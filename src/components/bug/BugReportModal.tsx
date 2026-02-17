@@ -12,6 +12,8 @@ type BugReportModalProps = {
 
 export default function BugReportModal({ isOpen, onClose }: BugReportModalProps) {
   const { user } = useAuth();
+  const DESCRIPTION_MAX = 3000;
+  const PAGE_URL_MAX = 255;
   const [feedbackType, setFeedbackType] = useState<FeedbackType>("bug");
   const [description, setDescription] = useState("");
   const [pageUrl, setPageUrl] = useState("");
@@ -27,7 +29,26 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = description.trim();
-    if (!trimmed) return;
+    if (!trimmed) {
+      return;
+    }
+
+    const rawPageUrl = pageUrl.trim();
+    let normalizedPageUrl: string | null = null;
+    if (rawPageUrl !== "") {
+      let candidate = rawPageUrl;
+      if (rawPageUrl.startsWith("http://") || rawPageUrl.startsWith("https://")) {
+        try {
+          const url = new URL(rawPageUrl);
+          candidate = url.pathname + url.search;
+        } catch {
+          candidate = rawPageUrl;
+        }
+      } else if (!rawPageUrl.startsWith("/")) {
+        candidate = `/${rawPageUrl}`;
+      }
+      normalizedPageUrl = candidate.slice(0, PAGE_URL_MAX);
+    }
 
     setStatus("loading");
     setMessage("");
@@ -35,7 +56,7 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
       user_id: user?.id ?? null,
       type: feedbackType,
       description: trimmed,
-      page_url: pageUrl.trim() || null,
+      page_url: normalizedPageUrl,
     });
 
     if (error) {
@@ -126,6 +147,7 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
               </label>
               <textarea
                 id="feedback-description"
+                maxLength={DESCRIPTION_MAX}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder={descriptionPlaceholder}
@@ -134,6 +156,9 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
                 className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
                 disabled={status === "loading"}
               />
+              <p className="mt-1 text-xs text-slate-500">
+                {description.length}/{DESCRIPTION_MAX} characters
+              </p>
             </div>
             <div>
               <label htmlFor="feedback-page" className="block text-sm font-medium text-slate-700 mb-1">
@@ -142,6 +167,7 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
               <input
                 id="feedback-page"
                 type="text"
+                maxLength={PAGE_URL_MAX}
                 value={pageUrl}
                 onChange={(e) => setPageUrl(e.target.value)}
                 placeholder="/dashboard"

@@ -6,6 +6,7 @@ import Footer from "../components/layout/Footer";
 import { PASSAGES } from "../data/passages";
 import type { Passage } from "../data/passages";
 import { getTipForMode } from "../data/tips";
+import { SKILL_TEACHING } from "../data/teaching";
 import type { TrainingType, TrainingDifficulty } from "../types/training";
 import { TRAINING_TYPE_LABELS, TRAINING_DIFFICULTY_LABELS } from "../types/training";
 import { pickNewRandomPassage } from "../lib/passages";
@@ -24,7 +25,7 @@ import {
 } from "../lib/guidedChunkingPreferences";
 
 const WPM_MIN = 200;
-const WPM_MAX = 600;
+const WPM_MAX = 900;
 const WPM_STORAGE_KEY = "ukcat-reader-wpm";
 const TIME_PRESETS = [30, 60, 90, 120] as const;
 const KEYWORD_COUNTS = [5, 6, 7, 8] as const;
@@ -257,25 +258,25 @@ export default function HomePage() {
                   key={type}
                   type="button"
                   onClick={() => setMode(type)}
-                  className={`flex flex-col items-center justify-between rounded-2xl border bg-white p-5 sm:p-6 text-center transition-transform transition-shadow duration-150 ${
+                  className={`flex flex-col items-center rounded-2xl border bg-white p-5 sm:p-6 text-center transition-transform transition-shadow duration-150 ${
                     isActive
                       ? "border-emerald-400 bg-emerald-50/80 shadow-lg ring-1 ring-emerald-100 hover:-translate-y-0.5 hover:shadow-xl"
                       : "border-slate-200 shadow-sm hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-50/40 hover:shadow-md"
                   }`}
                 >
                   <span
-                    className={`inline-flex h-10 w-10 items-center justify-center rounded-full mb-3 ${
+                    className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
                       isActive ? "bg-white text-emerald-600 shadow-sm" : "bg-slate-100 text-slate-700"
                     }`}
                     aria-hidden
                   >
                     {icon}
                   </span>
-                  <p className="text-base sm:text-lg font-semibold tracking-tight text-slate-900">
+                  <p className="mt-3 min-h-[1.75rem] text-base sm:text-lg font-semibold tracking-tight text-slate-900 flex items-center justify-center">
                     {TRAINING_TYPE_LABELS[type]}
                   </p>
                   <p
-                    className={`mt-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${
+                    className={`mt-1 min-h-[1rem] text-[11px] font-semibold uppercase tracking-[0.16em] flex items-center justify-center ${
                       isActive ? "text-emerald-700" : "text-slate-400"
                     }`}
                   >
@@ -288,18 +289,15 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Practice pod */}
+        {/* Settings */}
         <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-12">
           <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-md p-5 sm:p-6">
             <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 via-sky-500 to-indigo-500" />
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                  Practice pod
+                  Settings
                 </h2>
-                <p className="text-sm text-slate-600">
-                  Tune your next UCAT-style run in seconds.
-                </p>
               </div>
               <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1">
                 <span className="mr-1 h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden />
@@ -307,6 +305,17 @@ export default function HomePage() {
                   {TRAINING_TYPE_LABELS[mode]}
                 </span>
               </div>
+            </div>
+
+            <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 mb-1.5">
+                How it works
+              </p>
+              <ol className="list-decimal list-inside text-sm text-slate-700 space-y-1">
+                {SKILL_TEACHING[mode].howToUse.map((step, i) => (
+                  <li key={i}>{step}</li>
+                ))}
+              </ol>
             </div>
 
             <div className="space-y-4">
@@ -388,7 +397,7 @@ export default function HomePage() {
                         onChange={(e) => setWpm(Number(e.target.value))}
                         className="w-full h-2 rounded-full appearance-none bg-slate-200 accent-blue-600"
                       />
-                      <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-700">
+                      <span className="inline-flex shrink-0 items-center rounded-full bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-700 whitespace-nowrap">
                         ≈ {estimatedSeconds}s / passage
                       </span>
                     </div>

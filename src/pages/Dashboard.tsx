@@ -71,7 +71,7 @@ function getStoredTargetWpm(): number | null {
   const stored = localStorage.getItem(TARGET_WPM_STORAGE_KEY);
   if (stored == null) return null;
   const n = parseInt(stored, 10);
-  return Number.isFinite(n) && n >= 200 && n <= 600 ? n : null;
+  return Number.isFinite(n) && n >= 200 && n <= 900 ? n : null;
 }
 
 export default function Dashboard() {
@@ -90,6 +90,11 @@ export default function Dashboard() {
   const [personalTargetWpm, setPersonalTargetWpm] = useState<number | null>(
     () => getStoredTargetWpm()
   );
+  const [targetWpmInput, setTargetWpmInput] = useState<string>(() => {
+    const stored = getStoredTargetWpm();
+    return stored != null ? String(stored) : "";
+  });
+  const [targetWpmError, setTargetWpmError] = useState<string | null>(null);
   const [guestSummary, setGuestSummary] = useState<GuestDashboardSummary | null>(null);
 
   useEffect(() => {
@@ -610,33 +615,73 @@ export default function Dashboard() {
                       )}
                       % of the way to {WPM_TARGET} WPM.
                     </p>
-                    <p className="text-slate-500 text-xs mt-1 text-center">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const raw = window.prompt(
-                            "Set your personal target WPM (200-600). Leave empty to clear.",
-                            personalTargetWpm?.toString() ?? "400"
-                          );
-                          if (raw === null) return;
-                          if (raw.trim() === "") {
+                    <form
+                      className="mt-3 flex flex-col items-center gap-2 text-xs text-slate-600"
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        const raw = targetWpmInput.trim();
+                        if (raw === "") {
+                          localStorage.removeItem(TARGET_WPM_STORAGE_KEY);
+                          setPersonalTargetWpm(null);
+                          setTargetWpmInput("");
+                          setTargetWpmError(null);
+                          return;
+                        }
+                        const n = Number.parseInt(raw, 10);
+                        if (!Number.isFinite(n) || n < 200 || n > 900) {
+                          setTargetWpmError("Please enter a value between 200 and 900 WPM, or leave blank to clear.");
+                          return;
+                        }
+                        localStorage.setItem(TARGET_WPM_STORAGE_KEY, String(n));
+                        setPersonalTargetWpm(n);
+                        setTargetWpmError(null);
+                      }}
+                    >
+                      <div className="flex flex-wrap items-center justify-center gap-2">
+                        <label htmlFor="target-wpm-input" className="sr-only">
+                          Set personal target WPM
+                        </label>
+                        <span>Your personal target:</span>
+                        <input
+                          id="target-wpm-input"
+                          type="number"
+                          min={200}
+                          max={900}
+                          value={targetWpmInput}
+                          onChange={(e) => {
+                            setTargetWpmInput(e.target.value);
+                            if (targetWpmError) setTargetWpmError(null);
+                          }}
+                          className="w-20 rounded-md border border-slate-300 px-2 py-1 text-center text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                        />
+                        <span>WPM</span>
+                        <button
+                          type="submit"
+                          className="inline-flex items-center justify-center rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-blue-600 hover:bg-slate-50"
+                        >
+                          Save
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
                             localStorage.removeItem(TARGET_WPM_STORAGE_KEY);
                             setPersonalTargetWpm(null);
-                            return;
-                          }
-                          const n = parseInt(raw.trim(), 10);
-                          if (Number.isFinite(n) && n >= 200 && n <= 600) {
-                            localStorage.setItem(TARGET_WPM_STORAGE_KEY, String(n));
-                            setPersonalTargetWpm(n);
-                          }
-                        }}
-                        className="min-h-[44px] inline-flex items-center justify-center text-blue-600 hover:underline py-2"
-                      >
-                        {personalTargetWpm != null
-                          ? `Your target: ${personalTargetWpm} WPM (change)`
-                          : "Set your target WPM"}
-                      </button>
-                    </p>
+                            setTargetWpmInput("");
+                            setTargetWpmError(null);
+                          }}
+                          className="inline-flex items-center justify-center rounded-md border border-slate-200 px-2 py-1 text-xs font-medium text-slate-500 hover:bg-slate-50"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                      {targetWpmError && (
+                        <p className="mt-1 text-[11px] text-red-600 text-center max-w-md">
+                          {targetWpmError}
+                        </p>
+                      )}
+                    </form>
                   </>
                 )}
               </div>

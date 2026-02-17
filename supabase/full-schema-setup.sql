@@ -1,4 +1,3 @@
--- =============================================================================
 -- UCAT Trainer - Full Supabase Schema Setup
 -- =============================================================================
 -- Paste this entire file into Supabase Dashboard → SQL Editor → New query, then Run.
@@ -7,6 +6,25 @@
 --
 -- Auth (magic link): ensure Authentication → URL Configuration has your app
 -- URL and http://localhost:5173 in Redirect URLs.
+--
+-- SECURITY MODEL (READ ME BEFORE EDITING)
+-- - This project relies on Postgres Row Level Security (RLS) as the primary
+--   protection for user data. Every table that can contain user data MUST:
+--     * enable row level security, and
+--     * define policies that scope access by auth.uid() or by role.
+-- - The frontend uses the Supabase anon key from the browser. Treat the DB
+--   as untrusted with respect to the client: never create tables that are
+--   readable by the anon role without an auth.uid()-based predicate.
+-- - When adding new tables:
+--     * immediately call `alter table ... enable row level security;`
+--     * add at least one policy that enforces `auth.uid() = user_id` (or
+--       similar) for all select/insert/update/delete operations.
+--     * avoid policies that allow broad access to `anon` unless the data is
+--       explicitly public and non-sensitive.
+--
+-- Admin-only operations should go through SECURITY DEFINER functions which
+-- *themselves* check the caller's role (see get_admin_stats below). Do not
+-- expose admin data via tables that regular authenticated users can query.
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
@@ -95,6 +113,23 @@ create table if not exists public.bug_reports (
   created_at timestamptz not null default now()
 );
 
+-- NOTE: description may be long free text but we still want an upper bound
+-- to guard against accidental huge payloads. The application keeps feedback
+-- to a few thousand characters; enforce a hard cap in the database as well.
+alter table public.bug_reports
+  drop constraint if exists bug_reports_description_length_check;
+alter table public.bug_reports
+  add constraint bug_reports_description_length_check
+  check (length(description) <= 4000);
+
+-- Page URL should remain a short path (e.g. "/dashboard?mode=speed_reading").
+-- We allow NULL for anonymous or omitted values but cap the maximum length.
+alter table public.bug_reports
+  drop constraint if exists bug_reports_page_url_length_check;
+alter table public.bug_reports
+  add constraint bug_reports_page_url_length_check
+  check (page_url is null or length(page_url) <= 255);
+
 -- Ensure type column exists (for tables created before type was added)
 alter table public.bug_reports add column if not exists type text not null default 'bug';
 
@@ -136,6 +171,11 @@ declare
   is_admin boolean;
   result jsonb;
 begin
+  -- IMPORTANT: All admin-only functions must perform an explicit check
+  -- against public.profiles (or another trusted source of truth) to verify
+  -- that auth.uid() has the 'admin' role before returning any data.
+  -- Never rely solely on the caller passing an \"isAdmin\" flag from the
+  -- frontend.
   select (role = 'admin') into is_admin from public.profiles where id = auth.uid();
   if is_admin is not true then
     raise exception 'Forbidden: admin only';

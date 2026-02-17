@@ -65,11 +65,7 @@ export default function Header() {
           Admin
         </Link>
       )}
-      {loading && !user ? (
-        <span className="text-sm text-slate-400 min-h-[44px] inline-flex items-center" aria-hidden>
-          …
-        </span>
-      ) : user ? (
+      {user ? (
         <div className="flex items-center gap-2 min-h-[44px]">
           <span className="text-sm text-slate-600 inline-flex items-center" aria-label={displayName ? `Signed in as ${displayName}` : "Signed in"}>
             Hi, {displayName ?? "there"}

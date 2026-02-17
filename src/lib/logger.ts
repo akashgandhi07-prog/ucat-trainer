@@ -1,12 +1,26 @@
 /**
  * Simple namespaced logger for auth, dashboard, and Supabase operations.
  * In development logs to console; can be extended to send to a service.
- * info() is dev-only; do not log PII in production if logs are ever sent elsewhere.
+ *
+ * IMPORTANT:
+ * - info() is dev-only and should never be wired to a production log shipper.
+ * - warn()/error() redact common PII fields when not in dev so that any
+ *   future server-side log forwarding does not leak sensitive user data.
  */
 
 const isDev = import.meta.env.DEV;
 
-const PII_KEYS = new Set(["email", "userId", "user_id", "full_name", "name"]);
+const PII_KEYS = new Set([
+  "email",
+  "userId",
+  "user_id",
+  "full_name",
+  "name",
+  "first_name",
+  "last_name",
+  "entry_year",
+  "stream",
+]);
 
 function redactPii(meta: unknown): unknown {
   if (!meta || typeof meta !== "object") return meta;
