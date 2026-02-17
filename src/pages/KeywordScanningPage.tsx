@@ -12,6 +12,8 @@ import { supabase } from "../lib/supabase";
 import { supabaseLog } from "../lib/logger";
 import type { TrainingDifficulty } from "../types/training";
 import { pickNewRandomPassage } from "../lib/passages";
+import { getSiteBaseUrl } from "../lib/siteUrl";
+import SEOHead from "../components/seo/SEOHead";
 
 type Phase = "scanning" | "results";
 
@@ -228,6 +230,8 @@ export default function KeywordScanningPage() {
     return <Navigate to="/?mode=keyword_scanning" replace />;
   }
 
+  const canonicalUrl = getSiteBaseUrl() ? `${getSiteBaseUrl()}/train/keyword-scanning` : undefined;
+
   if (phase === "results") {
     const elapsed = Math.round((Date.now() - startTime) / 1000);
     const isNewBest =
@@ -237,6 +241,11 @@ export default function KeywordScanningPage() {
 
     return (
       <div className="flex flex-col min-h-screen">
+        <SEOHead
+          title="UCAT Keyword Scanning Trainer"
+          description="Find target words in dense passages. Free keyword scanning practice for UCAT Verbal Reasoning from The UKCAT People."
+          canonicalUrl={canonicalUrl}
+        />
         <a href="#main-content" className={skipLinkClass}>
           Skip to main content
         </a>
@@ -311,6 +320,11 @@ export default function KeywordScanningPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50/50">
+      <SEOHead
+        title="UCAT Keyword Scanning Trainer"
+        description="Find target words in dense passages. Free keyword scanning practice for UCAT Verbal Reasoning from The UKCAT People."
+        canonicalUrl={canonicalUrl}
+      />
       <a href="#main-content" className={skipLinkClass}>
         Skip to main content
       </a>
@@ -374,7 +388,7 @@ export default function KeywordScanningPage() {
                         key={`${pIdx}-${wIdx}-${word}`}
                         onClick={() => isTarget && !isFound && handleWordClick(normalized)}
                         className={`${
-                          isTarget ? "cursor-pointer rounded px-1.5 py-1 min-h-[1.5em] inline-flex items-center" : ""
+                          isTarget ? "cursor-pointer rounded px-1 inline-block align-baseline" : ""
                         } ${
                           isFound ? "bg-emerald-200 text-emerald-900 font-medium" : ""
                         }`}

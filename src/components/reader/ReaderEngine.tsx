@@ -8,6 +8,8 @@ const DEFAULT_TEXT =
 const WPM_MIN = 100;
 const WPM_MAX = 900;
 const WPM_STORAGE_KEY = "ukcat-reader-wpm";
+const SHOW_TIMER_STORAGE_KEY = "ukcat-reader-show-timer";
+const HIGHLIGHT_WORDS_STORAGE_KEY = "ukcat-reader-highlight-words";
 
 function clampWpm(value: number): number {
   return Math.min(WPM_MAX, Math.max(WPM_MIN, value));
@@ -21,10 +23,35 @@ function getInitialWpm(): number {
   return Number.isFinite(parsed) ? clampWpm(parsed) : 300;
 }
 
+function getStoredShowTimer(): boolean {
+  if (typeof window === "undefined") return true;
+  const v = localStorage.getItem(SHOW_TIMER_STORAGE_KEY);
+  if (v === "false") return false;
+  return true;
+}
+
+function getStoredHighlightWords(): boolean {
+  if (typeof window === "undefined") return true;
+  const v = localStorage.getItem(HIGHLIGHT_WORDS_STORAGE_KEY);
+  if (v === "false") return false;
+  return true;
+}
+
+function formatCountdown(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+export type ReaderFinishOpts = {
+  timeSpentSeconds: number;
+  usedOvertime?: boolean;
+};
+
 type ReaderEngineProps = {
   text?: string;
   initialWpm?: number;
-  onFinish?: (wpm: number) => void;
+  onFinish?: (wpm: number, opts?: ReaderFinishOpts) => void;
   passageTitle?: string;
   wordCount?: number;
   guidedChunkingEnabled?: boolean;
@@ -45,8 +72,16 @@ export default function ReaderEngine({
   const [wpm, setWpm] = useState(() =>
     initialWpm != null ? clampWpm(initialWpm) : getInitialWpm()
   );
+  const [showTimer, setShowTimer] = useState(getStoredShowTimer);
+  const [highlightEnabled, setHighlightEnabled] = useState(getStoredHighlightWords);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const [remainingSeconds, setRemainingSeconds] = useState(() => 0);
+  const [showMoreTimeModal, setShowMoreTimeModal] = useState(false);
+  const [overtimeMode, setOvertimeMode] = useState(false);
+  const [overtimeSeconds, setOvertimeSeconds] = useState(0);
   const startTimeRef = useRef<number>(0);
+  const readingStartTimeRef = useRef<number>(0);
+  const overtimeStartRef = useRef<number>(0);
   const rafRef = useRef<number>(0);
   const onFinishCalledRef = useRef(false);
   const mountedRef = useRef(true);
@@ -68,6 +103,41 @@ export default function ReaderEngine({
     [paragraphs]
   );
   const wordCount = wordCountProp ?? words.length;
+  const totalReadingSeconds = useMemo(
+    () => (wordCount > 0 && wpm > 0 ? Math.ceil((wordCount / wpm) * 60) : 0),
+    [wordCount, wpm]
+  );
+
+  // Keep remainingSeconds in sync when not playing (e.g. initial load or after reset)
+  useEffect(() => {
+    if (!isPlaying) setRemainingSeconds(totalReadingSeconds);
+  }, [isPlaying, totalReadingSeconds]);
+
+  // Countdown tick: update remaining time every second while playing; when it hits 0, pause and show "More time?" modal
+  useEffect(() => {
+    if (!isPlaying || totalReadingSeconds <= 0 || overtimeMode) return;
+    setRemainingSeconds(totalReadingSeconds);
+    const interval = setInterval(() => {
+      const elapsed = (Date.now() - startTimeRef.current) / 1000;
+      const remaining = Math.max(0, totalReadingSeconds - elapsed);
+      setRemainingSeconds(remaining);
+      if (remaining <= 0) {
+        setIsPlaying(false);
+        setShowMoreTimeModal(true);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isPlaying, totalReadingSeconds, overtimeMode]);
+
+  // Overtime: count up every second when in overtime mode
+  useEffect(() => {
+    if (!overtimeMode) return;
+    overtimeStartRef.current = Date.now();
+    const interval = setInterval(() => {
+      setOvertimeSeconds(Math.floor((Date.now() - overtimeStartRef.current) / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [overtimeMode]);
 
   // currentWordIndex intentionally omitted from deps: we use it only to set startTimeRef when
   // play starts or wpm/words.length change, to avoid restarting the animation on every word tick.
@@ -85,9 +155,14 @@ export default function ReaderEngine({
         if (!mountedRef.current) return;
         setIsPlaying(false);
         setCurrentWordIndex(words.length - 1);
-        if (!onFinishCalledRef.current) {
+        const elapsedSec = elapsedMs / 1000;
+        const timeRanOut = totalReadingSeconds > 0 && elapsedSec >= totalReadingSeconds - 0.01;
+        if (timeRanOut) {
+          setShowMoreTimeModal(true);
+        } else if (!onFinishCalledRef.current) {
           onFinishCalledRef.current = true;
-          onFinish?.(wpm);
+          const timeSpentSeconds = Math.round((Date.now() - readingStartTimeRef.current) / 1000);
+          onFinish?.(wpm, { timeSpentSeconds, usedOvertime: false });
         }
         return;
       }
@@ -104,7 +179,7 @@ export default function ReaderEngine({
       mountedRef.current = false;
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [isPlaying, wpm, words.length, useChunking, effectiveChunkSize]);
+  }, [isPlaying, wpm, words.length, useChunking, effectiveChunkSize, totalReadingSeconds]);
 
   const handlePlayPause = () => {
     const now = Date.now();
@@ -114,6 +189,7 @@ export default function ReaderEngine({
     if (currentWordIndex >= words.length - 1 && !isPlaying) {
       setCurrentWordIndex(0);
     }
+    if (!isPlaying && currentWordIndex === 0) readingStartTimeRef.current = Date.now();
     setIsPlaying((prev) => !prev);
   };
 
@@ -123,6 +199,10 @@ export default function ReaderEngine({
     lastResetRef.current = now;
     setIsPlaying(false);
     setCurrentWordIndex(0);
+    setRemainingSeconds(totalReadingSeconds);
+    setShowMoreTimeModal(false);
+    setOvertimeMode(false);
+    setOvertimeSeconds(0);
     onFinishCalledRef.current = false;
   };
 
@@ -130,8 +210,28 @@ export default function ReaderEngine({
     setIsPlaying(false);
     if (!onFinishCalledRef.current) {
       onFinishCalledRef.current = true;
-      onFinish?.(wpm);
+      const timeSpentSeconds = overtimeMode
+        ? totalReadingSeconds + overtimeSeconds
+        : (readingStartTimeRef.current
+            ? Math.max(0, Math.round((Date.now() - readingStartTimeRef.current) / 1000))
+            : 0);
+      onFinish?.(wpm, { timeSpentSeconds, usedOvertime: overtimeMode });
     }
+  };
+
+  const handleMoreTimeNo = () => {
+    setShowMoreTimeModal(false);
+    if (!onFinishCalledRef.current) {
+      onFinishCalledRef.current = true;
+      onFinish?.(wpm, { timeSpentSeconds: totalReadingSeconds, usedOvertime: false });
+    }
+  };
+
+  const handleMoreTimeYes = () => {
+    setShowMoreTimeModal(false);
+    setOvertimeMode(true);
+    setOvertimeSeconds(0);
+    overtimeStartRef.current = Date.now();
   };
 
   const handleWpmIncrement = () => setWpm((prev) => clampWpm(prev + 25));
@@ -145,11 +245,27 @@ export default function ReaderEngine({
     }
   }, [wpm]);
 
+  useEffect(() => {
+    try {
+      localStorage.setItem(SHOW_TIMER_STORAGE_KEY, String(showTimer));
+    } catch {
+      // ignore
+    }
+  }, [showTimer]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(HIGHLIGHT_WORDS_STORAGE_KEY, String(highlightEnabled));
+    } catch {
+      // ignore
+    }
+  }, [highlightEnabled]);
+
   const renderWord = (word: string, i: number) => {
-    const isCurrent = useChunking
+    const isCurrent = highlightEnabled && (useChunking
       ? i >= currentWordIndex && i < currentWordIndex + effectiveChunkSize
-      : i === currentWordIndex;
-    const isPast = i < currentWordIndex;
+      : i === currentWordIndex);
+    const isPast = highlightEnabled && i < currentWordIndex;
     const className = `transition-colors duration-75 ${
       isPast ? "opacity-50" : "opacity-100"
     } ${
@@ -181,10 +297,10 @@ export default function ReaderEngine({
         <div key={startIndex} className={baseClass}>
           {chunks.map((chunkWords, chunkIdx) => {
             const chunkStartIndex = startIndex + chunkIdx * effectiveChunkSize;
-            const isCurrentChunk =
+            const isCurrentChunk = highlightEnabled &&
               chunkStartIndex <= currentWordIndex &&
               chunkStartIndex + chunkWords.length > currentWordIndex;
-            const isPastChunk =
+            const isPastChunk = highlightEnabled &&
               chunkStartIndex + chunkWords.length <= currentWordIndex;
 
             const wrapperClass = `inline-flex flex-wrap gap-x-2 gap-y-1 transition-colors duration-75 ${
@@ -228,8 +344,52 @@ export default function ReaderEngine({
     </div>
   );
 
+  const timerSeconds = overtimeMode ? overtimeSeconds : (isPlaying ? remainingSeconds : totalReadingSeconds);
+  const isCountdown = !overtimeMode && isPlaying;
+  const isLowTime = isCountdown && remainingSeconds <= 10 && remainingSeconds > 0;
+
   return (
     <div className="w-full max-w-4xl mx-auto px-4 font-ucat">
+      {showMoreTimeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" aria-modal="true" role="dialog" aria-labelledby="more-time-title">
+          <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 text-center">
+            <h2 id="more-time-title" className="text-lg font-semibold text-slate-900 mb-2">Time&apos;s up</h2>
+            <p className="text-slate-600 mb-6">More time?</p>
+            <div className="flex gap-3 justify-center">
+              <button
+                type="button"
+                onClick={handleMoreTimeYes}
+                className="min-h-[44px] px-5 py-2.5 bg-slate-100 text-slate-800 font-medium rounded-lg hover:bg-slate-200 transition-colors"
+              >
+                Yes
+              </button>
+              <button
+                type="button"
+                onClick={handleMoreTimeNo}
+                className="min-h-[44px] px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                No, go to questions
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showTimer && totalReadingSeconds > 0 && (
+        <div className="flex flex-wrap justify-between items-center gap-2 mb-3">
+          <span className="text-sm font-medium text-slate-500">
+            Speed reading
+          </span>
+          <span
+            className={`text-2xl font-bold tabular-nums shrink-0 ${
+              overtimeMode ? "text-red-600" : isLowTime ? "text-red-600" : "text-slate-900"
+            }`}
+            aria-live="polite"
+            aria-label={overtimeMode ? `Overtime ${formatCountdown(overtimeSeconds)}` : isPlaying ? `${formatCountdown(remainingSeconds)} left` : `${formatCountdown(totalReadingSeconds)} total`}
+          >
+            {overtimeMode ? `+${formatCountdown(timerSeconds)}` : formatCountdown(timerSeconds)}
+          </span>
+        </div>
+      )}
       {(passageTitle != null || wordCount > 0) && (
         <p className="text-[13px] text-ucat-muted mb-2 text-center">
           {wpm} WPM · {wordCount} words
@@ -240,6 +400,26 @@ export default function ReaderEngine({
       {isMobile ? (
         <>
           <div className="mt-4 mb-4 p-3 bg-slate-50 rounded-xl border border-slate-200">
+            <div className="flex flex-wrap items-center gap-3 mb-3">
+              <label className="flex items-center gap-1.5 text-sm text-slate-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={highlightEnabled}
+                  onChange={(e) => setHighlightEnabled(e.target.checked)}
+                  className="rounded border-slate-300"
+                />
+                Highlight words
+              </label>
+              <label className="flex items-center gap-1.5 text-sm text-slate-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showTimer}
+                  onChange={(e) => setShowTimer(e.target.checked)}
+                  className="rounded border-slate-300"
+                />
+                Show timer
+              </label>
+            </div>
             <div className="flex flex-wrap items-center gap-2 mb-3 justify-start">
               <button
                 type="button"
@@ -290,28 +470,48 @@ export default function ReaderEngine({
         <>
           {content}
           <div className="flex flex-wrap items-center justify-between gap-4 mt-8 p-3 bg-slate-50 rounded-xl border border-slate-200">
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handleWpmDecrement}
-                disabled={isPlaying}
-                className="min-w-[44px] min-h-[44px] rounded-lg border border-slate-200 bg-white text-slate-700 font-medium hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center"
-                aria-label="Decrease WPM"
-              >
-                −
-              </button>
-              <span className="min-w-[5rem] text-center font-semibold text-slate-900">
-                {wpm} WPM
-              </span>
-              <button
-                type="button"
-                onClick={handleWpmIncrement}
-                disabled={isPlaying}
-                className="min-w-[44px] min-h-[44px] rounded-lg border border-slate-200 bg-white text-slate-700 font-medium hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center"
-                aria-label="Increase WPM"
-              >
-                +
-              </button>
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleWpmDecrement}
+                  disabled={isPlaying}
+                  className="min-w-[44px] min-h-[44px] rounded-lg border border-slate-200 bg-white text-slate-700 font-medium hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center"
+                  aria-label="Decrease WPM"
+                >
+                  −
+                </button>
+                <span className="min-w-[5rem] text-center font-semibold text-slate-900">
+                  {wpm} WPM
+                </span>
+                <button
+                  type="button"
+                  onClick={handleWpmIncrement}
+                  disabled={isPlaying}
+                  className="min-w-[44px] min-h-[44px] rounded-lg border border-slate-200 bg-white text-slate-700 font-medium hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center"
+                  aria-label="Increase WPM"
+                >
+                  +
+                </button>
+              </div>
+              <label className="flex items-center gap-1.5 text-sm text-slate-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={highlightEnabled}
+                  onChange={(e) => setHighlightEnabled(e.target.checked)}
+                  className="rounded border-slate-300"
+                />
+                Highlight words
+              </label>
+              <label className="flex items-center gap-1.5 text-sm text-slate-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showTimer}
+                  onChange={(e) => setShowTimer(e.target.checked)}
+                  className="rounded border-slate-300"
+                />
+                Show timer
+              </label>
             </div>
             <div className="flex items-center gap-2">
               <button

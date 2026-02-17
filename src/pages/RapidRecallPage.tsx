@@ -15,6 +15,8 @@ import { supabaseLog } from "../lib/logger";
 import { withRetry } from "../lib/retry";
 import type { TrainingDifficulty } from "../types/training";
 import { pickNewRandomPassage } from "../lib/passages";
+import { getSiteBaseUrl } from "../lib/siteUrl";
+import SEOHead from "../components/seo/SEOHead";
 
 type Phase = "reading" | "questions" | "results";
 
@@ -37,6 +39,10 @@ export default function RapidRecallPage() {
     () => state?.passage ?? pickNewRandomPassage(null, difficulty)
   );
   const [secondsLeft, setSecondsLeft] = useState(initialTimeLimit);
+  const [showMoreTimeModal, setShowMoreTimeModal] = useState(false);
+  const [overtimeMode, setOvertimeMode] = useState(false);
+  const [overtimeSeconds, setOvertimeSeconds] = useState(0);
+  const overtimeStartRef = useRef<number>(0);
   const [quizCorrect, setQuizCorrect] = useState(0);
   const [quizTotal, setQuizTotal] = useState(0);
   const [questionBreakdown, setQuestionBreakdown] = useState<QuestionBreakdownItem[]>([]);
@@ -70,10 +76,19 @@ export default function RapidRecallPage() {
   }, [phase]);
 
   useEffect(() => {
-    if (phase === "reading" && secondsLeft === 0) {
-      setPhase("questions");
+    if (phase === "reading" && secondsLeft === 0 && !overtimeMode) {
+      setShowMoreTimeModal(true);
     }
-  }, [phase, secondsLeft]);
+  }, [phase, secondsLeft, overtimeMode]);
+
+  useEffect(() => {
+    if (!overtimeMode) return;
+    overtimeStartRef.current = Date.now();
+    const interval = setInterval(() => {
+      setOvertimeSeconds(Math.floor((Date.now() - overtimeStartRef.current) / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [overtimeMode]);
 
   const handleQuizComplete = useCallback(
     (correct: number, total: number, breakdown: QuestionBreakdownItem[]) => {
@@ -123,6 +138,9 @@ export default function RapidRecallPage() {
         if (!opts?.skipRestart) {
           setPhase("reading");
           setSecondsLeft(timeLimitSeconds);
+          setShowMoreTimeModal(false);
+          setOvertimeMode(false);
+          setOvertimeSeconds(0);
         }
       } catch (err: unknown) {
         const message = err && typeof err === "object" && "message" in err ? String((err as { message: string }).message) : "Unknown error";
@@ -165,11 +183,30 @@ export default function RapidRecallPage() {
     setPhase("questions");
   };
 
+  const handleMoreTimeNo = () => {
+    setShowMoreTimeModal(false);
+    setPhase("questions");
+  };
+
+  const handleMoreTimeYes = () => {
+    setShowMoreTimeModal(false);
+    setOvertimeMode(true);
+    setOvertimeSeconds(0);
+    overtimeStartRef.current = Date.now();
+  };
+
   const skipLinkClass =
     "absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-slate-900 font-medium rounded-lg ring-2 ring-blue-600 opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
 
+  const canonicalUrl = getSiteBaseUrl() ? `${getSiteBaseUrl()}/train/rapid-recall` : undefined;
+
   return (
     <div className="flex flex-col min-h-screen">
+      <SEOHead
+        title="UCAT Rapid Recall Practice"
+        description="Test comprehension under time pressure with true/false statements. Free UCAT Verbal Reasoning training from The UKCAT People."
+        canonicalUrl={canonicalUrl}
+      />
       <a href="#main-content" className={skipLinkClass}>
         Skip to main content
       </a>
@@ -177,16 +214,42 @@ export default function RapidRecallPage() {
       <main id="main-content" className="flex-1 flex items-center justify-center py-12 px-4" tabIndex={-1}>
         {phase === "reading" && (
           <div className="w-full max-w-3xl">
+            {showMoreTimeModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" aria-modal="true" role="dialog" aria-labelledby="rapid-more-time-title">
+                <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 text-center">
+                  <h2 id="rapid-more-time-title" className="text-lg font-semibold text-slate-900 mb-2">Time&apos;s up</h2>
+                  <p className="text-slate-600 mb-6">More time?</p>
+                  <div className="flex gap-3 justify-center">
+                    <button
+                      type="button"
+                      onClick={handleMoreTimeYes}
+                      className="min-h-[44px] px-5 py-2.5 bg-slate-100 text-slate-800 font-medium rounded-lg hover:bg-slate-200 transition-colors"
+                    >
+                      Yes
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleMoreTimeNo}
+                      className="min-h-[44px] px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      No, go to questions
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
               <span className="text-sm font-medium text-slate-500">
-                Rapid Recall - read before time runs out
+                {overtimeMode ? "Rapid Recall - overtime" : "Rapid Recall - read before time runs out"}
               </span>
               <span
                 className={`text-2xl font-bold tabular-nums shrink-0 ${
-                  secondsLeft <= 10 ? "text-red-600" : "text-slate-900"
+                  overtimeMode ? "text-red-600" : secondsLeft <= 10 ? "text-red-600" : "text-slate-900"
                 }`}
               >
-                {Math.floor(secondsLeft / 60)}:{(secondsLeft % 60).toString().padStart(2, "0")}
+                {overtimeMode
+                  ? `+${Math.floor(overtimeSeconds / 60)}:${(overtimeSeconds % 60).toString().padStart(2, "0")}`
+                  : `${Math.floor(secondsLeft / 60)}:${(secondsLeft % 60).toString().padStart(2, "0")}`}
               </span>
             </div>
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 max-h-[75vh] min-h-[50vh] overflow-y-auto overscroll-behavior-contain">

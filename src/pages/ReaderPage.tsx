@@ -17,6 +17,7 @@ import { supabaseLog } from "../lib/logger";
 import { withRetry } from "../lib/retry";
 import type { TrainingDifficulty } from "../types/training";
 import { pickNewRandomPassage } from "../lib/passages";
+import { getSiteBaseUrl } from "../lib/siteUrl";
 import {
   clampChunkSize,
   getSuggestedChunkSize,
@@ -60,6 +61,7 @@ export default function ReaderPage() {
     return loadGuidedChunkingPrefs().chunkSize;
   });
   const [suggestedChunkSize, setSuggestedChunkSize] = useState<number | null>(null);
+  const [readingTimeSeconds, setReadingTimeSeconds] = useState<number | null>(null);
   const hasAutoSavedRef = useRef(false);
   const readingStartTimeRef = useRef<number | null>(null);
   const mountedRef = useRef(true);
@@ -108,15 +110,22 @@ export default function ReaderPage() {
   }
 
   const passageText = passage?.text ?? "";
+  const wordCount = passageText.trim().split(/\s+/).filter(Boolean).length;
   const questionCount = Math.min(3, configureState.questionCount ?? 3);
   const WPM_MIN = 200;
   const WPM_MAX = 900;
   const difficulty: TrainingDifficulty = configureState.difficulty ?? "medium";
 
-  const handleReaderFinish = useCallback((finishedWpm: number) => {
-    setWpm(finishedWpm);
+  const handleReaderFinish = useCallback((finishedWpm: number, opts?: { timeSpentSeconds: number; usedOvertime?: boolean }) => {
+    if (opts?.timeSpentSeconds != null && opts.timeSpentSeconds > 0) {
+      setReadingTimeSeconds(opts.timeSpentSeconds);
+      setWpm(Math.round((wordCount / opts.timeSpentSeconds) * 60));
+    } else {
+      setReadingTimeSeconds(null);
+      setWpm(finishedWpm);
+    }
     setPhase("quiz");
-  }, []);
+  }, [wordCount]);
 
   const handleQuizComplete = useCallback((correct: number, total: number, breakdown: QuestionBreakdownItem[]) => {
     setQuizCorrect(correct);
@@ -136,6 +145,7 @@ export default function ReaderPage() {
           total: quizTotal,
           passage_id: passage?.id ?? null,
           ...(rating != null && { wpm_rating: rating }),
+          ...(readingTimeSeconds != null && readingTimeSeconds > 0 && { time_seconds: readingTimeSeconds }),
         });
         openAuthModal();
         return;
@@ -151,6 +161,7 @@ export default function ReaderPage() {
         total: quizTotal,
         passage_id: passage?.id ?? null,
         ...(rating != null && { wpm_rating: rating }),
+        ...(readingTimeSeconds != null && readingTimeSeconds > 0 && { time_seconds: readingTimeSeconds }),
       };
       try {
         await withRetry(async () => {
@@ -182,11 +193,12 @@ export default function ReaderPage() {
         if (mountedRef.current) setSaveInProgress(false);
       }
     },
-    [user, wpm, quizCorrect, quizTotal, passage?.id, difficulty, openAuthModal]
+    [user, wpm, quizCorrect, quizTotal, passage?.id, difficulty, openAuthModal, readingTimeSeconds]
   );
 
   const handleRestart = useCallback(() => {
     hasAutoSavedRef.current = false;
+    setReadingTimeSeconds(null);
     setPhase("reading");
     setReadingKey((k) => k + 1);
     setPassage((current) => pickNewRandomPassage(current?.id, difficulty));
@@ -196,6 +208,7 @@ export default function ReaderPage() {
   const handleRestartWithWpm = useCallback(
     (newWpm: number) => {
       setWpm(Math.min(WPM_MAX, Math.max(WPM_MIN, newWpm)));
+      setReadingTimeSeconds(null);
       hasAutoSavedRef.current = false;
       setPhase("reading");
       setReadingKey((k) => k + 1);
@@ -224,6 +237,7 @@ export default function ReaderPage() {
         correct: quizCorrect,
         total: quizTotal,
         passage_id: passage?.id ?? null,
+        ...(readingTimeSeconds != null && readingTimeSeconds > 0 && { time_seconds: readingTimeSeconds }),
       });
     }
   }, [phase, handleSaveProgress, user, wpm, quizCorrect, quizTotal, passage?.id, difficulty]);
@@ -236,7 +250,8 @@ export default function ReaderPage() {
       <SEOHead
         title="Free UCAT Speed Reading Trainer"
         description="Practice dense academic texts with speed reading and scanning tools to improve your UCAT Verbal Reasoning scores."
-        canonicalUrl={typeof window !== "undefined" ? `${window.location.origin}/reader` : undefined}
+        canonicalUrl={getSiteBaseUrl() ? `${getSiteBaseUrl()}/reader` : undefined}
+        imageUrl={getSiteBaseUrl() ? `${getSiteBaseUrl()}/og-trainer.png` : undefined}
       />
       <a href="#main-content" className={skipLinkClass}>
         Skip to main content
@@ -250,7 +265,7 @@ export default function ReaderPage() {
             initialWpm={wpm}
             onFinish={handleReaderFinish}
             passageTitle={passage?.title}
-            wordCount={passageText.trim().split(/\s+/).filter(Boolean).length}
+            wordCount={wordCount}
             guidedChunkingEnabled={guidedChunkingEnabled}
             chunkSize={guidedChunkSize}
           />
@@ -270,14 +285,13 @@ export default function ReaderPage() {
             passageTitle={passage?.title}
             passageText={passageText}
             timeSpentSeconds={
-              readingStartTimeRef.current != null
-                ? Math.round((Date.now() - readingStartTimeRef.current) / 1000)
-                : 0
+              readingTimeSeconds ?? (readingStartTimeRef.current != null ? Math.round((Date.now() - readingStartTimeRef.current) / 1000) : 0)
             }
             questionBreakdown={questionBreakdown}
             onRestart={handleRestart}
-            onTryFasterWpm={() => handleRestartWithWpm(wpm + 25)}
+            onTrySlowerWpm={() => handleRestartWithWpm(wpm - 25)}
             onTrySameSettings={() => handleRestart()}
+            onTryFasterWpm={() => handleRestartWithWpm(wpm + 25)}
             saveError={saveError}
             saving={saveInProgress}
             guidedChunkingEnabled={guidedChunkingEnabled}

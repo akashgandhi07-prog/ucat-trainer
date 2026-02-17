@@ -10,6 +10,7 @@ import ReaderPage from "./pages/ReaderPage";
 import RapidRecallPage from "./pages/RapidRecallPage";
 import KeywordScanningPage from "./pages/KeywordScanningPage";
 import AdminPage from "./pages/AdminPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 
@@ -34,6 +35,7 @@ function App() {
               <Route path="/train/keyword-scanning" element={<KeywordScanningPage />} />
               <Route path="/dashboard" element={<Suspense fallback={<div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-600">Loading…</div>}><Dashboard /></Suspense>} />
               <Route path="/admin" element={<AdminPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
             </Routes>
             </BugReportProvider>
           </AuthModalProvider>

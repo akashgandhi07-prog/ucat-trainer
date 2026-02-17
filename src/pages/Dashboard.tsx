@@ -28,6 +28,7 @@ import SEOHead from "../components/seo/SEOHead";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import { getGuestSessions } from "../lib/guestSessions";
+import { getSiteBaseUrl } from "../lib/siteUrl";
 
 type SessionRow = {
   id: string;
@@ -759,7 +760,7 @@ export default function Dashboard() {
       <SEOHead
         title="UCAT Verbal Reasoning Dashboard & Analytics"
         description="Track your reading speed (WPM) and accuracy for the UCAT medical entrance exam. Free trainer for UK medical students."
-        canonicalUrl={typeof window !== "undefined" ? `${window.location.origin}/dashboard` : undefined}
+        canonicalUrl={getSiteBaseUrl() ? `${getSiteBaseUrl()}/dashboard` : undefined}
       />
       <a href="#main-content" className={skipLinkClass}>
         Skip to main content

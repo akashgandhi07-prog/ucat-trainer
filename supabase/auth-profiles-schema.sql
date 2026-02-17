@@ -7,8 +7,9 @@
 -- Safe to run multiple times; does not drop existing data.
 --
 -- After running: in Supabase Dashboard → Authentication → URL Configuration,
--- add your app URL (and http://localhost:5173 for dev) to Redirect URLs so
--- magic links work.
+-- add Redirect URLs: your app origin (e.g. https://yourapp.com) and
+-- https://yourapp.com/reset-password (and http://localhost:5173, http://localhost:5173/reset-password for dev)
+-- so password reset emails open correctly.
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------

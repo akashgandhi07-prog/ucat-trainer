@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useCallback, useEffect } from "rea
 import AuthModal from "../components/auth/AuthModal";
 import { useAuth } from "../contexts/AuthContext";
 
-export type AuthModalMode = "login" | "register";
+export type AuthModalMode = "login" | "register" | "forgot";
 
 type AuthModalContextValue = {
   openAuthModal: (mode?: AuthModalMode) => void;

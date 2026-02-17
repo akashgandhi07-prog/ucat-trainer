@@ -1,12 +1,37 @@
 @import "tailwindcss";
 
+/* Design system: semantic colors (HSL). All colors MUST be HSL. */
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  /* Official UCAT Verbal Reasoning typography: Arial/Helvetica, clear and readable */
   --font-ucat: Arial, "Helvetica Neue", Helvetica, sans-serif;
   --color-ucat-title: #2c3e50;
   --color-ucat-body: #333333;
   --color-ucat-muted: #666666;
+
+  /* Semantic palette (light) */
+  --color-background: hsl(0 0% 100%);
+  --color-foreground: hsl(215 25% 12%);
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(215 25% 12%);
+  --color-primary: hsl(217 71% 45%);
+  --color-primary-foreground: hsl(0 0% 100%);
+  --color-secondary: hsl(214 32% 96%);
+  --color-secondary-foreground: hsl(215 25% 12%);
+  --color-muted: hsl(214 32% 96%);
+  --color-muted-foreground: hsl(215 16% 47%);
+  --color-border: hsl(214 20% 90%);
+  --color-ring: hsl(217 71% 45%);
+
+  /* Training-specific */
+  --color-training-surface: hsl(214 32% 97%);
+  --color-training-active: hsl(217 71% 45%);
+  --color-training-active-muted: hsl(217 71% 95%);
+  --color-training-success: hsl(152 60% 42%);
+  --color-training-success-muted: hsl(152 60% 95%);
+  --color-training-highlight: hsl(217 71% 45%);
+  --color-training-highlight-muted: hsl(217 50% 94%);
+
+  --radius: 0.75rem;
 }
 
 @layer base {
@@ -14,7 +39,7 @@
     -webkit-tap-highlight-color: transparent;
   }
   body {
-    @apply bg-slate-50 text-slate-900 font-sans antialiased min-h-screen overflow-x-hidden;
+    @apply bg-background text-foreground font-sans antialiased min-h-screen overflow-x-hidden;
     min-height: 100dvh;
     overflow-wrap: break-word;
   }

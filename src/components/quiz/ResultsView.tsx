@@ -19,10 +19,9 @@ type ResultsViewProps = {
   timeSpentSeconds?: number;
   questionBreakdown?: QuestionBreakdownItem[];
   onRestart?: () => void;
-  /** When set, shown as primary CTA when accuracy >= 80: "Try +25 WPM" */
-  onTryFasterWpm?: () => void;
-  /** When set, shown as primary CTA when accuracy < 80: "Same settings" */
+  onTrySlowerWpm?: () => void;
   onTrySameSettings?: () => void;
+  onTryFasterWpm?: () => void;
   saveError?: string | null;
   saving?: boolean;
   guidedChunkingEnabled?: boolean;
@@ -46,8 +45,9 @@ export default function ResultsView({
   timeSpentSeconds = 0,
   questionBreakdown = [],
   onRestart,
-  onTryFasterWpm,
+  onTrySlowerWpm,
   onTrySameSettings,
+  onTryFasterWpm,
   saveError = null,
   saving = false,
   guidedChunkingEnabled = false,
@@ -56,13 +56,6 @@ export default function ResultsView({
   onAcceptSuggestedChunkSize,
 }: ResultsViewProps) {
   const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
-  const primaryCta =
-    accuracy >= 80 && onTryFasterWpm
-      ? "faster"
-      : accuracy < 80 && onTrySameSettings
-        ? "same"
-        : "another";
-  const [wpmRating, setWpmRating] = useState<WpmRating | null>(null);
   const [passageModalOpen, setPassageModalOpen] = useState(false);
 
   return (
@@ -138,9 +131,6 @@ export default function ResultsView({
               </>
             )}
           </p>
-        )}
-        {wpmRating === "just_right" && accuracy >= 80 && (
-          <p className="text-sm text-slate-600 mt-2">Great, we&apos;ll keep suggesting this range.</p>
         )}
       </div>
 
@@ -233,31 +223,39 @@ export default function ResultsView({
       )}
       <div className="mb-6">
         <p className="text-sm font-medium text-slate-700 mb-2">
-          How did this pace feel?
+          What pace next?
         </p>
         <div className="flex flex-wrap justify-center gap-2">
-          {(
-            [
-              ["too_slow", "Too slow"],
-              ["slightly_slow", "Slightly slow"],
-              ["just_right", "Just right"],
-              ["slightly_fast", "Slightly fast"],
-              ["too_fast", "Too fast"],
-            ] as const
-          ).map(([value, label]) => (
+          {onTrySlowerWpm && (
             <button
-              key={value}
               type="button"
-              onClick={() => setWpmRating(value)}
-              className={`min-h-[44px] px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                wpmRating === value
-                  ? "bg-blue-600 text-white"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
+              onClick={onTrySlowerWpm}
+              disabled={saving}
+              className="min-h-[44px] px-4 py-2 rounded-lg text-sm font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {label}
+              Slower -25 WPM
             </button>
-          ))}
+          )}
+          {onTrySameSettings && (
+            <button
+              type="button"
+              onClick={onTrySameSettings}
+              disabled={saving}
+              className="min-h-[44px] px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              Same settings
+            </button>
+          )}
+          {onTryFasterWpm && (
+            <button
+              type="button"
+              onClick={onTryFasterWpm}
+              disabled={saving}
+              className="min-h-[44px] px-4 py-2 rounded-lg text-sm font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              Faster +25 WPM
+            </button>
+          )}
         </div>
       </div>
 
@@ -268,37 +266,7 @@ export default function ResultsView({
         </p>
       )}
       <div className="flex flex-col items-center gap-3">
-        {primaryCta === "faster" && onTryFasterWpm && (
-          <button
-            type="button"
-            onClick={onTryFasterWpm}
-            disabled={saving}
-            className="min-h-[44px] px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
-          >
-            Try +25 WPM
-          </button>
-        )}
-        {primaryCta === "same" && onTrySameSettings && (
-          <button
-            type="button"
-            onClick={onTrySameSettings}
-            disabled={saving}
-            className="min-h-[44px] px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
-          >
-            Same settings
-          </button>
-        )}
-        {primaryCta === "another" && onRestart && (
-          <button
-            type="button"
-            onClick={onRestart}
-            disabled={saving}
-            className="min-h-[44px] px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
-          >
-            Try another
-          </button>
-        )}
-        {onRestart && primaryCta !== "another" && (
+        {onRestart && (
           <button
             type="button"
             onClick={onRestart}
