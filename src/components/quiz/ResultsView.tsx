@@ -19,6 +19,10 @@ type ResultsViewProps = {
   timeSpentSeconds?: number;
   questionBreakdown?: QuestionBreakdownItem[];
   onRestart?: () => void;
+  /** When set, shown as primary CTA when accuracy >= 80: "Try +25 WPM" */
+  onTryFasterWpm?: () => void;
+  /** When set, shown as primary CTA when accuracy < 80: "Same settings" */
+  onTrySameSettings?: () => void;
   saveError?: string | null;
   saving?: boolean;
   guidedChunkingEnabled?: boolean;
@@ -42,6 +46,8 @@ export default function ResultsView({
   timeSpentSeconds = 0,
   questionBreakdown = [],
   onRestart,
+  onTryFasterWpm,
+  onTrySameSettings,
   saveError = null,
   saving = false,
   guidedChunkingEnabled = false,
@@ -50,6 +56,12 @@ export default function ResultsView({
   onAcceptSuggestedChunkSize,
 }: ResultsViewProps) {
   const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
+  const primaryCta =
+    accuracy >= 80 && onTryFasterWpm
+      ? "faster"
+      : accuracy < 80 && onTrySameSettings
+        ? "same"
+        : "another";
   const [wpmRating, setWpmRating] = useState<WpmRating | null>(null);
   const [passageModalOpen, setPassageModalOpen] = useState(false);
 
@@ -255,17 +267,48 @@ export default function ResultsView({
           Saving…
         </p>
       )}
-      {onRestart && (
-        <button
-          type="button"
-          onClick={onRestart}
-          disabled={saving}
-          className="min-h-[44px] px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-70 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
-        >
-          Try another
-        </button>
-      )}
-
+      <div className="flex flex-col items-center gap-3">
+        {primaryCta === "faster" && onTryFasterWpm && (
+          <button
+            type="button"
+            onClick={onTryFasterWpm}
+            disabled={saving}
+            className="min-h-[44px] px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            Try +25 WPM
+          </button>
+        )}
+        {primaryCta === "same" && onTrySameSettings && (
+          <button
+            type="button"
+            onClick={onTrySameSettings}
+            disabled={saving}
+            className="min-h-[44px] px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            Same settings
+          </button>
+        )}
+        {primaryCta === "another" && onRestart && (
+          <button
+            type="button"
+            onClick={onRestart}
+            disabled={saving}
+            className="min-h-[44px] px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            Try another
+          </button>
+        )}
+        {onRestart && primaryCta !== "another" && (
+          <button
+            type="button"
+            onClick={onRestart}
+            disabled={saving}
+            className="min-h-[44px] px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors disabled:opacity-70"
+          >
+            Try another passage
+          </button>
+        )}
+      </div>
       <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm">
         <Link to="/" className="min-h-[44px] inline-flex items-center justify-center py-2 text-slate-500 hover:text-blue-600">
           Back to Home
@@ -274,7 +317,7 @@ export default function ResultsView({
           to="/?mode=speed_reading"
           className="min-h-[44px] inline-flex items-center justify-center py-2 text-slate-500 hover:text-blue-600"
         >
-          Try another drill
+          Change settings
         </Link>
       </div>
     </div>

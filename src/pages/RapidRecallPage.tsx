@@ -28,14 +28,15 @@ type LocationState = {
 export default function RapidRecallPage() {
   const location = useLocation();
   const state = location.state as LocationState | null;
-  const timeLimitSeconds = state?.timeLimitSeconds ?? 60;
+  const initialTimeLimit = state?.timeLimitSeconds ?? 60;
   const difficulty: TrainingDifficulty = state?.difficulty ?? "medium";
 
   const [phase, setPhase] = useState<Phase>("reading");
+  const [timeLimitSeconds, setTimeLimitSeconds] = useState(initialTimeLimit);
   const [passage, setPassage] = useState<Passage | null>(
     () => state?.passage ?? pickNewRandomPassage(null, difficulty)
   );
-  const [secondsLeft, setSecondsLeft] = useState(timeLimitSeconds);
+  const [secondsLeft, setSecondsLeft] = useState(initialTimeLimit);
   const [quizCorrect, setQuizCorrect] = useState(0);
   const [quizTotal, setQuizTotal] = useState(0);
   const [questionBreakdown, setQuestionBreakdown] = useState<QuestionBreakdownItem[]>([]);
@@ -243,11 +244,14 @@ export default function RapidRecallPage() {
                   ? Math.round((wordCount / timeLimitSeconds) * 60)
                   : 0;
                 const nextTimeSuggestion = Math.max(30, timeLimitSeconds - 10);
+                const canPushPace = nextTimeSuggestion < timeLimitSeconds;
                 return (
-                  <p className="text-slate-700 text-sm mt-3 pt-3 border-t border-slate-200">
-                    You had {timeLimitSeconds}s to read ~{wordCount} words ≈ {effectiveWpm} WPM.
-                    Next time try {nextTimeSuggestion}s to push your pace.
-                  </p>
+                  <>
+                    <p className="text-slate-700 text-sm mt-3 pt-3 border-t border-slate-200">
+                      You had {timeLimitSeconds}s to read ~{wordCount} words ≈ {effectiveWpm} WPM.
+                      {canPushPace && ` Next time try ${nextTimeSuggestion}s to push your pace.`}
+                    </p>
+                  </>
                 );
               })()}
             </div>
@@ -338,18 +342,45 @@ export default function RapidRecallPage() {
                 Saving…
               </p>
             )}
-            <button
-              type="button"
-              onClick={() => {
-                hasAutoSavedRef.current = false;
-                setPhase("reading");
-                setSecondsLeft(timeLimitSeconds);
-                setPassage((current) => pickNewRandomPassage(current?.id, difficulty));
-              }}
-              className="min-h-[44px] px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center justify-center gap-2"
-            >
-              Try another
-            </button>
+            {(() => {
+              const nextTimeSuggestion = Math.max(30, timeLimitSeconds - 10);
+              const canPushPace = nextTimeSuggestion < timeLimitSeconds;
+              return (
+                <div className="flex flex-col items-center gap-3">
+                  {canPushPace && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        hasAutoSavedRef.current = false;
+                        setTimeLimitSeconds(nextTimeSuggestion);
+                        setSecondsLeft(nextTimeSuggestion);
+                        setPhase("reading");
+                        setPassage((current) => pickNewRandomPassage(current?.id, difficulty));
+                      }}
+                      className="min-h-[44px] px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      Try again with {nextTimeSuggestion}s
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      hasAutoSavedRef.current = false;
+                      setSecondsLeft(timeLimitSeconds);
+                      setPhase("reading");
+                      setPassage((current) => pickNewRandomPassage(current?.id, difficulty));
+                    }}
+                    className={`min-h-[44px] px-6 py-3 font-medium rounded-lg transition-colors ${
+                      canPushPace
+                        ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                        : "bg-blue-600 text-white hover:bg-blue-700"
+                    }`}
+                  >
+                    Try another passage
+                  </button>
+                </div>
+              );
+            })()}
             <div className="mt-4">
               <Link to="/" className="min-h-[44px] inline-flex items-center justify-center py-2 text-sm text-slate-500 hover:text-blue-600">
                 Back to Home

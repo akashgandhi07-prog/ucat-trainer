@@ -292,7 +292,7 @@ export default function KeywordScanningPage() {
               }}
               className="min-h-[44px] px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700"
             >
-              Try again
+              Try another passage
             </button>
             <div className="mt-4">
               <Link to="/" className="min-h-[44px] inline-flex items-center justify-center py-2 text-sm text-slate-500 hover:text-blue-600">

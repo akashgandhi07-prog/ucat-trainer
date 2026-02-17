@@ -45,7 +45,7 @@ export default function ReaderPage() {
   const [passage, setPassage] = useState<Passage>(
     () => configureState?.passage ?? pickNewRandomPassage(null, configureState?.difficulty)
   );
-  const [wpm, setWpm] = useState(300);
+  const [wpm, setWpm] = useState<number>(() => configureState?.wpm ?? 300);
   const [quizCorrect, setQuizCorrect] = useState(0);
   const [quizTotal, setQuizTotal] = useState(0);
   const [questionBreakdown, setQuestionBreakdown] = useState<QuestionBreakdownItem[]>([]);
@@ -108,8 +108,9 @@ export default function ReaderPage() {
   }
 
   const passageText = passage?.text ?? "";
-  const initialWpm = configureState.wpm ?? undefined;
   const questionCount = Math.min(3, configureState.questionCount ?? 3);
+  const WPM_MIN = 200;
+  const WPM_MAX = 900;
   const difficulty: TrainingDifficulty = configureState.difficulty ?? "medium";
 
   const handleReaderFinish = useCallback((finishedWpm: number) => {
@@ -192,6 +193,18 @@ export default function ReaderPage() {
     readingStartTimeRef.current = null;
   }, [difficulty]);
 
+  const handleRestartWithWpm = useCallback(
+    (newWpm: number) => {
+      setWpm(Math.min(WPM_MAX, Math.max(WPM_MIN, newWpm)));
+      hasAutoSavedRef.current = false;
+      setPhase("reading");
+      setReadingKey((k) => k + 1);
+      setPassage((current) => pickNewRandomPassage(current?.id, difficulty));
+      readingStartTimeRef.current = null;
+    },
+    [difficulty]
+  );
+
   const handleApplySuggestedChunkSize = useCallback(() => {
     if (suggestedChunkSize == null) return;
     setGuidedChunkSize(suggestedChunkSize);
@@ -234,7 +247,7 @@ export default function ReaderPage() {
           <ReaderEngine
             key={`reading-${readingKey}`}
             text={passageText}
-            initialWpm={initialWpm}
+            initialWpm={wpm}
             onFinish={handleReaderFinish}
             passageTitle={passage?.title}
             wordCount={passageText.trim().split(/\s+/).filter(Boolean).length}
@@ -263,6 +276,8 @@ export default function ReaderPage() {
             }
             questionBreakdown={questionBreakdown}
             onRestart={handleRestart}
+            onTryFasterWpm={() => handleRestartWithWpm(wpm + 25)}
+            onTrySameSettings={() => handleRestart()}
             saveError={saveError}
             saving={saveInProgress}
             guidedChunkingEnabled={guidedChunkingEnabled}

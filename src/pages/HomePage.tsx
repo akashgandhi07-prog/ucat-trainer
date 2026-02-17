@@ -6,14 +6,13 @@ import Footer from "../components/layout/Footer";
 import { PASSAGES } from "../data/passages";
 import type { Passage } from "../data/passages";
 import { getTipForMode } from "../data/tips";
-import { SKILL_TEACHING } from "../data/teaching";
 import type { TrainingType, TrainingDifficulty } from "../types/training";
 import { TRAINING_TYPE_LABELS, TRAINING_DIFFICULTY_LABELS } from "../types/training";
 import { pickNewRandomPassage } from "../lib/passages";
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../lib/supabase";
 import { supabaseLog } from "../lib/logger";
-import { getWpmComparisonCopy } from "../lib/wpmBenchmark";
+import { getWpmComparisonCopy, getWpmTier, getWpmTierLabel } from "../lib/wpmBenchmark";
 import { Zap, Brain, Search, Eye } from "lucide-react";
 import {
   GUIDED_CHUNK_DEFAULT,
@@ -23,6 +22,7 @@ import {
   loadGuidedChunkingPrefs,
   saveGuidedChunkingPrefs,
 } from "../lib/guidedChunkingPreferences";
+import { getStreakAndLastPracticed } from "../lib/streakUtils";
 
 const WPM_MIN = 200;
 const WPM_MAX = 900;
@@ -37,6 +37,92 @@ const WPM_RATING_DELTAS: Record<string, number> = {
   slightly_fast: -15,
   too_fast: -25,
 };
+
+const STRATEGIC_OBJECTIVES: Record<TrainingType, string> = {
+  speed_reading: "Objective: Expand your perifoveal vision. Focus on the centre of the text to process 5 words at once.",
+  rapid_recall: "Objective: Build a conceptual map. Identify the author's stance before the timer hits zero.",
+  keyword_scanning: "Objective: Train selective attention. Quickly isolate target keywords whilst filtering out noise.",
+};
+
+function getWpmStatusLabel(wpm: number): string {
+  if (wpm <= 300) return "Reading for Detail (Low Speed)";
+  if (wpm <= 450) return "UCAT Competitive Range (Optimal)";
+  return "Extreme Scanning (Skimming Only)";
+}
+
+/** Estimated score impact copy: difficulty-aware (speed_reading only has scale points). */
+function getEstimatedScoreImpactCopy(
+  mode: TrainingType,
+  difficulty: TrainingDifficulty,
+  wpm: number,
+  _lastSession: { correct: number; total: number; wpm: number | null } | null,
+  _sessionCount: number
+): string {
+  if (mode !== "speed_reading") {
+    return "Complete sessions to estimate";
+  }
+  const wpmTier = wpm > 400 ? "high" : wpm >= 301 ? "mid" : "low";
+  if (difficulty === "easy") {
+    if (wpmTier === "high") return "+10 Scale points (Easier · building speed)";
+    if (wpmTier === "mid") return "+8 Scale points (Easier · practice)";
+    return "+5 Scale points (Easier · building)";
+  }
+  if (difficulty === "hard") {
+    if (wpmTier === "high") return "+20 Scale points (Challenging)";
+    if (wpmTier === "mid") return "+15 Scale points (Challenging)";
+    return "+8 Scale points (Challenging · building)";
+  }
+  if (wpmTier === "high") return "+20 Scale points (Standard)";
+  if (wpmTier === "mid") return "+15 Scale points (Standard)";
+  return "+5 Scale points (Standard · building)";
+}
+
+/** Calibration label: difficulty-aware; references history when we have it. */
+function getCalibrationLabel(
+  mode: TrainingType,
+  difficulty: TrainingDifficulty,
+  wpm: number,
+  sessionCount: number
+): string {
+  if (mode !== "speed_reading") {
+    if (sessionCount > 0) return `${sessionCount} session${sessionCount !== 1 ? "s" : ""} at this difficulty`;
+    return "—";
+  }
+  if (wpm >= 301 && wpm <= 450) {
+    const suffix = sessionCount > 0 ? ` · ${sessionCount} run${sessionCount !== 1 ? "s" : ""} at ${TRAINING_DIFFICULTY_LABELS[difficulty]}` : "";
+    return `Exam Ready${suffix}`;
+  }
+  if (wpm > 450) {
+    const suffix = sessionCount > 0 ? ` · ${sessionCount} at ${TRAINING_DIFFICULTY_LABELS[difficulty]}` : "";
+    return `Peak Speed${suffix}`;
+  }
+  const pct = Math.min(99, Math.round(((wpm - 200) / 101) * 100));
+  return `${pct}%`;
+}
+
+const WPM_GOAL = 400;
+
+/** Progress narrative for Live Session Stats: "X% of the way to 400 WPM" or milestone for other modes. */
+function getProgressNarrativeCopy(
+  mode: TrainingType,
+  wpm: number,
+  sessionCountAtDifficulty: number
+): string | null {
+  if (mode === "speed_reading") {
+    const tier = getWpmTier(wpm);
+    const tierLabel = getWpmTierLabel(tier);
+    if (wpm >= WPM_GOAL) {
+      return `${tierLabel}. You're at ${WPM_GOAL}+ WPM.`;
+    }
+    const pct = Math.min(99, Math.max(0, Math.round(((wpm - 200) / (WPM_GOAL - 200)) * 100)));
+    return `${tierLabel}. ${pct}% of the way to ${WPM_GOAL} WPM.`;
+  }
+  if (sessionCountAtDifficulty < 3) {
+    const remaining = 3 - sessionCountAtDifficulty;
+    return `${remaining} more session${remaining !== 1 ? "s" : ""} at this difficulty to build confidence.`;
+  }
+  return null;
+}
 
 const SKILLS: { type: TrainingType; icon: ReactNode; summary: string }[] = [
   {
@@ -99,6 +185,19 @@ export default function HomePage() {
   const [averageWpm, setAverageWpm] = useState<number | null>(null);
   const [guidedChunkingEnabled, setGuidedChunkingEnabled] = useState(false);
   const [guidedChunkSize, setGuidedChunkSize] = useState(GUIDED_CHUNK_DEFAULT);
+  /** Session history for current mode + difficulty (for Live Session Stats). */
+  const [lastSessionAtDifficulty, setLastSessionAtDifficulty] = useState<{
+    wpm: number | null;
+    correct: number;
+    total: number;
+    time_seconds: number | null;
+  } | null>(null);
+  const [sessionCountAtDifficulty, setSessionCountAtDifficulty] = useState(0);
+  const [avgAccuracyAtDifficulty, setAvgAccuracyAtDifficulty] = useState<number | null>(null);
+  /** Streak and last practiced (for logged-in users). */
+  const [streak, setStreak] = useState(0);
+  const [lastPracticedLabel, setLastPracticedLabel] = useState<string | null>(null);
+  const [streakFetched, setStreakFetched] = useState(false);
 
   const avgWordsSpeedReading = useMemo(
     () => Math.round(PASSAGES.reduce((s, p) => s + wordCount(p), 0) / PASSAGES.length),
@@ -165,6 +264,105 @@ export default function HomePage() {
     };
     fetchSpeedReadingStats();
   }, [mode, user]);
+
+  useEffect(() => {
+    if (!user) {
+      setStreak(0);
+      setLastPracticedLabel(null);
+      setStreakFetched(false);
+      return;
+    }
+    let cancelled = false;
+    const fetchStreak = async () => {
+      const { data, error } = await supabase
+        .from("sessions")
+        .select("created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true });
+      if (cancelled) return;
+      if (error) {
+        supabaseLog.warn("Streak fetch failed", { message: error.message, code: error.code });
+        setStreak(0);
+        setLastPracticedLabel(null);
+        setStreakFetched(true);
+        return;
+      }
+      const rows = (data ?? []) as { created_at: string }[];
+      const { streak: s, lastPracticedLabel: l } = getStreakAndLastPracticed(rows);
+      setStreak(s);
+      setLastPracticedLabel(l);
+      setStreakFetched(true);
+    };
+    fetchStreak();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) {
+      setLastSessionAtDifficulty(null);
+      setSessionCountAtDifficulty(0);
+      setAvgAccuracyAtDifficulty(null);
+      return;
+    }
+    const fetchSessionStatsAtDifficulty = async () => {
+      const { data: lastRow, error: lastError } = await supabase
+        .from("sessions")
+        .select("wpm, correct, total, time_seconds")
+        .eq("user_id", user.id)
+        .eq("training_type", mode)
+        .eq("difficulty", difficulty)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (lastError) {
+        supabaseLog.warn("Last session at difficulty fetch failed", {
+          message: lastError.message,
+          code: lastError.code,
+        });
+        setLastSessionAtDifficulty(null);
+      } else if (lastRow) {
+        setLastSessionAtDifficulty({
+          wpm: lastRow.wpm ?? null,
+          correct: lastRow.correct ?? 0,
+          total: lastRow.total ?? 0,
+          time_seconds: lastRow.time_seconds ?? null,
+        });
+      } else {
+        setLastSessionAtDifficulty(null);
+      }
+
+      const { data: rows, error: listError } = await supabase
+        .from("sessions")
+        .select("correct, total")
+        .eq("user_id", user.id)
+        .eq("training_type", mode)
+        .eq("difficulty", difficulty);
+      if (listError) {
+        setSessionCountAtDifficulty(0);
+        setAvgAccuracyAtDifficulty(null);
+        return;
+      }
+      if (rows?.length) {
+        setSessionCountAtDifficulty(rows.length);
+        const totalCorrect = rows.reduce((s, r) => s + (r.correct ?? 0), 0);
+        const totalQuestions = rows.reduce((s, r) => s + (r.total ?? 0), 0);
+        setAvgAccuracyAtDifficulty(
+          totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : null
+        );
+      } else {
+        setSessionCountAtDifficulty(0);
+        setAvgAccuracyAtDifficulty(null);
+      }
+    };
+    fetchSessionStatsAtDifficulty();
+  }, [user, mode, difficulty]);
+
+  const progressNarrative = useMemo(
+    () => getProgressNarrativeCopy(mode, wpm, sessionCountAtDifficulty),
+    [mode, wpm, sessionCountAtDifficulty]
+  );
 
   const setMode = (m: TrainingType) => {
     setSearchParams({ mode: m });
@@ -234,6 +432,21 @@ export default function HomePage() {
           {displayName && (
             <p className="text-sm font-medium text-slate-600 text-center mb-3">
               Welcome back, {displayName}.
+            </p>
+          )}
+          {user && streakFetched && (streak > 0 || lastPracticedLabel != null) && (
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 mb-4 text-sm text-slate-600">
+              {streak > 0 && (
+                <span className="font-medium text-green-700">{streak}-day streak</span>
+              )}
+              {lastPracticedLabel != null && (
+                <span>Last practiced {lastPracticedLabel.toLowerCase()}</span>
+              )}
+            </div>
+          )}
+          {user && streakFetched && streak === 0 && lastPracticedLabel == null && (
+            <p className="text-sm text-slate-500 text-center mb-4">
+              Start a session to begin your streak.
             </p>
           )}
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-slate-900 text-center">
@@ -307,18 +520,17 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
+            <div className="mb-6 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
               <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 mb-1.5">
-                How it works
+                Strategic Objective
               </p>
-              <ol className="list-decimal list-inside text-sm text-slate-700 space-y-1">
-                {SKILL_TEACHING[mode].howToUse.map((step, i) => (
-                  <li key={i}>{step}</li>
-                ))}
-              </ol>
+              <p className="text-sm text-slate-700 leading-relaxed">
+                {STRATEGIC_OBJECTIVES[mode]}
+              </p>
             </div>
 
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+              <div className="lg:col-span-3 space-y-8">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
                   Difficulty
@@ -401,6 +613,9 @@ export default function HomePage() {
                         ≈ {estimatedSeconds}s / passage
                       </span>
                     </div>
+                    <p className="mt-2 text-xs font-medium text-slate-600">
+                      {getWpmStatusLabel(wpm)}
+                    </p>
                     <div className="mt-4">
                       <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
                         <div className="flex items-start gap-3">
@@ -513,8 +728,8 @@ export default function HomePage() {
                 </div>
               )}
 
-              <div className="rounded-lg border border-slate-200 bg-amber-50/80 px-3 py-2 mb-1.5">
-                <p className="text-xs font-medium text-amber-800 uppercase tracking-wide mb-0.5">
+              <div className="rounded-lg border border-slate-200 border-l-4 border-l-indigo-500 px-4 py-3 mb-1.5" style={{ backgroundColor: "#f8fafc" }}>
+                <p className="text-xs font-medium text-slate-700 uppercase tracking-wide mb-0.5">
                   Tip
                 </p>
                 <p className="text-sm text-slate-700">
@@ -536,6 +751,81 @@ export default function HomePage() {
                 >
                   Start training
                 </button>
+              </div>
+              </div>
+
+              {/* Live Session Stats */}
+              <div className="lg:col-span-2">
+                <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4 space-y-4 sticky top-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-800 uppercase tracking-[0.12em]">
+                      Live Session Stats
+                    </h3>
+                    <p className="mt-0.5 text-[11px] text-slate-500">
+                      {TRAINING_DIFFICULTY_LABELS[difficulty]} difficulty
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-slate-500 mb-1">Estimated Score Impact</p>
+                    <p className="text-sm font-semibold text-slate-900">
+                      {getEstimatedScoreImpactCopy(
+                        mode,
+                        difficulty,
+                        wpm,
+                        lastSessionAtDifficulty,
+                        sessionCountAtDifficulty
+                      )}
+                    </p>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-xs font-medium text-slate-600 mb-1.5">
+                      <span>Calibration Status</span>
+                      <span>
+                        {getCalibrationLabel(mode, difficulty, wpm, sessionCountAtDifficulty)}
+                      </span>
+                    </div>
+                    <div className="h-2 rounded-full bg-slate-200 overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600 transition-all duration-300"
+                        style={{
+                          width:
+                            mode === "speed_reading"
+                              ? `${Math.min(100, Math.max(0, wpm >= 301 ? 100 : ((wpm - 200) / 101) * 100))}%`
+                              : sessionCountAtDifficulty > 0 && avgAccuracyAtDifficulty != null
+                                ? `${avgAccuracyAtDifficulty}%`
+                                : "0%",
+                        }}
+                      />
+                    </div>
+                  </div>
+                  {progressNarrative != null && (
+                    <p className="text-sm text-slate-700 leading-snug">{progressNarrative}</p>
+                  )}
+                  {(lastSessionAtDifficulty != null || sessionCountAtDifficulty > 0) && (
+                    <div className="rounded-lg border border-slate-200 bg-white/80 px-3 py-2.5">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 mb-1.5">
+                        Your history at this difficulty
+                      </p>
+                      {lastSessionAtDifficulty != null && lastSessionAtDifficulty.total > 0 && (
+                        <p className="text-sm text-slate-700">
+                          Last run: {lastSessionAtDifficulty.correct}/{lastSessionAtDifficulty.total} correct
+                          {mode === "speed_reading" && lastSessionAtDifficulty.wpm != null && (
+                            <> · {lastSessionAtDifficulty.wpm} WPM</>
+                          )}
+                          {mode === "keyword_scanning" &&
+                            lastSessionAtDifficulty.time_seconds != null && (
+                              <> · {lastSessionAtDifficulty.time_seconds}s</>
+                            )}
+                        </p>
+                      )}
+                      {sessionCountAtDifficulty > 0 && avgAccuracyAtDifficulty != null && (
+                        <p className="text-xs text-slate-600 mt-0.5">
+                          {sessionCountAtDifficulty} session{sessionCountAtDifficulty !== 1 ? "s" : ""} · {avgAccuracyAtDifficulty}% avg accuracy
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
