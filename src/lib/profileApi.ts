@@ -35,7 +35,8 @@ export async function getProfile(userId: string): Promise<Profile | null> {
 }
 
 /**
- * Upsert profile (full_name, stream) for the given user. No-op if profiles table doesn't exist or RLS fails.
+ * Upsert profile (full_name, stream) for the given user. Creates a minimal row if neither name nor stream
+ * are provided (e.g. login-only flow). No-op if profiles table doesn't exist or RLS fails.
  */
 export async function upsertProfile(
   userId: string,
@@ -45,10 +46,6 @@ export async function upsertProfile(
   const name = fullName?.trim() || null;
   const validStream: Stream | null =
     stream && ["Medicine", "Dentistry", "Undecided"].includes(stream) ? stream : null;
-  if (!name && validStream == null) {
-    authLog.info("upsertProfile skipped (no name or stream)", { userId });
-    return { ok: true };
-  }
   try {
     const payload: Record<string, unknown> = {
       id: userId,

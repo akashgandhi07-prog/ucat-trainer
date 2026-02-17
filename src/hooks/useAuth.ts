@@ -45,7 +45,13 @@ export function useAuth(): AuthState {
       });
       setUser(u);
       if (u) {
-        fetchProfile(u.id).catch((e) => authLog.error("Initial profile fetch failed", e));
+        let p = await getProfile(u.id);
+        if (!p) {
+          authLog.info("No profile row for user, creating minimal profile", { userId: u.id });
+          await upsertProfile(u.id, null, null);
+          p = await getProfile(u.id);
+        }
+        setProfile(p);
       } else {
         setProfile(null);
       }
@@ -57,7 +63,7 @@ export function useAuth(): AuthState {
     } finally {
       setLoading(false);
     }
-  }, [fetchProfile]);
+  }, []);
 
   useEffect(() => {
     loadSession();
@@ -107,12 +113,9 @@ export function useAuth(): AuthState {
           meta?.stream && ["Medicine", "Dentistry", "Undecided"].includes(meta.stream as string)
             ? (meta.stream as "Medicine" | "Dentistry" | "Undecided")
             : undefined;
-        if (fullName || stream) {
-          const { ok } = await upsertProfile(session.user.id, fullName, stream);
-          if (ok) await fetchProfile(session.user.id);
-        } else {
-          await fetchProfile(session.user.id);
-        }
+        // Always upsert so profile row exists (creates minimal row on login-only; updates name/stream if from register).
+        await upsertProfile(session.user.id, fullName, stream);
+        await fetchProfile(session.user.id);
       } else if (u) {
         await fetchProfile(u.id);
       } else {
@@ -137,7 +140,13 @@ export function useAuth(): AuthState {
     await loadSession();
   }, [loadSession]);
 
+  const signOut = useCallback(async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setProfile(null);
+  }, []);
+
   const isAdmin = profile?.role === "admin";
 
-  return { user, profile, loading, isAdmin, sessionLoadFailed, refetchProfile, retryGetSession };
+  return { user, profile, loading, isAdmin, sessionLoadFailed, refetchProfile, retryGetSession, signOut };
 }

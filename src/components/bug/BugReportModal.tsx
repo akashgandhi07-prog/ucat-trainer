@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../hooks/useAuth";
-import { useAuthModal } from "../../contexts/AuthModalContext";
 import { supabaseLog } from "../../lib/logger";
 
 export type FeedbackType = "bug" | "suggestion";
@@ -13,7 +12,6 @@ type BugReportModalProps = {
 
 export default function BugReportModal({ isOpen, onClose }: BugReportModalProps) {
   const { user } = useAuth();
-  const { openAuthModal } = useAuthModal();
   const [feedbackType, setFeedbackType] = useState<FeedbackType>("bug");
   const [description, setDescription] = useState("");
   const [pageUrl, setPageUrl] = useState("");
@@ -28,18 +26,13 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) {
-      openAuthModal();
-      onClose();
-      return;
-    }
     const trimmed = description.trim();
     if (!trimmed) return;
 
     setStatus("loading");
     setMessage("");
     const { error } = await supabase.from("bug_reports").insert({
-      user_id: user.id,
+      user_id: user?.id ?? null,
       type: feedbackType,
       description: trimmed,
       page_url: pageUrl.trim() || null,
@@ -99,31 +92,7 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
           </button>
         </div>
 
-        {!user ? (
-          <div className="space-y-4">
-            <p className="text-slate-600 text-sm">Sign in to send feedback.</p>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={handleClose}
-                className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  openAuthModal();
-                  onClose();
-                }}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                Sign in
-              </button>
-            </div>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <p className="block text-sm font-medium text-slate-700 mb-2">What would you like to send?</p>
               <div className="flex gap-3">
@@ -204,7 +173,6 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
               </button>
             </div>
           </form>
-        )}
       </div>
     </div>
   );

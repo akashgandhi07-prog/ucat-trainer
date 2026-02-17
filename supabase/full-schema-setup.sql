@@ -4,6 +4,9 @@
 -- Paste this entire file into Supabase Dashboard → SQL Editor → New query, then Run.
 -- Safe to run multiple times: creates missing objects, adds missing columns,
 -- and recreates policies/functions. Does not drop existing data.
+--
+-- Auth (magic link): ensure Authentication → URL Configuration has your app
+-- URL and http://localhost:5173 in Redirect URLs.
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
@@ -37,42 +40,12 @@ drop policy if exists "Users can update own profile" on public.profiles;
 create policy "Users can update own profile"
   on public.profiles for update using (auth.uid() = id);
 
--- Trigger: create/update profile on auth signup
-create or replace function public.handle_new_user()
-returns trigger
-language plpgsql
-security definer set search_path = public
-as $$
-declare
-  meta_stream text;
-begin
-  meta_stream := new.raw_user_meta_data->>'stream';
-  if meta_stream is null or meta_stream not in ('Medicine', 'Dentistry', 'Undecided') then
-    meta_stream := 'Undecided';
-  end if;
-
-  insert into public.profiles (id, full_name, stream, updated_at)
-  values (
-    new.id,
-    coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name'),
-    meta_stream,
-    now()
-  )
-  on conflict (id) do update set
-    full_name = coalesce(excluded.full_name, profiles.full_name),
-    stream = coalesce(excluded.stream, profiles.stream),
-    updated_at = now();
-  return new;
-end;
-$$;
-
+-- Profile creation: done in the app on first sign-in (useAuth + upsertProfile), not via trigger.
+-- Dropping the trigger avoids "Database error saving new user" when RLS blocks the trigger insert (no session yet).
 drop trigger if exists on_auth_user_created on auth.users;
-create trigger on_auth_user_created
-  after insert or update on auth.users
-  for each row
-  execute function public.handle_new_user();
+drop function if exists public.handle_new_user();
 
-comment on table public.profiles is 'User profile (display name, role). Synced from auth.users on sign-in.';
+comment on table public.profiles is 'User profile (display name, stream, role). Created/updated on first sign-in from the app.';
 
 -- -----------------------------------------------------------------------------
 -- 2) SESSIONS
@@ -134,6 +107,11 @@ drop policy if exists "Users can insert bug reports" on public.bug_reports;
 create policy "Users can insert bug reports"
   on public.bug_reports for insert to authenticated
   with check (auth.uid() = user_id);
+
+drop policy if exists "Anyone can insert anonymous feedback" on public.bug_reports;
+create policy "Anyone can insert anonymous feedback"
+  on public.bug_reports for insert to anon
+  with check (user_id is null);
 
 drop policy if exists "Admins can view bug reports" on public.bug_reports;
 create policy "Admins can view bug reports"

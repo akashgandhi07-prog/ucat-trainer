@@ -27,6 +27,8 @@ export interface AuthState {
   refetchProfile: () => Promise<void>;
   /** Retry loading session (e.g. after network failure). */
   retryGetSession: () => Promise<void>;
+  /** Sign out the current user. */
+  signOut: () => Promise<void>;
 }
 
 /** Session row as returned from Supabase (sessions table). */

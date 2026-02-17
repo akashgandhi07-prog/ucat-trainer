@@ -4,13 +4,14 @@ import { useAuthModal } from "../../contexts/AuthModalContext";
 import { useBugReportModal } from "../../contexts/BugReportContext";
 
 export default function Header() {
-  const { user, profile, isAdmin, loading, sessionLoadFailed, retryGetSession } = useAuth();
+  const { user, profile, isAdmin, loading, sessionLoadFailed, retryGetSession, signOut } = useAuth();
   const { openAuthModal } = useAuthModal();
   const { openBugReport } = useBugReportModal();
   const displayName =
     profile?.full_name?.trim() ||
     (user?.user_metadata?.full_name as string)?.trim() ||
     (user?.user_metadata?.name as string)?.trim() ||
+    user?.email?.trim() ||
     null;
 
   const showSessionRecovery = !loading && !user && sessionLoadFailed;
@@ -65,16 +66,24 @@ export default function Header() {
             </Link>
           )}
           {user ? (
-            displayName ? (
-              <span className="text-sm text-slate-600 min-h-[44px] inline-flex items-center" aria-label={`Signed in as ${displayName}`}>
-                Hi, {displayName}
+            <div className="flex items-center gap-2 min-h-[44px]">
+              <span className="text-sm text-slate-600 inline-flex items-center" aria-label={displayName ? `Signed in as ${displayName}` : "Signed in"}>
+                Hi, {displayName ?? "there"}
               </span>
-            ) : null
+              <button
+                type="button"
+                onClick={signOut}
+                className="text-sm font-medium text-slate-600 hover:text-slate-900 px-2 py-1 rounded hover:bg-slate-100"
+                aria-label="Sign out"
+              >
+                Sign out
+              </button>
+            </div>
           ) : (
             <>
               <button
                 type="button"
-                onClick={openAuthModal}
+                onClick={() => openAuthModal("register")}
                 className="px-4 py-2.5 min-h-[44px] text-sm font-medium text-slate-700 hover:text-blue-600 hover:bg-slate-100 rounded-lg transition-colors shrink-0 inline-flex items-center justify-center"
                 aria-label="Register"
               >
@@ -82,7 +91,7 @@ export default function Header() {
               </button>
               <button
                 type="button"
-                onClick={openAuthModal}
+                onClick={() => openAuthModal("login")}
                 className="px-4 py-2.5 min-h-[44px] text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shrink-0 inline-flex items-center justify-center"
                 aria-label="Login"
               >

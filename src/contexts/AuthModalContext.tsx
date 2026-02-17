@@ -1,8 +1,10 @@
 import { createContext, useContext, useState, useCallback } from "react";
 import AuthModal from "../components/auth/AuthModal";
 
+export type AuthModalMode = "login" | "register";
+
 type AuthModalContextValue = {
-  openAuthModal: () => void;
+  openAuthModal: (mode?: AuthModalMode) => void;
   closeAuthModal: () => void;
 };
 
@@ -10,13 +12,17 @@ const AuthModalContext = createContext<AuthModalContextValue | null>(null);
 
 export function AuthModalProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
-  const openAuthModal = useCallback(() => setIsOpen(true), []);
+  const [initialMode, setInitialMode] = useState<AuthModalMode>("login");
+  const openAuthModal = useCallback((mode?: AuthModalMode) => {
+    setInitialMode(mode ?? "login");
+    setIsOpen(true);
+  }, []);
   const closeAuthModal = useCallback(() => setIsOpen(false), []);
 
   return (
     <AuthModalContext.Provider value={{ openAuthModal, closeAuthModal }}>
       {children}
-      <AuthModal isOpen={isOpen} onClose={closeAuthModal} />
+      <AuthModal isOpen={isOpen} onClose={closeAuthModal} initialMode={initialMode} />
     </AuthModalContext.Provider>
   );
 }
