@@ -61,7 +61,7 @@ function buildQuestions(passageText: string, count: number): Question[] {
   const fallback = trimmed.split(/[.!?]+/).map((s) => s.trim()).filter(Boolean);
   const pool = candidates.length > 0 ? candidates : fallback;
   if (pool.length === 0) return [];
-  const num = Math.max(1, Math.min(10, count));
+  const num = Math.max(1, Math.min(3, count));
   const shuffled = shuffle(pool);
   const questions: Question[] = [];
   for (let i = 0; i < num; i++) {

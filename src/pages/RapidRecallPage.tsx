@@ -3,6 +3,7 @@ import { useLocation, Link, Navigate } from "react-router-dom";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import DistortionQuiz from "../components/quiz/DistortionQuiz";
+import ReReadPassageModal from "../components/quiz/ReReadPassageModal";
 import { useAuth } from "../hooks/useAuth";
 import { useAuthModal } from "../contexts/AuthModalContext";
 import type { Passage } from "../data/passages";
@@ -32,6 +33,8 @@ export default function RapidRecallPage() {
   const [quizTotal, setQuizTotal] = useState(0);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [passageModalOpen, setPassageModalOpen] = useState(false);
+  const hasAutoSavedRef = useRef(false);
   const mountedRef = useRef(true);
   const { user } = useAuth();
   const { openAuthModal } = useAuthModal();
@@ -69,52 +72,72 @@ export default function RapidRecallPage() {
     setPhase("results");
   }, []);
 
-  const handleSaveProgress = useCallback(async () => {
-    if (!user) {
+  const handleSaveProgress = useCallback(
+    async (opts?: { skipRestart?: boolean }) => {
+      if (!user) {
+        appendGuestSession({
+          training_type: "rapid_recall",
+          wpm: null,
+          correct: quizCorrect,
+          total: quizTotal,
+        });
+        openAuthModal();
+        return;
+      }
+      setSaveError(null);
+      setSaving(true);
+      const payload: SessionInsertPayload = {
+        user_id: user.id,
+        training_type: "rapid_recall",
+        wpm: null,
+        correct: quizCorrect,
+        total: quizTotal,
+      };
+      try {
+        await withRetry(async () => {
+          const { error } = await supabase.from("sessions").insert(payload);
+          if (error) throw error;
+        });
+        supabaseLog.info("Rapid recall session saved", {
+          userId: user.id,
+          correct: quizCorrect,
+          total: quizTotal,
+        });
+        if (!mountedRef.current) return;
+        setSaveError(null);
+        if (!opts?.skipRestart) {
+          setPhase("reading");
+          setSecondsLeft(timeLimitSeconds);
+        }
+      } catch (err: unknown) {
+        const message = err && typeof err === "object" && "message" in err ? String((err as { message: string }).message) : "Unknown error";
+        supabaseLog.error("Failed to save rapid_recall session", {
+          message,
+          userId: user.id,
+        });
+        if (!mountedRef.current) return;
+        setSaveError("Failed to save. Please try again.");
+      } finally {
+        if (mountedRef.current) setSaving(false);
+      }
+    },
+    [user, quizCorrect, quizTotal, timeLimitSeconds, openAuthModal]
+  );
+
+  useEffect(() => {
+    if (phase !== "results" || hasAutoSavedRef.current) return;
+    hasAutoSavedRef.current = true;
+    if (user) {
+      handleSaveProgress({ skipRestart: true });
+    } else {
       appendGuestSession({
         training_type: "rapid_recall",
         wpm: null,
         correct: quizCorrect,
         total: quizTotal,
       });
-      openAuthModal();
-      return;
     }
-    setSaveError(null);
-    setSaving(true);
-    const payload: SessionInsertPayload = {
-      user_id: user.id,
-      training_type: "rapid_recall",
-      wpm: null,
-      correct: quizCorrect,
-      total: quizTotal,
-    };
-    try {
-      await withRetry(async () => {
-        const { error } = await supabase.from("sessions").insert(payload);
-        if (error) throw error;
-      });
-      supabaseLog.info("Rapid recall session saved", {
-        userId: user.id,
-        correct: quizCorrect,
-        total: quizTotal,
-      });
-      if (!mountedRef.current) return;
-      setSaveError(null);
-      setPhase("reading");
-      setSecondsLeft(timeLimitSeconds);
-    } catch (err: unknown) {
-      const message = err && typeof err === "object" && "message" in err ? String((err as { message: string }).message) : "Unknown error";
-      supabaseLog.error("Failed to save rapid_recall session", {
-        message,
-        userId: user.id,
-      });
-      if (!mountedRef.current) return;
-      setSaveError("Failed to save. Please try again.");
-    } finally {
-      if (mountedRef.current) setSaving(false);
-    }
-  }, [user, quizCorrect, quizTotal, timeLimitSeconds, openAuthModal]);
+  }, [phase, handleSaveProgress, user, quizCorrect, quizTotal]);
 
   if (!passage) {
     return <Navigate to="/?mode=rapid_recall" replace />;
@@ -174,6 +197,18 @@ export default function RapidRecallPage() {
               <p className="text-slate-600 text-sm">
                 Time limit: {timeLimitSeconds}s
               </p>
+              <button
+                type="button"
+                onClick={() => setPassageModalOpen(true)}
+                className="min-h-[44px] px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg transition-colors"
+              >
+                View passage
+              </button>
+              <ReReadPassageModal
+                isOpen={passageModalOpen}
+                onClose={() => setPassageModalOpen(false)}
+                passageText={passageText}
+              />
               {(() => {
                 const wordCount = passageText.trim().split(/\s+/).filter(Boolean).length;
                 const effectiveWpm = timeLimitSeconds > 0
@@ -193,21 +228,22 @@ export default function RapidRecallPage() {
                 {saveError}
               </p>
             )}
+            {saving && (
+              <p className="mb-4 text-sm text-slate-600 inline-flex items-center gap-2" aria-live="polite">
+                <span className="inline-block w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" aria-hidden />
+                Saving…
+              </p>
+            )}
             <button
               type="button"
-              onClick={handleSaveProgress}
-              disabled={saving}
-              aria-busy={saving}
-              className="min-h-[44px] px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-70 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
+              onClick={() => {
+                hasAutoSavedRef.current = false;
+                setPhase("reading");
+                setSecondsLeft(timeLimitSeconds);
+              }}
+              className="min-h-[44px] px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center justify-center gap-2"
             >
-              {saving ? (
-                <>
-                  <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" aria-hidden />
-                  Saving…
-                </>
-              ) : (
-                "Save progress"
-              )}
+              Try another
             </button>
             <div className="mt-4">
               <Link to="/" className="min-h-[44px] inline-flex items-center justify-center py-2 text-sm text-slate-500 hover:text-blue-600">

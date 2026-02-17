@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import type { QuestionBreakdownItem } from "./DistortionQuiz";
+import ReReadPassageModal from "./ReReadPassageModal";
 
 export type WpmRating =
   | "too_slow"
@@ -14,9 +15,10 @@ type ResultsViewProps = {
   correct: number;
   total: number;
   passageTitle?: string;
+  passageText?: string;
   timeSpentSeconds?: number;
   questionBreakdown?: QuestionBreakdownItem[];
-  onSaveProgress: (rating?: WpmRating) => void;
+  onRestart?: () => void;
   saveError?: string | null;
   saving?: boolean;
 };
@@ -32,18 +34,16 @@ export default function ResultsView({
   correct,
   total,
   passageTitle,
+  passageText,
   timeSpentSeconds = 0,
   questionBreakdown = [],
-  onSaveProgress,
+  onRestart,
   saveError = null,
   saving = false,
 }: ResultsViewProps) {
   const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
   const [wpmRating, setWpmRating] = useState<WpmRating | null>(null);
-
-  const handleSave = () => {
-    onSaveProgress(wpmRating ?? undefined);
-  };
+  const [passageModalOpen, setPassageModalOpen] = useState(false);
 
   return (
     <div className="w-full max-w-2xl mx-auto px-4 text-center">
@@ -96,6 +96,23 @@ export default function ResultsView({
           <p className="text-sm text-slate-600 mt-2">Great — we&apos;ll keep suggesting this range.</p>
         )}
       </div>
+
+      {passageText && (
+        <div className="mb-6">
+          <button
+            type="button"
+            onClick={() => setPassageModalOpen(true)}
+            className="min-h-[44px] px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg transition-colors inline-flex items-center justify-center gap-2"
+          >
+            View passage
+          </button>
+          <ReReadPassageModal
+            isOpen={passageModalOpen}
+            onClose={() => setPassageModalOpen(false)}
+            passageText={passageText}
+          />
+        </div>
+      )}
 
       {questionBreakdown.length > 0 && (
         <div className="mb-8 text-left">
@@ -197,22 +214,22 @@ export default function ResultsView({
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={handleSave}
-        disabled={saving}
-        aria-busy={saving}
-        className="min-h-[44px] px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-70 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
-      >
-        {saving ? (
-          <>
-            <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" aria-hidden />
-            Saving…
-          </>
-        ) : (
-          "Save Progress"
-        )}
-      </button>
+      {saving && (
+        <p className="mb-4 text-sm text-slate-600 inline-flex items-center gap-2" aria-live="polite">
+          <span className="inline-block w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" aria-hidden />
+          Saving…
+        </p>
+      )}
+      {onRestart && (
+        <button
+          type="button"
+          onClick={onRestart}
+          disabled={saving}
+          className="min-h-[44px] px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-70 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
+        >
+          Try another
+        </button>
+      )}
 
       <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm">
         <Link to="/" className="min-h-[44px] inline-flex items-center justify-center py-2 text-slate-500 hover:text-blue-600">

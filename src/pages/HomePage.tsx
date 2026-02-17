@@ -66,7 +66,7 @@ export default function HomePage() {
   const [wpm, setWpm] = useState(getStoredWpm);
   const [timeLimitSeconds, setTimeLimitSeconds] = useState(60);
   const [keywordCount, setKeywordCount] = useState(6);
-  const [questionCount] = useState(7);
+  const [questionCount] = useState(3);
   const [suggestedWpm, setSuggestedWpm] = useState<number | null>(null);
   const [averageWpm, setAverageWpm] = useState<number | null>(null);
 

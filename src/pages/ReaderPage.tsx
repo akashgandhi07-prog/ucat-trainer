@@ -38,6 +38,7 @@ export default function ReaderPage() {
   const [questionBreakdown, setQuestionBreakdown] = useState<QuestionBreakdownItem[]>([]);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveInProgress, setSaveInProgress] = useState(false);
+  const hasAutoSavedRef = useRef(false);
   const readingStartTimeRef = useRef<number | null>(null);
   const mountedRef = useRef(true);
   const { user } = useAuth();
@@ -63,7 +64,7 @@ export default function ReaderPage() {
   const passage: Passage = configureState.passage ?? PASSAGES[0];
   const passageText = passage?.text ?? "";
   const initialWpm = configureState.wpm ?? undefined;
-  const questionCount = configureState.questionCount ?? 5;
+  const questionCount = Math.min(3, configureState.questionCount ?? 3);
 
   const handleReaderFinish = useCallback((finishedWpm: number) => {
     setWpm(finishedWpm);
@@ -78,7 +79,7 @@ export default function ReaderPage() {
   }, []);
 
   const handleSaveProgress = useCallback(
-    async (rating?: import("../components/quiz/ResultsView").WpmRating) => {
+    async (rating?: import("../components/quiz/ResultsView").WpmRating, opts?: { skipRestart?: boolean }) => {
       if (!user) {
         appendGuestSession({
           training_type: "speed_reading",
@@ -115,9 +116,11 @@ export default function ReaderPage() {
         });
         if (!mountedRef.current) return;
         setSaveError(null);
-        setPhase("reading");
-        setReadingKey((k) => k + 1);
-        readingStartTimeRef.current = null;
+        if (!opts?.skipRestart) {
+          setPhase("reading");
+          setReadingKey((k) => k + 1);
+          readingStartTimeRef.current = null;
+        }
       } catch (err: unknown) {
         const message = err && typeof err === "object" && "message" in err ? String((err as { message: string }).message) : "Unknown error";
         supabaseLog.error("Failed to save speed_reading session", {
@@ -132,6 +135,29 @@ export default function ReaderPage() {
     },
     [user, wpm, quizCorrect, quizTotal, passage?.id, openAuthModal]
   );
+
+  const handleRestart = useCallback(() => {
+    hasAutoSavedRef.current = false;
+    setPhase("reading");
+    setReadingKey((k) => k + 1);
+    readingStartTimeRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    if (phase !== "results" || hasAutoSavedRef.current) return;
+    hasAutoSavedRef.current = true;
+    if (user) {
+      handleSaveProgress(undefined, { skipRestart: true });
+    } else {
+      appendGuestSession({
+        training_type: "speed_reading",
+        wpm,
+        correct: quizCorrect,
+        total: quizTotal,
+        passage_id: passage?.id ?? null,
+      });
+    }
+  }, [phase, handleSaveProgress, user, wpm, quizCorrect, quizTotal, passage?.id]);
 
   const skipLinkClass =
     "absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-slate-900 font-medium rounded-lg ring-2 ring-blue-600 opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
@@ -171,13 +197,14 @@ export default function ReaderPage() {
             correct={quizCorrect}
             total={quizTotal}
             passageTitle={passage?.title}
+            passageText={passageText}
             timeSpentSeconds={
               readingStartTimeRef.current != null
                 ? Math.round((Date.now() - readingStartTimeRef.current) / 1000)
                 : 0
             }
             questionBreakdown={questionBreakdown}
-            onSaveProgress={handleSaveProgress}
+            onRestart={handleRestart}
             saveError={saveError}
             saving={saveInProgress}
           />

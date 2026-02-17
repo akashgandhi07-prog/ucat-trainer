@@ -72,7 +72,9 @@ export default function KeywordScanningPage() {
   const [foundCount, setFoundCount] = useState(0);
   const [clickedWrong, setClickedWrong] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const [bestTimeSeconds, setBestTimeSeconds] = useState<number | null>(null);
+  const hasAutoSavedRef = useRef(false);
   const mountedRef = useRef(true);
   const { user } = useAuth();
   const { openAuthModal } = useAuthModal();
@@ -139,8 +141,69 @@ export default function KeywordScanningPage() {
     }
   }, [foundCount, targets.length]);
 
-  const handleSaveProgress = useCallback(async () => {
-    if (!user) {
+  const handleSaveProgress = useCallback(
+    async (opts?: { skipRestart?: boolean }) => {
+      if (!user) {
+        const timeSeconds = Math.round((Date.now() - startTime) / 1000);
+        appendGuestSession({
+          training_type: "keyword_scanning",
+          wpm: null,
+          correct: foundCount,
+          total: targets.length,
+          time_seconds: timeSeconds,
+        });
+        openAuthModal();
+        return;
+      }
+      setSaveError(null);
+      setSaving(true);
+      const timeSeconds = Math.round((Date.now() - startTime) / 1000);
+      const payload: SessionInsertPayload = {
+        user_id: user.id,
+        training_type: "keyword_scanning",
+        wpm: null,
+        correct: foundCount,
+        total: targets.length,
+        time_seconds: timeSeconds,
+      };
+      const { error } = await supabase.from("sessions").insert(payload);
+      if (error) {
+        supabaseLog.error("Failed to save keyword_scanning session", {
+          message: error.message,
+          code: error.code,
+          userId: user.id,
+        });
+        if (mountedRef.current) {
+          setSaveError("Failed to save. Please try again.");
+        }
+        if (mountedRef.current) setSaving(false);
+        return;
+      }
+      supabaseLog.info("Keyword scanning session saved", {
+        userId: user.id,
+        correct: foundCount,
+        total: targets.length,
+        time_seconds: timeSeconds,
+      });
+      if (!mountedRef.current) return;
+      setSaveError(null);
+      setSaving(false);
+      if (!opts?.skipRestart) {
+        setPhase("scanning");
+        setFoundSet(new Set());
+        setFoundCount(0);
+        setStartTime(Date.now());
+      }
+    },
+    [user, foundCount, targets.length, startTime, openAuthModal]
+  );
+
+  useEffect(() => {
+    if (phase !== "results" || hasAutoSavedRef.current) return;
+    hasAutoSavedRef.current = true;
+    if (user) {
+      handleSaveProgress({ skipRestart: true });
+    } else {
       const timeSeconds = Math.round((Date.now() - startTime) / 1000);
       appendGuestSession({
         training_type: "keyword_scanning",
@@ -149,42 +212,8 @@ export default function KeywordScanningPage() {
         total: targets.length,
         time_seconds: timeSeconds,
       });
-      openAuthModal();
-      return;
     }
-    setSaveError(null);
-    const timeSeconds = Math.round((Date.now() - startTime) / 1000);
-    const payload: SessionInsertPayload = {
-      user_id: user.id,
-      training_type: "keyword_scanning",
-      wpm: null,
-      correct: foundCount,
-      total: targets.length,
-      time_seconds: timeSeconds,
-    };
-    const { error } = await supabase.from("sessions").insert(payload);
-    if (error) {
-      supabaseLog.error("Failed to save keyword_scanning session", {
-        message: error.message,
-        code: error.code,
-        userId: user.id,
-      });
-      if (mountedRef.current) setSaveError("Failed to save. Please try again.");
-      return;
-    }
-    supabaseLog.info("Keyword scanning session saved", {
-      userId: user.id,
-      correct: foundCount,
-      total: targets.length,
-      time_seconds: timeSeconds,
-    });
-    if (!mountedRef.current) return;
-    setSaveError(null);
-    setPhase("scanning");
-    setFoundSet(new Set());
-    setFoundCount(0);
-    setStartTime(Date.now());
-  }, [user, foundCount, targets.length, startTime, openAuthModal]);
+  }, [phase, user, handleSaveProgress, startTime, foundCount, targets.length]);
 
   if (!passage) {
     return <Navigate to="/?mode=keyword_scanning" replace />;
@@ -236,12 +265,24 @@ export default function KeywordScanningPage() {
                 {saveError}
               </p>
             )}
+            {saving && (
+              <p className="mb-4 text-sm text-slate-600 inline-flex items-center gap-2" aria-live="polite">
+                <span className="inline-block w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" aria-hidden />
+                Saving…
+              </p>
+            )}
             <button
               type="button"
-              onClick={handleSaveProgress}
+              onClick={() => {
+                hasAutoSavedRef.current = false;
+                setPhase("scanning");
+                setFoundSet(new Set());
+                setFoundCount(0);
+                setStartTime(Date.now());
+              }}
               className="min-h-[44px] px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700"
             >
-              Save progress
+              Try again
             </button>
             <div className="mt-4">
               <Link to="/" className="min-h-[44px] inline-flex items-center justify-center py-2 text-sm text-slate-500 hover:text-blue-600">

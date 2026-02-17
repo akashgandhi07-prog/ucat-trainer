@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ToastProvider } from "./contexts/ToastContext";
+import { AuthProvider } from "./contexts/AuthContext";
 import { AuthModalProvider } from "./contexts/AuthModalContext";
 import { BugReportProvider } from "./contexts/BugReportContext";
 import HomePage from "./pages/HomePage";
@@ -22,6 +23,7 @@ function App() {
     <BrowserRouter>
       <ErrorBoundary>
         <ToastProvider>
+          <AuthProvider>
           <AuthModalProvider>
             <BugReportProvider>
             <Routes>
@@ -35,6 +37,7 @@ function App() {
             </Routes>
             </BugReportProvider>
           </AuthModalProvider>
+          </AuthProvider>
         </ToastProvider>
       </ErrorBoundary>
     </BrowserRouter>
