@@ -1,7 +1,12 @@
 import { supabase } from "./supabase";
 import { authLog, supabaseLog } from "./logger";
 
-export type Stream = "Medicine" | "Dentistry" | "Undecided";
+export type Stream =
+  | "Medicine"
+  | "Dentistry"
+  | "Veterinary Medicine"
+  | "Other"
+  | "Undecided";
 
 export type Profile = {
   id: string;
@@ -9,6 +14,8 @@ export type Profile = {
   stream: Stream | null;
   updated_at: string;
   role?: string | null;
+  entry_year?: string | null;
+  email_marketing_opt_in?: boolean;
 };
 
 /**
@@ -41,11 +48,22 @@ export async function getProfile(userId: string): Promise<Profile | null> {
 export async function upsertProfile(
   userId: string,
   fullName: string | null,
-  stream?: Stream | null
+  stream?: string | null,
+  extra?: {
+    firstName?: string | null;
+    lastName?: string | null;
+    entryYear?: string | null;
+    emailMarketingOptIn?: boolean | null;
+  }
 ): Promise<{ ok: boolean; error?: string }> {
   const name = fullName?.trim() || null;
   const validStream: Stream | null =
-    stream && ["Medicine", "Dentistry", "Undecided"].includes(stream) ? stream : null;
+    stream &&
+    ["Medicine", "Dentistry", "Veterinary Medicine", "Other", "Undecided"].includes(
+      stream
+    )
+      ? (stream as Stream)
+      : null;
   try {
     const payload: Record<string, unknown> = {
       id: userId,
@@ -53,6 +71,23 @@ export async function upsertProfile(
     };
     if (name) payload.full_name = name;
     if (validStream != null) payload.stream = validStream;
+    if (extra) {
+      if (extra.firstName !== undefined) {
+        payload.first_name = extra.firstName?.trim() || null;
+      }
+      if (extra.lastName !== undefined) {
+        payload.last_name = extra.lastName?.trim() || null;
+      }
+      if (extra.entryYear !== undefined) {
+        payload.entry_year = extra.entryYear || null;
+      }
+      if (extra.emailMarketingOptIn !== undefined) {
+        payload.email_marketing_opt_in = !!extra.emailMarketingOptIn;
+        if (extra.emailMarketingOptIn) {
+          payload.email_marketing_opt_in_at = new Date().toISOString();
+        }
+      }
+    }
     const { error } = await supabase.from("profiles").upsert(
       payload as { id: string; full_name?: string; stream?: string; updated_at: string },
       { onConflict: "id" }

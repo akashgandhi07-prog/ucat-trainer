@@ -9,13 +9,20 @@ import type { QuestionBreakdownItem } from "../components/quiz/DistortionQuiz";
 import { useAuth } from "../hooks/useAuth";
 import { useAuthModal } from "../contexts/AuthModalContext";
 import type { Passage } from "../data/passages";
-import { PASSAGES } from "../data/passages";
 import SEOHead from "../components/seo/SEOHead";
 import type { SessionInsertPayload } from "../types/session";
 import { appendGuestSession } from "../lib/guestSessions";
 import { supabase } from "../lib/supabase";
 import { supabaseLog } from "../lib/logger";
 import { withRetry } from "../lib/retry";
+import type { TrainingDifficulty } from "../types/training";
+import { pickNewRandomPassage } from "../lib/passages";
+import {
+  clampChunkSize,
+  getSuggestedChunkSize,
+  loadGuidedChunkingPrefs,
+  saveGuidedChunkingPrefs,
+} from "../lib/guidedChunkingPreferences";
 
 type Phase = "reading" | "quiz" | "results";
 
@@ -25,6 +32,9 @@ type ConfigureState = {
   passage: Passage;
   wpm: number;
   questionCount?: number;
+  difficulty?: TrainingDifficulty;
+   guidedChunkingEnabled?: boolean;
+   guidedChunkSize?: number;
 };
 
 export default function ReaderPage() {
@@ -32,12 +42,24 @@ export default function ReaderPage() {
   const configureState = location.state as ConfigureState | null;
   const [phase, setPhase] = useState<Phase>("reading");
   const [readingKey, setReadingKey] = useState(0);
+  const [passage, setPassage] = useState<Passage>(
+    () => configureState?.passage ?? pickNewRandomPassage(null, configureState?.difficulty)
+  );
   const [wpm, setWpm] = useState(300);
   const [quizCorrect, setQuizCorrect] = useState(0);
   const [quizTotal, setQuizTotal] = useState(0);
   const [questionBreakdown, setQuestionBreakdown] = useState<QuestionBreakdownItem[]>([]);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveInProgress, setSaveInProgress] = useState(false);
+  const [guidedChunkingEnabled] = useState<boolean>(() => {
+    if (configureState?.guidedChunkingEnabled != null) return configureState.guidedChunkingEnabled;
+    return loadGuidedChunkingPrefs().enabled;
+  });
+  const [guidedChunkSize, setGuidedChunkSize] = useState<number>(() => {
+    if (configureState?.guidedChunkSize != null) return clampChunkSize(configureState.guidedChunkSize);
+    return loadGuidedChunkingPrefs().chunkSize;
+  });
+  const [suggestedChunkSize, setSuggestedChunkSize] = useState<number | null>(null);
   const hasAutoSavedRef = useRef(false);
   const readingStartTimeRef = useRef<number | null>(null);
   const mountedRef = useRef(true);
@@ -52,19 +74,43 @@ export default function ReaderPage() {
   }, []);
 
   useEffect(() => {
+    saveGuidedChunkingPrefs({ enabled: guidedChunkingEnabled, chunkSize: guidedChunkSize });
+  }, [guidedChunkingEnabled, guidedChunkSize]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    }
+  }, []);
+
+  useEffect(() => {
     if (phase === "reading") {
       readingStartTimeRef.current = Date.now();
     }
   }, [phase]);
 
+  useEffect(() => {
+    if (phase !== "results") {
+      setSuggestedChunkSize(null);
+      return;
+    }
+    if (!guidedChunkingEnabled) {
+      setSuggestedChunkSize(null);
+      return;
+    }
+    const accuracy = quizTotal > 0 ? Math.round((quizCorrect / quizTotal) * 100) : 0;
+    const nextSize = getSuggestedChunkSize(guidedChunkSize, accuracy);
+    setSuggestedChunkSize(nextSize);
+  }, [phase, guidedChunkingEnabled, guidedChunkSize, quizCorrect, quizTotal]);
+
   if (!configureState) {
     return <Navigate to="/" replace />;
   }
 
-  const passage: Passage = configureState.passage ?? PASSAGES[0];
   const passageText = passage?.text ?? "";
   const initialWpm = configureState.wpm ?? undefined;
   const questionCount = Math.min(3, configureState.questionCount ?? 3);
+  const difficulty: TrainingDifficulty = configureState.difficulty ?? "medium";
 
   const handleReaderFinish = useCallback((finishedWpm: number) => {
     setWpm(finishedWpm);
@@ -83,6 +129,7 @@ export default function ReaderPage() {
       if (!user) {
         appendGuestSession({
           training_type: "speed_reading",
+          difficulty,
           wpm,
           correct: quizCorrect,
           total: quizTotal,
@@ -97,6 +144,7 @@ export default function ReaderPage() {
       const payload: SessionInsertPayload = {
         user_id: user.id,
         training_type: "speed_reading",
+        difficulty,
         wpm,
         correct: quizCorrect,
         total: quizTotal,
@@ -133,15 +181,22 @@ export default function ReaderPage() {
         if (mountedRef.current) setSaveInProgress(false);
       }
     },
-    [user, wpm, quizCorrect, quizTotal, passage?.id, openAuthModal]
+    [user, wpm, quizCorrect, quizTotal, passage?.id, difficulty, openAuthModal]
   );
 
   const handleRestart = useCallback(() => {
     hasAutoSavedRef.current = false;
     setPhase("reading");
     setReadingKey((k) => k + 1);
+    setPassage((current) => pickNewRandomPassage(current?.id, difficulty));
     readingStartTimeRef.current = null;
-  }, []);
+  }, [difficulty]);
+
+  const handleApplySuggestedChunkSize = useCallback(() => {
+    if (suggestedChunkSize == null) return;
+    setGuidedChunkSize(suggestedChunkSize);
+    setSuggestedChunkSize(null);
+  }, [suggestedChunkSize]);
 
   useEffect(() => {
     if (phase !== "results" || hasAutoSavedRef.current) return;
@@ -151,13 +206,14 @@ export default function ReaderPage() {
     } else {
       appendGuestSession({
         training_type: "speed_reading",
+        difficulty,
         wpm,
         correct: quizCorrect,
         total: quizTotal,
         passage_id: passage?.id ?? null,
       });
     }
-  }, [phase, handleSaveProgress, user, wpm, quizCorrect, quizTotal, passage?.id]);
+  }, [phase, handleSaveProgress, user, wpm, quizCorrect, quizTotal, passage?.id, difficulty]);
 
   const skipLinkClass =
     "absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-slate-900 font-medium rounded-lg ring-2 ring-blue-600 opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
@@ -182,6 +238,8 @@ export default function ReaderPage() {
             onFinish={handleReaderFinish}
             passageTitle={passage?.title}
             wordCount={passageText.trim().split(/\s+/).filter(Boolean).length}
+            guidedChunkingEnabled={guidedChunkingEnabled}
+            chunkSize={guidedChunkSize}
           />
         )}
         {phase === "quiz" && (
@@ -207,6 +265,10 @@ export default function ReaderPage() {
             onRestart={handleRestart}
             saveError={saveError}
             saving={saveInProgress}
+            guidedChunkingEnabled={guidedChunkingEnabled}
+            chunkSize={guidedChunkSize}
+            suggestedChunkSize={suggestedChunkSize}
+            onAcceptSuggestedChunkSize={handleApplySuggestedChunkSize}
           />
         )}
       </main>

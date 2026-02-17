@@ -65,7 +65,7 @@ export default function Header() {
           Admin
         </Link>
       )}
-      {loading ? (
+      {loading && !user ? (
         <span className="text-sm text-slate-400 min-h-[44px] inline-flex items-center" aria-hidden>
           …
         </span>

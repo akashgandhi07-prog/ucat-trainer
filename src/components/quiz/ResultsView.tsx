@@ -21,6 +21,10 @@ type ResultsViewProps = {
   onRestart?: () => void;
   saveError?: string | null;
   saving?: boolean;
+  guidedChunkingEnabled?: boolean;
+  chunkSize?: number;
+  suggestedChunkSize?: number | null;
+  onAcceptSuggestedChunkSize?: () => void;
 };
 
 function userAnswerLabel(a: "true" | "false" | "cant_tell"): string {
@@ -40,6 +44,10 @@ export default function ResultsView({
   onRestart,
   saveError = null,
   saving = false,
+  guidedChunkingEnabled = false,
+  chunkSize,
+  suggestedChunkSize,
+  onAcceptSuggestedChunkSize,
 }: ResultsViewProps) {
   const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
   const [wpmRating, setWpmRating] = useState<WpmRating | null>(null);
@@ -92,8 +100,35 @@ export default function ResultsView({
             ? "Good comprehension at this speed. Try +25 WPM next time to push your pace."
             : "Comprehension was lower; try the same or slightly lower WPM next time and focus on key sentences."}
         </p>
+        {guidedChunkingEnabled && chunkSize != null && (
+          <p className="text-xs text-slate-600 mt-2">
+            Guided chunking: {chunkSize} word{chunkSize !== 1 ? "s" : ""} per chunk.
+            {suggestedChunkSize != null && suggestedChunkSize !== chunkSize && (
+              <>
+                {" "}
+                Based on your comprehension, you could try{" "}
+                <span className="font-semibold">
+                  {suggestedChunkSize} word{suggestedChunkSize !== 1 ? "s" : ""} per chunk
+                </span>{" "}
+                next time.
+                {onAcceptSuggestedChunkSize && (
+                  <>
+                    {" "}
+                    <button
+                      type="button"
+                      onClick={onAcceptSuggestedChunkSize}
+                      className="text-blue-600 hover:text-blue-700 hover:underline font-medium"
+                    >
+                      Use suggested
+                    </button>
+                  </>
+                )}
+              </>
+            )}
+          </p>
+        )}
         {wpmRating === "just_right" && accuracy >= 80 && (
-          <p className="text-sm text-slate-600 mt-2">Great — we&apos;ll keep suggesting this range.</p>
+          <p className="text-sm text-slate-600 mt-2">Great, we&apos;ll keep suggesting this range.</p>
         )}
       </div>
 

@@ -3,9 +3,12 @@ export type Passage = {
   title: string;
   text: string;
   category: string;
+  difficulty: number; // 1 (easiest) - 10 (hardest)
 };
 
-export const PASSAGES: Passage[] = 
+type PassageBase = Omit<Passage, "difficulty">;
+
+export const RAW_PASSAGES: PassageBase[] =
 [
   {
     "id": "pass_01",
@@ -457,6 +460,31 @@ export const PASSAGES: Passage[] =
         "text": "The development of lethal autonomous weapons systems which can identify and engage targets without human intervention has sparked a global ethical debate. Proponents argue that these systems can be more precise than human soldiers and could reduce the risk of civilian casualties by removing the influence of fear and emotion from the battlefield. They might also reduce the risk to friendly forces.\n\nHowever critics worry that autonomous weapons lower the threshold for going to war and raise significant accountability issues. If a machine makes a mistake and kills innocent people it is unclear who should be held responsible for the action. There is also the fear that these weapons could be used for mass killings or be hacked by rogue actors which would lead to catastrophic consequences.\n\nMany human rights organizations and scientists have called for a total ban on the development and use of killer robots. They argue that the decision to take a human life should never be outsourced to an algorithm. International discussions on regulating these systems are ongoing but reaching a consensus is difficult as some nations see them as a vital military advantage in the future of warfare.",
         "category": "Ethics"
       }
-    ]
+    ];
 
-;
+function countWords(text: string): number {
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+function estimateDifficulty(text: string, category: string): number {
+  const words = countWords(text);
+  let base =
+    words < 220 ? 3 :
+    words < 320 ? 5 :
+    words < 420 ? 7 :
+    8; // very long / dense passages
+
+  if (category === "Ethics") base += 1;
+  if (category === "Science") base += 0;
+  if (category === "History") base += 0;
+
+  if (base < 1) base = 1;
+  if (base > 10) base = 10;
+  return base;
+}
+
+export const PASSAGES: Passage[] = RAW_PASSAGES.map((p) => ({
+  ...p,
+  difficulty: estimateDifficulty(p.text, p.category),
+}));
+

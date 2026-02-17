@@ -1,5 +1,5 @@
 -- =============================================================================
--- UCAT Trainer – Auth & Profiles schema (Supabase)
+-- UCAT Trainer - Auth & Profiles schema (Supabase)
 -- =============================================================================
 -- Run this in Supabase Dashboard → SQL Editor when you need to fix or sync
 -- login/registration (profiles table and removal of the old signup trigger).
@@ -20,14 +20,33 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   full_name text,
   stream text,
+  first_name text,
+  last_name text,
+  entry_year text,
+  email_marketing_opt_in boolean not null default false,
+  email_marketing_opt_in_at timestamptz,
   updated_at timestamptz not null default now()
 );
 
--- Ensure stream column and constraint (idempotent)
+-- Ensure columns and constraints (idempotent)
 alter table public.profiles add column if not exists stream text;
+alter table public.profiles add column if not exists first_name text;
+alter table public.profiles add column if not exists last_name text;
+alter table public.profiles add column if not exists entry_year text;
+alter table public.profiles add column if not exists email_marketing_opt_in boolean not null default false;
+alter table public.profiles add column if not exists email_marketing_opt_in_at timestamptz;
 alter table public.profiles drop constraint if exists profiles_stream_check;
 alter table public.profiles add constraint profiles_stream_check
-  check (stream is null or stream in ('Medicine', 'Dentistry', 'Undecided'));
+  check (
+    stream is null
+    or stream in (
+      'Medicine',
+      'Dentistry',
+      'Veterinary Medicine',
+      'Other',
+      'Undecided'
+    )
+  );
 
 -- Role: default 'user'; admins set via separate update
 alter table public.profiles add column if not exists role text not null default 'user';

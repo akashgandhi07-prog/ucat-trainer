@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { useAuthModal } from "../contexts/AuthModalContext";
 import { supabase } from "../lib/supabase";
 import { dashboardLog } from "../lib/logger";
+import Header from "../components/layout/Header";
+import Footer from "../components/layout/Footer";
 
 type AdminStats = {
   total_users: number;
@@ -26,7 +29,14 @@ type FeedbackRow = {
 type FeedbackFilter = "all" | "bug" | "suggestion";
 
 export default function AdminPage() {
-  const { user, profile, loading: authLoading, isAdmin } = useAuth();
+  const {
+    user,
+    profile,
+    loading: authLoading,
+    isAdmin,
+    sessionLoadFailed,
+  } = useAuth();
+  const { openAuthModal } = useAuthModal();
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [feedback, setFeedback] = useState<FeedbackRow[]>([]);
   const [feedbackFilter, setFeedbackFilter] = useState<FeedbackFilter>("all");
@@ -71,46 +81,160 @@ export default function AdminPage() {
     };
   }, [user, isAdmin]);
 
+  const skipLinkClass =
+    "absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-slate-900 font-medium rounded-lg ring-2 ring-blue-600 opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
+
   if (authLoading || (user && profile === null && loading)) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <p className="text-slate-600">Loading…</p>
+      <div className="flex flex-col min-h-screen bg-slate-50">
+        <a href="#main-content" className={skipLinkClass}>
+          Skip to main content
+        </a>
+        <Header />
+        <main
+          id="main-content"
+          className="flex-1 flex items-center justify-center px-4"
+          tabIndex={-1}
+        >
+          <p className="text-slate-600">Loading admin area…</p>
+        </main>
+        <Footer />
       </div>
     );
   }
 
-  if (!user || !isAdmin) {
-    return <Navigate to="/" replace />;
+  if (!user) {
+    return (
+      <div className="flex flex-col min-h-screen bg-slate-50">
+        <a href="#main-content" className={skipLinkClass}>
+          Skip to main content
+        </a>
+        <Header />
+        <main
+          id="main-content"
+          className="flex-1 max-w-2xl mx-auto px-4 py-8 flex items-center justify-center"
+          tabIndex={-1}
+        >
+          <div className="w-full bg-white rounded-xl border border-slate-200 shadow-sm p-6 text-center">
+            {sessionLoadFailed ? (
+              <>
+                <p className="text-red-700 font-medium mb-2">
+                  We couldn&apos;t verify your admin access right now.
+                </p>
+                <p className="text-slate-700 text-sm mb-4">
+                  Check your connection, then try again.
+                </p>
+                <Link
+                  to="/"
+                  className="min-h-[44px] inline-flex items-center justify-center px-4 py-2 text-blue-600 font-medium hover:underline"
+                >
+                  Back to Home
+                </Link>
+              </>
+            ) : (
+              <>
+                <p className="text-slate-900 font-medium mb-2">
+                  Sign in as an admin to view this page.
+                </p>
+                <p className="text-slate-700 text-sm mb-4">
+                  You&apos;ll need an admin account to access platform stats and feedback.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => openAuthModal("login")}
+                  className="min-h-[44px] px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Sign in
+                </button>
+              </>
+            )}
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="flex flex-col min-h-screen bg-slate-50">
+        <a href="#main-content" className={skipLinkClass}>
+          Skip to main content
+        </a>
+        <Header />
+        <main
+          id="main-content"
+          className="flex-1 max-w-2xl mx-auto px-4 py-8 flex items-center justify-center"
+          tabIndex={-1}
+        >
+          <div className="w-full bg-white rounded-xl border border-slate-200 shadow-sm p-6 text-center">
+            <p className="text-slate-900 font-medium mb-2">
+              You don&apos;t have access to the admin dashboard.
+            </p>
+            <p className="text-slate-700 text-sm mb-4">
+              If you think this is a mistake, contact the site owner.
+            </p>
+            <Link
+              to="/"
+              className="min-h-[44px] inline-flex items-center justify-center px-4 py-2 text-blue-600 font-medium hover:underline"
+            >
+              Back to Home
+            </Link>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <p className="text-slate-600">Loading admin dashboard…</p>
+      <div className="flex flex-col min-h-screen bg-slate-50">
+        <a href="#main-content" className={skipLinkClass}>
+          Skip to main content
+        </a>
+        <Header />
+        <main
+          id="main-content"
+          className="flex-1 flex items-center justify-center px-4"
+          tabIndex={-1}
+        >
+          <p className="text-slate-600">Loading admin dashboard…</p>
+        </main>
+        <Footer />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-        <p className="text-red-600 mb-4">{error}</p>
-        <Link to="/" className="text-blue-600 font-medium hover:underline">
-          Back to Home
-        </Link>
+      <div className="flex flex-col min-h-screen bg-slate-50">
+        <a href="#main-content" className={skipLinkClass}>
+          Skip to main content
+        </a>
+        <Header />
+        <main
+          id="main-content"
+          className="flex-1 flex flex-col items-center justify-center p-4"
+          tabIndex={-1}
+        >
+          <p className="text-red-600 mb-4">{error}</p>
+          <Link to="/" className="text-blue-600 font-medium hover:underline">
+            Back to Home
+          </Link>
+        </main>
+        <Footer />
       </div>
     );
   }
 
-  const skipLinkClass =
-    "absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-slate-900 font-medium rounded-lg ring-2 ring-blue-600 opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
-
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="flex flex-col min-h-screen bg-slate-50">
       <a href="#main-content" className={skipLinkClass}>
         Skip to main content
       </a>
-      <main id="main-content" className="max-w-4xl mx-auto px-4 py-8" tabIndex={-1}>
+      <Header />
+      <main id="main-content" className="flex-1 max-w-4xl mx-auto px-4 py-8" tabIndex={-1}>
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-bold text-slate-900">Admin</h1>
           <Link to="/" className="min-h-[44px] inline-flex items-center justify-center py-2 text-blue-600 font-medium hover:underline">
@@ -204,6 +328,7 @@ export default function AdminPage() {
           )}
         </section>
       </main>
+      <Footer />
     </div>
   );
 }

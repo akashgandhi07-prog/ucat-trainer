@@ -1,4 +1,4 @@
-# Hostile User & SRE Audit — The UKCAT People
+# Hostile User & SRE Audit - The UKCAT People
 
 **Mindset:** Destructive testing, failure modes, and production resilience.  
 **Date:** 2026-02-16
@@ -15,7 +15,7 @@
 
 ---
 
-## 1. App Killer #1 — Save Progress hang & double-submit
+## 1. App Killer #1 - Save Progress hang & double-submit
 
 **Problem:**  
 - "Save Progress" has no loading state. On slow 3G the button does nothing visible and the request can take many seconds.  
@@ -31,7 +31,7 @@
 
 ---
 
-## 2. App Killer #2 — Unmounted component state update (ReaderEngine)
+## 2. App Killer #2 - Unmounted component state update (ReaderEngine)
 
 **Problem:**  
 - When the user navigates away (or logs out) while the reader is playing, the `requestAnimationFrame` loop may still run. The next `tick()` calls `setCurrentWordIndex(index)` or `setIsPlaying(false)` after the component has unmounted → React warning and possible leak.
@@ -68,7 +68,7 @@ useEffect(() => {
 
 ---
 
-## 3. App Killer #3 — No retry on Supabase insert
+## 3. App Killer #3 - No retry on Supabase insert
 
 **Problem:**  
 - `supabase.from("sessions").insert(...)` is called once. On network failure or 5xx, the promise rejects or returns error and we only set `saveError`. No retry → one transient failure = lost save.
@@ -85,7 +85,7 @@ useEffect(() => {
 
 - **Start/Reset 50x:** ReaderEngine: Start toggles `isPlaying`; effect cleanup cancels rAF. Only one rAF runs at a time. Reset clears state. No interval stacking.  
 - **RapidRecallPage timer:** Single `setInterval` when `phase === "reading"`; cleanup clears it. No stacking unless phase flips repeatedly (not exposed by UI).  
-- **WPM 0 or 20,000:** ReaderEngine and HomePage clamp WPM (100–600 and 200–600). No divide-by-zero.  
+- **WPM 0 or 20,000:** ReaderEngine and HomePage clamp WPM (100-600 and 200-600). No divide-by-zero.  
 - **Save Progress:** Covered above (loading + retry).
 
 ### Data corruption / state
@@ -97,7 +97,7 @@ useEffect(() => {
 ### Accessibility
 
 - **Lawyer Mode red/orange (Deuteranopia):** Red and orange can be indistinguishable. **Fix:** In `getLawyerHighlightClass`, add a non-color cue: e.g. qualifier `underline decoration-orange-500`, absolute `underline decoration-red-600 font-bold` or a pattern (e.g. `underline` for one, `underline decoration-double` for the other).  
-- **Mobile legibility:** Body text uses 15–16px and UCAT font; ensure min font-size and touch targets (e.g. 44px) are kept.  
+- **Mobile legibility:** Body text uses 15-16px and UCAT font; ensure min font-size and touch targets (e.g. 44px) are kept.  
 - **Keyboard:** Buttons are focusable by default. Add visible focus rings (e.g. `focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`) and ensure modals trap focus where applicable.
 
 ### Prod / build
@@ -107,7 +107,7 @@ useEffect(() => {
 
 ---
 
-## User Session — strictly typed interface (no `any`)
+## User Session - strictly typed interface (no `any`)
 
 Use a single, strictly typed representation of “user session” (auth user + profile) so callers never rely on `any`:
 

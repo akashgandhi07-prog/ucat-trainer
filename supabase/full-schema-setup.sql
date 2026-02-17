@@ -1,5 +1,5 @@
 -- =============================================================================
--- UCAT Trainer – Full Supabase Schema Setup
+-- UCAT Trainer - Full Supabase Schema Setup
 -- =============================================================================
 -- Paste this entire file into Supabase Dashboard → SQL Editor → New query, then Run.
 -- Safe to run multiple times: creates missing objects, adds missing columns,
@@ -54,6 +54,7 @@ create table if not exists public.sessions (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users (id) on delete cascade,
   training_type text not null check (training_type in ('speed_reading', 'rapid_recall', 'keyword_scanning')),
+  difficulty text check (difficulty is null or difficulty in ('easy', 'medium', 'hard')),
   wpm integer,
   correct integer not null,
   total integer not null,
@@ -64,6 +65,7 @@ create table if not exists public.sessions (
 );
 
 alter table public.sessions add column if not exists time_seconds integer;
+alter table public.sessions add column if not exists difficulty text check (difficulty is null or difficulty in ('easy', 'medium', 'hard'));
 
 create index if not exists sessions_user_id_created_at on public.sessions (user_id, created_at);
 
@@ -79,6 +81,7 @@ create policy "Users can insert own sessions"
 
 comment on table public.sessions is 'Training sessions (speed reading, rapid recall, keyword scanning).';
 comment on column public.sessions.time_seconds is 'Duration in seconds (e.g. scan time for keyword_scanning, reading window for rapid_recall).';
+comment on column public.sessions.difficulty is 'Optional difficulty label chosen for the run (easy, medium, hard).';
 
 -- -----------------------------------------------------------------------------
 -- 3) BUG_REPORTS (feedback: bugs + suggestions)

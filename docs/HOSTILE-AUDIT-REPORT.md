@@ -1,4 +1,4 @@
-# Hostile SRE Audit Report — The UKCAT People
+# Hostile SRE Audit Report - The UKCAT People
 
 **Audit date:** Feb 2025  
 **Scope:** Destructive mindset across Monkey Test, Data Corruption, Accessibility, and Prod Safety.
@@ -9,13 +9,13 @@
 
 | Category            | Finding                                                                 | Severity |
 |---------------------|-------------------------------------------------------------------------|----------|
-| Session on failure  | `getSession()` had no retry → one network blip = silent logout          | **High** |
-| Start/Reset spam    | No debounce → rapid clicks caused effect thrash and jank                | **High** |
-| ErrorBoundary leak  | Raw `console.error(error, errorInfo)` in prod → stack/internal leak    | **High** |
+| Session on failure  | `getSession()` had no retry -> one network blip = silent logout          | **High** |
+| Start/Reset spam    | No debounce -> rapid clicks caused effect thrash and jank                | **High** |
+| ErrorBoundary leak  | Raw `console.error(error, errorInfo)` in prod -> stack/internal leak    | **High** |
 | Lawyer mode a11y    | Red vs orange hard for deuteranopia → fixed with dashed vs solid       | Medium   |
-| Save Progress 3G    | Already has spinner + `withRetry` → OK                                  | OK       |
-| Timer on logout     | ReaderEngine uses `mountedRef` → no unmounted setState                  | OK       |
-| WPM 0 / 20k         | Clamped 100–600 in ReaderEngine, 200–600 on HomePage → no divide-by-zero| OK       |
+| Save Progress 3G    | Already has spinner + `withRetry` -> OK                                  | OK       |
+| Timer on logout     | ReaderEngine uses `mountedRef` -> no unmounted setState                  | OK       |
+| WPM 0 / 20k         | Clamped 100-600 in ReaderEngine, 200-600 on HomePage -> no divide-by-zero| OK       |
 | Heavy libs          | No moment/lodash; recharts only for dashboard → acceptable             | OK       |
 | console.log in prod | Logger is dev-gated for `info`; `warn`/`error` use redacted meta       | OK       |
 
@@ -96,7 +96,7 @@ const handleReset = () => {
 **Fix applied:** Gate detailed logging to dev; in production log only a short, safe message:
 
 - **Dev:** `console.error("ErrorBoundary caught:", error, errorInfo)` (unchanged).
-- **Prod:** `console.error("[ErrorBoundary] Something went wrong. Message:", error?.message ?? "Unknown")` — no stack, no component tree.
+- **Prod:** `console.error("[ErrorBoundary] Something went wrong. Message:", error?.message ?? "Unknown")` - no stack, no component tree.
 
 **Defensive code (already added):**
 
@@ -117,11 +117,11 @@ componentDidCatch(error: Error, errorInfo: ErrorInfo) {
 
 ## Other findings (short)
 
-- **WPM 0 / 20,000:** ReaderEngine clamps WPM 100–600; HomePage 200–600. No divide-by-zero; `(currentWordIndex / wpm) * 60000` is safe.
+- **WPM 0 / 20,000:** ReaderEngine clamps WPM 100-600; HomePage 200-600. No divide-by-zero; `(currentWordIndex / wpm) * 60000` is safe.
 - **Save Progress on slow 3G:** ResultsView shows “Saving…” and spinner; `handleSaveProgress` uses `withRetry` for the insert. No change needed.
 - **Logout while timer running:** ReaderEngine cleanup sets `mountedRef.current = false` and cancels RAF; no setState after unmount.
 - **Lawyer mode (Deuteranopia):** `getLawyerHighlightClass` now uses **dashed** underline for qualifier and **solid** underline + bold for absolute, so distinction doesn’t rely on red vs orange alone.
-- **Keyboard (Tab + Space):** Buttons and links are focusable; no custom tabIndex hacks found. Main gap: no skip link or explicit “focus trap” in modals — consider adding for full a11y.
+- **Keyboard (Tab + Space):** Buttons and links are focusable; no custom tabIndex hacks found. Main gap: no skip link or explicit “focus trap” in modals - consider adding for full a11y.
 - **Mobile legibility:** Reader text uses `text-[15px] sm:text-[16px]` and sufficient contrast; 100% zoom on mobile is acceptable.
 - **Heavy libs:** No moment.js or full lodash; recharts only on dashboard. No change.
 - **console.log:** App code uses `logger`; `info` is dev-only; `warn`/`error` use `redactPii` in prod. ErrorBoundary was the only raw console leak; now fixed.

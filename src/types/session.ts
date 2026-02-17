@@ -36,6 +36,7 @@ export interface SessionRow {
   id: string;
   user_id: string;
   training_type: "speed_reading" | "rapid_recall" | "keyword_scanning";
+  difficulty?: "easy" | "medium" | "hard" | null;
   wpm: number | null;
   correct: number;
   total: number;
@@ -49,6 +50,7 @@ export interface SessionRow {
 export interface SessionInsertPayload {
   user_id: string;
   training_type: "speed_reading" | "rapid_recall" | "keyword_scanning";
+  difficulty?: "easy" | "medium" | "hard" | null;
   wpm: number | null;
   correct: number;
   total: number;

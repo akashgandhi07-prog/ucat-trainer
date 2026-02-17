@@ -5,10 +5,13 @@ import Footer from "../components/layout/Footer";
 import { useAuth } from "../hooks/useAuth";
 import { useAuthModal } from "../contexts/AuthModalContext";
 import type { Passage } from "../data/passages";
+import { PASSAGES } from "../data/passages";
 import type { SessionInsertPayload } from "../types/session";
 import { appendGuestSession } from "../lib/guestSessions";
 import { supabase } from "../lib/supabase";
 import { supabaseLog } from "../lib/logger";
+import type { TrainingDifficulty } from "../types/training";
+import { pickNewRandomPassage } from "../lib/passages";
 
 type Phase = "scanning" | "results";
 
@@ -16,6 +19,7 @@ type LocationState = {
   trainingType: "keyword_scanning";
   passage: Passage;
   keywordCount: number;
+  difficulty?: TrainingDifficulty;
 };
 
 const STOPWORDS = new Set([
@@ -64,10 +68,13 @@ function pickTargetWords(text: string, count: number): string[] {
 export default function KeywordScanningPage() {
   const location = useLocation();
   const state = location.state as LocationState | null;
-  const passage = state?.passage ?? null;
   const keywordCount = state?.keywordCount ?? 6;
+  const difficulty: TrainingDifficulty = state?.difficulty ?? "medium";
 
   const [phase, setPhase] = useState<Phase>("scanning");
+  const [passage, setPassage] = useState<Passage | null>(
+    () => state?.passage ?? PASSAGES[0] ?? null
+  );
   const [startTime, setStartTime] = useState(() => Date.now());
   const [foundCount, setFoundCount] = useState(0);
   const [clickedWrong, setClickedWrong] = useState(false);
@@ -151,6 +158,7 @@ export default function KeywordScanningPage() {
           correct: foundCount,
           total: targets.length,
           time_seconds: timeSeconds,
+          difficulty,
         });
         openAuthModal();
         return;
@@ -161,6 +169,7 @@ export default function KeywordScanningPage() {
       const payload: SessionInsertPayload = {
         user_id: user.id,
         training_type: "keyword_scanning",
+        difficulty,
         wpm: null,
         correct: foundCount,
         total: targets.length,
@@ -235,7 +244,7 @@ export default function KeywordScanningPage() {
         <main id="main-content" className="flex-1 flex items-center justify-center py-12 px-4" tabIndex={-1}>
           <div className="w-full max-w-md mx-auto text-center">
             <h2 className="text-xl font-semibold text-slate-900 mb-6">
-              Keyword Scanning – Results
+              Keyword Scanning - Results
             </h2>
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4 mb-6">
               {isNewBest && (
@@ -279,6 +288,7 @@ export default function KeywordScanningPage() {
                 setFoundSet(new Set());
                 setFoundCount(0);
                 setStartTime(Date.now());
+                setPassage((current) => pickNewRandomPassage(current?.id, difficulty));
               }}
               className="min-h-[44px] px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700"
             >

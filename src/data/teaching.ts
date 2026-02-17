@@ -23,7 +23,7 @@ export const SKILL_TEACHING: Record<TrainingType, SkillTeaching> = {
     howToUse: [
       "Choose how long to read.",
       "Passage disappears when time's up.",
-      "Answer from memory – no going back.",
+      "Answer from memory - no going back.",
     ],
   },
   keyword_scanning: {

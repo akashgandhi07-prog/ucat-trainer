@@ -13,7 +13,16 @@ type AuthModalProps = {
 const STREAM_OPTIONS: { value: Stream; label: string }[] = [
   { value: "Medicine", label: "Medicine" },
   { value: "Dentistry", label: "Dentistry" },
-  { value: "Undecided", label: "Other" },
+  { value: "Veterinary Medicine", label: "Veterinary Medicine" },
+  { value: "Other", label: "Other" },
+];
+
+const ENTRY_YEAR_OPTIONS: { value: string; label: string }[] = [
+  { value: "2026", label: "2026 Entry (Starting University September 2026)" },
+  { value: "2027", label: "2027 Entry (Starting University September 2027)" },
+  { value: "2028", label: "2028 Entry (Starting University September 2028)" },
+  { value: "2029", label: "2029 Entry (Starting University September 2029)" },
+  { value: "Other", label: "Other" },
 ];
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -50,8 +59,10 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
     if (isOpen) setMode(initialMode);
   }, [isOpen, initialMode]);
   const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
-  const [stream, setStream] = useState<Stream>("Undecided");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [stream, setStream] = useState<Stream>("Medicine");
+  const [entryYear, setEntryYear] = useState<string>("2026");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">(
     "idle"
   );
@@ -71,31 +82,49 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
       return;
     }
     const isRegister = mode === "register";
-    if (isRegister && !name.trim()) {
-      setMessage("Please enter your full name to register.");
-      setStatus("error");
-      return;
+    if (isRegister) {
+      if (!firstName.trim() || !lastName.trim()) {
+        setMessage("Please enter your first and last name to register.");
+        setStatus("error");
+        return;
+      }
+      if (!stream) {
+        setMessage("Please select your subject.");
+        setStatus("error");
+        return;
+      }
+      if (!entryYear) {
+        setMessage("Please select your entry year.");
+        setStatus("error");
+        return;
+      }
     }
 
     setStatus("loading");
     setMessage("");
+    const fullName =
+      isRegister ? `${firstName.trim()} ${lastName.trim()}`.trim() : null;
+
     authLog.info("Sign-in requested", {
       email: trimmedEmail,
       mode,
-      hasName: !!name.trim(),
+      hasName: !!fullName,
       stream,
+      entryYear: isRegister ? entryYear : undefined,
     });
 
     const redirectUrl =
-      typeof window !== "undefined"
-        ? window.location.origin + window.location.pathname
-        : undefined;
+      typeof window !== "undefined" ? window.location.href : undefined;
     const options = isRegister
       ? {
           data: {
-            full_name: name.trim(),
+            full_name: fullName,
+            first_name: firstName.trim(),
+            last_name: lastName.trim(),
             stream,
-          } as { full_name: string; stream: Stream },
+            entry_year: entryYear,
+            email_marketing_opt_in: true,
+          },
           emailRedirectTo: redirectUrl,
         }
       : {
@@ -124,13 +153,17 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
       userId: userId ?? "pending",
     });
     setStatus("success");
-    setMessage("Check your email for the sign-in link.");
+    setMessage(
+      "We’ve emailed you a magic login link. Open it to log in, then you can just return to this tab and continue. If a new tab opens, you can close it after the link has loaded."
+    );
   };
 
   const handleClose = () => {
     setEmail("");
-    setName("");
-    setStream("Undecided");
+    setFirstName("");
+    setLastName("");
+    setStream("Medicine");
+    setEntryYear("2026");
     setStatus("idle");
     setMessage("");
     setMode("login");
@@ -145,12 +178,12 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50"
       role="dialog"
       aria-modal="true"
       aria-labelledby="auth-modal-title"
     >
-      <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6">
+      <div className="bg-white rounded-2xl shadow-xl max-w-md sm:max-w-lg w-full px-5 sm:px-7 py-6 sm:py-7">
         <div className="flex items-center justify-between mb-4">
           <h2
             id="auth-modal-title"
@@ -170,45 +203,85 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === "register" && (
             <>
-              <div>
-                <label
-                  htmlFor="auth-name"
-                  className="block text-sm font-medium text-slate-700 mb-1"
-                >
-                  Full Name
-                </label>
-                <input
-                  id="auth-name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Your name"
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  autoComplete="name"
-                  disabled={status === "loading"}
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label
+                    htmlFor="auth-first-name"
+                    className="block text-sm font-medium text-slate-700 mb-1"
+                  >
+                    First Name<span className="text-red-500"> *</span>
+                  </label>
+                  <input
+                    id="auth-first-name"
+                    type="text"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    placeholder="First name"
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    autoComplete="given-name"
+                    disabled={status === "loading"}
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="auth-last-name"
+                    className="block text-sm font-medium text-slate-700 mb-1"
+                  >
+                    Last Name<span className="text-red-500"> *</span>
+                  </label>
+                  <input
+                    id="auth-last-name"
+                    type="text"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    placeholder="Last name"
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    autoComplete="family-name"
+                    disabled={status === "loading"}
+                  />
+                </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Target Stream
+                <label
+                  htmlFor="auth-subject"
+                  className="block text-sm font-medium text-slate-700 mb-1"
+                >
+                  Subject<span className="text-red-500"> *</span>
                 </label>
-                <div className="flex flex-wrap gap-2">
+                <select
+                  id="auth-subject"
+                  value={stream}
+                  onChange={(e) => setStream(e.target.value as Stream)}
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={status === "loading"}
+                >
                   {STREAM_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => setStream(opt.value)}
-                      disabled={status === "loading"}
-                      className={`min-h-[44px] px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        stream === opt.value
-                          ? "bg-blue-600 text-white"
-                          : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                      }`}
-                    >
+                    <option key={opt.value} value={opt.value}>
                       {opt.label}
-                    </button>
+                    </option>
                   ))}
-                </div>
+                </select>
+              </div>
+              <div>
+                <label
+                  htmlFor="auth-entry-year"
+                  className="block text-sm font-medium text-slate-700 mb-1"
+                >
+                  Entry Year<span className="text-red-500"> *</span>
+                </label>
+                <select
+                  id="auth-entry-year"
+                  value={entryYear}
+                  onChange={(e) => setEntryYear(e.target.value)}
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={status === "loading"}
+                >
+                  {ENTRY_YEAR_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
               </div>
             </>
           )}
@@ -231,6 +304,12 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
               disabled={status === "loading"}
             />
           </div>
+          {mode === "register" && (
+            <p className="text-[11px] leading-snug text-slate-500">
+              By creating an account, you agree that The UKCAT People may email you UCAT tips, relevant course
+              information and occasional marketing updates. You can unsubscribe at any time via the link in each email.
+            </p>
+          )}
           {message && (
             <p
               className={`text-sm ${

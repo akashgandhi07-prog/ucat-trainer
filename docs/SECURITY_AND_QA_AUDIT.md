@@ -1,4 +1,4 @@
-# Security & QA Audit — The UKCAT People
+# Security & QA Audit - The UKCAT People
 
 **Stack:** Vite, React, TypeScript, Tailwind, Supabase (Auth + DB)  
 **Date:** 2026-02-16  
@@ -11,7 +11,7 @@
 | # | Severity   | Area            | Issue | Location |
 |---|------------|-----------------|--------|----------|
 | 1 | **Critical** | Auth            | Dashboard does not redirect when `!user`; it renders "Sign in to view your dashboard" and keeps URL `/dashboard`. No strict redirect like AdminPage. | `src/pages/Dashboard.tsx` |
-| 2 | **High**     | Logic / Regex   | `textAnalysis.ts` (Lawyer mode) is unused. If used for full-text scan later, matching should use word boundaries and `gi` for "Many" / "many,". Current `getLawyerHighlight` normalizes per-word so it already handles these; no regex in that file. DistortionQuiz uses `\b` and lowercasing—OK. | `src/utils/textAnalysis.ts` (hardening only if used) |
+| 2 | **High**     | Logic / Regex   | `textAnalysis.ts` (Lawyer mode) is unused. If used for full-text scan later, matching should use word boundaries and `gi` for "Many" / "many,". Current `getLawyerHighlight` normalizes per-word so it already handles these; no regex in that file. DistortionQuiz uses `\b` and lowercasing-OK. | `src/utils/textAnalysis.ts` (hardening only if used) |
 | 3 | **Medium**   | Auth            | DistortionQuiz has no auth; it is used by ReaderPage/RapidRecallPage which don’t require login. By design only save is gated. If product requires “quiz only when logged in”, add route-level guard. | `ReaderPage.tsx`, `RapidRecallPage.tsx` |
 | 4 | **Low**      | Mobile UX       | Chunk Mode is not present in codebase. `useIsMobile` exists (768px). When/if Chunk Mode is added, gate it with `useIsMobile` for screens &lt; 768px. | `src/hooks/useIsMobile.ts` |
 | 5 | **Info**     | Security        | No accidental logging of `anon_key` in `src/lib/supabase.ts`. | `src/lib/supabase.ts` |
@@ -80,7 +80,7 @@ No change required if you only use `getLawyerHighlight(word)` with pre-split wor
 
 ---
 
-## Step 3: Quick Win — Error Boundary
+## Step 3: Quick Win - Error Boundary
 
 **Suggestion:** Add a React Error Boundary so a single component error (e.g. in Recharts, Supabase callback, or quiz) does not blank the whole app.
 

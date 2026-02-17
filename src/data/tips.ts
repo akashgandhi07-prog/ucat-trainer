@@ -7,7 +7,7 @@ import type { TrainingType } from "../types/training";
 export const TIPS: Record<TrainingType, string[]> = {
   speed_reading: [
     "Focus on the centre of each chunk; your peripheral vision catches the rest.",
-    "Keep a steady pace — avoid pausing on every word.",
+    "Keep a steady pace; avoid pausing on every word.",
     "Aim for main ideas first; details stick when the structure is clear.",
   ],
   rapid_recall: [

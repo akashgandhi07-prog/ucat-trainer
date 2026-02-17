@@ -37,6 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
         setProfile(null);
         setSessionLoadFailed(true);
+        authLog.info("Session load failed flag set", { scope: "loadSession", reason: "getSession error" });
         return;
       }
       const u = session?.user ?? null;
@@ -62,6 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setProfile(null);
       setSessionLoadFailed(true);
+      authLog.info("Session load failed flag set", { scope: "loadSession", reason: "retry exhaustion" });
     } finally {
       setLoading(false);
     }
@@ -108,14 +110,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           });
         }
 
-        const meta = session.user.user_metadata;
+        const meta = session.user.user_metadata as Record<string, unknown> | null;
         const fullName =
           (meta?.full_name as string) || (meta?.name as string) || null;
-        const stream =
-          meta?.stream && ["Medicine", "Dentistry", "Undecided"].includes(meta.stream as string)
-            ? (meta.stream as "Medicine" | "Dentistry" | "Undecided")
-            : undefined;
-        await upsertProfile(session.user.id, fullName, stream);
+        const stream = (meta?.stream as string | undefined) ?? undefined;
+        const firstName = (meta?.first_name as string | undefined) ?? null;
+        const lastName = (meta?.last_name as string | undefined) ?? null;
+        const entryYear = (meta?.entry_year as string | undefined) ?? null;
+        const emailMarketingOptIn =
+          (meta?.email_marketing_opt_in as boolean | undefined) ?? null;
+
+        await upsertProfile(session.user.id, fullName, stream, {
+          firstName,
+          lastName,
+          entryYear,
+          emailMarketingOptIn,
+        });
         await fetchProfile(session.user.id);
       } else if (u) {
         await fetchProfile(u.id);
@@ -123,7 +133,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setProfile(null);
       }
 
-      if (mounted) setUser(u);
+      if (mounted) {
+        if (!u && user) {
+          authLog.info("Auth context user cleared", {
+            prevUserId: user.id,
+            event,
+          });
+        }
+        setUser(u);
+      }
     });
 
     return () => {

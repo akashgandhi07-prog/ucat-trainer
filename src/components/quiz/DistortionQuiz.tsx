@@ -61,11 +61,11 @@ function buildQuestions(passageText: string, count: number): Question[] {
   const fallback = trimmed.split(/[.!?]+/).map((s) => s.trim()).filter(Boolean);
   const pool = candidates.length > 0 ? candidates : fallback;
   if (pool.length === 0) return [];
-  const num = Math.max(1, Math.min(3, count));
+  const num = Math.max(1, Math.min(3, count, pool.length));
   const shuffled = shuffle(pool);
   const questions: Question[] = [];
   for (let i = 0; i < num; i++) {
-    const sentence = shuffled[i % shuffled.length];
+    const sentence = shuffled[i];
     const isOriginal = Math.random() < 0.5;
     questions.push({
       displayedSentence: sentenceHasQualifier(sentence) ? (isOriginal ? sentence : swapQualifierToAll(sentence)) : sentence,
