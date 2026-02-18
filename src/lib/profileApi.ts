@@ -25,7 +25,7 @@ export async function getProfile(userId: string): Promise<Profile | null> {
   try {
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, full_name, stream, updated_at, role")
+      .select("id, full_name, stream, updated_at, role, entry_year, email_marketing_opt_in")
       .eq("id", userId)
       .maybeSingle();
 
@@ -59,9 +59,9 @@ export async function upsertProfile(
   const name = fullName?.trim() || null;
   const validStream: Stream | null =
     stream &&
-    ["Medicine", "Dentistry", "Veterinary Medicine", "Other", "Undecided"].includes(
-      stream
-    )
+      ["Medicine", "Dentistry", "Veterinary Medicine", "Other", "Undecided"].includes(
+        stream
+      )
       ? (stream as Stream)
       : null;
   try {

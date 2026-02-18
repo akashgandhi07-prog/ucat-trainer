@@ -29,6 +29,14 @@ export class ErrorBoundary extends Component<Props, State> {
           <p className="text-slate-600 mb-4">
             We&apos;ve been notified. Please try again or go back home.
           </p>
+
+          {this.state.error && (
+            <div className="max-w-2xl w-full bg-red-50 border border-red-200 rounded-lg p-4 mb-4 text-left overflow-auto max-h-96">
+              <p className="font-mono text-sm text-red-700 font-bold mb-2">{this.state.error.toString()}</p>
+              <pre className="font-mono text-xs text-red-600 whitespace-pre-wrap">{this.state.error.stack}</pre>
+            </div>
+          )}
+
           <a href="/" className="text-blue-600 font-medium hover:underline">
             Back to Home
           </a>

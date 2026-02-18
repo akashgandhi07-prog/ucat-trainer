@@ -204,7 +204,7 @@ export default function RapidRecallPage() {
     <div className="flex flex-col min-h-screen">
       <SEOHead
         title="UCAT Rapid Recall Practice"
-        description="Test comprehension under time pressure with true/false statements. Free UCAT Verbal Reasoning training from The UKCAT People."
+        description="Test comprehension under time pressure with true/false statements. Free UCAT Verbal Reasoning training from TheUKCATPeople."
         canonicalUrl={canonicalUrl}
       />
       <a href="#main-content" className={skipLinkClass}>

@@ -1,0 +1,200 @@
+/* UCAT Calculator Styles - TI-108 Replica */
+
+.ucat-calculator-container {
+    font-family: Arial, sans-serif;
+    width: 320px;
+    background-color: #3b75b0;
+    /* TI-108 Blue */
+    border: 2px solid #2a5a8a;
+    border-radius: 12px;
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3), inset 1px 1px 2px rgba(255, 255, 255, 0.2);
+    user-select: none;
+    position: relative;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.ucat-calculator-header {
+    /* Hidden or styled subtly - TI-108 doesn't have a window title bar really, but we need drag handle */
+    background-color: transparent;
+    color: white;
+    padding: 5px 0;
+    font-weight: bold;
+    font-size: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: move;
+    margin-bottom: 5px;
+}
+
+.ucat-calculator-body {
+    padding: 0;
+}
+
+/* Solar Panel Area */
+.solar-panel-container {
+    background-color: #356799;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.solar-panel {
+    width: 60px;
+    height: 20px;
+    background-color: #3c2f2f;
+    margin-left: auto;
+    border-radius: 2px;
+    border: 1px solid #555;
+    background: repeating-linear-gradient(90deg,
+            #4a3b3b,
+            #4a3b3b 10px,
+            #3c2f2f 10px,
+            #3c2f2f 20px);
+    opacity: 0.8;
+    /* Simulation of solar cells */
+}
+
+/* Display */
+.ucat-display-container {
+    background-color: #7a8a99;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 5px;
+    box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.ucat-display {
+    background-color: #e8e8e3;
+    /* LCD Grey/Greenish */
+    border: 2px solid #555;
+    height: 50px;
+    font-family: 'Courier New', Courier, monospace;
+    /* Digital look */
+    font-size: 32px;
+    text-align: right;
+    padding: 5px 10px;
+    overflow: hidden;
+    white-space: nowrap;
+    color: #000;
+    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1);
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+/* Branding */
+.brand-text {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    color: white;
+    margin-bottom: 15px;
+    padding: 0 5px;
+}
+
+.tex-inst {
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+.model-num {
+    font-family: 'Times New Roman', serif;
+    font-weight: bold;
+    font-size: 24px;
+    letter-spacing: 1px;
+}
+
+/* Keypad Grid */
+.ucat-keypad {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    background-color: #3b75b0;
+    padding: 5px;
+    border-radius: 8px;
+    border: 1px solid #2a5a8a;
+    /* Inset look around keys */
+}
+
+/* Buttons */
+.ucat-btn {
+    height: 40px;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+        2px 2px 0px rgba(0, 0, 0, 0.2),
+        inset 1px 1px 0px rgba(255, 255, 255, 0.2),
+        inset -1px -1px 0px rgba(0, 0, 0, 0.1);
+    transition: transform 0.05s;
+    font-family: Arial, sans-serif;
+}
+
+.ucat-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow:
+        0px 0px 0px rgba(0, 0, 0, 0.2),
+        inset 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.btn-white {
+    background-color: #fcfcfc;
+    color: #111;
+}
+
+.btn-red {
+    background-color: #d12e2e;
+    color: white;
+}
+
+/* Specific Layout Overrides */
+.equals-btn {
+    grid-row: span 2;
+    height: auto;
+    /* Fill grid height */
+}
+
+/* Inactive State */
+.inactive-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 50;
+    color: #333;
+    font-weight: bold;
+    font-size: 1.2rem;
+    backdrop-filter: blur(2px);
+    border-radius: 12px;
+}
+
+.numlock-warning {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(255, 0, 0, 0.9);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    font-size: 2rem;
+    text-align: center;
+}

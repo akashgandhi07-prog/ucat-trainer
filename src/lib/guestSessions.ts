@@ -25,10 +25,16 @@ export function getGuestSessions(): GuestSessionPayload[] {
   }
 }
 
+const MAX_GUEST_SESSIONS = 200;
+
 export function appendGuestSession(payload: GuestSessionPayload): void {
   const sessions = getGuestSessions();
   sessions.push(payload);
-  localStorage.setItem(GUEST_SESSIONS_KEY, JSON.stringify(sessions));
+  // Keep only the most recent sessions to prevent localStorage overflow
+  const capped = sessions.length > MAX_GUEST_SESSIONS
+    ? sessions.slice(sessions.length - MAX_GUEST_SESSIONS)
+    : sessions;
+  localStorage.setItem(GUEST_SESSIONS_KEY, JSON.stringify(capped));
 }
 
 export function clearGuestSessions(): void {

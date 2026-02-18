@@ -3,7 +3,7 @@
 // Secrets: MAILCHIMP_API_KEY, MAILCHIMP_LIST_ID (set via Supabase Dashboard)
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": "https://ucat.theukcatpeople.co.uk",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
 
   let body: SubscriberPayload;
   try {
-    body = await req.json();
+    body = await req.json() as SubscriberPayload;
   } catch {
     return new Response(
       JSON.stringify({ error: "Invalid JSON body" }),
@@ -60,8 +60,8 @@ Deno.serve(async (req) => {
 
   const payload = {
     email_address: email,
-    status: "subscribed",
-    merge_fields: Object.keys(mergeFields).length > 0 ? merge_fields : undefined,
+    status: "subscribed" as const,
+    merge_fields: Object.keys(mergeFields).length > 0 ? mergeFields : undefined,
   };
 
   const auth = btoa(`anystring:${apiKey}`);
@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify(payload),
     });
 
-    const data = await res.json().catch(() => ({}));
+    const data = await res.json().catch(() => ({})) as Record<string, unknown>;
 
     if (!res.ok) {
       if (res.status === 400 && data?.title === "Member Exists") {
@@ -87,7 +87,7 @@ Deno.serve(async (req) => {
       }
       console.error("Mailchimp API error", res.status, data);
       return new Response(
-        JSON.stringify({ error: data?.detail || "Failed to add subscriber" }),
+        JSON.stringify({ error: (data?.detail as string) || "Failed to add subscriber" }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

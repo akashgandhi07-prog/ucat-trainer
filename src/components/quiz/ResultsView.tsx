@@ -158,26 +158,25 @@ export default function ResultsView({
           </h2>
           <div className="space-y-3">
             {questionBreakdown.map((item, i) => {
-              const isCorrect =
-                (item.userAnswer === "true" && item.correctAnswer) ||
+              const isCorrect = item.correctAnswerRaw
+                ? item.userAnswer === item.correctAnswerRaw
+                : (item.userAnswer === "true" && item.correctAnswer) ||
                 (item.userAnswer === "false" && !item.correctAnswer);
               return (
                 <div
                   key={i}
-                  className={`rounded-xl border p-4 ${
-                    isCorrect
+                  className={`rounded-xl border p-4 ${isCorrect
                       ? "bg-green-50 border-green-200"
                       : "bg-red-50 border-red-200"
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-between gap-2 mb-2">
                     <span className="font-bold text-slate-900">{i + 1}</span>
                     <span
-                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${
-                        isCorrect
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${isCorrect
                           ? "bg-green-200 text-green-800"
                           : "bg-red-200 text-red-800"
-                      }`}
+                        }`}
                     >
                       {isCorrect ? (
                         <>

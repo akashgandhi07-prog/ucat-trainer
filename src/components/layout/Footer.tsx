@@ -22,7 +22,7 @@ export default function Footer() {
           </button>
         </nav>
         <p className="text-center text-sm text-slate-500">
-          © 2026 The UKCAT People. Secure & Encrypted.
+          © 2026 TheUKCATPeople. Secure & Encrypted.
         </p>
       </div>
     </footer>

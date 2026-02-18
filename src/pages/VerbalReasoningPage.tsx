@@ -175,7 +175,7 @@ function pickPassageForDifficulty(level: TrainingDifficulty): Passage {
   return pickNewRandomPassage(null, level);
 }
 
-export default function HomePage() {
+export default function VerbalReasoningPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const rawMode = searchParams.get("mode");
@@ -435,7 +435,7 @@ export default function HomePage() {
     <div className="flex flex-col min-h-screen bg-background">
       <SEOHead
         title="UCAT Verbal Reasoning Trainer"
-        description="Free speed reading, rapid recall and keyword scanning practice for the UCAT. Built by The UKCAT People for UK medical and dental applicants."
+        description="Free speed reading, rapid recall and keyword scanning practice for the UCAT. Built by TheUKCATPeople for UK medical and dental applicants."
         canonicalUrl={canonicalUrl}
         imageUrl={ogImageUrl}
       />
@@ -489,24 +489,21 @@ export default function HomePage() {
                   key={type}
                   type="button"
                   onClick={() => setMode(type)}
-                  className={`group relative flex flex-col rounded-xl border p-5 text-left transition-all duration-200 ${
-                    isActive
+                  className={`group relative flex flex-col rounded-xl border p-5 text-left transition-all duration-200 ${isActive
                       ? "border-primary bg-training-active-muted shadow-md ring-1 ring-primary/20"
                       : "border-border bg-card shadow-sm hover:border-primary/40 hover:shadow-md"
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-between mb-3">
                     <span
-                      className={`inline-flex h-10 w-10 items-center justify-center rounded-lg ${
-                        isActive ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"
-                      }`}
+                      className={`inline-flex h-10 w-10 items-center justify-center rounded-lg ${isActive ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"
+                        }`}
                     >
                       {icon}
                     </span>
                     <span
-                      className={`text-[10px] font-bold uppercase tracking-widest ${
-                        isActive ? "text-primary" : "text-muted-foreground"
-                      }`}
+                      className={`text-[10px] font-bold uppercase tracking-widest ${isActive ? "text-primary" : "text-muted-foreground"
+                        }`}
                     >
                       {benefit}
                     </span>
@@ -562,11 +559,10 @@ export default function HomePage() {
                           key={level}
                           type="button"
                           onClick={() => setDifficulty(level)}
-                          className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                            difficulty === level
+                          className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${difficulty === level
                               ? "bg-primary text-primary-foreground shadow-sm"
                               : "text-muted-foreground hover:text-foreground"
-                          }`}
+                            }`}
                         >
                           {TRAINING_DIFFICULTY_LABELS[level]}
                         </button>
@@ -574,186 +570,181 @@ export default function HomePage() {
                     </div>
                   </fieldset>
 
-              {mode === "speed_reading" && (
-                <div className="space-y-5">
-                  {(averageWpm != null || suggestedWpm != null) && (
-                    <div className="rounded-xl border border-border bg-training-surface p-4 space-y-1">
-                      {averageWpm != null && (
-                        <p className="text-sm font-medium text-foreground">
-                          Your typical speed: <strong>{averageWpm} WPM</strong>
-                        </p>
+                  {mode === "speed_reading" && (
+                    <div className="space-y-5">
+                      {(averageWpm != null || suggestedWpm != null) && (
+                        <div className="rounded-xl border border-border bg-training-surface p-4 space-y-1">
+                          {averageWpm != null && (
+                            <p className="text-sm font-medium text-foreground">
+                              Your typical speed: <strong>{averageWpm} WPM</strong>
+                            </p>
+                          )}
+                          {suggestedWpm != null && (
+                            <p className="text-sm text-muted-foreground">
+                              Suggested next: <strong>{suggestedWpm} WPM</strong>
+                              {" · "}
+                              <button
+                                type="button"
+                                onClick={() => setWpm(suggestedWpm)}
+                                className="text-primary hover:underline"
+                              >
+                                Use suggested
+                              </button>
+                            </p>
+                          )}
+                          {averageWpm != null && (
+                            <p className="text-xs text-muted-foreground">
+                              {getWpmComparisonCopy(averageWpm)}
+                            </p>
+                          )}
+                        </div>
                       )}
-                      {suggestedWpm != null && (
-                        <p className="text-sm text-muted-foreground">
-                          Suggested next: <strong>{suggestedWpm} WPM</strong>
-                          {" · "}
+                      <div className="rounded-xl border border-border bg-training-surface p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <p className="text-sm font-medium text-foreground">
+                              Words per minute
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Controls auto-scroll speed
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-3xl font-bold tracking-tight text-foreground">
+                              {wpm}
+                            </span>
+                            <span className="ml-1 text-xs font-medium text-muted-foreground">
+                              WPM
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs text-muted-foreground w-8">{WPM_MIN}</span>
+                          <input
+                            type="range"
+                            min={WPM_MIN}
+                            max={WPM_MAX}
+                            step={25}
+                            value={wpm}
+                            onChange={(e) => setWpm(Number(e.target.value))}
+                            className="flex-1 h-2 rounded-full appearance-none bg-border accent-primary cursor-pointer"
+                          />
+                          <span className="text-xs text-muted-foreground w-8 text-right">{WPM_MAX}</span>
+                        </div>
+                        <div className="flex items-center justify-between mt-2">
+                          <p className={`text-xs font-medium ${getWpmStatusColor(wpm)}`}>
+                            {getWpmStatusLabel(wpm)}
+                          </p>
+                          <span className="text-xs text-muted-foreground">
+                            ≈ {estimatedSeconds}s / passage
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="rounded-xl border border-border bg-training-surface p-4">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-start gap-3">
+                            <span className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-card text-muted-foreground shadow-sm border border-border">
+                              <Eye className="h-4 w-4" aria-hidden="true" />
+                            </span>
+                            <div>
+                              <p className="text-sm font-semibold text-foreground">
+                                Guided Chunking
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                Highlights word groups at your set pace
+                              </p>
+                            </div>
+                          </div>
                           <button
                             type="button"
-                            onClick={() => setWpm(suggestedWpm)}
-                            className="text-primary hover:underline"
+                            role="switch"
+                            aria-checked={guidedChunkingEnabled}
+                            onClick={() => setGuidedChunkingEnabled((prev) => !prev)}
+                            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${guidedChunkingEnabled ? "bg-primary" : "bg-border"
+                              }`}
+                            aria-label="Toggle guided chunking"
                           >
-                            Use suggested
+                            <span
+                              className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-card shadow ring-0 transition-transform ${guidedChunkingEnabled ? "translate-x-5" : "translate-x-0"
+                                }`}
+                            />
                           </button>
-                        </p>
-                      )}
-                      {averageWpm != null && (
-                        <p className="text-xs text-muted-foreground">
-                          {getWpmComparisonCopy(averageWpm)}
-                        </p>
-                      )}
+                        </div>
+                        {guidedChunkingEnabled && (
+                          <div className="mt-4 pt-3 border-t border-border">
+                            <p className="text-xs font-medium text-muted-foreground mb-2">
+                              Words per chunk
+                            </p>
+                            <div className="inline-flex rounded-lg border border-border bg-card p-0.5">
+                              {Array.from(
+                                { length: GUIDED_CHUNK_MAX - GUIDED_CHUNK_MIN + 1 },
+                                (_, i) => GUIDED_CHUNK_MIN + i
+                              ).map((size) => (
+                                <button
+                                  key={size}
+                                  type="button"
+                                  onClick={() => setGuidedChunkSize(clampChunkSize(size))}
+                                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${guidedChunkSize === size
+                                      ? "bg-primary text-primary-foreground shadow-sm"
+                                      : "text-muted-foreground hover:text-foreground"
+                                    }`}
+                                >
+                                  {size}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
-                  <div className="rounded-xl border border-border bg-training-surface p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <p className="text-sm font-medium text-foreground">
-                          Words per minute
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Controls auto-scroll speed
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-3xl font-bold tracking-tight text-foreground">
-                          {wpm}
-                        </span>
-                        <span className="ml-1 text-xs font-medium text-muted-foreground">
-                          WPM
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs text-muted-foreground w-8">{WPM_MIN}</span>
-                      <input
-                        type="range"
-                        min={WPM_MIN}
-                        max={WPM_MAX}
-                        step={25}
-                        value={wpm}
-                        onChange={(e) => setWpm(Number(e.target.value))}
-                        className="flex-1 h-2 rounded-full appearance-none bg-border accent-primary cursor-pointer"
-                      />
-                      <span className="text-xs text-muted-foreground w-8 text-right">{WPM_MAX}</span>
-                    </div>
-                    <div className="flex items-center justify-between mt-2">
-                      <p className={`text-xs font-medium ${getWpmStatusColor(wpm)}`}>
-                        {getWpmStatusLabel(wpm)}
-                      </p>
-                      <span className="text-xs text-muted-foreground">
-                        ≈ {estimatedSeconds}s / passage
-                      </span>
-                    </div>
-                  </div>
 
-                  <div className="rounded-xl border border-border bg-training-surface p-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex items-start gap-3">
-                        <span className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-card text-muted-foreground shadow-sm border border-border">
-                          <Eye className="h-4 w-4" aria-hidden="true" />
-                        </span>
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">
-                            Guided Chunking
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            Highlights word groups at your set pace
-                          </p>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked={guidedChunkingEnabled}
-                        onClick={() => setGuidedChunkingEnabled((prev) => !prev)}
-                        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
-                          guidedChunkingEnabled ? "bg-primary" : "bg-border"
-                        }`}
-                        aria-label="Toggle guided chunking"
-                      >
-                        <span
-                          className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-card shadow ring-0 transition-transform ${
-                            guidedChunkingEnabled ? "translate-x-5" : "translate-x-0"
-                          }`}
-                        />
-                      </button>
-                    </div>
-                    {guidedChunkingEnabled && (
-                      <div className="mt-4 pt-3 border-t border-border">
-                        <p className="text-xs font-medium text-muted-foreground mb-2">
-                          Words per chunk
-                        </p>
-                        <div className="inline-flex rounded-lg border border-border bg-card p-0.5">
-                          {Array.from(
-                            { length: GUIDED_CHUNK_MAX - GUIDED_CHUNK_MIN + 1 },
-                            (_, i) => GUIDED_CHUNK_MIN + i
-                          ).map((size) => (
-                            <button
-                              key={size}
-                              type="button"
-                              onClick={() => setGuidedChunkSize(clampChunkSize(size))}
-                              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                                guidedChunkSize === size
-                                  ? "bg-primary text-primary-foreground shadow-sm"
-                                  : "text-muted-foreground hover:text-foreground"
+                  {mode === "rapid_recall" && (
+                    <fieldset>
+                      <legend className="text-sm font-medium text-foreground mb-2">
+                        Time to read
+                      </legend>
+                      <div className="inline-flex rounded-lg border border-border bg-secondary p-0.5">
+                        {TIME_PRESETS.map((sec) => (
+                          <button
+                            key={sec}
+                            type="button"
+                            onClick={() => setTimeLimitSeconds(sec)}
+                            className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${timeLimitSeconds === sec
+                                ? "bg-primary text-primary-foreground shadow-sm"
+                                : "text-muted-foreground hover:text-foreground"
                               }`}
-                            >
-                              {size}
-                            </button>
-                          ))}
-                        </div>
+                          >
+                            {sec}s
+                          </button>
+                        ))}
                       </div>
-                    )}
-                  </div>
-                </div>
-              )}
+                    </fieldset>
+                  )}
 
-              {mode === "rapid_recall" && (
-                <fieldset>
-                  <legend className="text-sm font-medium text-foreground mb-2">
-                    Time to read
-                  </legend>
-                  <div className="inline-flex rounded-lg border border-border bg-secondary p-0.5">
-                    {TIME_PRESETS.map((sec) => (
-                      <button
-                        key={sec}
-                        type="button"
-                        onClick={() => setTimeLimitSeconds(sec)}
-                        className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                          timeLimitSeconds === sec
-                            ? "bg-primary text-primary-foreground shadow-sm"
-                            : "text-muted-foreground hover:text-foreground"
-                        }`}
-                      >
-                        {sec}s
-                      </button>
-                    ))}
-                  </div>
-                </fieldset>
-              )}
-
-              {mode === "keyword_scanning" && (
-                <fieldset>
-                  <legend className="text-sm font-medium text-foreground mb-2">
-                    Keywords to find
-                  </legend>
-                  <div className="inline-flex rounded-lg border border-border bg-secondary p-0.5">
-                    {KEYWORD_COUNTS.map((n) => (
-                      <button
-                        key={n}
-                        type="button"
-                        onClick={() => setKeywordCount(n)}
-                        className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                          keywordCount === n
-                            ? "bg-primary text-primary-foreground shadow-sm"
-                            : "text-muted-foreground hover:text-foreground"
-                        }`}
-                      >
-                        {n}
-                      </button>
-                    ))}
-                  </div>
-                </fieldset>
-              )}
+                  {mode === "keyword_scanning" && (
+                    <fieldset>
+                      <legend className="text-sm font-medium text-foreground mb-2">
+                        Keywords to find
+                      </legend>
+                      <div className="inline-flex rounded-lg border border-border bg-secondary p-0.5">
+                        {KEYWORD_COUNTS.map((n) => (
+                          <button
+                            key={n}
+                            type="button"
+                            onClick={() => setKeywordCount(n)}
+                            className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${keywordCount === n
+                                ? "bg-primary text-primary-foreground shadow-sm"
+                                : "text-muted-foreground hover:text-foreground"
+                              }`}
+                          >
+                            {n}
+                          </button>
+                        ))}
+                      </div>
+                    </fieldset>
+                  )}
 
                   <div className="rounded-lg bg-card border border-border p-3">
                     <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../../lib/supabase";
 import { authLog } from "../../lib/logger";
 import { validatePassword, getPasswordRequirementHint } from "../../lib/passwordValidation";
@@ -134,7 +134,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
         return;
       }
       authLog.info("Signed in", { email: trimmedEmail });
-      onClose();
+      handleClose();
       return;
     }
 
@@ -231,15 +231,15 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
         .then(({ error }) => {
           if (error) authLog.warn("Mailchimp subscribe failed", { error: error?.message });
         })
-        .catch(() => {});
+        .catch(() => { });
     }
 
     if (data?.user?.confirmed_at) {
-      onClose();
+      handleClose();
     }
   };
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setEmail("");
     setPassword("");
     setConfirmPassword("");
@@ -251,7 +251,17 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
     setMessage("");
     setMode("login");
     onClose();
-  };
+  }, [onClose]);
+
+  // Fix #10: close on Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") handleClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [isOpen, handleClose]);
 
   if (!isOpen) return null;
 
@@ -270,6 +280,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
       role="dialog"
       aria-modal="true"
       aria-labelledby="auth-modal-title"
+      onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
     >
       <div className="bg-white rounded-2xl shadow-xl max-w-md sm:max-w-lg w-full px-5 sm:px-7 py-6 sm:py-7 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
@@ -418,7 +429,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
 
           {isRegister && (
             <p className="text-[11px] leading-snug text-slate-500">
-              By creating an account, you agree that The UKCAT People may email you UCAT tips, relevant course
+              By creating an account, you agree that TheUKCATPeople may email you UCAT tips, relevant course
               information and occasional marketing updates. You can unsubscribe at any time via the link in each email.
             </p>
           )}

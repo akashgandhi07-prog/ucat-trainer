@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../hooks/useAuth";
 import { supabaseLog } from "../../lib/logger";
@@ -10,6 +10,9 @@ type BugReportModalProps = {
   onClose: () => void;
 };
 
+const RATE_LIMIT_MS = 60000; // 1 minute
+const RATE_LIMIT_KEY = "last_bug_report_timestamp";
+
 export default function BugReportModal({ isOpen, onClose }: BugReportModalProps) {
   const { user } = useAuth();
   const DESCRIPTION_MAX = 3000;
@@ -17,17 +20,66 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
   const [feedbackType, setFeedbackType] = useState<FeedbackType>("bug");
   const [description, setDescription] = useState("");
   const [pageUrl, setPageUrl] = useState("");
+  const [honeypot, setHoneypot] = useState(""); // Honeypot field for spam prevention
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
+  const [rateLimitRemaining, setRateLimitRemaining] = useState<number | null>(null);
+  const rateLimitTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (isOpen && typeof window !== "undefined") {
       setPageUrl(window.location.pathname + window.location.search);
+
+      // Check rate limit
+      const lastSubmit = localStorage.getItem(RATE_LIMIT_KEY);
+      if (lastSubmit) {
+        const elapsed = Date.now() - parseInt(lastSubmit, 10);
+        if (elapsed < RATE_LIMIT_MS) {
+          const remaining = Math.ceil((RATE_LIMIT_MS - elapsed) / 1000);
+          setRateLimitRemaining(remaining);
+
+          // Update countdown every second
+          rateLimitTimerRef.current = setInterval(() => {
+            const newElapsed = Date.now() - parseInt(lastSubmit, 10);
+            if (newElapsed >= RATE_LIMIT_MS) {
+              setRateLimitRemaining(null);
+              if (rateLimitTimerRef.current) {
+                clearInterval(rateLimitTimerRef.current);
+              }
+            } else {
+              setRateLimitRemaining(Math.ceil((RATE_LIMIT_MS - newElapsed) / 1000));
+            }
+          }, 1000);
+        }
+      }
     }
+
+    return () => {
+      if (rateLimitTimerRef.current) {
+        clearInterval(rateLimitTimerRef.current);
+      }
+    };
   }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Honeypot check - if filled, it's likely a bot
+    if (honeypot) {
+      supabaseLog.warn("Bug report blocked: honeypot triggered");
+      setStatus("success");
+      setMessage("Thanks! Your feedback has been sent.");
+      setTimeout(() => onClose(), 1500);
+      return;
+    }
+
+    // Rate limit check
+    if (rateLimitRemaining !== null && rateLimitRemaining > 0) {
+      setStatus("error");
+      setMessage(`Please wait ${rateLimitRemaining} seconds before submitting again.`);
+      return;
+    }
+
     const trimmed = description.trim();
     if (!trimmed) {
       return;
@@ -65,6 +117,10 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
       setMessage("Failed to send. Please try again.");
       return;
     }
+
+    // Set rate limit timestamp
+    localStorage.setItem(RATE_LIMIT_KEY, Date.now().toString());
+
     setStatus("success");
     setMessage("Thanks! Your feedback has been sent.");
     setDescription("");
@@ -75,8 +131,13 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
 
   const handleClose = () => {
     setDescription("");
+    setHoneypot("");
     setStatus("idle");
     setMessage("");
+    setRateLimitRemaining(null);
+    if (rateLimitTimerRef.current) {
+      clearInterval(rateLimitTimerRef.current);
+    }
     onClose();
   };
 
@@ -114,91 +175,106 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <p className="block text-sm font-medium text-slate-700 mb-2">What would you like to send?</p>
-              <div className="flex gap-3">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="feedback-type"
-                    value="bug"
-                    checked={feedbackType === "bug"}
-                    onChange={() => setFeedbackType("bug")}
-                    className="text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="text-sm text-slate-700">Report a bug</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="feedback-type"
-                    value="suggestion"
-                    checked={feedbackType === "suggestion"}
-                    onChange={() => setFeedbackType("suggestion")}
-                    className="text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="text-sm text-slate-700">Suggest an improvement</span>
-                </label>
-              </div>
-            </div>
-            <div>
-              <label htmlFor="feedback-description" className="block text-sm font-medium text-slate-700 mb-1">
-                {descriptionLabel}
+          {/* Honeypot field - hidden from users, catches bots */}
+          <div className="absolute opacity-0 pointer-events-none" aria-hidden="true">
+            <label htmlFor="feedback-website">Website</label>
+            <input
+              id="feedback-website"
+              type="text"
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+              tabIndex={-1}
+              autoComplete="off"
+            />
+          </div>
+
+          <div>
+            <p className="block text-sm font-medium text-slate-700 mb-2">What would you like to send?</p>
+            <div className="flex gap-3">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="feedback-type"
+                  value="bug"
+                  checked={feedbackType === "bug"}
+                  onChange={() => setFeedbackType("bug")}
+                  className="text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-sm text-slate-700">Report a bug</span>
               </label>
-              <textarea
-                id="feedback-description"
-                maxLength={DESCRIPTION_MAX}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder={descriptionPlaceholder}
-                rows={4}
-                required
-                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
-                disabled={status === "loading"}
-              />
-              <p className="mt-1 text-xs text-slate-500">
-                {description.length}/{DESCRIPTION_MAX} characters
-              </p>
-            </div>
-            <div>
-              <label htmlFor="feedback-page" className="block text-sm font-medium text-slate-700 mb-1">
-                {pageLabel}
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="feedback-type"
+                  value="suggestion"
+                  checked={feedbackType === "suggestion"}
+                  onChange={() => setFeedbackType("suggestion")}
+                  className="text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-sm text-slate-700">Suggest an improvement</span>
               </label>
-              <input
-                id="feedback-page"
-                type="text"
-                maxLength={PAGE_URL_MAX}
-                value={pageUrl}
-                onChange={(e) => setPageUrl(e.target.value)}
-                placeholder="/dashboard"
-                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                disabled={status === "loading"}
-              />
             </div>
-            {message && (
-              <p
-                className={`text-sm ${status === "error" ? "text-red-600" : "text-green-600"}`}
-              >
-                {message}
-              </p>
-            )}
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={handleClose}
-                className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={status === "loading" || !description.trim()}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              >
-                {submitLabel}
-              </button>
-            </div>
-          </form>
+          </div>
+          <div>
+            <label htmlFor="feedback-description" className="block text-sm font-medium text-slate-700 mb-1">
+              {descriptionLabel}
+            </label>
+            <textarea
+              id="feedback-description"
+              maxLength={DESCRIPTION_MAX}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder={descriptionPlaceholder}
+              rows={4}
+              required
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
+              disabled={status === "loading"}
+            />
+            <p className="mt-1 text-xs text-slate-500">
+              {description.length}/{DESCRIPTION_MAX} characters
+            </p>
+          </div>
+          <div>
+            <label htmlFor="feedback-page" className="block text-sm font-medium text-slate-700 mb-1">
+              {pageLabel}
+            </label>
+            <input
+              id="feedback-page"
+              type="text"
+              maxLength={PAGE_URL_MAX}
+              value={pageUrl}
+              onChange={(e) => setPageUrl(e.target.value)}
+              placeholder="/dashboard"
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={status === "loading"}
+            />
+          </div>
+          {message && (
+            <p
+              className={`text-sm ${status === "error" ? "text-red-600" : "text-green-600"}`}
+            >
+              {message}
+            </p>
+          )}
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={status === "loading" || !description.trim() || (rateLimitRemaining !== null && rateLimitRemaining > 0)}
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            >
+              {rateLimitRemaining !== null && rateLimitRemaining > 0
+                ? `Wait ${rateLimitRemaining}s`
+                : submitLabel}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

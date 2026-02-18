@@ -10,6 +10,7 @@ import type { SessionInsertPayload } from "../types/session";
 import { appendGuestSession } from "../lib/guestSessions";
 import { supabase } from "../lib/supabase";
 import { supabaseLog } from "../lib/logger";
+import { withRetry } from "../lib/retry";
 import type { TrainingDifficulty } from "../types/training";
 import { pickNewRandomPassage } from "../lib/passages";
 import { getSiteBaseUrl } from "../lib/siteUrl";
@@ -177,11 +178,17 @@ export default function KeywordScanningPage() {
         total: targets.length,
         time_seconds: timeSeconds,
       };
-      const { error } = await supabase.from("sessions").insert(payload);
-      if (error) {
+      try {
+        await withRetry(async () => {
+          const { error } = await supabase.from("sessions").insert(payload);
+          if (error) throw error;
+        });
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Unknown error";
+        const code = (err as { code?: string })?.code;
         supabaseLog.error("Failed to save keyword_scanning session", {
-          message: error.message,
-          code: error.code,
+          message,
+          code,
           userId: user.id,
         });
         if (mountedRef.current) {
@@ -234,8 +241,8 @@ export default function KeywordScanningPage() {
 
   if (phase === "results") {
     const elapsed = Math.round((Date.now() - startTime) / 1000);
-    const isNewBest =
-      bestTimeSeconds == null || elapsed < bestTimeSeconds;
+    const isPerfect = foundCount === targets.length;
+    const isNewBest = isPerfect && (bestTimeSeconds == null || elapsed < bestTimeSeconds);
     const skipLinkClass =
       "absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-slate-900 font-medium rounded-lg ring-2 ring-blue-600 opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
 
@@ -243,7 +250,7 @@ export default function KeywordScanningPage() {
       <div className="flex flex-col min-h-screen">
         <SEOHead
           title="UCAT Keyword Scanning Trainer"
-          description="Find target words in dense passages. Free keyword scanning practice for UCAT Verbal Reasoning from The UKCAT People."
+          description="Find target words in dense passages. Free keyword scanning practice for UCAT Verbal Reasoning from TheUKCATPeople."
           canonicalUrl={canonicalUrl}
         />
         <a href="#main-content" className={skipLinkClass}>
@@ -322,7 +329,7 @@ export default function KeywordScanningPage() {
     <div className="flex flex-col min-h-screen bg-slate-50/50">
       <SEOHead
         title="UCAT Keyword Scanning Trainer"
-        description="Find target words in dense passages. Free keyword scanning practice for UCAT Verbal Reasoning from The UKCAT People."
+        description="Find target words in dense passages. Free keyword scanning practice for UCAT Verbal Reasoning from TheUKCATPeople."
         canonicalUrl={canonicalUrl}
       />
       <a href="#main-content" className={skipLinkClass}>
@@ -333,15 +340,23 @@ export default function KeywordScanningPage() {
         <div className="max-w-2xl mx-auto">
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 mb-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm font-semibold text-slate-700">
-                Find these words
-              </p>
-              <span
-                className="inline-flex items-center justify-center min-w-[4.5rem] px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600"
-                aria-live="polite"
+              <div className="flex items-center gap-3">
+                <p className="text-sm font-semibold text-slate-700">
+                  Find these words
+                </p>
+                <span
+                  className="inline-flex items-center justify-center min-w-[4.5rem] px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600"
+                  aria-live="polite"
+                >
+                  {foundCount}/{targets.length} found
+                </span>
+              </div>
+              <button
+                onClick={() => setPhase("results")}
+                className="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline px-2 py-1"
               >
-                {foundCount}/{targets.length} found
-              </span>
+                Finish & View Results
+              </button>
             </div>
             <div className="flex flex-wrap gap-2 mt-3">
               {targets.map((target) => {
@@ -349,11 +364,10 @@ export default function KeywordScanningPage() {
                 return (
                   <span
                     key={target}
-                    className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
-                      found
-                        ? "bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-sm"
-                        : "bg-slate-50 text-slate-700 border border-slate-200"
-                    }`}
+                    className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${found
+                      ? "bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-sm"
+                      : "bg-slate-50 text-slate-700 border border-slate-200"
+                      }`}
                   >
                     {found && (
                       <span className="text-emerald-600 shrink-0" aria-hidden>
@@ -372,9 +386,8 @@ export default function KeywordScanningPage() {
             </p>
           )}
           <div
-            className={`bg-white rounded-xl border shadow-sm p-6 transition-colors ${
-              clickedWrong ? "border-red-300 ring-2 ring-red-100" : "border-slate-200"
-            }`}
+            className={`bg-white rounded-xl border shadow-sm p-6 transition-colors ${clickedWrong ? "border-red-300 ring-2 ring-red-100" : "border-slate-200"
+              }`}
           >
             <div className="text-slate-800 leading-[1.7] space-y-5 text-[15px]">
               {paragraphs.map((wordsInParagraph, pIdx) => (
@@ -387,11 +400,9 @@ export default function KeywordScanningPage() {
                       <span
                         key={`${pIdx}-${wIdx}-${word}`}
                         onClick={() => isTarget && !isFound && handleWordClick(normalized)}
-                        className={`${
-                          isTarget ? "cursor-pointer rounded px-1 inline-block align-baseline" : ""
-                        } ${
-                          isFound ? "bg-emerald-200 text-emerald-900 font-medium" : ""
-                        }`}
+                        className={`${isTarget ? "cursor-pointer rounded px-1 inline-block align-baseline" : ""
+                          } ${isFound ? "bg-emerald-200 text-emerald-900 font-medium" : ""
+                          }`}
                       >
                         {word}
                       </span>

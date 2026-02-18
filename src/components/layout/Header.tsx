@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useAuthModal } from "../../contexts/AuthModalContext";
 import { useBugReportModal } from "../../contexts/BugReportContext";
@@ -18,6 +18,8 @@ function MenuIcon({ open }: { open: boolean }) {
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const navigate = useNavigate();
   const { user, profile, isAdmin, loading, sessionLoadFailed, retryGetSession, signOut } = useAuth();
   const { openAuthModal } = useAuthModal();
   const { openBugReport } = useBugReportModal();
@@ -72,14 +74,17 @@ export default function Header() {
           </span>
           <button
             type="button"
-            onClick={() => {
-              signOut();
+            disabled={signingOut}
+            onClick={async () => {
               setMobileMenuOpen(false);
+              setSigningOut(true);
+              await signOut();
+              navigate("/");
             }}
-            className="text-sm font-medium text-slate-600 hover:text-slate-900 px-2 py-1 rounded hover:bg-slate-100"
+            className="text-sm font-medium text-slate-600 hover:text-slate-900 px-2 py-1 rounded hover:bg-slate-100 disabled:opacity-50"
             aria-label="Sign out"
           >
-            Sign out
+            {signingOut ? "Signing out…" : "Sign out"}
           </button>
         </div>
       ) : (
@@ -140,7 +145,7 @@ export default function Header() {
             to="/"
             className="text-lg sm:text-2xl font-bold text-slate-900 shrink-0 hover:text-blue-600 transition-colors flex items-center"
           >
-            The UKCAT People
+            TheUKCATPeople
           </Link>
         </div>
         <nav className="hidden sm:flex items-center gap-2 sm:gap-4">{navLinks}</nav>

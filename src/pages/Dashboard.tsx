@@ -21,8 +21,8 @@ import {
   getWpmTierLabel,
   WPM_BENCHMARK,
 } from "../lib/wpmBenchmark";
-import { TRAINING_TYPE_LABELS } from "../types/training";
-import type { TrainingType } from "../types/training";
+import { TRAINING_TYPE_LABELS, TRAINING_DIFFICULTY_LABELS } from "../types/training";
+import type { TrainingType, TrainingDifficulty } from "../types/training";
 import { PASSAGES } from "../data/passages";
 import SEOHead from "../components/seo/SEOHead";
 import Header from "../components/layout/Header";
@@ -34,6 +34,7 @@ type SessionRow = {
   id: string;
   user_id: string;
   training_type?: string | null;
+  difficulty?: string | null;
   wpm?: number | null;
   correct: number;
   total: number;
@@ -48,17 +49,30 @@ type ChartPoint = {
   displayDate: string;
 };
 
+type AccuracyChartPoint = {
+  date: string;
+  accuracy: number;
+  displayDate: string;
+};
+
+type DifficultyStats = {
+  count: number;
+  avgAccuracy: number;
+};
+
 type GuestDashboardSummary = {
   totalSessions: number;
   speedReadingCount: number;
   rapidRecallCount: number;
   keywordScanningCount: number;
   averageWpm: number | null;
+  rapidRecallAvgAccuracy: number | null;
+  keywordScanningAvgAccuracy: number | null;
 };
 
 function getTrainingType(s: SessionRow): TrainingType {
   const t = s.training_type;
-  if (t === "speed_reading" || t === "rapid_recall" || t === "keyword_scanning")
+  if (t === "speed_reading" || t === "rapid_recall" || t === "keyword_scanning" || t === "calculator")
     return t;
   return "speed_reading";
 }
@@ -101,26 +115,50 @@ export default function Dashboard() {
   useEffect(() => {
     if (!user) {
       setLoading(false);
+      setError(null);
+      setSessions([]);
       return;
     }
 
     let cancelled = false;
     let attempt = 0;
+    let timeoutId: number | null = null;
 
     const fetchSessions = async () => {
       if (cancelled) return;
       dashboardLog.info("Fetching sessions", { userId: user.id, attempt: attempt + 1 });
 
+      // Create AbortController for timeout
+      const abortController = new AbortController();
+      const FETCH_TIMEOUT_MS = 10000; // 10 seconds
+
+      timeoutId = window.setTimeout(() => {
+        abortController.abort();
+        dashboardLog.warn("Session fetch timed out", { userId: user.id, attempt: attempt + 1 });
+      }, FETCH_TIMEOUT_MS);
+
       const { data, error: err } = await supabase
         .from("sessions")
-        .select("*")
+        .select("id, user_id, training_type, difficulty, wpm, correct, total, created_at, passage_id, time_seconds")
         .eq("user_id", user.id)
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: true })
+        .abortSignal(abortController.signal);
+
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
 
       if (cancelled) return;
 
       if (err) {
-        dashboardLog.error("Sessions fetch failed", { message: err.message, code: err.code, error: err });
+        const isAborted = err.message?.includes("aborted") || err.message?.includes("abort");
+        dashboardLog.error("Sessions fetch failed", {
+          message: err.message,
+          code: err.code,
+          error: err,
+          isTimeout: isAborted
+        });
         if (attempt < SESSIONS_FETCH_RETRIES) {
           attempt += 1;
           dashboardLog.info("Retrying sessions fetch", { nextAttempt: attempt + 1 });
@@ -145,6 +183,9 @@ export default function Dashboard() {
     fetchSessions();
     return () => {
       cancelled = true;
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+      }
     };
   }, [user]);
 
@@ -166,12 +207,18 @@ export default function Dashboard() {
       wpmValues.length > 0
         ? Math.round(wpmValues.reduce((sum, n) => sum + n, 0) / wpmValues.length)
         : null;
+    const rapidAccValues = rapid.filter((s) => s.total > 0).map((s) => (s.correct / s.total) * 100);
+    const rapidRecallAvgAccuracy = rapidAccValues.length > 0 ? Math.round(rapidAccValues.reduce((a, b) => a + b, 0) / rapidAccValues.length) : null;
+    const kwAccValues = keyword.filter((s) => s.total > 0).map((s) => (s.correct / s.total) * 100);
+    const keywordScanningAvgAccuracy = kwAccValues.length > 0 ? Math.round(kwAccValues.reduce((a, b) => a + b, 0) / kwAccValues.length) : null;
     setGuestSummary({
       totalSessions: guestSessions.length,
       speedReadingCount: speed.length,
       rapidRecallCount: rapid.length,
       keywordScanningCount: keyword.length,
       averageWpm,
+      rapidRecallAvgAccuracy,
+      keywordScanningAvgAccuracy,
     });
   }, [user]);
 
@@ -180,6 +227,7 @@ export default function Dashboard() {
       speed_reading: [],
       rapid_recall: [],
       keyword_scanning: [],
+      calculator: [],
     };
     for (const s of sessions) {
       m[getTrainingType(s)].push(s);
@@ -209,35 +257,107 @@ export default function Dashboard() {
   const averageWpm =
     speedWpmCount > 0
       ? Math.round(
-          speedReadingSessions.reduce((sum, s) => sum + (s.wpm ?? 0), 0) / speedWpmCount
-        )
+        speedReadingSessions.reduce((sum, s) => sum + (s.wpm ?? 0), 0) / speedWpmCount
+      )
+      : 0;
+  const bestWpm =
+    speedWpmCount > 0
+      ? Math.max(...speedReadingSessions.filter((s) => s.wpm != null).map((s) => s.wpm ?? 0))
       : 0;
 
   const speedReadingAccuracy =
     speedReadingSessions.length > 0
       ? Math.max(
-          ...speedReadingSessions.map((s) =>
-            s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0
-          )
+        ...speedReadingSessions.map((s) =>
+          s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0
         )
+      )
       : 0;
 
+  // Helper: compute difficulty breakdown for a set of sessions
+  function computeDifficultyBreakdown(rows: SessionRow[]): Record<TrainingDifficulty, DifficultyStats> {
+    const base: Record<TrainingDifficulty, DifficultyStats> = {
+      easy: { count: 0, avgAccuracy: 0 },
+      medium: { count: 0, avgAccuracy: 0 },
+      hard: { count: 0, avgAccuracy: 0 },
+    };
+    const totals: Record<TrainingDifficulty, number> = { easy: 0, medium: 0, hard: 0 };
+    for (const s of rows) {
+      const diff: TrainingDifficulty = (s.difficulty as TrainingDifficulty) ?? "medium";
+      base[diff].count++;
+      totals[diff] += s.total > 0 ? (s.correct / s.total) * 100 : 0;
+    }
+    for (const d of ["easy", "medium", "hard"] as TrainingDifficulty[]) {
+      base[d].avgAccuracy = base[d].count > 0 ? Math.round(totals[d] / base[d].count) : 0;
+    }
+    return base;
+  }
+
+  // Helper: compute accuracy chart data
+  function computeAccuracyChart(rows: SessionRow[]): AccuracyChartPoint[] {
+    return rows
+      .filter((s) => s.total > 0)
+      .map((s) => ({
+        date: s.created_at,
+        accuracy: Math.round((s.correct / s.total) * 100),
+        displayDate: new Date(s.created_at).toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric",
+        }),
+      }));
+  }
+
+  // Helper: format last session date
+  function formatLastSession(rows: SessionRow[]): string | null {
+    if (rows.length === 0) return null;
+    return new Date(rows[rows.length - 1].created_at).toLocaleDateString(undefined, {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  }
+
+  const speedDifficultyBreakdown = useMemo(() => computeDifficultyBreakdown(speedReadingSessions), [speedReadingSessions]);
+  const speedAccuracyChart = useMemo(() => computeAccuracyChart(speedReadingSessions), [speedReadingSessions]);
+
+  // --- Rapid Recall ---
   const rapidRecallSessions = byType.rapid_recall;
   const rapidRecallAvg =
     rapidRecallSessions.length > 0
       ? Math.round(
-          (rapidRecallSessions.reduce((sum, s) => sum + (s.total > 0 ? (s.correct / s.total) * 100 : 0), 0) /
-            rapidRecallSessions.length)
-        )
+        (rapidRecallSessions.reduce((sum, s) => sum + (s.total > 0 ? (s.correct / s.total) * 100 : 0), 0) /
+          rapidRecallSessions.length)
+      )
       : 0;
+  const rapidBestScore =
+    rapidRecallSessions.length > 0
+      ? Math.max(...rapidRecallSessions.map((s) => s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0))
+      : 0;
+  const rapidSessionsWithTime = rapidRecallSessions.filter((s) => s.time_seconds != null && s.time_seconds > 0);
+  const rapidAvgTime =
+    rapidSessionsWithTime.length > 0
+      ? Math.round(rapidSessionsWithTime.reduce((sum, s) => sum + (s.time_seconds ?? 0), 0) / rapidSessionsWithTime.length)
+      : null;
+  const rapidBestTime =
+    rapidSessionsWithTime.length > 0
+      ? Math.min(...rapidSessionsWithTime.map((s) => s.time_seconds ?? Infinity))
+      : null;
+  const rapidAccuracyChart = useMemo(() => computeAccuracyChart(rapidRecallSessions), [rapidRecallSessions]);
+  const rapidDifficultyBreakdown = useMemo(() => computeDifficultyBreakdown(rapidRecallSessions), [rapidRecallSessions]);
+  const rapidLastSession = useMemo(() => formatLastSession(rapidRecallSessions), [rapidRecallSessions]);
 
+  // --- Keyword Scanning ---
   const keywordSessions = byType.keyword_scanning;
   const keywordAvg =
     keywordSessions.length > 0
       ? Math.round(
-          (keywordSessions.reduce((sum, s) => sum + (s.total > 0 ? (s.correct / s.total) * 100 : 0), 0) /
-            keywordSessions.length)
-        )
+        (keywordSessions.reduce((sum, s) => sum + (s.total > 0 ? (s.correct / s.total) * 100 : 0), 0) /
+          keywordSessions.length)
+      )
+      : 0;
+  const keywordBestAccuracy =
+    keywordSessions.length > 0
+      ? Math.max(...keywordSessions.map((s) => s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0))
       : 0;
   const keywordSessionsWithTime = keywordSessions.filter(
     (s) => s.time_seconds != null && s.time_seconds > 0
@@ -245,10 +365,125 @@ export default function Dashboard() {
   const averageScanTimeSeconds =
     keywordSessionsWithTime.length > 0
       ? Math.round(
-          keywordSessionsWithTime.reduce((sum, s) => sum + (s.time_seconds ?? 0), 0) /
-            keywordSessionsWithTime.length
-        )
+        keywordSessionsWithTime.reduce((sum, s) => sum + (s.time_seconds ?? 0), 0) /
+        keywordSessionsWithTime.length
+      )
       : null;
+  const keywordBestTime =
+    keywordSessionsWithTime.length > 0
+      ? Math.min(...keywordSessionsWithTime.map((s) => s.time_seconds ?? Infinity))
+      : null;
+  const keywordAccuracyChart = useMemo(() => computeAccuracyChart(keywordSessions), [keywordSessions]);
+  const keywordDifficultyBreakdown = useMemo(() => computeDifficultyBreakdown(keywordSessions), [keywordSessions]);
+  const keywordLastSession = useMemo(() => formatLastSession(keywordSessions), [keywordSessions]);
+
+  // --- Calculator Trainer ---
+  const calculatorSessions = byType.calculator;
+  const calculatorAvgAccuracy =
+    calculatorSessions.length > 0
+      ? Math.round(
+        (calculatorSessions.reduce((sum, s) => sum + (s.total > 0 ? (s.correct / s.total) * 100 : 0), 0) /
+          calculatorSessions.length)
+      )
+      : 0;
+
+  // WPM column stores KPS for calculator
+  const calculatorKpsValues = calculatorSessions
+    .filter(s => s.wpm != null)
+    .map(s => s.wpm ?? 0);
+
+  const calculatorAvgKps =
+    calculatorKpsValues.length > 0
+      ? (calculatorKpsValues.reduce((sum, k) => sum + k, 0) / calculatorKpsValues.length).toFixed(1)
+      : "0.0";
+
+  const calculatorBestKps =
+    calculatorKpsValues.length > 0
+      ? Math.max(...calculatorKpsValues).toFixed(1)
+      : "0.0";
+
+  const calculatorChartData: ChartPoint[] = calculatorSessions
+    .filter((s) => s.wpm != null)
+    .map((s) => ({
+      date: s.created_at,
+      wpm: s.wpm ?? 0, // This is KPS
+      displayDate: new Date(s.created_at).toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+      }),
+    }));
+
+  const calculatorDrillBreakdown = useMemo(() => {
+    const breakdown: Record<string, { count: number; kpsSum: number; accSum: number }> = {};
+
+    for (const s of calculatorSessions) {
+      const mode = s.difficulty || 'free'; // 'difficulty' col holds mode
+      if (!breakdown[mode]) {
+        breakdown[mode] = { count: 0, kpsSum: 0, accSum: 0 };
+      }
+      breakdown[mode].count++;
+      breakdown[mode].kpsSum += s.wpm ?? 0;
+      breakdown[mode].accSum += s.total > 0 ? (s.correct / s.total) * 100 : 0;
+    }
+
+    // Finalize averages
+    const result: Record<string, { count: number; avgKps: string; avgAccuracy: number }> = {};
+    Object.entries(breakdown).forEach(([mode, stats]) => {
+      result[mode] = {
+        count: stats.count,
+        avgKps: (stats.kpsSum / stats.count).toFixed(1),
+        avgAccuracy: Math.round(stats.accSum / stats.count)
+      };
+    });
+    return result;
+  }, [calculatorSessions]);
+
+  const calculatorLastSession = useMemo(() => formatLastSession(calculatorSessions), [calculatorSessions]);
+
+  // Shared difficulty breakdown renderer
+  const renderDifficultyBreakdown = (breakdown: Record<TrainingDifficulty, DifficultyStats>) => {
+    const hasSessions = breakdown.easy.count + breakdown.medium.count + breakdown.hard.count > 0;
+    if (!hasSessions) return null;
+    return (
+      <div className="mt-4">
+        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">By Difficulty</p>
+        <div className="grid grid-cols-3 gap-2 text-center">
+          {(["easy", "medium", "hard"] as TrainingDifficulty[]).map((d) => (
+            <div key={d} className="bg-slate-50 rounded-lg px-3 py-2">
+              <p className="text-[11px] font-medium text-slate-500">{TRAINING_DIFFICULTY_LABELS[d]}</p>
+              <p className="text-sm font-bold text-slate-900">{breakdown[d].count > 0 ? `${breakdown[d].avgAccuracy}%` : "-"}</p>
+              <p className="text-[10px] text-slate-400">{breakdown[d].count} session{breakdown[d].count !== 1 ? "s" : ""}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Shared accuracy chart renderer
+  const renderAccuracyChart = (data: AccuracyChartPoint[], label: string) => {
+    if (data.length < 2) return null;
+    return (
+      <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm mt-4">
+        <h3 className="text-base font-medium text-slate-900 mb-4">{label}</h3>
+        <div className="h-52 sm:h-60 min-h-[180px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="displayDate" tick={{ fontSize: 12, fill: "#64748b" }} stroke="#94a3b8" />
+              <YAxis tick={{ fontSize: 12, fill: "#64748b" }} stroke="#94a3b8" domain={[0, 100]} />
+              <Tooltip
+                contentStyle={{ backgroundColor: "#fff", border: "1px solid #e2e8f0", borderRadius: "8px" }}
+                labelFormatter={(_, payload) => payload?.[0]?.payload?.displayDate ?? ""}
+                formatter={(value: number | undefined) => [`${value ?? 0}%`, "Accuracy"]}
+              />
+              <Line type="monotone" dataKey="accuracy" stroke="#16a34a" strokeWidth={2} dot={{ fill: "#16a34a", r: 3 }} activeDot={{ r: 5 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    );
+  };
 
   const displayName =
     profile?.full_name?.trim() ||
@@ -261,10 +496,10 @@ export default function Dashboard() {
   const lastCheckUp =
     sessions.length > 0
       ? new Date(sessions[sessions.length - 1].created_at).toLocaleDateString(undefined, {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        })
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
       : "-";
 
   const today = useMemo(() => {
@@ -405,7 +640,7 @@ export default function Dashboard() {
           </div>
         </section>
         <section className="mb-10">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
               <p className="text-sm font-medium text-slate-500">Total sessions</p>
               <p className="text-3xl font-bold text-slate-900">{guestSummary.totalSessions}</p>
@@ -413,12 +648,27 @@ export default function Dashboard() {
             <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
               <p className="text-sm font-medium text-slate-500">Speed Reading</p>
               <p className="text-2xl font-bold text-slate-900">{guestSummary.speedReadingCount}</p>
+              <p className="text-xs text-slate-400 mt-1">session{guestSummary.speedReadingCount !== 1 ? "s" : ""}</p>
             </div>
             <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-              <p className="text-sm font-medium text-slate-500">Rapid Recall & Keyword</p>
-              <p className="text-2xl font-bold text-slate-900">
-                {guestSummary.rapidRecallCount + guestSummary.keywordScanningCount}
-              </p>
+              <p className="text-sm font-medium text-slate-500">Rapid Recall</p>
+              <p className="text-2xl font-bold text-slate-900">{guestSummary.rapidRecallCount}</p>
+              {guestSummary.rapidRecallAvgAccuracy != null && (
+                <p className="text-xs text-slate-500 mt-1">Avg accuracy: {guestSummary.rapidRecallAvgAccuracy}%</p>
+              )}
+            </div>
+            <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+              <p className="text-sm font-medium text-slate-500">Keyword Scanning</p>
+              <p className="text-2xl font-bold text-slate-900">{guestSummary.keywordScanningCount}</p>
+              {guestSummary.keywordScanningAvgAccuracy != null && (
+                <p className="text-xs text-slate-500 mt-1">Avg accuracy: {guestSummary.keywordScanningAvgAccuracy}%</p>
+              )}
+            </div>
+            {/* Calculator (Guest Placeholder) */}
+            <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+              <p className="text-sm font-medium text-slate-500">Calculator</p>
+              <p className="text-2xl font-bold text-slate-900">-</p>
+              <p className="text-xs text-slate-500 mt-1">Sign in to track</p>
             </div>
           </div>
         </section>
@@ -527,14 +777,18 @@ export default function Dashboard() {
                   </p>
                 </div>
               )}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                 <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                   <p className="text-sm font-medium text-slate-500">Your typical WPM</p>
                   <p className="text-slate-500 text-xs mb-1">Average from your history</p>
                   <p className="text-3xl font-bold text-slate-900">{averageWpm}</p>
                 </div>
                 <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                  <p className="text-sm font-medium text-slate-500">Best comprehension accuracy</p>
+                  <p className="text-sm font-medium text-slate-500">Best WPM</p>
+                  <p className="text-3xl font-bold text-slate-900">{bestWpm}</p>
+                </div>
+                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                  <p className="text-sm font-medium text-slate-500">Best comprehension</p>
                   <p className="text-3xl font-bold text-slate-900">{speedReadingAccuracy}%</p>
                 </div>
               </div>
@@ -686,49 +940,179 @@ export default function Dashboard() {
                   </>
                 )}
               </div>
+              {renderAccuracyChart(speedAccuracyChart, "Comprehension accuracy over time")}
+              {renderDifficultyBreakdown(speedDifficultyBreakdown)}
             </section>
 
             <section className="mb-10">
               <h2 className="text-lg font-semibold text-slate-900 mb-4">
                 {TRAINING_TYPE_LABELS.rapid_recall}
               </h2>
-              <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                {rapidRecallSessions.length === 0 ? (
+              {rapidRecallSessions.length === 0 ? (
+                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                   <p className="text-slate-500">No Rapid Recall sessions yet.</p>
-                ) : (
-                  <>
-                    <p className="text-sm font-medium text-slate-500">Average score</p>
-                    <p className="text-2xl font-bold text-slate-900">{rapidRecallAvg}%</p>
-                    <p className="text-slate-500 text-sm mt-1">
-                      {rapidRecallSessions.length} session{rapidRecallSessions.length !== 1 ? "s" : ""}
-                    </p>
-                  </>
-                )}
-              </div>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                      <p className="text-sm font-medium text-slate-500">Average score</p>
+                      <p className="text-2xl font-bold text-slate-900">{rapidRecallAvg}%</p>
+                    </div>
+                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                      <p className="text-sm font-medium text-slate-500">Best score</p>
+                      <p className="text-2xl font-bold text-slate-900">{rapidBestScore}%</p>
+                    </div>
+                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                      <p className="text-sm font-medium text-slate-500">Avg reading time</p>
+                      <p className="text-2xl font-bold text-slate-900">{rapidAvgTime != null ? `${rapidAvgTime}s` : "-"}</p>
+                    </div>
+                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                      <p className="text-sm font-medium text-slate-500">Best time</p>
+                      <p className="text-2xl font-bold text-slate-900">{rapidBestTime != null ? `${rapidBestTime}s` : "-"}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-3 text-sm text-slate-600 mb-4">
+                    <span>{rapidRecallSessions.length} session{rapidRecallSessions.length !== 1 ? "s" : ""}</span>
+                    {rapidLastSession && <span>Last session: {rapidLastSession}</span>}
+                  </div>
+                  {renderAccuracyChart(rapidAccuracyChart, "Recall accuracy over time")}
+                  <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm mt-4">
+                    {renderDifficultyBreakdown(rapidDifficultyBreakdown)}
+                  </div>
+                </>
+              )}
             </section>
 
             <section>
               <h2 className="text-lg font-semibold text-slate-900 mb-4">
                 {TRAINING_TYPE_LABELS.keyword_scanning}
               </h2>
-              <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                {keywordSessions.length === 0 ? (
+              {keywordSessions.length === 0 ? (
+                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                   <p className="text-slate-500">No Keyword Scanning sessions yet.</p>
-                ) : (
-                  <>
-                    <p className="text-sm font-medium text-slate-500">Average accuracy</p>
-                    <p className="text-2xl font-bold text-slate-900">{keywordAvg}%</p>
-                    {averageScanTimeSeconds != null && (
-                      <p className="text-slate-600 text-sm mt-2">
-                        Average time to find all keywords: {averageScanTimeSeconds}s
-                      </p>
-                    )}
-                    <p className="text-slate-500 text-sm mt-1">
-                      {keywordSessions.length} session{keywordSessions.length !== 1 ? "s" : ""}
-                    </p>
-                  </>
-                )}
-              </div>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                      <p className="text-sm font-medium text-slate-500">Average accuracy</p>
+                      <p className="text-2xl font-bold text-slate-900">{keywordAvg}%</p>
+                    </div>
+                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                      <p className="text-sm font-medium text-slate-500">Best accuracy</p>
+                      <p className="text-2xl font-bold text-slate-900">{keywordBestAccuracy}%</p>
+                    </div>
+                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                      <p className="text-sm font-medium text-slate-500">Avg scan time</p>
+                      <p className="text-2xl font-bold text-slate-900">{averageScanTimeSeconds != null ? `${averageScanTimeSeconds}s` : "-"}</p>
+                    </div>
+                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                      <p className="text-sm font-medium text-slate-500">Best time</p>
+                      <p className="text-2xl font-bold text-slate-900">{keywordBestTime != null ? `${keywordBestTime}s` : "-"}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-3 text-sm text-slate-600 mb-4">
+                    <span>{keywordSessions.length} session{keywordSessions.length !== 1 ? "s" : ""}</span>
+                    {keywordLastSession && <span>Last session: {keywordLastSession}</span>}
+                  </div>
+                  {renderAccuracyChart(keywordAccuracyChart, "Scanning accuracy over time")}
+                  <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm mt-4">
+                    {renderDifficultyBreakdown(keywordDifficultyBreakdown)}
+                  </div>
+                </>
+              )}
+            </section>
+
+            <section>
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">
+                {TRAINING_TYPE_LABELS.calculator}
+              </h2>
+
+              {calculatorSessions.length === 0 ? (
+                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                  <p className="text-slate-500">No Calculator sessions yet. Start the Calculator Trainer to track your speed.</p>
+                  <Link
+                    to="/calculator"
+                    className="inline-flex mt-4 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+                  >
+                    Go to Calculator
+                  </Link>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                      <p className="text-sm font-medium text-slate-500">Your Average KPS</p>
+                      <p className="text-3xl font-bold text-slate-900">{calculatorAvgKps}</p>
+                    </div>
+                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                      <p className="text-sm font-medium text-slate-500">Best KPS</p>
+                      <p className="text-3xl font-bold text-slate-900">{calculatorBestKps}</p>
+                    </div>
+                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                      <p className="text-sm font-medium text-slate-500">Avg Accuracy</p>
+                      <p className="text-3xl font-bold text-slate-900">{calculatorAvgAccuracy}%</p>
+                    </div>
+                  </div>
+
+                  {/* Drill Breakdown */}
+                  <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm mb-4">
+                    <h3 className="text-sm font-medium text-slate-900 mb-3">Performance by Mode</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {Object.entries(calculatorDrillBreakdown).map(([mode, stats]) => (
+                        <div key={mode} className="bg-slate-50 p-3 rounded-lg text-center">
+                          <p className="text-xs font-bold text-slate-600 uppercase mb-1">{mode === 'fingerTwister' ? 'Twister' : mode}</p>
+                          <p className="text-lg font-bold text-slate-900">{stats.avgKps} <span className="text-xs font-normal text-slate-500">KPS</span></p>
+                          <p className="text-xs text-slate-500">{stats.avgAccuracy}% Acc ({stats.count})</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+                    <h3 className="text-base font-medium text-slate-900 mb-4">
+                      KPS Progress
+                    </h3>
+                    <div className="h-64 sm:h-72 min-h-[200px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={calculatorChartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                          <XAxis
+                            dataKey="displayDate"
+                            tick={{ fontSize: 12, fill: "#64748b" }}
+                            stroke="#94a3b8"
+                          />
+                          <YAxis
+                            tick={{ fontSize: 12, fill: "#64748b" }}
+                            stroke="#94a3b8"
+                            domain={["auto", "auto"]}
+                          />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: "#fff",
+                              border: "1px solid #e2e8f0",
+                              borderRadius: "8px",
+                            }}
+                            labelFormatter={(_, payload) =>
+                              payload?.[0]?.payload?.displayDate ?? ""
+                            }
+                            formatter={(value: number | undefined) => [`${value ?? 0} KPS`, "Speed"]}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="wpm"
+                            stroke="#4f46e5"
+                            strokeWidth={2}
+                            dot={{ fill: "#4f46e5", r: 4 }}
+                            activeDot={{ r: 6 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </>
+              )}
             </section>
           </>
         )}

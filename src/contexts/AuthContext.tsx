@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { withRetry } from "../lib/retry";
 import { authLog } from "../lib/logger";
@@ -19,60 +19,76 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [sessionLoadFailed, setSessionLoadFailed] = useState(false);
 
+  // Use a ref for user so the onAuthStateChange closure always has the latest value
+  const userRef = useRef(user);
+  userRef.current = user;
+
   const fetchProfile = useCallback(async (userId: string) => {
     const p = await getProfile(userId);
     setProfile(p);
   }, []);
 
+  /* ── loadSession ───────────────────────────────────────────────── */
   const loadSession = useCallback(async () => {
     setSessionLoadFailed(false);
     setLoading(true);
+
+    let resolvedUser: AuthState["user"] = null;
+
     try {
       const { data: { session }, error } = await withRetry(
         () => supabase.auth.getSession(),
         { retries: GET_SESSION_RETRIES, baseMs: GET_SESSION_BASE_MS }
       );
+
       if (error) {
-        authLog.error("getSession failed", error);
-        setUser(null);
-        setProfile(null);
-        setSessionLoadFailed(true);
-        authLog.info("Session load failed flag set", { scope: "loadSession", reason: "getSession error" });
-        return;
-      }
-      const u = session?.user ?? null;
-      authLog.info("Session resolved", {
-        hasUser: !!u,
-        userId: u?.id,
-        email: u?.email,
-      });
-      setUser(u);
-      if (u) {
-        let p = await getProfile(u.id);
-        if (!p) {
-          authLog.info("No profile row for user, creating minimal profile", { userId: u.id });
-          await upsertProfile(u.id, null, null);
-          p = await getProfile(u.id);
-        }
-        setProfile(p);
+        authLog.error("getSession returned error", error);
+        // Don't early-return — fall through to finally
       } else {
-        setProfile(null);
+        resolvedUser = session?.user ?? null;
+        authLog.info("Session resolved", {
+          hasUser: !!resolvedUser,
+          userId: resolvedUser?.id,
+          email: resolvedUser?.email,
+        });
       }
     } catch (err) {
       authLog.error("getSession failed after retries", err);
-      setUser(null);
-      setProfile(null);
-      setSessionLoadFailed(true);
-      authLog.info("Session load failed flag set", { scope: "loadSession", reason: "retry exhaustion" });
-    } finally {
-      setLoading(false);
+
+      // Fix #1: clear corrupt localStorage token so next load doesn't repeat
+      // scope:"local" avoids calling the Supabase server (prevents race conditions)
+      try { await supabase.auth.signOut({ scope: "local" }); } catch { /* ignore */ }
+
+      const isAbortError = err instanceof Error && (err.name === "AbortError" || err.message.includes("aborted"));
+      if (!isAbortError) {
+        setSessionLoadFailed(true);
+        authLog.info("Session load failed flag set", { scope: "loadSession", reason: "retry exhaustion" });
+      } else {
+        authLog.info("Stale session cleared after AbortError — user can log in fresh");
+      }
     }
+
+    // Always runs — fix #3 (no fragile early-return before finally)
+    setUser(resolvedUser);
+    if (resolvedUser) {
+      let p = await getProfile(resolvedUser.id);
+      if (!p) {
+        authLog.info("No profile row for user, creating minimal profile", { userId: resolvedUser.id });
+        await upsertProfile(resolvedUser.id, null, null);
+        p = await getProfile(resolvedUser.id);
+      }
+      setProfile(p);
+    } else {
+      setProfile(null);
+    }
+    setLoading(false);
   }, []);
 
+  /* ── mount: listener only (fix #7 — no double-load) ────────── */
   useEffect(() => {
-    loadSession();
-
     let mounted = true;
+    let initialLoadDone = false;
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -85,6 +101,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!mounted) return;
       const u = session?.user ?? null;
       setSessionLoadFailed(false);
+
+      // INITIAL_SESSION is the first event — use it instead of manual loadSession
+      if (event === "INITIAL_SESSION") {
+        setUser(u);
+        if (u) {
+          let p = await getProfile(u.id);
+          if (!p) {
+            authLog.info("No profile row, creating minimal profile", { userId: u.id });
+            await upsertProfile(u.id, null, null);
+            p = await getProfile(u.id);
+          }
+          if (mounted) setProfile(p);
+        } else {
+          setProfile(null);
+        }
+        initialLoadDone = true;
+        if (mounted) setLoading(false);
+        return;
+      }
+
+      // If INITIAL_SESSION hasn't fired yet, skip other events to avoid races
+      if (!initialLoadDone) return;
 
       if (event === "SIGNED_IN" && session?.user) {
         const guestSessions = getGuestSessions();
@@ -126,29 +164,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           entryYear,
           emailMarketingOptIn,
         });
-        await fetchProfile(session.user.id);
+        if (mounted) await fetchProfile(session.user.id);
+      } else if (event === "SIGNED_OUT") {
+        authLog.info("User signed out", { prevUserId: userRef.current?.id });
+        if (mounted) setProfile(null);
       } else if (u) {
-        await fetchProfile(u.id);
+        if (mounted) await fetchProfile(u.id);
       } else {
-        setProfile(null);
+        if (mounted) setProfile(null);
       }
 
-      if (mounted) {
-        if (!u && user) {
-          authLog.info("Auth context user cleared", {
-            prevUserId: user.id,
-            event,
-          });
-        }
-        setUser(u);
-      }
+      if (mounted) setUser(u);
     });
 
     return () => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [loadSession]);
+  }, [fetchProfile, showToast]);
 
   const refetchProfile = useCallback(async () => {
     if (!user) return;
@@ -160,9 +193,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [loadSession]);
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut();
+    authLog.info("Sign out requested", { userId: userRef.current?.id });
+    // Clear state immediately for instant UI feedback
     setUser(null);
     setProfile(null);
+    setSessionLoadFailed(false);
+    // Then tell Supabase (also triggers onAuthStateChange SIGNED_OUT)
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      authLog.error("signOut failed", err);
+      // State is already cleared so user sees logged-out UI regardless
+    }
   }, []);
 
   const isAdmin = profile?.role === "admin";

@@ -8,7 +8,7 @@ interface SEOHeadProps {
   imageUrl?: string;
 }
 
-const SITE_NAME = "The UKCAT People";
+const SITE_NAME = "TheUKCATPeople";
 
 const JSON_LD_BASE = {
   "@context": "https://schema.org",
