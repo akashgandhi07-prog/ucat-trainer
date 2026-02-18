@@ -1,7 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as Dialog from "@radix-ui/react-dialog";
 import { supabase } from "../../lib/supabase";
 import { authLog } from "../../lib/logger";
-import { validatePassword, getPasswordRequirementHint } from "../../lib/passwordValidation";
+import { getPasswordRequirementHint } from "../../lib/passwordValidation";
+import { getAuthSchema, type AuthFormData } from "../../lib/authSchema";
+import { trackEvent } from "../../lib/analytics";
 import type { Stream } from "../../lib/profileApi";
 import type { AuthModalMode } from "../../contexts/AuthModalContext";
 
@@ -25,12 +30,6 @@ const ENTRY_YEAR_OPTIONS: { value: string; label: string }[] = [
   { value: "2029", label: "2029 Entry (Starting University September 2029)" },
   { value: "Other", label: "Other" },
 ];
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-function isValidEmail(value: string): boolean {
-  return EMAIL_REGEX.test(value.trim());
-}
 
 const FALLBACK_AUTH_ERROR = "Something went wrong. Please try again.";
 
@@ -68,34 +67,38 @@ function getResetRedirectUrl(): string {
 
 export default function AuthModal({ isOpen, onClose, initialMode = "login" }: AuthModalProps) {
   const [mode, setMode] = useState<Mode>(initialMode);
-
-  useEffect(() => {
-    if (isOpen) setMode(initialMode);
-  }, [isOpen, initialMode]);
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [stream, setStream] = useState<Stream>("Medicine");
-  const [entryYear, setEntryYear] = useState<string>("2026");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmedEmail = email.trim();
-    if (!trimmedEmail) {
-      setMessage("Please enter your email.");
-      setStatus("error");
-      return;
+  const {
+    register,
+    control,
+    handleSubmit: rhfHandleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<AuthFormData>({
+    resolver: (values, context, options) =>
+      zodResolver(getAuthSchema(mode))(values, context, options),
+    defaultValues: {
+      email: "",
+      password: "",
+      confirmPassword: "",
+      firstName: "",
+      lastName: "",
+      stream: "Medicine",
+      entryYear: "2026",
+    },
+  });
+
+  useEffect(() => {
+    if (isOpen) {
+      setMode(initialMode);
+      trackEvent("auth_modal_opened", { trigger: initialMode });
     }
-    if (!isValidEmail(trimmedEmail)) {
-      setMessage("Please enter a valid email address.");
-      setStatus("error");
-      return;
-    }
+  }, [isOpen, initialMode]);
+
+  const onSubmit = async (data: AuthFormData) => {
+    const trimmedEmail = data.email.trim();
 
     if (mode === "forgot") {
       setStatus("loading");
@@ -116,16 +119,11 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
     }
 
     if (mode === "login") {
-      if (!password) {
-        setMessage("Please enter your password.");
-        setStatus("error");
-        return;
-      }
       setStatus("loading");
       setMessage("");
       const { error } = await supabase.auth.signInWithPassword({
         email: trimmedEmail,
-        password,
+        password: data.password!,
       });
       if (error) {
         authLog.error("Sign-in failed", { message: error.message, email: trimmedEmail });
@@ -139,59 +137,29 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
     }
 
     // register
-    if (!firstName.trim() || !lastName.trim()) {
-      setMessage("Please enter your first and last name to register.");
-      setStatus("error");
-      return;
-    }
-    if (!stream) {
-      setMessage("Please select your subject.");
-      setStatus("error");
-      return;
-    }
-    if (!entryYear) {
-      setMessage("Please select your entry year.");
-      setStatus("error");
-      return;
-    }
-    if (!password) {
-      setMessage("Please enter a password.");
-      setStatus("error");
-      return;
-    }
-    const passwordResult = validatePassword(password);
-    if (!passwordResult.valid) {
-      setMessage(passwordResult.message);
-      setStatus("error");
-      return;
-    }
-    if (password !== confirmPassword) {
-      setMessage("Passwords do not match.");
-      setStatus("error");
-      return;
-    }
-
     setStatus("loading");
     setMessage("");
-    const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
+    const firstName = (data.firstName ?? "").trim();
+    const lastName = (data.lastName ?? "").trim();
+    const fullName = `${firstName} ${lastName}`.trim();
 
     authLog.info("Registration requested", {
       email: trimmedEmail,
       hasName: !!fullName,
-      stream,
-      entryYear,
+      stream: data.stream,
+      entryYear: data.entryYear,
     });
 
-    const { data, error } = await supabase.auth.signUp({
+    const { data: signUpData, error } = await supabase.auth.signUp({
       email: trimmedEmail,
-      password,
+      password: data.password!,
       options: {
         data: {
           full_name: fullName,
-          first_name: firstName.trim(),
-          last_name: lastName.trim(),
-          stream,
-          entry_year: entryYear,
+          first_name: firstName,
+          last_name: lastName,
+          stream: data.stream!,
+          entry_year: data.entryYear!,
           email_marketing_opt_in: true,
         },
       },
@@ -204,28 +172,29 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
       return;
     }
 
-    if (data?.user?.identities?.length === 0) {
+    if (signUpData?.user?.identities?.length === 0) {
       setStatus("error");
       setMessage("An account with this email already exists. Sign in instead or use “Forgot password?” to reset.");
       return;
     }
 
-    authLog.info("Account created", { email: trimmedEmail, userId: data?.user?.id });
+    authLog.info("Account created", { email: trimmedEmail, userId: signUpData?.user?.id });
+    trackEvent("sign_up");
     setStatus("success");
     setMessage(
-      data?.user?.confirmed_at
+      signUpData?.user?.confirmed_at
         ? "Account created. You’re signed in."
         : "Account created. Please check your email to confirm your address, then sign in with your password."
     );
 
     // Add to Mailchimp audience (fire-and-forget; registration continues either way)
-    if (data?.user && import.meta.env.VITE_SUPABASE_URL) {
+    if (signUpData?.user && import.meta.env.VITE_SUPABASE_URL) {
       supabase.functions
         .invoke("add-mailchimp-subscriber", {
           body: {
             email: trimmedEmail,
-            firstName: firstName.trim(),
-            lastName: lastName.trim(),
+            firstName,
+            lastName,
           },
         })
         .then(({ error }) => {
@@ -234,36 +203,26 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
         .catch(() => { });
     }
 
-    if (data?.user?.confirmed_at) {
+    if (signUpData?.user?.confirmed_at) {
       handleClose();
     }
   };
 
   const handleClose = useCallback(() => {
-    setEmail("");
-    setPassword("");
-    setConfirmPassword("");
-    setFirstName("");
-    setLastName("");
-    setStream("Medicine");
-    setEntryYear("2026");
+    reset({
+      email: "",
+      password: "",
+      confirmPassword: "",
+      firstName: "",
+      lastName: "",
+      stream: "Medicine",
+      entryYear: "2026",
+    });
     setStatus("idle");
     setMessage("");
     setMode("login");
     onClose();
-  }, [onClose]);
-
-  // Fix #10: close on Escape key
-  useEffect(() => {
-    if (!isOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") handleClose();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [isOpen, handleClose]);
-
-  if (!isOpen) return null;
+  }, [onClose, reset]);
 
   const isForgot = mode === "forgot";
   const isRegister = mode === "register";
@@ -275,28 +234,28 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
     "w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent";
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="auth-modal-title"
-      onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
-    >
-      <div className="bg-white rounded-2xl shadow-xl max-w-md sm:max-w-lg w-full px-5 sm:px-7 py-6 sm:py-7 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-4">
-          <h2 id="auth-modal-title" className="text-lg font-semibold text-slate-900">
-            {title}
-          </h2>
-          <button
-            type="button"
-            onClick={handleClose}
-            className="min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-600 -m-2"
-            aria-label="Close"
-          >
-            ×
-          </button>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <Dialog.Root open={isOpen} onOpenChange={(open) => { if (!open) handleClose(); }}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
+        <Dialog.Content
+          className="fixed left-1/2 top-1/2 z-50 w-full max-w-md sm:max-w-lg max-h-[90vh] -translate-x-1/2 -translate-y-1/2 overflow-y-auto bg-white rounded-2xl shadow-xl px-5 sm:px-7 py-6 sm:py-7 outline-none"
+          aria-labelledby="auth-modal-title"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <Dialog.Title id="auth-modal-title" className="text-lg font-semibold text-slate-900">
+              {title}
+            </Dialog.Title>
+            <Dialog.Close asChild>
+              <button
+                type="button"
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-600 -m-2"
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </Dialog.Close>
+          </div>
+        <form onSubmit={rhfHandleSubmit(onSubmit)} className="space-y-4">
           {isRegister && (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -307,13 +266,15 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
                   <input
                     id="auth-first-name"
                     type="text"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
                     placeholder="First name"
                     className={inputClass}
                     autoComplete="given-name"
                     disabled={status === "loading"}
+                    {...register("firstName")}
                   />
+                  {errors.firstName && (
+                    <p className="mt-1 text-sm text-red-600">{errors.firstName.message}</p>
+                  )}
                 </div>
                 <div>
                   <label htmlFor="auth-last-name" className="block text-sm font-medium text-slate-700 mb-1">
@@ -322,50 +283,68 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
                   <input
                     id="auth-last-name"
                     type="text"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
                     placeholder="Last name"
                     className={inputClass}
                     autoComplete="family-name"
                     disabled={status === "loading"}
+                    {...register("lastName")}
                   />
+                  {errors.lastName && (
+                    <p className="mt-1 text-sm text-red-600">{errors.lastName.message}</p>
+                  )}
                 </div>
               </div>
               <div>
                 <label htmlFor="auth-subject" className="block text-sm font-medium text-slate-700 mb-1">
                   Subject<span className="text-red-500"> *</span>
                 </label>
-                <select
-                  id="auth-subject"
-                  value={stream}
-                  onChange={(e) => setStream(e.target.value as Stream)}
-                  className={inputClass + " text-sm bg-white"}
-                  disabled={status === "loading"}
-                >
-                  {STREAM_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
+                <Controller
+                  name="stream"
+                  control={control}
+                  render={({ field }) => (
+                    <select
+                      id="auth-subject"
+                      className={inputClass + " text-sm bg-white"}
+                      disabled={status === "loading"}
+                      {...field}
+                    >
+                      {STREAM_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                />
+                {errors.stream && (
+                  <p className="mt-1 text-sm text-red-600">{errors.stream.message}</p>
+                )}
               </div>
               <div>
                 <label htmlFor="auth-entry-year" className="block text-sm font-medium text-slate-700 mb-1">
                   Entry Year<span className="text-red-500"> *</span>
                 </label>
-                <select
-                  id="auth-entry-year"
-                  value={entryYear}
-                  onChange={(e) => setEntryYear(e.target.value)}
-                  className={inputClass + " text-sm bg-white"}
-                  disabled={status === "loading"}
-                >
-                  {ENTRY_YEAR_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
+                <Controller
+                  name="entryYear"
+                  control={control}
+                  render={({ field }) => (
+                    <select
+                      id="auth-entry-year"
+                      className={inputClass + " text-sm bg-white"}
+                      disabled={status === "loading"}
+                      {...field}
+                    >
+                      {ENTRY_YEAR_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                />
+                {errors.entryYear && (
+                  <p className="mt-1 text-sm text-red-600">{errors.entryYear.message}</p>
+                )}
               </div>
             </>
           )}
@@ -377,14 +356,15 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
             <input
               id="auth-email"
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               className={inputClass}
-              required
               autoComplete="email"
               disabled={status === "loading"}
+              {...register("email")}
             />
+            {errors.email && (
+              <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+            )}
           </div>
 
           {!isForgot && (
@@ -396,13 +376,15 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
                 <input
                   id="auth-password"
                   type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
                   placeholder={isRegister ? "Choose a strong password" : "Your password"}
                   className={inputClass}
                   autoComplete={isRegister ? "new-password" : "current-password"}
                   disabled={status === "loading"}
+                  {...register("password")}
                 />
+                {errors.password && (
+                  <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+                )}
                 {isRegister && (
                   <p className="mt-1 text-xs text-slate-500">{getPasswordRequirementHint()}</p>
                 )}
@@ -415,13 +397,15 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
                   <input
                     id="auth-confirm-password"
                     type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirm password"
                     className={inputClass}
                     autoComplete="new-password"
                     disabled={status === "loading"}
+                    {...register("confirmPassword")}
                   />
+                  {errors.confirmPassword && (
+                    <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>
+                  )}
                 </div>
               )}
             </>
@@ -499,7 +483,8 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
             )}
           </p>
         </form>
-      </div>
-    </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }

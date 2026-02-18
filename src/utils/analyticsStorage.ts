@@ -1,11 +1,12 @@
 import { supabase } from '../lib/supabase';
+import { trackEvent } from '../lib/analytics';
 
 export interface GameSession {
     id: string;
     date: string;
     kps: number;
     accuracy: number;
-    mode: 'sprint' | 'fingerTwister' | 'ghost' | 'memory' | 'free';
+    mode: 'sprint' | 'fingerTwister' | 'memory' | 'stages' | 'free';
     correctQuestions?: number;
     totalQuestions?: number;
     timeTaken?: string;
@@ -29,7 +30,7 @@ export const saveSession = async (session: Omit<GameSession, 'id' | 'date'>) => 
     try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-            const timeSeconds = session.timeTaken ? parseInt(session.timeTaken) : 60; // Default or parse "60s"
+            const timeSeconds = session.timeTaken ? parseInt(session.timeTaken, 10) : 60; // Default or parse "60s"
 
             const { error } = await supabase.from('sessions').insert({
                 user_id: user.id,
@@ -48,6 +49,8 @@ export const saveSession = async (session: Omit<GameSession, 'id' | 'date'>) => 
 
             if (error) {
                 console.error("Failed to save calculator session to Supabase:", error);
+            } else {
+                trackEvent("trainer_completed", { training_type: "calculator", mode: session.mode });
             }
         }
     } catch (err) {

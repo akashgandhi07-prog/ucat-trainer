@@ -7,10 +7,9 @@ interface CalculatorEngineProps {
     onInput?: (key: string) => void;
     onStateChange?: (state: { display: string; currentValue: number | null; lastCalculated?: number }) => void;
     active: boolean; // For focus loss simulation
-    hideDisplay?: boolean;
 }
 
-export const CalculatorEngine = ({ lagEnabled, onInput, onStateChange, active, hideDisplay = false }: CalculatorEngineProps) => {
+export const CalculatorEngine = ({ lagEnabled, onInput, onStateChange, active }: CalculatorEngineProps) => {
     const {
         display,
         inputDigit,
@@ -114,7 +113,7 @@ export const CalculatorEngine = ({ lagEnabled, onInput, onStateChange, active, h
                 </div>
                 <div className="ucat-display-container">
                     <div className="ucat-display">
-                        {hideDisplay ? '' : display}
+                        {display}
                     </div>
                 </div>
                 <div className="brand-text">

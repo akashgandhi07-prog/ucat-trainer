@@ -92,7 +92,11 @@ export const ShortcutsModal = ({ isOpen, onClose }: ShortcutsModalProps) => {
                             </div>
                             <div className="flex items-center gap-4">
                                 <kbd className="px-2 py-1 bg-indigo-50 border border-indigo-100 rounded text-sm font-semibold text-indigo-700 min-w-[4rem] text-center">Backspace</kbd>
-                                <span className="text-slate-600">Clear Entry (ON/C)</span>
+                                <span className="text-slate-600">Clear all</span>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <kbd className="px-2 py-1 bg-indigo-50 border border-indigo-100 rounded text-sm font-semibold text-indigo-700 min-w-[2rem] text-center">Esc</kbd>
+                                <span className="text-slate-600">Clear all</span>
                             </div>
                         </div>
                     </section>
@@ -103,27 +107,26 @@ export const ShortcutsModal = ({ isOpen, onClose }: ShortcutsModalProps) => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="flex items-center gap-4">
                                 <kbd className="px-2 py-1 bg-emerald-50 border border-emerald-100 rounded text-sm font-semibold text-emerald-700 min-w-[2rem] text-center">P</kbd>
-                                <span className="text-slate-600">Memory Plus (M+)</span>
+                                <span className="text-slate-600">Memory Store (M+)</span>
                             </div>
                             <div className="flex items-center gap-4">
-                                <kbd className="px-2 py-1 bg-emerald-50 border border-emerald-100 rounded text-sm font-semibold text-emerald-700 min-w-[2rem] text-center">M</kbd>
-                                <span className="text-slate-600">Memory Minus (M-)</span>
-                            </div>
-                            <div className="flex items-center gap-4">
-                                <kbd className="px-2 py-1 bg-emerald-50 border border-emerald-100 rounded text-sm font-semibold text-emerald-700 min-w-[2rem] text-center">R</kbd>
+                                <kbd className="px-2 py-1 bg-emerald-50 border border-emerald-100 rounded text-sm font-semibold text-emerald-700 min-w-[2rem] text-center">C</kbd>
                                 <span className="text-slate-600">Memory Recall (MRC)</span>
                             </div>
                             <div className="flex items-center gap-4">
-                                <kbd className="px-2 py-1 bg-emerald-50 border border-emerald-100 rounded text-sm font-semibold text-emerald-700 min-w-[2rem] text-center">S</kbd>
-                                <span className="text-slate-600">Square Root (√)</span>
+                                <kbd className="px-2 py-1 bg-emerald-50 border border-emerald-100 rounded text-sm font-semibold text-emerald-700 min-w-[2rem] text-center">X</kbd>
+                                <span className="text-slate-600">Square Root (√) — after entering the number</span>
                             </div>
                         </div>
                     </section>
                 </div>
 
-                <div className="p-6 bg-slate-50 border-t border-slate-100 rounded-b-xl text-center">
+                <div className="p-6 bg-slate-50 border-t border-slate-100 rounded-b-xl text-center space-y-1">
                     <p className="text-sm text-slate-500">
                         Pro Tip: Use the NumPad on your keyboard for maximum speed!
+                    </p>
+                    <p className="text-xs text-slate-400">
+                        On Mac, use <kbd className="px-1 py-0.5 bg-slate-200 rounded text-slate-600">Option</kbd> (⌥) instead of Alt.
                     </p>
                 </div>
             </div>

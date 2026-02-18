@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { CalculatorEngine } from '../components/calculator/CalculatorEngine';
 import { AnalyticsDashboard } from '../components/calculator/AnalyticsDashboard';
-import { SprintDrill, FingerTwisterDrill, GhostDrill, MemoryMarathonDrill } from '../components/calculator/DrillModes';
+import { SprintDrill, FingerTwisterDrill, MemoryMarathonDrill, StagesDrill } from '../components/calculator/DrillModes';
 import type { Difficulty } from '../components/calculator/DrillModes';
 import { ArrowLeft, Clock, Activity, Brain, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -12,8 +12,9 @@ import { KeyHeatmap } from '../components/calculator/KeyHeatmap';
 import { ShortcutsModal } from '../components/calculator/ShortcutsModal';
 import { Keyboard } from 'lucide-react';
 import { DrillSummary } from '../components/calculator/DrillSummary';
+import { trackEvent, setActiveTrainer, clearActiveTrainer } from '../lib/analytics';
 
-type DrillType = 'sprint' | 'fingerTwister' | 'ghost' | 'memory' | null;
+type DrillType = 'sprint' | 'fingerTwister' | 'memory' | 'stages' | null;
 
 const CalculatorPage = () => {
     const [lagEnabled, setLagEnabled] = useState(false);
@@ -36,6 +37,31 @@ const CalculatorPage = () => {
         setUserKeystrokes([]);
     }, [activeDrill]);
 
+    // Analytics: trainer_opened on mount
+    useEffect(() => {
+        trackEvent("trainer_opened", {
+            training_type: "calculator",
+            pathname: "/train/calculator",
+        });
+    }, []);
+
+    // Analytics: trainer_started and trainer_mode_selected when drill starts
+    useEffect(() => {
+        if (activeDrill) {
+            trackEvent("trainer_started", {
+                training_type: "calculator",
+                mode: activeDrill,
+                difficulty,
+            });
+            trackEvent("trainer_mode_selected", {
+                training_type: "calculator",
+                mode: activeDrill,
+                difficulty,
+            });
+            setActiveTrainer("calculator", activeDrill);
+        }
+    }, [activeDrill, difficulty]);
+
     const handleCalculatorInput = useCallback((key: string) => {
         if (activeDrill) {
             setUserKeystrokes(prev => [...prev, key]);
@@ -57,6 +83,7 @@ const CalculatorPage = () => {
     };
 
     const handleDrillComplete = useCallback((stats: any) => {
+        clearActiveTrainer();
         const sessionData = {
             kps: parseFloat(stats.kps),
             accuracy: stats.accuracy,
@@ -184,10 +211,10 @@ const CalculatorPage = () => {
                                 🌪️ Finger Twister
                             </button>
                             <button
-                                onClick={(e) => { e.stopPropagation(); setLastDrillStats(null); setActiveDrill('ghost'); }}
-                                className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-colors border ${activeDrill === 'ghost' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'hover:bg-slate-50 text-slate-700 border-slate-200'}`}
+                                onClick={(e) => { e.stopPropagation(); setLastDrillStats(null); setActiveDrill('stages'); }}
+                                className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-colors border ${activeDrill === 'stages' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'hover:bg-slate-50 text-slate-700 border-slate-200'}`}
                             >
-                                👻 Ghost Drill
+                                🎯 UCAT Ready (Stages)
                             </button>
                             <button
                                 onClick={(e) => { e.stopPropagation(); setLastDrillStats(null); setActiveDrill('memory'); }}
@@ -227,19 +254,29 @@ const CalculatorPage = () => {
                 <div className={`lg:col-span-8 flex flex-col xl:flex-row gap-6 items-start`}>
 
                     {/* Active Drill Area */}
-                    <div className="flex-1 w-full xl:w-1/2 min-h-[500px] flex flex-col">
+                    <div className="flex-1 w-full xl:w-7/12 min-h-[500px] flex flex-col">
                         {activeDrill && (
                             <>
                                 {activeDrill === 'sprint' && <SprintDrill isActive={true} onComplete={handleDrillComplete} userKeystrokes={userKeystrokes} onQuestionComplete={handleResetKeystrokes} currentCalculatorValue={calculatorState.display} difficulty={difficulty} lastCalculated={calculatorState.lastCalculated} />}
                                 {activeDrill === 'fingerTwister' && <FingerTwisterDrill isActive={true} onComplete={handleDrillComplete} userKeystrokes={userKeystrokes} onQuestionComplete={handleResetKeystrokes} currentCalculatorValue={calculatorState.display} difficulty={difficulty} lastCalculated={calculatorState.lastCalculated} />}
-                                {activeDrill === 'ghost' && <GhostDrill isActive={true} onComplete={handleDrillComplete} userKeystrokes={userKeystrokes} onQuestionComplete={handleResetKeystrokes} currentCalculatorValue={calculatorState.display} difficulty={difficulty} lastCalculated={calculatorState.lastCalculated} />}
+                                {activeDrill === 'stages' && <StagesDrill isActive={true} onComplete={handleDrillComplete} userKeystrokes={userKeystrokes} onQuestionComplete={handleResetKeystrokes} currentCalculatorValue={calculatorState.display} difficulty={difficulty} lastCalculated={calculatorState.lastCalculated} />}
                                 {activeDrill === 'memory' && <MemoryMarathonDrill isActive={true} onComplete={handleDrillComplete} userKeystrokes={userKeystrokes} onQuestionComplete={handleResetKeystrokes} currentCalculatorValue={calculatorState.display} difficulty={difficulty} lastCalculated={calculatorState.lastCalculated} />}
                             </>
                         )}
 
                         {!activeDrill && lastDrillStats && (
                             <DrillSummary
-                                drillName={lastDrillStats.drillName === 'sprint' ? 'The Sprint' : lastDrillStats.drillName}
+                                drillName={
+                                    lastDrillStats.drillName === 'sprint'
+                                        ? 'The Sprint'
+                                        : lastDrillStats.drillName === 'fingerTwister'
+                                            ? 'Finger Twister'
+                                            : lastDrillStats.drillName === 'memory'
+                                                ? 'Memory Marathon'
+                                                : lastDrillStats.drillName === 'stages'
+                                                    ? (lastDrillStats.stageName || 'UCAT Ready (Stages)')
+                                                    : lastDrillStats.drillName
+                                }
                                 score={lastDrillStats.score || 0}
                                 totalQuestions={lastDrillStats.totalQuestions || 0}
                                 correctQuestions={lastDrillStats.correctQuestions || 0}
@@ -253,7 +290,7 @@ const CalculatorPage = () => {
                         )}
                     </div>
 
-                    <div className={`flex flex-col items-center justify-center bg-white rounded-xl shadow-sm p-8 min-h-[500px] relative border-2 border-slate-100 transition-all duration-300 ${activeDrill ? 'w-full xl:w-1/2' : 'w-full'}`}>
+                    <div className={`flex flex-col items-center justify-center bg-white rounded-xl shadow-sm p-4 md:p-6 min-h-[420px] relative border border-slate-100 transition-all duration-300 ${activeDrill ? 'w-full xl:w-5/12' : 'w-full xl:w-5/12'}`}>
 
                         {/* Click catcher for focus loss simulation */}
                         <div
@@ -269,7 +306,6 @@ const CalculatorPage = () => {
                             <CalculatorEngine
                                 lagEnabled={lagEnabled}
                                 active={isFocused}
-                                hideDisplay={activeDrill === 'ghost'}
                                 onInput={handleCalculatorInput}
                                 onStateChange={setCalculatorState}
                             />

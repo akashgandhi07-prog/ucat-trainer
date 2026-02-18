@@ -28,7 +28,7 @@ export const DrillSummary = ({
     const accuracy = totalQuestions > 0 ? Math.round((correctQuestions / totalQuestions) * 100) : 0;
 
     return (
-        <div className="flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-lg border border-slate-200 animate-in zoom-in-95 duration-300 max-w-md mx-auto w-full">
+        <div className="flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-lg border border-slate-200 animate-in zoom-in-95 duration-300 max-w-xl mx-auto w-full">
             <h2 className="text-2xl font-bold text-slate-800 mb-2">{drillName} Complete!</h2>
             <p className="text-slate-500 mb-8">Here's how you performed.</p>
 

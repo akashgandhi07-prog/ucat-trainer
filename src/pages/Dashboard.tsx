@@ -29,19 +29,10 @@ import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import { getGuestSessions } from "../lib/guestSessions";
 import { getSiteBaseUrl } from "../lib/siteUrl";
-
-type SessionRow = {
-  id: string;
-  user_id: string;
-  training_type?: string | null;
-  difficulty?: string | null;
-  wpm?: number | null;
-  correct: number;
-  total: number;
-  created_at: string;
-  passage_id?: string | null;
-  time_seconds?: number | null;
-};
+import { trackEvent } from "../lib/analytics";
+import type { SessionRow } from "../types/session";
+import type { SyllogismSession } from "../types/syllogisms";
+import SyllogismAnalytics from "../components/dashboard/SyllogismAnalytics";
 
 type ChartPoint = {
   date: string;
@@ -72,9 +63,23 @@ type GuestDashboardSummary = {
 
 function getTrainingType(s: SessionRow): TrainingType {
   const t = s.training_type;
-  if (t === "speed_reading" || t === "rapid_recall" || t === "keyword_scanning" || t === "calculator")
+  if (t === "speed_reading" || t === "rapid_recall" || t === "keyword_scanning" || t === "calculator" || t === "inference_trainer")
     return t;
   return "speed_reading";
+}
+
+function formatSessionScore(session: SessionRow): string {
+  const type = getTrainingType(session);
+  const pct = session.total > 0 ? Math.round((session.correct / session.total) * 100) : 0;
+  if (type === "speed_reading") {
+    const wpm = session.wpm != null ? session.wpm : 0;
+    return `${wpm} WPM`;
+  }
+  if (type === "calculator") {
+    const kps = session.wpm != null ? session.wpm : 0;
+    return `${kps} KPS, ${pct}%`;
+  }
+  return `${pct}%`;
 }
 
 const SESSIONS_FETCH_RETRIES = 2;
@@ -111,6 +116,11 @@ export default function Dashboard() {
   });
   const [targetWpmError, setTargetWpmError] = useState<string | null>(null);
   const [guestSummary, setGuestSummary] = useState<GuestDashboardSummary | null>(null);
+  const [syllogismSessions, setSyllogismSessions] = useState<SyllogismSession[]>([]);
+
+  useEffect(() => {
+    trackEvent("dashboard_viewed");
+  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -190,6 +200,26 @@ export default function Dashboard() {
   }, [user]);
 
   useEffect(() => {
+    if (!user) {
+      setSyllogismSessions([]);
+      return;
+    }
+    let cancelled = false;
+    supabase
+      .from("syllogism_sessions")
+      .select("id, user_id, mode, score, total_questions, average_time_per_decision, categorical_accuracy, relative_accuracy, majority_accuracy, complex_accuracy, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: true })
+      .then(({ data, error }) => {
+        if (cancelled || error) return;
+        setSyllogismSessions((data as SyllogismSession[]) ?? []);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  useEffect(() => {
     if (user) {
       setGuestSummary(null);
       return;
@@ -228,6 +258,7 @@ export default function Dashboard() {
       rapid_recall: [],
       keyword_scanning: [],
       calculator: [],
+      inference_trainer: [],
     };
     for (const s of sessions) {
       m[getTrainingType(s)].push(s);
@@ -437,6 +468,11 @@ export default function Dashboard() {
     });
     return result;
   }, [calculatorSessions]);
+
+  const recentSessions = useMemo(
+    () => [...sessions].reverse().slice(0, 30),
+    [sessions]
+  );
 
   // Shared difficulty breakdown renderer
   const renderDifficultyBreakdown = (breakdown: Record<TrainingDifficulty, DifficultyStats>) => {
@@ -1031,7 +1067,7 @@ export default function Dashboard() {
                 <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                   <p className="text-slate-500">No Calculator sessions yet. Start the Calculator Trainer to track your speed.</p>
                   <Link
-                    to="/calculator"
+                    to="/train/calculator"
                     className="inline-flex mt-4 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors"
                   >
                     Go to Calculator
@@ -1112,6 +1148,56 @@ export default function Dashboard() {
                 </>
               )}
             </section>
+
+            <section className="mt-10">
+              <SyllogismAnalytics sessions={syllogismSessions} />
+            </section>
+
+            {recentSessions.length > 0 && (
+              <section className="mt-10">
+                <h2 className="text-lg font-semibold text-slate-900 mb-4">Recent activity</h2>
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm" role="table" aria-label="Recent training sessions">
+                      <thead>
+                        <tr className="border-b border-slate-200 bg-slate-50">
+                          <th scope="col" className="text-left px-4 py-3 font-medium text-slate-600">Date & time</th>
+                          <th scope="col" className="text-left px-4 py-3 font-medium text-slate-600">Trainer</th>
+                          <th scope="col" className="text-left px-4 py-3 font-medium text-slate-600">Time</th>
+                          <th scope="col" className="text-left px-4 py-3 font-medium text-slate-600">Score</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {recentSessions.map((session) => (
+                          <tr key={session.id} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50">
+                            <td className="px-4 py-3 text-slate-700 whitespace-nowrap">
+                              {new Date(session.created_at).toLocaleString(undefined, {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </td>
+                            <td className="px-4 py-3 text-slate-900 font-medium">
+                              {TRAINING_TYPE_LABELS[getTrainingType(session)]}
+                            </td>
+                            <td className="px-4 py-3 text-slate-700">
+                              {session.time_seconds != null && session.time_seconds > 0
+                                ? `${session.time_seconds}s`
+                                : "–"}
+                            </td>
+                            <td className="px-4 py-3 text-slate-900">
+                              {formatSessionScore(session)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </section>
+            )}
           </>
         )}
       </>

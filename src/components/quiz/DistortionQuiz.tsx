@@ -398,13 +398,14 @@ export default function DistortionQuiz({
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.altKey && e.key === "n") {
+      // Use event.code so shortcuts work on Mac (Option = Alt; Option+key yields different key value)
+      if (e.altKey && e.code === "KeyN") {
         e.preventDefault();
         setCurrentIndex((i) => Math.min(questions.length - 1, i + 1));
-      } else if (e.altKey && e.key === "p") {
+      } else if (e.altKey && e.code === "KeyP") {
         e.preventDefault();
         setCurrentIndex((i) => Math.max(0, i - 1));
-      } else if (e.altKey && e.key === "f") {
+      } else if (e.altKey && e.code === "KeyF") {
         e.preventDefault();
         toggleFlag();
       }

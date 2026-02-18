@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, useRef } f
 import { supabase } from "../lib/supabase";
 import { withRetry } from "../lib/retry";
 import { authLog } from "../lib/logger";
+import { trackEvent } from "../lib/analytics";
 import { getProfile, upsertProfile } from "../lib/profileApi";
 import { getGuestSessions, clearGuestSessions } from "../lib/guestSessions";
 import { useToast } from "../contexts/ToastContext";
@@ -23,8 +24,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const userRef = useRef(user);
   userRef.current = user;
 
+  // Skip setState after unmount (e.g. when fetchProfile is called from auth listener and user navigates away)
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   const fetchProfile = useCallback(async (userId: string) => {
     const p = await getProfile(userId);
+    if (!mountedRef.current) return;
     setProfile(p);
   }, []);
 
@@ -69,14 +79,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Always runs — fix #3 (no fragile early-return before finally)
+    if (!mountedRef.current) return;
     setUser(resolvedUser);
     if (resolvedUser) {
       let p = await getProfile(resolvedUser.id);
+      if (!mountedRef.current) return;
       if (!p) {
         authLog.info("No profile row for user, creating minimal profile", { userId: resolvedUser.id });
         await upsertProfile(resolvedUser.id, null, null);
         p = await getProfile(resolvedUser.id);
       }
+      if (!mountedRef.current) return;
       setProfile(p);
     } else {
       setProfile(null);
@@ -125,6 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!initialLoadDone) return;
 
       if (event === "SIGNED_IN" && session?.user) {
+        trackEvent("sign_in");
         const guestSessions = getGuestSessions();
         if (guestSessions.length > 0 && mounted) {
           const rows = guestSessions.map((g) => ({
@@ -140,7 +154,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const { error } = await supabase.from("sessions").insert(rows);
           if (!error) {
             clearGuestSessions();
-            showToast("History successfully synced!");
+            showToast("History successfully synced!", { variant: "success" });
           }
           authLog.info("Guest sessions merge", {
             count: guestSessions.length,
@@ -166,6 +180,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
         if (mounted) await fetchProfile(session.user.id);
       } else if (event === "SIGNED_OUT") {
+        trackEvent("sign_out");
         authLog.info("User signed out", { prevUserId: userRef.current?.id });
         if (mounted) setProfile(null);
       } else if (u) {
@@ -182,6 +197,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       subscription.unsubscribe();
     };
   }, [fetchProfile, showToast]);
+
+  // Fallback: if INITIAL_SESSION never fires (e.g. edge case / env), stop loading after a short delay
+  const loadingRef = useRef(loading);
+  loadingRef.current = loading;
+  useEffect(() => {
+    const fallbackMs = 2500;
+    const t = setTimeout(() => {
+      if (loadingRef.current) {
+        authLog.info("Auth loading fallback: INITIAL_SESSION may not have fired, calling loadSession");
+        loadSession();
+      }
+    }, fallbackMs);
+    return () => clearTimeout(t);
+  }, [loadSession]);
 
   const refetchProfile = useCallback(async () => {
     if (!user) return;

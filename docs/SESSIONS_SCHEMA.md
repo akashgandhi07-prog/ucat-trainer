@@ -8,13 +8,15 @@ The app expects a Supabase table `sessions` with the following shape. RLS must r
 |-----------------|--------------|----------|--------------------------------------------------|
 | id              | uuid         | no       | Primary key (default: `gen_random_uuid()`)      |
 | user_id         | uuid         | no       | References `auth.users(id)`; set to `auth.uid()` |
-| training_type   | text         | no       | One of: `speed_reading`, `rapid_recall`, `keyword_scanning` |
-| wpm             | integer      | yes      | Words per minute (speed_reading only)            |
+| training_type   | text         | no       | One of: `speed_reading`, `rapid_recall`, `keyword_scanning`, `calculator`, `inference_trainer` |
+| difficulty      | text         | yes      | Verbal difficulty (`easy`, `medium`, `hard`) or calculator mode (`sprint`, `fingerTwister`, `memory`, `stages`, `free`) |
+| wpm             | integer      | yes      | Words per minute (speed_reading) or key-presses per second (calculator) |
 | correct         | integer      | no       | Number of correct answers                        |
 | total           | integer      | no       | Total questions or targets                       |
 | created_at      | timestamptz  | no       | Default: `now()`                                |
 | passage_id      | text         | yes      | Optional; used for speed_reading                |
 | wpm_rating      | text         | yes      | Optional; one of: `too_slow`, `slightly_slow`, `just_right`, `slightly_fast`, `too_fast` (speed_reading) |
+| time_seconds    | integer      | yes      | Optional; duration in seconds (e.g. rapid_recall window, keyword_scanning scan time, inference_trainer question time, calculator drill time) |
 
 ## RLS
 

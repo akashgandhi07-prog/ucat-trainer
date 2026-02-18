@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { Trophy, Target, Clock, Sparkles, ChevronRight } from 'lucide-react';
 
 import { DrillActiveArea } from './DrillActiveArea';
+import { CALCULATOR_STAGES, getHighestUnlockedStage, setHighestUnlockedStage } from './calculatorStages';
 
 export type Difficulty = 'easy' | 'medium' | 'hard';
 
@@ -50,13 +52,20 @@ const generateSum = (difficulty: Difficulty | 'memory') => {
     }
 
     const op = allowedOps[Math.floor(Math.random() * allowedOps.length)];
-    const a = Math.floor(Math.random() * maxA) + 1;
-    const b = Math.floor(Math.random() * maxB) + 1;
+    let a = Math.floor(Math.random() * maxA) + 1;
+    let b = Math.floor(Math.random() * maxB) + 1;
 
     // Ensure clean division
     if (op === '/') {
         const prod = a * b;
         return { text: `${prod} ÷ ${a}`, answer: b };
+    }
+
+    // For subtraction, ensure non-negative answers by ordering operands so a ≥ b
+    if (op === '-' && a < b) {
+        const tmp = a;
+        a = b;
+        b = tmp;
     }
 
     let ans = 0;
@@ -67,14 +76,66 @@ const generateSum = (difficulty: Difficulty | 'memory') => {
     return { text: `${a} ${op === '/' ? '÷' : op === '*' ? '×' : op} ${b}`, answer: ans };
 };
 
+/** UCAT-style: percentage-of, multi-step (a×b)+(c×d), or single-op by difficulty */
+const generateUCATStyleQuestion = (difficulty: Difficulty): { text: string; answer: number } => {
+    const roll = Math.random();
+    if (difficulty === 'easy') {
+        if (roll < 0.3) {
+            const pct = [5, 10, 15, 20, 25][Math.floor(Math.random() * 5)];
+            const n = [20, 40, 60, 80, 100][Math.floor(Math.random() * 5)];
+            const ans = Math.round((pct / 100) * n);
+            return { text: `${pct}% of ${n}`, answer: ans };
+        }
+        return generateSum(difficulty);
+    }
+    if (difficulty === 'medium') {
+        if (roll < 0.25) {
+            const pct = [10, 15, 20, 25, 30][Math.floor(Math.random() * 5)];
+            const n = [40, 60, 80, 100, 120][Math.floor(Math.random() * 5)];
+            const ans = Math.round((pct / 100) * n);
+            return { text: `${pct}% of ${n}`, answer: ans };
+        }
+        if (roll < 0.5) {
+            const a = Math.floor(Math.random() * 15) + 2, b = Math.floor(Math.random() * 12) + 2;
+            const c = Math.floor(Math.random() * 15) + 2, d = Math.floor(Math.random() * 12) + 2;
+            return { text: `(${a} × ${b}) + (${c} × ${d})`, answer: (a * b) + (c * d) };
+        }
+        return generateSum(difficulty);
+    }
+    if (roll < 0.2) {
+        const pct = [15, 20, 25, 30, 40][Math.floor(Math.random() * 5)];
+        const n = [80, 100, 120, 150, 200][Math.floor(Math.random() * 5)];
+        const ans = Math.round((pct / 100) * n);
+        return { text: `${pct}% of ${n}`, answer: ans };
+    }
+    if (roll < 0.5) {
+        const a = Math.floor(Math.random() * 25) + 3, b = Math.floor(Math.random() * 15) + 2;
+        const c = Math.floor(Math.random() * 25) + 3, d = Math.floor(Math.random() * 15) + 2;
+        return { text: `(${a} × ${b}) + (${c} × ${d})`, answer: (a * b) + (c * d) };
+    }
+    return generateSum(difficulty);
+};
+
 const getExpectedKeystrokes = (text: string): string[] => {
-    const tokens = text.match(/(\d+|\+|\-|\*|\/|x|÷)/g);
+    // Percentage: "X% of Y" → enter as decimal 0.XX × Y (e.g. 15% of 60 → 0.15 * 60)
+    const pctMatch = text.match(/^(\d+)%\s*of\s*(\d+)$/);
+    if (pctMatch) {
+        const pct = parseInt(pctMatch[1], 10);
+        const n = pctMatch[2];
+        const decimalStr = (pct / 100).toString(); // e.g. "0.15" or "0.05"
+        const keys: string[] = [...decimalStr.split(''), '*', ...n.split(''), 'Enter'];
+        return keys;
+    }
+
+    const tokens = text.match(/(\d+|\+|\-|\*|\/|x|÷|%)/g);
     if (!tokens) return [];
 
     const keys: string[] = [];
     tokens.forEach(token => {
         if (/\d+/.test(token)) {
             keys.push(...token.split(''));
+        } else if (token === '%') {
+            // Standalone % in other patterns: skip (we already handled "X% of Y")
         } else if (token === '+' || token === '-') {
             keys.push(token);
         } else if (token === '*' || token === 'x' || token === '×') {
@@ -99,6 +160,7 @@ export const SprintDrill = ({ onComplete, isActive, userKeystrokes, onQuestionCo
         correctQuestions: 0,
         keyStats: {} as Record<string, { total: number; correct: number }>
     });
+    const startTimeRef = useRef<number>(Date.now());
     const [displayScore, setDisplayScore] = useState(0);
 
     // Sync Ref with current keystrokes for final calculation
@@ -133,32 +195,62 @@ export const SprintDrill = ({ onComplete, isActive, userKeystrokes, onQuestionCo
         }
     }, [userKeystrokes, currentSum, updateKeyStats]);
 
+    // Reset timer and stats whenever the drill (re)starts
+    useEffect(() => {
+        if (!isActive) return;
+        startTimeRef.current = Date.now();
+        setTimeLeft(60);
+        statsRef.current = {
+            score: 0,
+            totalQuestions: 0,
+            correctQuestions: 0,
+            keyStats: {}
+        };
+        setDisplayScore(0);
+        setCurrentSum(generateSum(difficulty));
+    }, [isActive, difficulty]);
 
     const finishDrill = useCallback(() => {
+        const timeElapsed = (Date.now() - startTimeRef.current) / 1000;
+        const boundedElapsed = Math.min(60, Math.max(0, timeElapsed));
+        const roundedSeconds = Math.round(boundedElapsed);
         const { score, totalQuestions, keyStats } = statsRef.current;
 
-        // Calculate best/worst keys
-        let bestKey = '-';
-        let worstKey = '-';
+        // Calculate best/worst keys (only when we have enough data per key)
+        let bestKeyName: string | null = null;
+        let worstKeyName: string | null = null;
         let bestRate = -1;
         let worstRate = 2; // > 1
 
         Object.entries(keyStats).forEach(([key, stat]) => {
-            if (stat.total < 2) return; // Need at least 2 attempts
+            if (stat.total < 2) return; // Need at least 2 attempts for a meaningful stat
             const rate = stat.correct / stat.total;
 
-            // If we have a tie, prefer the one with more attempts
-            if (rate > bestRate || (rate === bestRate && stat.total > (keyStats[bestKey]?.total || 0))) {
+            // Best key: highest success rate, breaking ties by attempts
+            if (
+                rate > bestRate ||
+                (rate === bestRate && bestKeyName && stat.total > (keyStats[bestKeyName]?.total || 0))
+            ) {
                 bestRate = rate;
-                bestKey = key;
+                bestKeyName = key;
             }
-            if (rate < worstRate || (rate === worstRate && stat.total > (keyStats[worstKey]?.total || 0))) {
+
+            // Worst key: lowest success rate, breaking ties by attempts
+            if (
+                rate < worstRate ||
+                (rate === worstRate && worstKeyName && stat.total > (keyStats[worstKeyName]?.total || 0))
+            ) {
                 worstRate = rate;
-                worstKey = key;
+                worstKeyName = key;
             }
         });
 
-        // Key-by-key accuracy
+        // If best and worst are effectively the same performance, don't show a "Needs Work" key
+        if (bestKeyName && worstKeyName && bestKeyName === worstKeyName) {
+            worstKeyName = null;
+        }
+
+        // Key-by-key overall accuracy
         let totalKeys = 0;
         let correctKeys = 0;
         Object.values(keyStats).forEach(s => {
@@ -167,15 +259,21 @@ export const SprintDrill = ({ onComplete, isActive, userKeystrokes, onQuestionCo
         });
         const keyAccuracy = totalKeys > 0 ? Math.round((correctKeys / totalKeys) * 100) : 100;
 
+        const bestKeyDisplay =
+            bestKeyName != null ? `${bestKeyName} (${Math.round(bestRate * 100)}%)` : undefined;
+
+        const worstKeyDisplay =
+            worstKeyName != null ? `${worstKeyName} (${Math.round(worstRate * 100)}%)` : undefined;
+
         onComplete({
             kps: (score / 60 * 5).toFixed(1),
-            accuracy: keyAccuracy, // User requested strict key accuracy
+            accuracy: keyAccuracy, // Strict key accuracy
             score,
             totalQuestions,
             correctQuestions: statsRef.current.correctQuestions,
-            timeTaken: "60s",
-            bestKey: bestKey !== '-' ? `${bestKey} (${Math.round(bestRate * 100)}%)` : '-',
-            worstKey: worstKey !== '-' ? `${worstKey} (${Math.round(worstRate * 100)}%)` : '-'
+            timeTaken: `${roundedSeconds}s`,
+            bestKey: bestKeyDisplay,
+            worstKey: worstKeyDisplay
         });
         if (onFinish) onFinish();
     }, [onComplete, onFinish]);
@@ -335,77 +433,6 @@ export const FingerTwisterDrill = ({ onComplete: _onComplete, isActive: _isActiv
     );
 };
 
-export const GhostDrill = ({ onComplete: _onComplete, isActive: _isActive, userKeystrokes, onQuestionComplete, onFinish: _onFinish, currentCalculatorValue, difficulty, lastCalculated }: DrillProps) => {
-    const [currentSum, setCurrentSum] = useState(generateSum(difficulty));
-    const [score, setScore] = useState(0);
-
-    const startTimeRef = useRef<number>(Date.now());
-    const statsRef = useRef({
-        totalQuestions: 0
-    });
-
-    useEffect(() => {
-        if (_isActive) {
-            startTimeRef.current = Date.now();
-            statsRef.current = { totalQuestions: 0 };
-            setScore(0);
-        }
-    }, [_isActive]);
-
-    const finishDrill = useCallback(() => {
-        const timeElapsed = (Date.now() - startTimeRef.current) / 1000;
-        const total = statsRef.current.totalQuestions;
-        const correct = score;
-        const safeTime = timeElapsed < 1 ? 1 : timeElapsed;
-        const kps = ((correct * 5) / safeTime).toFixed(1);
-        const accuracy = total > 0 ? Math.round((correct / total) * 100) : 100;
-
-        _onComplete({
-            kps,
-            accuracy,
-            score,
-            totalQuestions: total,
-            correctQuestions: correct,
-            timeTaken: `${Math.round(timeElapsed)}s`
-        });
-        if (_onFinish) _onFinish();
-    }, [_onComplete, score, _onFinish]);
-
-    const lastProcessedCalculation = useRef<number>(0);
-
-    useEffect(() => {
-        if (!lastCalculated || lastCalculated === lastProcessedCalculation.current || !_isActive) return;
-        lastProcessedCalculation.current = lastCalculated;
-
-        statsRef.current.totalQuestions++;
-        const expected = currentSum.answer;
-        const actual = parseFloat(currentCalculatorValue || '0');
-        if (Math.abs(actual - expected) < 0.0001) {
-            setScore(s => s + 1);
-        }
-        // ALWAYS advance
-        setCurrentSum(generateSum(difficulty));
-        onQuestionComplete?.();
-    }, [lastCalculated, currentCalculatorValue, currentSum, difficulty, onQuestionComplete, _isActive]);
-
-    return (
-        <DrillActiveArea
-            drillName="👻 Ghost Drill"
-            description="Display Hidden. Trust your fingers."
-            currentProblem={currentSum}
-            userKeystrokes={userKeystrokes}
-            stats={{ kps: 0, accuracy: 100, score }}
-            onSkip={() => {
-                statsRef.current.totalQuestions++;
-                setCurrentSum(generateSum('medium'));
-                onQuestionComplete?.();
-            }}
-            onFinish={finishDrill}
-            expectedKeystrokes={getExpectedKeystrokes(currentSum.text)}
-        />
-    );
-};
-
 export const MemoryMarathonDrill = ({ onComplete: _onComplete, isActive: _isActive, userKeystrokes, onQuestionComplete, onFinish: _onFinish, currentCalculatorValue, difficulty: _difficulty, lastCalculated: _lastCalculated }: DrillProps) => {
     const [currentSum, setCurrentSum] = useState(generateSum('memory'));
     const [score, setScore] = useState(0);
@@ -472,6 +499,304 @@ export const MemoryMarathonDrill = ({ onComplete: _onComplete, isActive: _isActi
             manualAdvance={true}
             onNextQuestion={handleNextQuestion}
             expectedKeystrokes={[]}
+        />
+    );
+};
+
+type StagePassedStats = {
+    stageIndex: number;
+    stageName: string;
+    accuracy: number;
+    score: number;
+    totalQuestions: number;
+    timeTaken: string;
+    kps: string;
+    isLastStage: boolean;
+};
+
+const StagePassedView = ({
+    stats,
+    nextStageName,
+    onContinue,
+    onFinish
+}: {
+    stats: StagePassedStats;
+    nextStageName: string | null;
+    onContinue: () => void;
+    onFinish: () => void;
+}) => (
+    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full animate-in fade-in zoom-in-95 duration-300">
+        <div className="flex-1 p-8 flex flex-col items-center justify-center gap-6">
+            <div className="flex items-center gap-2 text-amber-500">
+                <Sparkles className="w-8 h-8" />
+                <span className="text-2xl font-bold text-amber-600">Stage passed!</span>
+                <Sparkles className="w-8 h-8" />
+            </div>
+            <h2 className="text-3xl font-bold text-slate-800 text-center">Well done! 🎉</h2>
+            <p className="text-slate-600 text-center max-w-sm">
+                You crushed {stats.stageName}. {stats.accuracy === 100 ? "Perfect score!" : "Keep that momentum going!"}
+            </p>
+
+            <div className="grid grid-cols-2 gap-4 w-full max-w-xs mt-4">
+                <div className="bg-indigo-50 p-4 rounded-xl flex flex-col items-center">
+                    <Target className="w-5 h-5 text-indigo-600 mb-1" />
+                    <span className="text-xl font-bold text-indigo-900">{stats.accuracy}%</span>
+                    <span className="text-xs text-indigo-600 font-semibold uppercase tracking-wider">Accuracy</span>
+                </div>
+                <div className="bg-emerald-50 p-4 rounded-xl flex flex-col items-center">
+                    <Trophy className="w-5 h-5 text-emerald-600 mb-1" />
+                    <span className="text-xl font-bold text-emerald-900">{stats.score}/{stats.totalQuestions}</span>
+                    <span className="text-xs text-emerald-600 font-semibold uppercase tracking-wider">Score</span>
+                </div>
+                <div className="bg-amber-50 p-4 rounded-xl flex flex-col items-center">
+                    <Clock className="w-5 h-5 text-amber-600 mb-1" />
+                    <span className="text-xl font-bold text-amber-900">{stats.timeTaken}</span>
+                    <span className="text-xs text-amber-600 font-semibold uppercase tracking-wider">Time</span>
+                </div>
+                <div className="bg-slate-50 p-4 rounded-xl flex flex-col items-center">
+                    <span className="text-xl font-bold text-slate-800 pt-1">{stats.kps}</span>
+                    <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider">KPS</span>
+                </div>
+            </div>
+
+            {stats.isLastStage ? (
+                <p className="text-slate-600 text-center font-medium">You&apos;ve completed all stages! Incredible work. 🏆</p>
+            ) : (
+                <p className="text-slate-500 text-center text-sm">Next up: {nextStageName}</p>
+            )}
+
+            <div className="flex gap-4 w-full max-w-xs mt-4">
+                {stats.isLastStage ? (
+                    <button
+                        onClick={onFinish}
+                        className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-sm transition-colors"
+                    >
+                        Back to menu
+                    </button>
+                ) : (
+                    <button
+                        onClick={onContinue}
+                        className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-sm transition-colors"
+                    >
+                        {nextStageName}
+                        <ChevronRight className="w-5 h-5" />
+                    </button>
+                )}
+            </div>
+        </div>
+    </div>
+);
+
+export const StagesDrill = ({
+    onComplete,
+    isActive,
+    userKeystrokes,
+    onQuestionComplete,
+    onFinish,
+    currentCalculatorValue,
+    lastCalculated
+}: DrillProps) => {
+    const [currentStageIndex, setCurrentStageIndex] = useState(0);
+    const [questionsAnswered, setQuestionsAnswered] = useState(0);
+    const [correctCount, setCorrectCount] = useState(0);
+    const [currentProblem, setCurrentProblem] = useState<{ text: string; answer: number }>(() => ({ text: '', answer: 0 }));
+    const [stageFailed, setStageFailed] = useState(false);
+    const [stagePassedStats, setStagePassedStats] = useState<StagePassedStats | null>(null);
+
+    const startTimeRef = useRef<number>(Date.now());
+    const lastProcessedCalculation = useRef<number>(0);
+
+    const stage = CALCULATOR_STAGES[currentStageIndex];
+    const requiredAccuracy = stage?.requiredAccuracy ?? 100;
+    const questionCount = stage?.questionCount ?? 5;
+    const nextStage = CALCULATOR_STAGES[currentStageIndex + 1];
+
+    useEffect(() => {
+        if (isActive) {
+            const startIndex = getHighestUnlockedStage();
+            setCurrentStageIndex(startIndex);
+            setQuestionsAnswered(0);
+            setCorrectCount(0);
+            setStageFailed(false);
+            setStagePassedStats(null);
+            const s = CALCULATOR_STAGES[startIndex];
+            setCurrentProblem(s ? generateUCATStyleQuestion(s.difficulty) : { text: '0', answer: 0 });
+            startTimeRef.current = Date.now();
+        }
+    }, [isActive]);
+
+    const advanceToNextQuestion = useCallback(() => {
+        const s = CALCULATOR_STAGES[currentStageIndex];
+        if (!s) return;
+        setCurrentProblem(generateUCATStyleQuestion(s.difficulty));
+        onQuestionComplete?.();
+    }, [currentStageIndex, onQuestionComplete]);
+
+    const handleStagePassed = useCallback((nextCorrect: number, _nextAnswered: number) => {
+        setHighestUnlockedStage(currentStageIndex + 1);
+        const timeElapsed = (Date.now() - startTimeRef.current) / 1000;
+        const safeTime = timeElapsed < 1 ? 1 : timeElapsed;
+        const kps = ((nextCorrect * 5) / safeTime).toFixed(1);
+        const accuracyPct = questionCount > 0 ? (nextCorrect / questionCount) * 100 : 0;
+
+        setStagePassedStats({
+            stageIndex: currentStageIndex,
+            stageName: stage?.name ?? 'Stage',
+            accuracy: Math.round(accuracyPct),
+            score: nextCorrect,
+            totalQuestions: questionCount,
+            timeTaken: `${Math.round(timeElapsed)}s`,
+            kps,
+            isLastStage: currentStageIndex >= CALCULATOR_STAGES.length - 1
+        });
+    }, [currentStageIndex, stage?.name, questionCount]);
+
+    const handleContinueToNextStage = useCallback(() => {
+        if (currentStageIndex >= CALCULATOR_STAGES.length - 1) return;
+        setStagePassedStats(null);
+        setCurrentStageIndex(prev => prev + 1);
+        setQuestionsAnswered(0);
+        setCorrectCount(0);
+        const nextStageData = CALCULATOR_STAGES[currentStageIndex + 1];
+        setCurrentProblem(nextStageData ? generateUCATStyleQuestion(nextStageData.difficulty) : { text: '0', answer: 0 });
+        startTimeRef.current = Date.now();
+        onQuestionComplete?.();
+    }, [currentStageIndex, onQuestionComplete]);
+
+    const handleFinishAllStages = useCallback(() => {
+        if (!stagePassedStats) return;
+        onComplete({
+            kps: stagePassedStats.kps,
+            accuracy: stagePassedStats.accuracy,
+            score: stagePassedStats.score,
+            totalQuestions: stagePassedStats.totalQuestions,
+            correctQuestions: stagePassedStats.score,
+            timeTaken: stagePassedStats.timeTaken,
+            stagePassed: true,
+            stageIndex: stagePassedStats.stageIndex,
+            stageName: stagePassedStats.stageName
+        });
+        onFinish?.();
+    }, [stagePassedStats, onComplete, onFinish]);
+
+    useEffect(() => {
+        if (!lastCalculated || lastCalculated === lastProcessedCalculation.current || !isActive || stageFailed || stagePassedStats) return;
+        lastProcessedCalculation.current = lastCalculated;
+
+        const expected = currentProblem.answer;
+        const actual = parseFloat(currentCalculatorValue || '0');
+        const isCorrect = !isNaN(actual) && Math.abs(actual - expected) < 0.001;
+
+        const nextAnswered = questionsAnswered + 1;
+        const nextCorrect = correctCount + (isCorrect ? 1 : 0);
+        setQuestionsAnswered(nextAnswered);
+        setCorrectCount(nextCorrect);
+
+        if (nextAnswered < questionCount) {
+            advanceToNextQuestion();
+        } else {
+            const accuracyPct = questionCount > 0 ? (nextCorrect / questionCount) * 100 : 0;
+            if (accuracyPct >= requiredAccuracy) {
+                handleStagePassed(nextCorrect, nextAnswered);
+            } else {
+                setStageFailed(true);
+            }
+        }
+    }, [lastCalculated, currentCalculatorValue, currentProblem.answer, isActive, questionsAnswered, correctCount, questionCount, requiredAccuracy, currentStageIndex, stage?.name, stageFailed, stagePassedStats, advanceToNextQuestion, handleStagePassed]);
+
+    const retryStage = useCallback(() => {
+        setQuestionsAnswered(0);
+        setCorrectCount(0);
+        setStageFailed(false);
+        const s = CALCULATOR_STAGES[currentStageIndex];
+        setCurrentProblem(s ? generateUCATStyleQuestion(s.difficulty) : { text: '0', answer: 0 });
+        onQuestionComplete?.();
+    }, [currentStageIndex, onQuestionComplete]);
+
+    const finishEarly = useCallback(() => {
+        const timeElapsed = (Date.now() - startTimeRef.current) / 1000;
+        const safeTime = timeElapsed < 1 ? 1 : timeElapsed;
+        const kps = (correctCount * 5) / safeTime;
+        onComplete({
+            kps: kps.toFixed(1),
+            accuracy: questionCount > 0 ? Math.round((correctCount / questionsAnswered) * 100) : 0,
+            score: correctCount,
+            totalQuestions: questionsAnswered,
+            correctQuestions: correctCount,
+            timeTaken: `${Math.round(timeElapsed)}s`,
+            stagePassed: false
+        });
+        onFinish?.();
+    }, [onComplete, onFinish, correctCount, questionsAnswered, questionCount]);
+
+    if (!stage) {
+        return (
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center text-slate-600">
+                No stages configured.
+            </div>
+        );
+    }
+
+    if (stagePassedStats) {
+        return (
+            <StagePassedView
+                stats={stagePassedStats}
+                nextStageName={nextStage?.name ?? null}
+                onContinue={handleContinueToNextStage}
+                onFinish={handleFinishAllStages}
+            />
+        );
+    }
+
+    if (stageFailed) {
+        const achievedPct = questionCount > 0 ? Math.round((correctCount / questionCount) * 100) : 0;
+        return (
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full animate-in fade-in zoom-in-95 duration-300">
+                <div className="bg-slate-50 p-4 border-b border-slate-200">
+                    <h3 className="font-bold text-slate-800">{stage.name}</h3>
+                    <p className="text-xs text-slate-500">Stage not passed</p>
+                </div>
+                <div className="flex-1 p-8 flex flex-col items-center justify-center gap-6">
+                    <p className="text-slate-600 text-center">
+                        You got <strong>{achievedPct}%</strong> accuracy. You need {requiredAccuracy}% to pass. Keep practicing!
+                    </p>
+                    <button
+                        onClick={retryStage}
+                        className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-sm transition-colors"
+                    >
+                        Retry stage
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    const description = `Question ${questionsAnswered + 1} of ${questionCount} · ${requiredAccuracy}% to pass`;
+
+    return (
+        <DrillActiveArea
+            drillName={`🎯 ${stage.name}`}
+            description={description}
+            currentProblem={currentProblem}
+            userKeystrokes={userKeystrokes}
+            stats={{ kps: 0, accuracy: 100, score: correctCount }}
+            onSkip={() => {
+                const newAnswered = questionsAnswered + 1;
+                const newCorrect = correctCount;
+                setQuestionsAnswered(newAnswered);
+                if (newAnswered < questionCount) {
+                    advanceToNextQuestion();
+                } else {
+                    const accuracyPct = questionCount > 0 ? (newCorrect / questionCount) * 100 : 0;
+                    if (accuracyPct >= requiredAccuracy) {
+                        handleStagePassed(newCorrect, newAnswered);
+                    } else {
+                        setStageFailed(true);
+                    }
+                }
+            }}
+            onFinish={finishEarly}
+            expectedKeystrokes={getExpectedKeystrokes(currentProblem.text)}
         />
     );
 };

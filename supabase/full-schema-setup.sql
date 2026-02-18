@@ -89,11 +89,18 @@ update public.sessions set training_type = 'speed_reading' where training_type i
 -- Constraints (drop + re-add for idempotency — only AFTER columns exist)
 alter table public.sessions drop constraint if exists sessions_training_type_check;
 alter table public.sessions add constraint sessions_training_type_check
-  check (training_type in ('speed_reading', 'rapid_recall', 'keyword_scanning'));
+  check (training_type in ('speed_reading', 'rapid_recall', 'keyword_scanning', 'calculator', 'inference_trainer'));
 
 alter table public.sessions drop constraint if exists sessions_difficulty_check;
 alter table public.sessions add constraint sessions_difficulty_check
-  check (difficulty is null or difficulty in ('easy', 'medium', 'hard'));
+  check (
+    difficulty is null
+    or difficulty in (
+      'easy', 'medium', 'hard',               -- verbal drills
+      'sprint', 'fingerTwister', 'memory',   -- calculator modes
+      'stages', 'free'                       -- calculator modes
+    )
+  );
 
 alter table public.sessions drop constraint if exists sessions_wpm_rating_check;
 alter table public.sessions add constraint sessions_wpm_rating_check
@@ -118,15 +125,128 @@ create policy "Users can insert own sessions"
   on public.sessions for insert with check (auth.uid() = user_id);
 
 comment on table public.sessions is
-  'Training sessions (speed reading, rapid recall, keyword scanning).';
+  'Training sessions (speed_reading, rapid_recall, keyword_scanning, calculator, inference_trainer).';
 comment on column public.sessions.time_seconds is
-  'Duration in seconds (e.g. scan time for keyword_scanning, reading window for rapid_recall).';
+  'Duration in seconds (e.g. scan time for keyword_scanning, reading window for rapid_recall/inference_trainer, drill duration for calculator).';
 comment on column public.sessions.difficulty is
-  'Difficulty label chosen for the run (easy, medium, hard).';
+  'Difficulty or mode label for the run (e.g. easy/medium/hard for verbal drills; sprint/fingerTwister/memory/stages/free for calculator).';
 
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 3) BUG REPORTS (feedback: bugs + suggestions)
+-- 3) SYLLOGISM TRAINER (Decision Making)
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- Questions: programmatically generated syllogisms (shared stimulus via macro_block_id)
+create table if not exists public.syllogism_questions (
+  id uuid primary key default gen_random_uuid(),
+  macro_block_id uuid default gen_random_uuid(),
+  stimulus_text text not null,
+  conclusion_text text not null,
+  is_correct boolean not null,
+  logic_group text not null,
+  trick_type text not null,
+  explanation text not null,
+  created_at timestamptz default now()
+);
+
+-- Ensure ALL columns exist (idempotent with older partial schemas)
+alter table public.syllogism_questions add column if not exists macro_block_id uuid default gen_random_uuid();
+alter table public.syllogism_questions add column if not exists stimulus_text text not null;
+alter table public.syllogism_questions add column if not exists conclusion_text text not null;
+alter table public.syllogism_questions add column if not exists is_correct boolean not null;
+alter table public.syllogism_questions add column if not exists logic_group text not null;
+alter table public.syllogism_questions add column if not exists trick_type text not null;
+alter table public.syllogism_questions add column if not exists explanation text not null;
+alter table public.syllogism_questions add column if not exists created_at timestamptz default now();
+
+-- Logic group constraint (categorical / relative / majority / complex)
+alter table public.syllogism_questions drop constraint if exists syllogism_questions_logic_group_check;
+alter table public.syllogism_questions add constraint syllogism_questions_logic_group_check
+  check (logic_group in ('categorical', 'relative', 'majority', 'complex'));
+
+-- RLS + policies: questions are publicly readable (no user data)
+alter table public.syllogism_questions enable row level security;
+
+drop policy if exists "Allow public read access to syllogism questions" on public.syllogism_questions;
+create policy "Allow public read access to syllogism questions"
+  on public.syllogism_questions for select
+  using (true);
+
+comment on table public.syllogism_questions is
+  'Programmatically generated syllogism questions; macro_block_id groups five conclusions per stimulus for Macro Drill.';
+
+
+-- Sessions: user performance on syllogism drills (micro + macro)
+create table if not exists public.syllogism_sessions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  mode text not null,
+  score integer not null,
+  total_questions integer not null,
+  average_time_per_decision numeric not null,
+  categorical_accuracy numeric,
+  relative_accuracy numeric,
+  majority_accuracy numeric,
+  complex_accuracy numeric,
+  created_at timestamptz default now()
+);
+
+-- Ensure ALL columns exist
+alter table public.syllogism_sessions add column if not exists user_id uuid not null references auth.users (id) on delete cascade;
+alter table public.syllogism_sessions add column if not exists mode text not null;
+alter table public.syllogism_sessions add column if not exists score integer not null;
+alter table public.syllogism_sessions add column if not exists total_questions integer not null;
+alter table public.syllogism_sessions add column if not exists average_time_per_decision numeric not null;
+alter table public.syllogism_sessions add column if not exists categorical_accuracy numeric;
+alter table public.syllogism_sessions add column if not exists relative_accuracy numeric;
+alter table public.syllogism_sessions add column if not exists majority_accuracy numeric;
+alter table public.syllogism_sessions add column if not exists complex_accuracy numeric;
+alter table public.syllogism_sessions add column if not exists created_at timestamptz default now();
+
+-- Constraints
+alter table public.syllogism_sessions drop constraint if exists syllogism_sessions_mode_check;
+alter table public.syllogism_sessions add constraint syllogism_sessions_mode_check
+  check (mode in ('micro', 'macro'));
+
+alter table public.syllogism_sessions drop constraint if exists syllogism_sessions_categorical_accuracy_check;
+alter table public.syllogism_sessions add constraint syllogism_sessions_categorical_accuracy_check
+  check (categorical_accuracy is null or (categorical_accuracy >= 0 and categorical_accuracy <= 1));
+
+alter table public.syllogism_sessions drop constraint if exists syllogism_sessions_relative_accuracy_check;
+alter table public.syllogism_sessions add constraint syllogism_sessions_relative_accuracy_check
+  check (relative_accuracy is null or (relative_accuracy >= 0 and relative_accuracy <= 1));
+
+alter table public.syllogism_sessions drop constraint if exists syllogism_sessions_majority_accuracy_check;
+alter table public.syllogism_sessions add constraint syllogism_sessions_majority_accuracy_check
+  check (majority_accuracy is null or (majority_accuracy >= 0 and majority_accuracy <= 1));
+
+alter table public.syllogism_sessions drop constraint if exists syllogism_sessions_complex_accuracy_check;
+alter table public.syllogism_sessions add constraint syllogism_sessions_complex_accuracy_check
+  check (complex_accuracy is null or (complex_accuracy >= 0 and complex_accuracy <= 1));
+
+-- Index for dashboard and analytics queries
+create index if not exists syllogism_sessions_user_id_created_at
+  on public.syllogism_sessions (user_id, created_at);
+
+-- RLS + policies: per-user insert/read
+alter table public.syllogism_sessions enable row level security;
+
+drop policy if exists "Users can insert their own syllogism sessions" on public.syllogism_sessions;
+create policy "Users can insert their own syllogism sessions"
+  on public.syllogism_sessions for insert
+  with check (auth.uid() = user_id);
+
+drop policy if exists "Users can view their own syllogism sessions" on public.syllogism_sessions;
+create policy "Users can view their own syllogism sessions"
+  on public.syllogism_sessions for select
+  using (auth.uid() = user_id);
+
+comment on table public.syllogism_sessions is
+  'User syllogism drill sessions (Decision Making) with aggregate accuracy per logic group.';
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 4) BUG REPORTS (feedback: bugs + suggestions)
 -- ─────────────────────────────────────────────────────────────────────────────
 create table if not exists public.bug_reports (
   id uuid primary key default gen_random_uuid(),
@@ -180,9 +300,47 @@ comment on table public.bug_reports is
 
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 4) ADMIN STATS FUNCTION
+-- 5) ANALYTICS EVENTS
 -- ─────────────────────────────────────────────────────────────────────────────
-create or replace function public.get_admin_stats()
+create table if not exists public.analytics_events (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete set null,
+  session_id text not null,
+  event_name text not null,
+  event_properties jsonb default '{}',
+  pathname text,
+  referrer text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists analytics_events_user_created on public.analytics_events(user_id, created_at) where user_id is not null;
+create index if not exists analytics_events_name_created on public.analytics_events(event_name, created_at);
+create index if not exists analytics_events_session on public.analytics_events(session_id, created_at);
+
+alter table public.analytics_events enable row level security;
+
+drop policy if exists "Anyone can insert analytics events" on public.analytics_events;
+create policy "Anyone can insert analytics events"
+  on public.analytics_events for insert
+  with check (
+    (auth.role() = 'authenticated' and (user_id is null or user_id = auth.uid()))
+    or (auth.role() = 'anon' and user_id is null)
+  );
+
+drop policy if exists "Admins can view analytics events" on public.analytics_events;
+create policy "Admins can view analytics events"
+  on public.analytics_events for select to authenticated
+  using (exists (select 1 from public.profiles where id = auth.uid() and role = 'admin'));
+
+comment on table public.analytics_events is
+  'Product analytics events: page views, trainer usage, auth, feature usage.';
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 6) ADMIN STATS AND ANALYTICS (date-range aware)
+-- ─────────────────────────────────────────────────────────────────────────────
+-- get_admin_stats(since_ts, until_ts): null = all time
+create or replace function public.get_admin_stats(since_ts timestamptz default null, until_ts timestamptz default null)
 returns jsonb
 language plpgsql
 security definer
@@ -192,31 +350,138 @@ declare
   is_admin boolean;
   result jsonb;
 begin
-  select (role = 'admin') into is_admin
-    from public.profiles where id = auth.uid();
+  select (role = 'admin') into is_admin from public.profiles where id = auth.uid();
   if is_admin is not true then
     raise exception 'Forbidden: admin only';
   end if;
 
   select jsonb_build_object(
-    'total_users',              (select count(*)::int from public.profiles),
-    'total_sessions',           (select count(*)::int from public.sessions),
-    'sessions_speed_reading',   (select count(*)::int from public.sessions where training_type = 'speed_reading'),
-    'sessions_rapid_recall',    (select count(*)::int from public.sessions where training_type = 'rapid_recall'),
-    'sessions_keyword_scanning',(select count(*)::int from public.sessions where training_type = 'keyword_scanning'),
-    'bug_reports_count',        (select count(*)::int from public.bug_reports where type = 'bug'),
-    'suggestions_count',        (select count(*)::int from public.bug_reports where type = 'suggestion')
+    'total_users', (select count(*)::int from public.profiles),
+    'total_sessions', (select count(*)::int from public.sessions
+      where (since_ts is null or created_at >= since_ts) and (until_ts is null or created_at <= until_ts)),
+    'sessions_speed_reading', (select count(*)::int from public.sessions where training_type = 'speed_reading'
+      and (since_ts is null or created_at >= since_ts) and (until_ts is null or created_at <= until_ts)),
+    'sessions_rapid_recall', (select count(*)::int from public.sessions where training_type = 'rapid_recall'
+      and (since_ts is null or created_at >= since_ts) and (until_ts is null or created_at <= until_ts)),
+    'sessions_keyword_scanning', (select count(*)::int from public.sessions where training_type = 'keyword_scanning'
+      and (since_ts is null or created_at >= since_ts) and (until_ts is null or created_at <= until_ts)),
+    'sessions_calculator', (select count(*)::int from public.sessions where training_type = 'calculator'
+      and (since_ts is null or created_at >= since_ts) and (until_ts is null or created_at <= until_ts)),
+    'sessions_inference_trainer', (select count(*)::int from public.sessions where training_type = 'inference_trainer'
+      and (since_ts is null or created_at >= since_ts) and (until_ts is null or created_at <= until_ts)),
+    'syllogism_sessions_count', (select count(*)::int from public.syllogism_sessions
+      where (since_ts is null or created_at >= since_ts) and (until_ts is null or created_at <= until_ts)),
+    'bug_reports_count', (select count(*)::int from public.bug_reports where type = 'bug'
+      and (since_ts is null or created_at >= since_ts) and (until_ts is null or created_at <= until_ts)),
+    'suggestions_count', (select count(*)::int from public.bug_reports where type = 'suggestion'
+      and (since_ts is null or created_at >= since_ts) and (until_ts is null or created_at <= until_ts))
   ) into result;
   return result;
 end;
 $$;
 
-comment on function public.get_admin_stats() is
-  'Returns aggregate stats for admin dashboard. Callable only when profiles.role = ''admin'' for auth.uid().';
+comment on function public.get_admin_stats(timestamptz, timestamptz) is
+  'Returns aggregate stats for admin dashboard, optionally filtered by date range. Admin only.';
+
+-- get_analytics_summary(since_ts, until_ts): event counts, by day, trainer by type, funnel, unique sessions/users
+create or replace function public.get_analytics_summary(since_ts timestamptz default null, until_ts timestamptz default null)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  is_admin boolean;
+  event_counts jsonb;
+  by_day jsonb;
+  trainer_by_type jsonb;
+  funnel jsonb;
+  unique_sessions int;
+  unique_users int;
+begin
+  select (role = 'admin') into is_admin from public.profiles where id = auth.uid();
+  if is_admin is not true then
+    raise exception 'Forbidden: admin only';
+  end if;
+
+  select coalesce(jsonb_object_agg(event_name, cnt), '{}'::jsonb)
+  into event_counts
+  from (
+    select event_name, count(*)::int as cnt
+    from public.analytics_events
+    where (since_ts is null or created_at >= since_ts) and (until_ts is null or created_at <= until_ts)
+    group by event_name
+  ) t;
+
+  with funnel_raw as (
+    select event_properties->>'training_type' as tt, event_name, count(*)::int as c
+    from public.analytics_events
+    where (since_ts is null or created_at >= since_ts) and (until_ts is null or created_at <= until_ts)
+      and event_properties ? 'training_type'
+      and event_name in ('trainer_opened', 'trainer_started', 'trainer_completed', 'trainer_abandoned')
+    group by event_properties->>'training_type', event_name
+  )
+  select coalesce(jsonb_object_agg(tt, funnel_obj), '{}'::jsonb)
+  into funnel
+  from (
+    select tt, jsonb_object_agg(event_name, c) as funnel_obj
+    from funnel_raw
+    group by tt
+  ) f;
+
+  with day_events as (
+    select date_trunc('day', created_at)::date as d, event_name, count(*)::int as c
+    from public.analytics_events
+    where (since_ts is null or created_at >= since_ts) and (until_ts is null or created_at <= until_ts)
+    group by date_trunc('day', created_at)::date, event_name
+  ),
+  days_agg as (
+    select d, jsonb_object_agg(event_name, c) as events
+    from day_events
+    group by d
+  )
+  select coalesce(jsonb_agg(jsonb_build_object('date', d, 'events', events) order by d), '[]'::jsonb)
+  into by_day
+  from days_agg;
+
+  select coalesce(jsonb_object_agg(training_type, cnt), '{}'::jsonb)
+  into trainer_by_type
+  from (
+    select event_properties->>'training_type' as training_type, count(*)::int as cnt
+    from public.analytics_events
+    where (since_ts is null or created_at >= since_ts) and (until_ts is null or created_at <= until_ts)
+      and event_properties ? 'training_type'
+      and event_properties->>'training_type' is not null
+      and event_properties->>'training_type' <> ''
+    group by event_properties->>'training_type'
+  ) t;
+
+  select count(distinct session_id)::int into unique_sessions
+  from public.analytics_events
+  where (since_ts is null or created_at >= since_ts) and (until_ts is null or created_at <= until_ts);
+
+  select count(distinct user_id)::int into unique_users
+  from public.analytics_events
+  where (since_ts is null or created_at >= since_ts) and (until_ts is null or created_at <= until_ts)
+    and user_id is not null;
+
+  return jsonb_build_object(
+    'event_counts', event_counts,
+    'by_day', by_day,
+    'trainer_by_type', trainer_by_type,
+    'funnel', funnel,
+    'unique_sessions', unique_sessions,
+    'unique_users', unique_users
+  );
+end;
+$$;
+
+comment on function public.get_analytics_summary(timestamptz, timestamptz) is
+  'Returns aggregated analytics events for admin dashboard (event counts, by day, trainer by type, unique sessions/users). Admin only.';
 
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 5) VERIFICATION QUERY (run after the above to confirm everything is set up)
+-- 7) VERIFICATION QUERY (run after the above to confirm everything is set up)
 -- ─────────────────────────────────────────────────────────────────────────────
 -- This select will show you the tables and their columns so you can confirm:
 select
@@ -227,12 +492,12 @@ select
   column_default
 from information_schema.columns
 where table_schema = 'public'
-  and table_name in ('profiles', 'sessions', 'bug_reports')
+  and table_name in ('profiles', 'sessions', 'bug_reports', 'syllogism_questions', 'syllogism_sessions', 'analytics_events')
 order by table_name, ordinal_position;
 
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 6) OPTIONAL: Make yourself admin
+-- 8) OPTIONAL: Make yourself admin
 -- Replace the UUID below with your auth user id from Authentication → Users
 -- ─────────────────────────────────────────────────────────────────────────────
 -- update public.profiles set role = 'admin' where id = 'your-auth-user-uuid-here';

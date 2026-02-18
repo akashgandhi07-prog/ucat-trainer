@@ -1,31 +1,43 @@
-import { createContext, useContext, useState, useCallback } from "react";
+import { createContext, useContext, useCallback } from "react";
+import { toast as sonnerToast } from "sonner";
+
+export type ToastVariant = "success" | "error" | "info" | "default";
+
+export type ToastOptions = {
+  variant?: ToastVariant;
+  duration?: number;
+};
 
 type ToastContextValue = {
-  showToast: (message: string) => void;
+  showToast: (message: string, options?: ToastOptions) => void;
 };
 
 const ToastContext = createContext<ToastContextValue | null>(null);
 
-export function ToastProvider({ children }: { children: React.ReactNode }) {
-  const [toast, setToast] = useState<string | null>(null);
+const DEFAULT_DURATION = 3000;
 
-  const showToast = useCallback((message: string) => {
-    setToast(message);
-    setTimeout(() => setToast(null), 3000);
+export function ToastProvider({ children }: { children: React.ReactNode }) {
+  const showToast = useCallback((message: string, options?: ToastOptions) => {
+    const duration = options?.duration ?? DEFAULT_DURATION;
+    const variant = options?.variant ?? "default";
+    switch (variant) {
+      case "success":
+        sonnerToast.success(message, { duration });
+        break;
+      case "error":
+        sonnerToast.error(message, { duration });
+        break;
+      case "info":
+        sonnerToast.info(message, { duration });
+        break;
+      default:
+        sonnerToast(message, { duration });
+    }
   }, []);
 
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      {toast && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] px-4 py-3 bg-slate-900 text-white text-sm font-medium rounded-lg shadow-lg"
-        >
-          {toast}
-        </div>
-      )}
     </ToastContext.Provider>
   );
 }

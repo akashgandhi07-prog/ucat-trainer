@@ -25,6 +25,11 @@ export const TIPS: Record<TrainingType, string[]> = {
     "Practise common operations (percentages, fractions) until they're automatic.",
     "Estimate first to catch key-entry errors before submitting.",
   ],
+  inference_trainer: [
+    "Look for the sentence that directly answers the question; avoid restatements.",
+    "Narrow to the precise evidence—don't select more than you need.",
+    "Read the question carefully to understand what inference is being asked.",
+  ],
 };
 
 function pickTip(tips: string[], seed?: number): string {

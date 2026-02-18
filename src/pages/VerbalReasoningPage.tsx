@@ -9,11 +9,12 @@ import { getTipForMode } from "../data/tips";
 import type { TrainingType, TrainingDifficulty } from "../types/training";
 import { TRAINING_TYPE_LABELS, TRAINING_DIFFICULTY_LABELS } from "../types/training";
 import { pickNewRandomPassage } from "../lib/passages";
+import { PASSAGE_IDS_WITH_INFERENCE } from "../data/inferenceQuestions";
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../lib/supabase";
 import { supabaseLog } from "../lib/logger";
 import { getWpmComparisonCopy, getWpmTier, getWpmTierLabel } from "../lib/wpmBenchmark";
-import { Zap, Brain, Search, Eye, ChevronRight } from "lucide-react";
+import { Zap, Brain, Search, Eye, ChevronRight, Target } from "lucide-react";
 import {
   GUIDED_CHUNK_DEFAULT,
   GUIDED_CHUNK_MAX,
@@ -25,6 +26,7 @@ import {
 import { getStreakAndLastPracticed } from "../lib/streakUtils";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 import SEOHead from "../components/seo/SEOHead";
+import { trackEvent } from "../lib/analytics";
 
 const WPM_MIN = 200;
 const WPM_MAX = 900;
@@ -45,6 +47,7 @@ const STRATEGIC_OBJECTIVES: Record<TrainingType, string> = {
   rapid_recall: "Build a conceptual map. Identify the author's stance before the timer hits zero.",
   keyword_scanning: "Train selective attention. Quickly isolate target keywords whilst filtering out noise.",
   calculator: "Build numpad fluency. Keep a consistent hand position and practise common operations until they're automatic.",
+  inference_trainer: "Identify the precise evidence. Look for the sentence that directly supports the inference asked.",
 };
 
 function getWpmStatusLabel(wpm: number): string {
@@ -152,6 +155,12 @@ const SKILLS: { type: TrainingType; icon: ReactNode; summary: string; benefit: s
     summary: "Train yourself to spot critical keywords and phrases quickly under time pressure.",
     benefit: "Find answers faster",
   },
+  {
+    type: "inference_trainer",
+    icon: <Target className="w-5 h-5" aria-hidden="true" />,
+    summary: "Identify the exact evidence that supports an inference by selecting text from the passage.",
+    benefit: "Evidence-based answers",
+  },
 ];
 
 function getStoredWpm(): number {
@@ -169,7 +178,7 @@ function wordCount(p: Passage): number {
 }
 
 function isValidTrainingType(s: string | null): s is TrainingType {
-  return s === "speed_reading" || s === "rapid_recall" || s === "keyword_scanning";
+  return s === "speed_reading" || s === "rapid_recall" || s === "keyword_scanning" || s === "inference_trainer";
 }
 
 function pickPassageForDifficulty(level: TrainingDifficulty): Passage {
@@ -220,6 +229,13 @@ export default function VerbalReasoningPage() {
     () => Math.ceil((words / wpm) * 60),
     [words, wpm]
   );
+
+  useEffect(() => {
+    trackEvent("trainer_opened", {
+      training_type: mode,
+      pathname: window.location.pathname,
+    });
+  }, [mode]);
 
   useEffect(() => {
     const prefs = loadGuidedChunkingPrefs();
@@ -381,6 +397,11 @@ export default function VerbalReasoningPage() {
   };
 
   const handleStartSpeedReading = () => {
+    trackEvent("trainer_started", {
+      training_type: "speed_reading",
+      difficulty,
+      pathname: "/reader",
+    });
     const chosenPassage = pickPassageForDifficulty(difficulty);
     try {
       localStorage.setItem(WPM_STORAGE_KEY, String(wpm));
@@ -402,6 +423,11 @@ export default function VerbalReasoningPage() {
   };
 
   const handleStartRapidRecall = () => {
+    trackEvent("trainer_started", {
+      training_type: "rapid_recall",
+      difficulty,
+      pathname: "/train/rapid-recall",
+    });
     const chosenPassage = pickPassageForDifficulty(difficulty);
     navigate("/train/rapid-recall", {
       state: {
@@ -414,12 +440,37 @@ export default function VerbalReasoningPage() {
   };
 
   const handleStartKeywordScanning = () => {
+    trackEvent("trainer_started", {
+      training_type: "keyword_scanning",
+      difficulty,
+      pathname: "/train/keyword-scanning",
+    });
     const chosenPassage = pickPassageForDifficulty(difficulty);
     navigate("/train/keyword-scanning", {
       state: {
         trainingType: "keyword_scanning" as const,
         passage: chosenPassage,
         keywordCount,
+        difficulty,
+      },
+    });
+  };
+
+  const handleStartInferenceTrainer = () => {
+    trackEvent("trainer_started", {
+      training_type: "inference_trainer",
+      difficulty,
+      pathname: "/train/inference",
+    });
+    const candidates = PASSAGES.filter((p) => PASSAGE_IDS_WITH_INFERENCE.includes(p.id));
+    const chosenPassage = candidates.length > 0
+      ? candidates[Math.floor(Math.random() * candidates.length)]
+      : PASSAGES[0];
+    if (!chosenPassage) return;
+    navigate("/train/inference", {
+      state: {
+        trainingType: "inference_trainer" as const,
+        passage: chosenPassage,
         difficulty,
       },
     });
@@ -482,7 +533,7 @@ export default function VerbalReasoningPage() {
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-[0.2em] text-center mb-6">
             Pick a skill to train
           </p>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {SKILLS.map(({ type, icon, summary, benefit }) => {
               const isActive = mode === type;
               return (
@@ -495,15 +546,15 @@ export default function VerbalReasoningPage() {
                       : "border-border bg-card shadow-sm hover:border-primary/40 hover:shadow-md"
                     }`}
                 >
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex flex-col gap-2 mb-3">
                     <span
-                      className={`inline-flex h-10 w-10 items-center justify-center rounded-lg ${isActive ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"
+                      className={`inline-flex h-10 w-10 items-center justify-center rounded-lg shrink-0 ${isActive ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"
                         }`}
                     >
                       {icon}
                     </span>
                     <span
-                      className={`text-[10px] font-bold uppercase tracking-widest ${isActive ? "text-primary" : "text-muted-foreground"
+                      className={`text-[10px] font-bold uppercase tracking-widest leading-tight ${isActive ? "text-primary" : "text-muted-foreground"
                         }`}
                     >
                       {benefit}
@@ -747,6 +798,12 @@ export default function VerbalReasoningPage() {
                     </fieldset>
                   )}
 
+                  {mode === "inference_trainer" && (
+                    <p className="text-sm text-muted-foreground">
+                      Select the relevant section(s) of text for each question. Questions are drawn from passages with curated inference tasks.
+                    </p>
+                  )}
+
                   <div className="rounded-lg bg-card border border-border p-3">
                     <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                       Tip
@@ -764,7 +821,9 @@ export default function VerbalReasoningPage() {
                           ? handleStartSpeedReading
                           : mode === "rapid_recall"
                             ? handleStartRapidRecall
-                            : handleStartKeywordScanning
+                            : mode === "keyword_scanning"
+                              ? handleStartKeywordScanning
+                              : handleStartInferenceTrainer
                       }
                       className="w-full flex items-center justify-center gap-2 min-h-[48px] px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 transition-colors shadow-sm"
                     >
@@ -916,7 +975,9 @@ export default function VerbalReasoningPage() {
               ? handleStartSpeedReading
               : mode === "rapid_recall"
                 ? handleStartRapidRecall
-                : handleStartKeywordScanning
+                : mode === "keyword_scanning"
+                  ? handleStartKeywordScanning
+                  : handleStartInferenceTrainer
           }
           className="w-full flex items-center justify-center gap-2 min-h-[48px] px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 transition-colors"
         >

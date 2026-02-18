@@ -1,7 +1,12 @@
 import { useState, useEffect, useRef } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as Dialog from "@radix-ui/react-dialog";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../hooks/useAuth";
 import { supabaseLog } from "../../lib/logger";
+import { trackEvent } from "../../lib/analytics";
+import { feedbackSchema, type FeedbackFormData } from "../../lib/feedbackSchema";
 
 export type FeedbackType = "bug" | "suggestion";
 
@@ -12,24 +17,44 @@ type BugReportModalProps = {
 
 const RATE_LIMIT_MS = 60000; // 1 minute
 const RATE_LIMIT_KEY = "last_bug_report_timestamp";
+const DESCRIPTION_MAX = 3000;
+const PAGE_URL_MAX = 255;
 
 export default function BugReportModal({ isOpen, onClose }: BugReportModalProps) {
   const { user } = useAuth();
-  const DESCRIPTION_MAX = 3000;
-  const PAGE_URL_MAX = 255;
-  const [feedbackType, setFeedbackType] = useState<FeedbackType>("bug");
-  const [description, setDescription] = useState("");
-  const [pageUrl, setPageUrl] = useState("");
   const [honeypot, setHoneypot] = useState(""); // Honeypot field for spam prevention
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
   const [rateLimitRemaining, setRateLimitRemaining] = useState<number | null>(null);
   const rateLimitTimerRef = useRef<number | null>(null);
 
+  const {
+    register,
+    handleSubmit: rhfHandleSubmit,
+    reset,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<FeedbackFormData>({
+    resolver: zodResolver(feedbackSchema),
+    defaultValues: {
+      feedbackType: "bug",
+      description: "",
+      pageUrl: "",
+    },
+  });
+
+  useEffect(() => {
+    if (isOpen) {
+      trackEvent("bug_report_opened");
+      if (typeof window !== "undefined") {
+        setValue("pageUrl", window.location.pathname + window.location.search);
+      }
+    }
+  }, [isOpen, setValue]);
+
   useEffect(() => {
     if (isOpen && typeof window !== "undefined") {
-      setPageUrl(window.location.pathname + window.location.search);
-
       // Check rate limit
       const lastSubmit = localStorage.getItem(RATE_LIMIT_KEY);
       if (lastSubmit) {
@@ -61,9 +86,7 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
     };
   }, [isOpen]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const onSubmit = async (data: FeedbackFormData) => {
     // Honeypot check - if filled, it's likely a bot
     if (honeypot) {
       supabaseLog.warn("Bug report blocked: honeypot triggered");
@@ -80,12 +103,9 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
       return;
     }
 
-    const trimmed = description.trim();
-    if (!trimmed) {
-      return;
-    }
+    const trimmed = data.description.trim();
 
-    const rawPageUrl = pageUrl.trim();
+    const rawPageUrl = (data.pageUrl ?? "").trim();
     let normalizedPageUrl: string | null = null;
     if (rawPageUrl !== "") {
       let candidate = rawPageUrl;
@@ -106,7 +126,7 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
     setMessage("");
     const { error } = await supabase.from("bug_reports").insert({
       user_id: user?.id ?? null,
-      type: feedbackType,
+      type: data.feedbackType,
       description: trimmed,
       page_url: normalizedPageUrl,
     });
@@ -123,14 +143,14 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
 
     setStatus("success");
     setMessage("Thanks! Your feedback has been sent.");
-    setDescription("");
+    reset({ feedbackType: data.feedbackType, description: "", pageUrl: data.pageUrl ?? "" });
     setTimeout(() => {
       onClose();
     }, 1500);
   };
 
   const handleClose = () => {
-    setDescription("");
+    reset({ feedbackType: "bug", description: "", pageUrl: "" });
     setHoneypot("");
     setStatus("idle");
     setMessage("");
@@ -141,6 +161,7 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
     onClose();
   };
 
+  const feedbackType = watch("feedbackType");
   const isBug = feedbackType === "bug";
   const title = isBug ? "Report a bug" : "Suggest an improvement";
   const descriptionLabel = isBug ? "What went wrong?" : "What would you like to suggest?";
@@ -150,31 +171,30 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
   const pageLabel = isBug ? "Where did it happen? (optional)" : "Where does this apply? (optional)";
   const submitLabel = status === "loading" ? "Sending…" : "Send feedback";
 
-  if (!isOpen) return null;
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="feedback-modal-title"
-    >
-      <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 id="feedback-modal-title" className="text-lg font-semibold text-slate-900">
-            {title}
-          </h2>
-          <button
-            type="button"
-            onClick={handleClose}
-            className="min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-600 -m-2"
-            aria-label="Close"
-          >
-            ×
-          </button>
-        </div>
+    <Dialog.Root open={isOpen} onOpenChange={(open) => { if (!open) handleClose(); }}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
+        <Dialog.Content
+          className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-xl p-6 outline-none"
+          aria-labelledby="feedback-modal-title"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <Dialog.Title id="feedback-modal-title" className="text-lg font-semibold text-slate-900">
+              {title}
+            </Dialog.Title>
+            <Dialog.Close asChild>
+              <button
+                type="button"
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-600 -m-2"
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </Dialog.Close>
+          </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={rhfHandleSubmit(onSubmit)} className="space-y-4">
           {/* Honeypot field - hidden from users, catches bots */}
           <div className="absolute opacity-0 pointer-events-none" aria-hidden="true">
             <label htmlFor="feedback-website">Website</label>
@@ -194,22 +214,18 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="radio"
-                  name="feedback-type"
                   value="bug"
-                  checked={feedbackType === "bug"}
-                  onChange={() => setFeedbackType("bug")}
                   className="text-blue-600 focus:ring-blue-500"
+                  {...register("feedbackType")}
                 />
                 <span className="text-sm text-slate-700">Report a bug</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="radio"
-                  name="feedback-type"
                   value="suggestion"
-                  checked={feedbackType === "suggestion"}
-                  onChange={() => setFeedbackType("suggestion")}
                   className="text-blue-600 focus:ring-blue-500"
+                  {...register("feedbackType")}
                 />
                 <span className="text-sm text-slate-700">Suggest an improvement</span>
               </label>
@@ -222,16 +238,17 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
             <textarea
               id="feedback-description"
               maxLength={DESCRIPTION_MAX}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
               placeholder={descriptionPlaceholder}
               rows={4}
-              required
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
               disabled={status === "loading"}
+              {...register("description")}
             />
+            {errors.description && (
+              <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
+            )}
             <p className="mt-1 text-xs text-slate-500">
-              {description.length}/{DESCRIPTION_MAX} characters
+              {(watch("description") ?? "").length}/{DESCRIPTION_MAX} characters
             </p>
           </div>
           <div>
@@ -242,12 +259,14 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
               id="feedback-page"
               type="text"
               maxLength={PAGE_URL_MAX}
-              value={pageUrl}
-              onChange={(e) => setPageUrl(e.target.value)}
               placeholder="/dashboard"
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               disabled={status === "loading"}
+              {...register("pageUrl")}
             />
+            {errors.pageUrl && (
+              <p className="mt-1 text-sm text-red-600">{errors.pageUrl.message}</p>
+            )}
           </div>
           {message && (
             <p
@@ -266,7 +285,7 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
             </button>
             <button
               type="submit"
-              disabled={status === "loading" || !description.trim() || (rateLimitRemaining !== null && rateLimitRemaining > 0)}
+              disabled={status === "loading" || (rateLimitRemaining !== null && rateLimitRemaining > 0)}
               className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
             >
               {rateLimitRemaining !== null && rateLimitRemaining > 0
@@ -275,7 +294,8 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
             </button>
           </div>
         </form>
-      </div>
-    </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }

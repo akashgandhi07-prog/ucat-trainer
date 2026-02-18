@@ -24,6 +24,7 @@ import {
   loadGuidedChunkingPrefs,
   saveGuidedChunkingPrefs,
 } from "../lib/guidedChunkingPreferences";
+import { trackEvent, setActiveTrainer, clearActiveTrainer } from "../lib/analytics";
 
 type Phase = "reading" | "quiz" | "results";
 
@@ -88,8 +89,16 @@ export default function ReaderPage() {
   useEffect(() => {
     if (phase === "reading") {
       readingStartTimeRef.current = Date.now();
+      trackEvent("trainer_started", {
+        training_type: "speed_reading",
+        difficulty: configureState?.difficulty ?? "medium",
+        passage_id: passage?.id,
+      });
+      setActiveTrainer("speed_reading", "reading");
+    } else if (phase === "results") {
+      clearActiveTrainer();
     }
-  }, [phase]);
+  }, [phase, configureState?.difficulty, passage?.id]);
 
   useEffect(() => {
     if (phase !== "results") {
@@ -174,6 +183,8 @@ export default function ReaderPage() {
           correct: payload.correct,
           total: payload.total,
         });
+        trackEvent("trainer_completed", { training_type: "speed_reading", difficulty });
+        clearActiveTrainer();
         if (!mountedRef.current) return;
         setSaveError(null);
         if (!opts?.skipRestart) {

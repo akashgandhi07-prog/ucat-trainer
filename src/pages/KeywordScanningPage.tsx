@@ -15,6 +15,7 @@ import type { TrainingDifficulty } from "../types/training";
 import { pickNewRandomPassage } from "../lib/passages";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 import SEOHead from "../components/seo/SEOHead";
+import { trackEvent, setActiveTrainer, clearActiveTrainer } from "../lib/analytics";
 
 type Phase = "scanning" | "results";
 
@@ -95,6 +96,19 @@ export default function KeywordScanningPage() {
       mountedRef.current = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (phase === "scanning") {
+      trackEvent("trainer_started", {
+        training_type: "keyword_scanning",
+        difficulty,
+        keyword_count: keywordCount,
+      });
+      setActiveTrainer("keyword_scanning", "scanning");
+    } else if (phase === "results") {
+      clearActiveTrainer();
+    }
+  }, [phase, difficulty, keywordCount]);
 
   useEffect(() => {
     if (phase !== "results" || !user || keywordCount <= 0) return;
@@ -203,6 +217,8 @@ export default function KeywordScanningPage() {
         total: targets.length,
         time_seconds: timeSeconds,
       });
+      trackEvent("trainer_completed", { training_type: "keyword_scanning", difficulty });
+      clearActiveTrainer();
       if (!mountedRef.current) return;
       setSaveError(null);
       setSaving(false);

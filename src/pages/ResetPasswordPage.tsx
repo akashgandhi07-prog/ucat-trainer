@@ -64,7 +64,7 @@ export default function ResetPasswordPage() {
 
     authLog.info("Password updated successfully");
     setStatus("success");
-    showToast("Password updated. You can now sign in with your new password.");
+    showToast("Password updated. You can now sign in with your new password.", { variant: "success" });
     setTimeout(() => navigate("/", { replace: true }), 1500);
   };
 

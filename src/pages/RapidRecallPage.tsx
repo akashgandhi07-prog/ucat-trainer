@@ -17,6 +17,7 @@ import type { TrainingDifficulty } from "../types/training";
 import { pickNewRandomPassage } from "../lib/passages";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 import SEOHead from "../components/seo/SEOHead";
+import { trackEvent, setActiveTrainer, clearActiveTrainer } from "../lib/analytics";
 
 type Phase = "reading" | "questions" | "results";
 
@@ -62,6 +63,19 @@ export default function RapidRecallPage() {
   }, []);
 
   useEffect(() => {
+    if (phase === "reading") {
+      trackEvent("trainer_started", {
+        training_type: "rapid_recall",
+        difficulty,
+        time_limit_seconds: timeLimitSeconds,
+      });
+      setActiveTrainer("rapid_recall", "reading");
+    } else if (phase === "results") {
+      clearActiveTrainer();
+    }
+  }, [phase, difficulty, timeLimitSeconds]);
+
+  useEffect(() => {
     if (phase !== "reading") return;
     const t = setInterval(() => {
       setSecondsLeft((s) => {
@@ -102,6 +116,7 @@ export default function RapidRecallPage() {
 
   const handleSaveProgress = useCallback(
     async (opts?: { skipRestart?: boolean }) => {
+      const timeSeconds = timeLimitSeconds + overtimeSeconds;
       if (!user) {
         appendGuestSession({
           training_type: "rapid_recall",
@@ -109,6 +124,7 @@ export default function RapidRecallPage() {
           wpm: null,
           correct: quizCorrect,
           total: quizTotal,
+          time_seconds: timeSeconds,
         });
         openAuthModal();
         return;
@@ -122,6 +138,7 @@ export default function RapidRecallPage() {
         wpm: null,
         correct: quizCorrect,
         total: quizTotal,
+        time_seconds: timeSeconds,
       };
       try {
         await withRetry(async () => {
@@ -133,6 +150,8 @@ export default function RapidRecallPage() {
           correct: quizCorrect,
           total: quizTotal,
         });
+        trackEvent("trainer_completed", { training_type: "rapid_recall", difficulty });
+        clearActiveTrainer();
         if (!mountedRef.current) return;
         setSaveError(null);
         if (!opts?.skipRestart) {
@@ -154,7 +173,7 @@ export default function RapidRecallPage() {
         if (mountedRef.current) setSaving(false);
       }
     },
-    [user, quizCorrect, quizTotal, timeLimitSeconds, difficulty, openAuthModal]
+    [user, quizCorrect, quizTotal, timeLimitSeconds, overtimeSeconds, difficulty, openAuthModal]
   );
 
   useEffect(() => {
@@ -328,9 +347,10 @@ export default function RapidRecallPage() {
                 </p>
                 <div className="space-y-3">
                   {questionBreakdown.map((item, index) => {
-                    const isCorrect =
-                      (item.userAnswer === "true" && item.correctAnswer) ||
-                      (item.userAnswer === "false" && !item.correctAnswer);
+                    const isCorrect = item.correctAnswerRaw
+                      ? item.userAnswer === item.correctAnswerRaw
+                      : (item.userAnswer === "true" && item.correctAnswer) ||
+                        (item.userAnswer === "false" && !item.correctAnswer);
                     return (
                       <div
                         key={index}

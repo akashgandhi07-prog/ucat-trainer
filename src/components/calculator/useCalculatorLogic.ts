@@ -282,13 +282,13 @@ export const useCalculatorLogic = ({ lagEnabled, onInput }: UseCalculatorLogicPr
                 inputDot();
             } else if (key === 'Enter' || key === '=') {
                 calculateResult();
-            } else if (key === 'Backspace' || key === 'Delete') {
+            } else if (key === 'Backspace' || key === 'Delete' || key === 'Escape') {
                 clearDisplay();
             } else if (key === '+') {
                 performOperation('+');
             } else if (key === '-') {
                 performOperation('-');
-            } else if (key === '*' || key.toLowerCase() === 'x') {
+            } else if (key === '*') {
                 performOperation('*');
             } else if (key === '/') {
                 performOperation('/');
@@ -296,8 +296,14 @@ export const useCalculatorLogic = ({ lagEnabled, onInput }: UseCalculatorLogicPr
                 memoryAdd();
             } else if (key.toLowerCase() === 'm') {
                 memorySub();
-            } else if (key.toLowerCase() === 'r') {
+            } else if (key.toLowerCase() === 'c' && !event.altKey) {
                 memoryRecallClear();
+            } else if (key.toLowerCase() === 'x') {
+                event.preventDefault();
+                sqrt();
+            } else if (key === '%') {
+                event.preventDefault();
+                percentage();
             }
         };
 

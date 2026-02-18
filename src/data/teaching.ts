@@ -41,4 +41,12 @@ export const SKILL_TEACHING: Record<TrainingType, SkillTeaching> = {
       "Review the heatmap to see which keys slow you down and practise them.",
     ],
   },
+  inference_trainer: {
+    why: "UCAT Verbal Reasoning tests making inferences and drawing conclusions. This trainer builds the skill of identifying the exact evidence that supports an inference.",
+    howToUse: [
+      "Read the passage and question.",
+      "Select the relevant section(s) of text that answer the question.",
+      "Submit your selection and review the explanation.",
+    ],
+  },
 };
