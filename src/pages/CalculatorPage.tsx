@@ -128,17 +128,18 @@ const CalculatorPage = () => {
 
     const handleDrillComplete = useCallback((stats: LastDrillStats) => {
         clearActiveTrainer();
-        const sessionData = {
+        const mode: GameSession['mode'] = activeDrill ?? 'free';
+        const sessionData: Omit<GameSession, 'id' | 'date'> = {
             kps: parseFloat(stats.kps ?? '0'),
-            accuracy: stats.accuracy,
-            mode: activeDrill ?? 'free',
+            accuracy: stats.accuracy ?? 0,
+            mode,
             correctQuestions: stats.correctQuestions,
             totalQuestions: stats.totalQuestions,
             timeTaken: stats.timeTaken
         };
         saveSession(sessionData);
         loadData();
-        setLastDrillStats({ ...stats, drillName: activeDrill });
+        setLastDrillStats({ ...stats, drillName: activeDrill ?? undefined });
         setActiveDrill(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- loadData intentionally omitted to avoid loop
     }, [activeDrill]);
@@ -146,7 +147,7 @@ const CalculatorPage = () => {
     const handleRetry = () => {
         const drill = lastDrillStats?.drillName;
         setLastDrillStats(null);
-        setActiveDrill(drill);
+        setActiveDrill(drill && (drill === 'sprint' || drill === 'fingerTwister' || drill === 'memory' || drill === 'stages') ? drill : null);
     };
 
 
@@ -293,16 +294,16 @@ const CalculatorPage = () => {
                                             : lastDrillStats.drillName === 'memory'
                                                 ? 'Memory Marathon'
                                                 : lastDrillStats.drillName === 'stages'
-                                                    ? (lastDrillStats.stageName || 'UCAT Ready (Stages)')
-                                                    : lastDrillStats.drillName
+                                                    ? (lastDrillStats.stageName ?? 'UCAT Ready (Stages)')
+                                                    : (lastDrillStats.drillName ?? 'Drill')
                                 }
-                                score={lastDrillStats.score || 0}
-                                totalQuestions={lastDrillStats.totalQuestions || 0}
-                                correctQuestions={lastDrillStats.correctQuestions || 0}
-                                timeTaken={lastDrillStats.timeTaken || '60s'}
-                                kps={lastDrillStats.kps}
-                                bestKey={lastDrillStats.bestKey}
-                                worstKey={lastDrillStats.worstKey}
+                                score={lastDrillStats.score ?? 0}
+                                totalQuestions={lastDrillStats.totalQuestions ?? 0}
+                                correctQuestions={lastDrillStats.correctQuestions ?? 0}
+                                timeTaken={lastDrillStats.timeTaken ?? '60s'}
+                                kps={lastDrillStats.kps ?? ''}
+                                bestKey={lastDrillStats.bestKey ?? undefined}
+                                worstKey={lastDrillStats.worstKey ?? undefined}
                                 onRetry={handleRetry}
                                 onMenu={handleMenu}
                             />
