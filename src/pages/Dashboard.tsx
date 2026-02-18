@@ -438,8 +438,6 @@ export default function Dashboard() {
     return result;
   }, [calculatorSessions]);
 
-  const calculatorLastSession = useMemo(() => formatLastSession(calculatorSessions), [calculatorSessions]);
-
   // Shared difficulty breakdown renderer
   const renderDifficultyBreakdown = (breakdown: Record<TrainingDifficulty, DifficultyStats>) => {
     const hasSessions = breakdown.easy.count + breakdown.medium.count + breakdown.hard.count > 0;

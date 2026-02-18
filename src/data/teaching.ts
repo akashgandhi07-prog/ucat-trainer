@@ -33,4 +33,12 @@ export const SKILL_TEACHING: Record<TrainingType, SkillTeaching> = {
       "Find and click them in the passage as fast as you can.",
     ],
   },
+  calculator: {
+    why: "UCAT's Decision Making and Quantitative Reasoning allow an on-screen calculator. Fluency with the numpad under time pressure saves seconds per question.",
+    howToUse: [
+      "Use the on-screen numpad or your keyboard to enter answers.",
+      "Complete each calculation as quickly and accurately as you can.",
+      "Review the heatmap to see which keys slow you down and practise them.",
+    ],
+  },
 };

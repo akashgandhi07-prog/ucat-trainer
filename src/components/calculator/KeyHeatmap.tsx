@@ -1,5 +1,5 @@
 // Mock intensity data for the numpad keys
-const getKeyIntensity = (key: string) => {
+const getKeyIntensity = (_key: string) => {
     // In a real implementation, this would come from a map of average latencies per key
     // For now, let's randomize slightly to show the heatmap effect
     const intensity = Math.random();

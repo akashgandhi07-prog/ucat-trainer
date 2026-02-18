@@ -44,6 +44,7 @@ const STRATEGIC_OBJECTIVES: Record<TrainingType, string> = {
   speed_reading: "Expand your perifoveal vision. Focus on the centre of the text to process 5 words at once.",
   rapid_recall: "Build a conceptual map. Identify the author's stance before the timer hits zero.",
   keyword_scanning: "Train selective attention. Quickly isolate target keywords whilst filtering out noise.",
+  calculator: "Build numpad fluency. Keep a consistent hand position and practise common operations until they're automatic.",
 };
 
 function getWpmStatusLabel(wpm: number): string {

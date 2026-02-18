@@ -20,6 +20,11 @@ export const TIPS: Record<TrainingType, string[]> = {
     "Use your finger or cursor to keep your place and pace.",
     "Ignore words you don't need; only stop on possible matches.",
   ],
+  calculator: [
+    "Use the numpad for speed; keep your hand in a fixed position.",
+    "Practise common operations (percentages, fractions) until they're automatic.",
+    "Estimate first to catch key-entry errors before submitting.",
+  ],
 };
 
 function pickTip(tips: string[], seed?: number): string {
