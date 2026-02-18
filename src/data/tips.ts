@@ -30,6 +30,11 @@ export const TIPS: Record<TrainingType, string[]> = {
     "Narrow to the precise evidence—don't select more than you need.",
     "Read the question carefully to understand what inference is being asked.",
   ],
+  mental_maths: [
+    "Practise times tables and common fractions so they become automatic.",
+    "Use percentage shortcuts: 10% is divide by 10; 5% is half of that.",
+    "For estimation, round to one significant figure first, then refine.",
+  ],
 };
 
 function pickTip(tips: string[], seed?: number): string {

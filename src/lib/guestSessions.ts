@@ -18,7 +18,7 @@ export function getGuestSessions(): GuestSessionPayload[] {
         typeof item.training_type === "string" &&
         typeof item.correct === "number" &&
         typeof item.total === "number" &&
-        ["speed_reading", "rapid_recall", "keyword_scanning", "inference_trainer"].includes(item.training_type)
+        ["speed_reading", "rapid_recall", "keyword_scanning", "inference_trainer", "mental_maths"].includes(item.training_type)
     );
   } catch {
     return [];

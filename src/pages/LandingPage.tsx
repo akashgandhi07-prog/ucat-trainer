@@ -14,7 +14,7 @@ export default function HomePage() {
         <div className="flex flex-col min-h-screen bg-background font-sans">
             <SEOHead
                 title="UCAT Trainer | TheUKCATPeople"
-                description="Free UCAT practice tools for Verbal Reasoning and Quantitative Reasoning. Master speed reading, mental math, and calculator usage."
+                description="Free UCAT practice tools for Verbal Reasoning, Decision Making, and Quantitative Reasoning. Master speed reading, syllogisms, mental math, and calculator usage."
                 canonicalUrl={canonicalUrl}
                 imageUrl={ogImageUrl}
             />
@@ -78,7 +78,7 @@ export default function HomePage() {
 
                             {/* Quantitative Reasoning Card */}
                             <button
-                                onClick={() => navigate("/train/calculator")}
+                                onClick={() => navigate("/quantitative")}
                                 className="group relative flex flex-col items-center p-8 bg-card border border-border rounded-2xl shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-300 text-center space-y-6"
                             >
                                 <div className="p-4 rounded-full bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100 group-hover:scale-110 transition-transform duration-300">
@@ -89,7 +89,7 @@ export default function HomePage() {
                                         Quantitative Reasoning
                                     </h2>
                                     <p className="text-muted-foreground leading-relaxed">
-                                        Master the official UCAT calculator and mental math with targeted keypad drills and arithmetic practice.
+                                        Calculator trainer and mental maths: master the keypad and build speed without it.
                                     </p>
                                 </div>
                                 <span className="text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">

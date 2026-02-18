@@ -34,6 +34,10 @@ export default function MicroDrill() {
     current != null && userAnswers[currentIndex] !== null;
   const isCorrectCurrent =
     current != null && userAnswers[currentIndex] === current.is_correct;
+  const answeredCount = userAnswers.filter((a) => a !== null).length;
+  const correctSoFar = questions.filter(
+    (q, i) => userAnswers[i] !== null && userAnswers[i] === q.is_correct
+  ).length;
   const feedbackLabel =
     current && hasAnsweredCurrent
       ? getFeedbackLabel(isCorrectCurrent, current.is_correct)
@@ -108,10 +112,15 @@ export default function MicroDrill() {
 
             {current && (
               <>
-                <div className="mb-4 text-sm text-slate-600 flex items-center justify-between">
+                <div className="mb-4 text-sm text-slate-600 flex items-center justify-between flex-wrap gap-2">
                   <span>
                     Question {currentIndex + 1} of {questions.length}
                   </span>
+                  {questions.length > 0 && (
+                    <span className="font-medium text-slate-700">
+                      Score: {correctSoFar} / {answeredCount}
+                    </span>
+                  )}
                 </div>
 
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">

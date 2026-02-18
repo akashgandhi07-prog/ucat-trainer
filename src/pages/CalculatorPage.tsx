@@ -3,7 +3,7 @@ import { CalculatorEngine } from '../components/calculator/CalculatorEngine';
 import { AnalyticsDashboard } from '../components/calculator/AnalyticsDashboard';
 import { SprintDrill, FingerTwisterDrill, MemoryMarathonDrill, StagesDrill } from '../components/calculator/DrillModes';
 import type { Difficulty } from '../components/calculator/DrillModes';
-import { ArrowLeft, Clock, Activity, Brain, Trash2 } from 'lucide-react';
+import { ArrowLeft, Clock, Activity, Brain, Trash2, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getHistory, saveSession, getAggregatedStats, clearHistory } from '../utils/analyticsStorage';
 import type { GameSession } from '../utils/analyticsStorage';
@@ -13,6 +13,37 @@ import { ShortcutsModal } from '../components/calculator/ShortcutsModal';
 import { Keyboard } from 'lucide-react';
 import { DrillSummary } from '../components/calculator/DrillSummary';
 import { trackEvent, setActiveTrainer, clearActiveTrainer } from '../lib/analytics';
+
+const MOBILE_NOTICE_KEY = 'calculator-mobile-notice-dismissed';
+
+function MobileDesktopNotice() {
+    const [dismissed, setDismissed] = useState(() => {
+        if (typeof sessionStorage === 'undefined') return false;
+        return sessionStorage.getItem(MOBILE_NOTICE_KEY) === '1';
+    });
+    const handleDismiss = () => {
+        setDismissed(true);
+        sessionStorage.setItem(MOBILE_NOTICE_KEY, '1');
+    };
+    if (dismissed) return null;
+    return (
+        <div className="order-first lg:order-none col-span-full block lg:hidden bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+            <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-amber-900">
+                    This calculator trainer is best done on a desktop computer with a keyboard to practice real UCAT conditions. It is not ideal on mobile.
+                </p>
+            </div>
+            <button
+                type="button"
+                onClick={handleDismiss}
+                className="flex-shrink-0 p-1 rounded hover:bg-amber-100 text-amber-700"
+                aria-label="Dismiss"
+            >
+                <X className="w-5 h-5" />
+            </button>
+        </div>
+    );
+}
 
 type DrillType = 'sprint' | 'fingerTwister' | 'memory' | 'stages' | null;
 
@@ -155,9 +186,11 @@ const CalculatorPage = () => {
             </div>
 
             <div className={`flex-1 p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-[1600px] mx-auto w-full`}>
+                {/* Mobile-only notice: best on desktop with keyboard */}
+                <MobileDesktopNotice />
 
-                {/* Left Column: Drills & Stats */}
-                <div className="lg:col-span-4 space-y-6">
+                {/* Left column part 1: XP + Drills — mobile order 1, desktop col 1 row 1 */}
+                <div className="order-1 lg:col-span-4 lg:col-start-1 lg:row-start-1 space-y-6">
                     {/* XP Banner */}
                     <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl shadow-sm p-6 text-white relative overflow-hidden">
                         <div className="relative z-10">
@@ -173,7 +206,6 @@ const CalculatorPage = () => {
                             </div>
                             <p className="text-xs text-indigo-200 mt-1 text-right">{progress}% to Level {level + 1}</p>
                         </div>
-                        {/* Decorative circles */}
                         <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
                         <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-16 h-16 bg-white/10 rounded-full blur-lg"></div>
                     </div>
@@ -183,8 +215,6 @@ const CalculatorPage = () => {
                             <Brain className="w-5 h-5 text-indigo-600" />
                             Targeted Drills
                         </h2>
-
-                        {/* Difficulty Selector */}
                         <div className="flex p-1 bg-slate-100 rounded-lg mb-4">
                             {(['easy', 'medium', 'hard'] as Difficulty[]).map((d) => (
                                 <button
@@ -196,7 +226,6 @@ const CalculatorPage = () => {
                                 </button>
                             ))}
                         </div>
-
                         <div className="space-y-2">
                             <button
                                 onClick={(e) => { e.stopPropagation(); setLastDrillStats(null); setActiveDrill('sprint'); }}
@@ -224,34 +253,10 @@ const CalculatorPage = () => {
                             </button>
                         </div>
                     </div>
-
-                    <div className="bg-white rounded-xl shadow-sm p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-bold flex items-center gap-2">
-                                <Activity className="w-5 h-5 text-emerald-600" />
-                                Stats (Avg)
-                            </h2>
-                            <button onClick={handleClearHistory} className="text-slate-400 hover:text-red-500" title="Clear History">
-                                <Trash2 className="w-4 h-4" />
-                            </button>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4 mb-4">
-                            <div className="bg-slate-50 p-4 rounded-lg text-center">
-                                <div className="text-2xl font-bold text-slate-800">{aggregates.averageKps}</div>
-                                <div className="text-xs text-slate-500 uppercase tracking-wide">Avg KPS</div>
-                            </div>
-                            <div className="bg-slate-50 p-4 rounded-lg text-center">
-                                <div className="text-2xl font-bold text-slate-800">{aggregates.averageAccuracy}%</div>
-                                <div className="text-xs text-slate-500 uppercase tracking-wide">Accuracy</div>
-                            </div>
-                        </div>
-                        <AnalyticsDashboard data={chartData} />
-                        <KeyHeatmap />
-                    </div>
                 </div>
 
-                {/* Center: Calculator Playground */}
-                <div className={`lg:col-span-8 flex flex-col xl:flex-row gap-6 items-start`}>
+                {/* Center: Calculator Playground — mobile order 2, desktop col 2 span 2 rows */}
+                <div className="order-2 lg:col-span-8 lg:col-start-5 lg:row-start-1 lg:row-span-2 flex flex-col xl:flex-row gap-6 items-start">
 
                     {/* Active Drill Area */}
                     <div className="flex-1 w-full xl:w-7/12 min-h-[500px] flex flex-col">
@@ -319,6 +324,33 @@ const CalculatorPage = () => {
                             {!activeDrill && !lastDrillStats && <p>Select a drill from the left or just practice freely.</p>}
                         </div>
 
+                    </div>
+                </div>
+
+                {/* Stats — mobile order 3 (bottom), desktop col 1 row 2 */}
+                <div className="order-3 lg:col-span-4 lg:col-start-1 lg:row-start-2">
+                    <div className="bg-white rounded-xl shadow-sm p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-lg font-bold flex items-center gap-2">
+                                <Activity className="w-5 h-5 text-emerald-600" />
+                                Stats (Avg)
+                            </h2>
+                            <button onClick={handleClearHistory} className="text-slate-400 hover:text-red-500" title="Clear History">
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                            <div className="bg-slate-50 p-4 rounded-lg text-center">
+                                <div className="text-2xl font-bold text-slate-800">{aggregates.averageKps}</div>
+                                <div className="text-xs text-slate-500 uppercase tracking-wide">Avg KPS</div>
+                            </div>
+                            <div className="bg-slate-50 p-4 rounded-lg text-center">
+                                <div className="text-2xl font-bold text-slate-800">{aggregates.averageAccuracy}%</div>
+                                <div className="text-xs text-slate-500 uppercase tracking-wide">Accuracy</div>
+                            </div>
+                        </div>
+                        <AnalyticsDashboard data={chartData} />
+                        <KeyHeatmap />
                     </div>
                 </div>
 

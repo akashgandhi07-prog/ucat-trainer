@@ -15,6 +15,8 @@ import InferenceTrainerPage from "./pages/InferenceTrainerPage";
 import AdminPage from "./pages/AdminPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import CalculatorPage from "./pages/CalculatorPage";
+import MentalMathsPage from "./pages/MentalMathsPage";
+import QuantitativeReasoningPage from "./pages/QuantitativeReasoningPage";
 import DecisionMakingPage from "./pages/DecisionMakingPage";
 import SyllogismMicroPage from "./pages/SyllogismMicroPage";
 import SyllogismMacroPage from "./pages/SyllogismMacroPage";
@@ -40,9 +42,11 @@ function App() {
                 <Routes>
                   <Route path="/" element={<LandingPage />} />
                   <Route path="/verbal" element={<VerbalReasoningPage />} />
+                  <Route path="/quantitative" element={<QuantitativeReasoningPage />} />
                   <Route path="/configure" element={<ConfigureRedirect />} />
                   <Route path="/reader" element={<ReaderPage />} />
                   <Route path="/train/calculator" element={<CalculatorPage />} />
+                  <Route path="/train/mentalMaths" element={<MentalMathsPage />} />
                   <Route path="/train/rapid-recall" element={<RapidRecallPage />} />
                   <Route path="/train/keyword-scanning" element={<KeywordScanningPage />} />
                   <Route path="/train/inference" element={<InferenceTrainerPage />} />

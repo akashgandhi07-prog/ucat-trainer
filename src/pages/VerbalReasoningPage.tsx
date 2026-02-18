@@ -48,6 +48,7 @@ const STRATEGIC_OBJECTIVES: Record<TrainingType, string> = {
   keyword_scanning: "Train selective attention. Quickly isolate target keywords whilst filtering out noise.",
   calculator: "Build numpad fluency. Keep a consistent hand position and practise common operations until they're automatic.",
   inference_trainer: "Identify the precise evidence. Look for the sentence that directly supports the inference asked.",
+  mental_maths: "Build automaticity with times tables and percentages; then practise estimation under time pressure.",
 };
 
 function getWpmStatusLabel(wpm: number): string {

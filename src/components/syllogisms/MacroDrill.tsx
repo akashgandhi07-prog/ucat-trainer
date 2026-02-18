@@ -32,6 +32,11 @@ export default function MacroDrill() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
+  const answeredCount =
+    questions.length > 0
+      ? userAnswers.filter((a) => a !== null).length
+      : 0;
+
   useEffect(() => {
     fetchMacroBlock();
   }, [fetchMacroBlock]);
@@ -94,48 +99,55 @@ export default function MacroDrill() {
   }, [questions.length, getLatestUserAnswers, finishSession]);
 
   return (
-    <div className="px-4 pb-8">
-      <div className="w-full max-w-6xl mx-auto pt-4">
-        <header className="mb-4 flex items-baseline justify-between gap-4">
+    <div className="px-4 pb-4">
+      <div className="w-full max-w-6xl mx-auto pt-2">
+        <header className="mb-2 flex items-baseline justify-between gap-4">
           <div>
             <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">
               Macro Syllogism Drill
             </h1>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-0.5 text-base text-slate-600">
               Review the stimulus on the left and decide whether each
               conclusion on the right follows. Choose Yes or No for all five,
               then submit.
             </p>
           </div>
-          <div className="text-right">
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-              Time
-            </p>
-            <p className="text-sm font-semibold text-slate-900">
-              {totalElapsedSeconds}s
-            </p>
+          <div className="text-right flex flex-col items-end gap-0.5">
+            {questions.length > 0 && !sessionFinished && (
+              <p className="text-sm font-medium text-slate-600">
+                Answered: {answeredCount} / {questions.length}
+              </p>
+            )}
+            <div>
+              <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
+                Time
+              </p>
+              <p className="text-lg font-semibold text-slate-900">
+                {totalElapsedSeconds}s
+              </p>
+            </div>
           </div>
         </header>
 
         {error && (
-          <p className="mb-3 text-sm text-red-600">{error}</p>
+          <p className="mb-3 text-base text-red-600">{error}</p>
         )}
 
         {/* Stem (stimulus) ABOVE – read first, then conclusions and Yes/No below */}
-        <section className="mb-6">
-          <div className="rounded-xl border-2 border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 mb-2">
+        <section className="mb-3">
+          <div className="rounded-xl border-2 border-slate-200 bg-white p-3 shadow-sm">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 mb-1">
               Stimulus
             </h2>
             {loading && !stimulus && (
-              <p className="text-sm text-slate-600">Loading stimulus…</p>
+              <p className="text-base text-slate-600">Loading stimulus…</p>
             )}
             {stimulus && (
-              <p className="text-base text-slate-900 whitespace-pre-line leading-relaxed">
+              <p className="text-lg font-bold text-slate-900 whitespace-pre-line leading-relaxed">
                 {stimulus}
               </p>
             )}
-            <p className="mt-4 text-sm font-medium text-slate-700">
+            <p className="mt-2 text-sm font-medium text-slate-700">
               Place &lsquo;Yes&rsquo; if the conclusion does follow. Place
               &lsquo;No&rsquo; if the conclusion does not follow. Drag from the
               Yes/No panel into each answer box.
@@ -144,20 +156,20 @@ export default function MacroDrill() {
         </section>
 
         {/* Conclusions list + Yes/No palette below the stem */}
-        <section className="flex flex-col lg:flex-row gap-4 lg:gap-6">
+        <section className="flex flex-col lg:flex-row gap-3 lg:gap-4">
           {/* Conclusions: question boxes + drop zones */}
-          <div className="flex-1 min-w-0 bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4">
+          <div className="flex-1 min-w-0 bg-white rounded-xl border border-slate-200 shadow-sm p-3 space-y-2">
             <h2 className="text-sm font-semibold text-slate-900">
               Conclusions
             </h2>
 
               {questions.length === 0 && loading && (
-                <p className="text-sm text-slate-600">
+                <p className="text-base text-slate-600">
                   Loading conclusions…
                 </p>
               )}
 
-              <ol className="space-y-3">
+              <ol className="space-y-1.5">
                 {questions.map((q, index) => {
                   const userAnswer = userAnswers[index];
                   const showFeedback = sessionFinished;
@@ -173,26 +185,34 @@ export default function MacroDrill() {
                   const interactive = !sessionFinished;
 
                   return (
-                    <li key={q.id} className="space-y-2">
-                      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-stretch gap-3">
-                        {/* Conclusion text in a bordered box (official style) */}
-                        <div className="flex min-h-[3rem] items-center rounded border border-slate-300 bg-white px-3 py-2">
-                          <p className="text-sm text-slate-900">
-                            {index + 1}. {q.conclusion_text}
-                          </p>
-                        </div>
+                    <li
+                      key={q.id}
+                      className={
+                        "border-b border-slate-200 last:border-b-0 pb-2 last:pb-0 " +
+                        (showFeedback
+                          ? isCorrect
+                            ? "rounded-lg bg-green-50 px-2 pt-1.5 pb-2"
+                            : "rounded-lg bg-red-50 px-2 pt-1.5 pb-2"
+                          : "")
+                      }
+                    >
+                      <div className="grid grid-cols-[minmax(0,1fr)_6rem] items-center gap-3">
+                        {/* Conclusion text – no extra box, just number + text */}
+                        <p className="text-base text-slate-900 leading-snug py-0.5">
+                          <span className="font-semibold text-slate-600">{index + 1}.</span> {q.conclusion_text}
+                        </p>
 
-                        {/* Answer slot: grey drop zone when empty, or show placed Yes/No */}
+                        {/* Answer: single compact cell, drop zone when empty */}
                         <div
                           className={
-                            "flex min-h-[3.5rem] min-w-[6rem] flex-shrink-0 flex-col items-center justify-center rounded border-2 text-sm font-medium transition-colors " +
+                            "flex h-10 w-24 flex-shrink-0 items-center justify-center rounded text-base font-medium transition-colors " +
                             (userAnswer === true
-                              ? "border-slate-300 bg-white text-slate-900"
+                              ? "bg-slate-100 text-slate-900"
                               : userAnswer === false
-                                ? "border-slate-300 bg-white text-slate-900"
+                                ? "bg-slate-100 text-slate-900"
                                 : isDropTarget
-                                  ? "border-sky-400 border-dashed bg-sky-50/80 text-sky-700"
-                                  : "border-slate-300 bg-slate-100 text-slate-500")
+                                  ? "bg-sky-100 text-sky-700 ring-1 ring-sky-300"
+                                  : "bg-slate-50 text-slate-400")
                           }
                           onDragOver={interactive ? (e) => handleDragOver(e, index) : undefined}
                           onDragLeave={interactive ? handleDragLeave : undefined}
@@ -204,59 +224,20 @@ export default function MacroDrill() {
                               : undefined
                           }
                         >
-                          {userAnswer === true ? (
-                            "Yes"
-                          ) : userAnswer === false ? (
-                            "No"
-                          ) : interactive ? (
-                            <>
-                              <span className="text-xs">
-                                {isDropTarget ? "Drop here" : "Drop Yes or No here"}
-                              </span>
-                              <span className="mt-1 flex gap-1.5">
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleToggle(index, true);
-                                  }}
-                                  className="rounded border border-slate-300 bg-white px-2 py-0.5 text-xs text-slate-600 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
-                                >
-                                  Yes
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleToggle(index, false);
-                                  }}
-                                  className="rounded border border-slate-300 bg-white px-2 py-0.5 text-xs text-slate-600 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
-                                >
-                                  No
-                                </button>
-                              </span>
-                            </>
-                          ) : (
-                            "—"
-                          )}
+                          {userAnswer === true ? "Yes" : userAnswer === false ? "No" : "—"}
                         </div>
                       </div>
 
                       {showFeedback && (
-                        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-1">
-                          <p
-                            className={
-                              "text-xs font-semibold " +
-                              (isCorrect
-                                ? "text-green-600"
-                                : "text-red-600")
-                            }
-                          >
-                            {feedbackLabel}
+                        <div className="mt-1.5 pl-0 text-sm">
+                          <p className="text-slate-700">
+                            <span className="font-semibold text-slate-900">Correct: {q.is_correct ? "Yes" : "No"}</span>
+                            {" · "}
+                            <span className={isCorrect ? "text-green-600" : "text-red-600"}>
+                              {feedbackLabel}
+                            </span>
                           </p>
-                          <p className="text-xs text-slate-700">
-                            {q.explanation}
-                          </p>
+                          <p className="text-slate-600 mt-0.5 leading-relaxed">{q.explanation}</p>
                         </div>
                       )}
                     </li>
@@ -266,13 +247,13 @@ export default function MacroDrill() {
 
               {submitError && (
                 <div className="rounded-md border border-red-200 bg-red-50 p-3">
-                  <p className="text-sm text-red-700">{submitError}</p>
+                  <p className="text-base text-red-700">{submitError}</p>
                 </div>
               )}
 
-              <div className="pt-2 flex items-center justify-between gap-4 flex-wrap">
+              <div className="pt-1.5 flex items-center justify-between gap-3 flex-wrap">
                 {lastSummary && sessionFinished && (
-                  <p className="text-sm text-slate-700">
+                  <p className="text-base text-slate-700">
                     Score:{" "}
                     <span className="font-semibold">{lastSummary.score}</span>{" "}
                     (UCAT macro scoring). Correct judgements{" "}
@@ -287,7 +268,7 @@ export default function MacroDrill() {
                   type="button"
                   onClick={handleSubmit}
                   disabled={questions.length === 0 || sessionFinished}
-                  className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-50"
+                  className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2.5 text-base font-semibold text-white hover:bg-slate-800 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-50"
                 >
                   {sessionFinished ? "Submitted" : "Submit answers"}
                 </button>
@@ -298,20 +279,17 @@ export default function MacroDrill() {
             {questions.length > 0 && (
               <div
                 className={
-                  "flex-shrink-0 rounded-xl border-2 border-slate-300 bg-slate-100 p-4 " +
+                  "flex flex-shrink-0 flex-col justify-center rounded-lg border-2 border-slate-300 bg-slate-100 p-2 " +
                   (sessionFinished ? "opacity-60" : "")
                 }
                 aria-label="Drag Yes or No into an answer box"
               >
-                <p className="mb-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
-                  Drag to answer box
-                </p>
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-2">
                   <div
                     draggable={!sessionFinished}
                     onDragStart={(e) => handleDragStart(e, true)}
                     className={
-                      "flex min-h-[48px] min-w-[5rem] cursor-grab active:cursor-grabbing items-center justify-center rounded-lg border-2 border-slate-300 bg-white px-5 text-base font-medium text-slate-900 shadow " +
+                      "flex min-h-[44px] min-w-[5rem] cursor-grab active:cursor-grabbing items-center justify-center rounded-lg border-2 border-slate-300 bg-white px-4 text-base font-medium text-slate-900 shadow " +
                       (sessionFinished ? "cursor-default" : "hover:border-slate-400 hover:shadow-md")
                     }
                   >
@@ -321,13 +299,16 @@ export default function MacroDrill() {
                     draggable={!sessionFinished}
                     onDragStart={(e) => handleDragStart(e, false)}
                     className={
-                      "flex min-h-[48px] min-w-[5rem] cursor-grab active:cursor-grabbing items-center justify-center rounded-lg border-2 border-slate-300 bg-white px-5 text-base font-medium text-slate-900 shadow " +
+                      "flex min-h-[44px] min-w-[5rem] cursor-grab active:cursor-grabbing items-center justify-center rounded-lg border-2 border-slate-300 bg-white px-4 text-base font-medium text-slate-900 shadow " +
                       (sessionFinished ? "cursor-default" : "hover:border-slate-400 hover:shadow-md")
                     }
                   >
                     No
                   </div>
                 </div>
+                <p className="mt-1.5 text-center text-sm text-slate-600">
+                  Drop Yes or No into an answer box
+                </p>
               </div>
             )}
           </section>

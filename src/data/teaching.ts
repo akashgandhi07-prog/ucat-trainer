@@ -49,4 +49,13 @@ export const SKILL_TEACHING: Record<TrainingType, SkillTeaching> = {
       "Submit your selection and review the explanation.",
     ],
   },
+  mental_maths: {
+    why: "UCAT Quantitative Reasoning benefits from quick mental calculation and estimation when the on-screen calculator is slow or unnecessary. This trainer builds automaticity and strategy so you can answer without relying on the calculator.",
+    howToUse: [
+      "Work through stages in order; each stage unlocks when you meet the accuracy and speed targets.",
+      "Stages 1–2: use the number pad to enter exact answers.",
+      "Stages 3–4: choose the best estimate from four multiple-choice options.",
+      "Review your summary after each run to track progress.",
+    ],
+  },
 };

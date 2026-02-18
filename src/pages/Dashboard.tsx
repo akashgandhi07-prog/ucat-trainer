@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   LineChart,
@@ -56,6 +56,7 @@ type GuestDashboardSummary = {
   speedReadingCount: number;
   rapidRecallCount: number;
   keywordScanningCount: number;
+  mentalMathsCount: number;
   averageWpm: number | null;
   rapidRecallAvgAccuracy: number | null;
   keywordScanningAvgAccuracy: number | null;
@@ -63,7 +64,7 @@ type GuestDashboardSummary = {
 
 function getTrainingType(s: SessionRow): TrainingType {
   const t = s.training_type;
-  if (t === "speed_reading" || t === "rapid_recall" || t === "keyword_scanning" || t === "calculator" || t === "inference_trainer")
+  if (t === "speed_reading" || t === "rapid_recall" || t === "keyword_scanning" || t === "calculator" || t === "inference_trainer" || t === "mental_maths")
     return t;
   return "speed_reading";
 }
@@ -78,6 +79,11 @@ function formatSessionScore(session: SessionRow): string {
   if (type === "calculator") {
     const kps = session.wpm != null ? session.wpm : 0;
     return `${kps} KPS, ${pct}%`;
+  }
+  if (type === "mental_maths") {
+    const stage = session.difficulty ?? "stage_1";
+    const stageLabel = stage.replace("stage_", "Stage ");
+    return `${stageLabel}, ${pct}%`;
   }
   return `${pct}%`;
 }
@@ -118,9 +124,33 @@ export default function Dashboard() {
   const [guestSummary, setGuestSummary] = useState<GuestDashboardSummary | null>(null);
   const [syllogismSessions, setSyllogismSessions] = useState<SyllogismSession[]>([]);
 
+  // Track dashboard view once auth state is known (so we can tag authenticated vs guest)
   useEffect(() => {
-    trackEvent("dashboard_viewed");
-  }, []);
+    if (authLoading) return;
+    trackEvent("dashboard_viewed", { authenticated: !!user });
+  }, [authLoading, user]);
+
+  // When authenticated and data has loaded, track dashboard_loaded and log once for ops
+  const hasLoggedReady = useRef(false);
+  useEffect(() => {
+    if (!user || loading || error != null) return;
+    if (hasLoggedReady.current) return;
+    hasLoggedReady.current = true;
+    dashboardLog.info("Dashboard ready (authenticated)", {
+      session_count: sessions.length,
+      syllogism_session_count: syllogismSessions.length,
+    });
+    trackEvent("dashboard_loaded", {
+      authenticated: true,
+      session_count: sessions.length,
+      syllogism_session_count: syllogismSessions.length,
+    });
+  }, [user, loading, error, sessions.length, syllogismSessions.length]);
+  // Reset so a fresh load (e.g. after re-login) logs again
+  useEffect(() => {
+    if (!user) hasLoggedReady.current = false;
+  }, [user]);
+
 
   useEffect(() => {
     if (!user) {
@@ -227,11 +257,14 @@ export default function Dashboard() {
     const guestSessions = getGuestSessions();
     if (!guestSessions.length) {
       setGuestSummary(null);
+      dashboardLog.info("Dashboard ready (guest)", { guest_session_count: 0 });
+      trackEvent("dashboard_loaded", { authenticated: false, guest_session_count: 0 });
       return;
     }
     const speed = guestSessions.filter((s) => s.training_type === "speed_reading");
     const rapid = guestSessions.filter((s) => s.training_type === "rapid_recall");
     const keyword = guestSessions.filter((s) => s.training_type === "keyword_scanning");
+    const mentalMaths = guestSessions.filter((s) => s.training_type === "mental_maths");
     const wpmValues = speed.map((s) => s.wpm ?? 0).filter((n) => Number.isFinite(n) && n > 0);
     const averageWpm =
       wpmValues.length > 0
@@ -246,10 +279,13 @@ export default function Dashboard() {
       speedReadingCount: speed.length,
       rapidRecallCount: rapid.length,
       keywordScanningCount: keyword.length,
+      mentalMathsCount: mentalMaths.length,
       averageWpm,
       rapidRecallAvgAccuracy,
       keywordScanningAvgAccuracy,
     });
+    dashboardLog.info("Dashboard ready (guest)", { guest_session_count: guestSessions.length });
+    trackEvent("dashboard_loaded", { authenticated: false, guest_session_count: guestSessions.length });
   }, [user]);
 
   const byType = useMemo(() => {
@@ -259,6 +295,7 @@ export default function Dashboard() {
       keyword_scanning: [],
       calculator: [],
       inference_trainer: [],
+      mental_maths: [],
     };
     for (const s of sessions) {
       m[getTrainingType(s)].push(s);
@@ -468,6 +505,33 @@ export default function Dashboard() {
     });
     return result;
   }, [calculatorSessions]);
+
+  // --- Mental Maths Trainer ---
+  const mentalMathsSessions = byType.mental_maths;
+  const mentalMathsAvgAccuracy =
+    mentalMathsSessions.length > 0
+      ? Math.round(
+          (mentalMathsSessions.reduce((sum, s) => sum + (s.total > 0 ? (s.correct / s.total) * 100 : 0), 0) /
+            mentalMathsSessions.length)
+        )
+      : 0;
+  // wpm column stores average time per question in ms for mental_maths
+  const mentalMathsWithWpm = mentalMathsSessions.filter((s) => s.wpm != null);
+  const mentalMathsAvgTimeMs =
+    mentalMathsWithWpm.length > 0
+      ? Math.round(mentalMathsWithWpm.reduce((sum, s) => sum + (s.wpm ?? 0), 0) / mentalMathsWithWpm.length)
+      : null;
+  const mentalMathsChartData: ChartPoint[] = mentalMathsSessions
+    .filter((s) => s.wpm != null)
+    .slice(-10) // last 10 sessions (sessions are ordered created_at ascending)
+    .map((s) => ({
+      date: s.created_at,
+      wpm: s.wpm ?? 0,
+      displayDate: new Date(s.created_at).toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+      }),
+    }));
 
   const recentSessions = useMemo(
     () => [...sessions].reverse().slice(0, 30),
@@ -1139,6 +1203,94 @@ export default function Dashboard() {
                             stroke="#4f46e5"
                             strokeWidth={2}
                             dot={{ fill: "#4f46e5", r: 4 }}
+                            activeDot={{ r: 6 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </>
+              )}
+            </section>
+
+            <section className="mt-10">
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">
+                {TRAINING_TYPE_LABELS.mental_maths}
+              </h2>
+              {mentalMathsSessions.length === 0 ? (
+                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                  <p className="text-slate-500">No Mental Maths sessions yet. Build speed and estimation without the calculator.</p>
+                  <Link
+                    to="/train/mentalMaths"
+                    className="inline-flex mt-4 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+                  >
+                    Go to Mental Maths Trainer
+                  </Link>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                      <p className="text-sm font-medium text-slate-500">Avg accuracy</p>
+                      <p className="text-3xl font-bold text-slate-900">{mentalMathsAvgAccuracy}%</p>
+                    </div>
+                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                      <p className="text-sm font-medium text-slate-500">Avg time per question</p>
+                      <p className="text-3xl font-bold text-slate-900">
+                        {mentalMathsAvgTimeMs != null ? `${(mentalMathsAvgTimeMs / 1000).toFixed(1)}s` : "–"}
+                      </p>
+                    </div>
+                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                      <p className="text-sm font-medium text-slate-500">Sessions</p>
+                      <p className="text-3xl font-bold text-slate-900">{mentalMathsSessions.length}</p>
+                    </div>
+                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                      <p className="text-sm font-medium text-slate-500">Latest stage</p>
+                      <p className="text-2xl font-bold text-slate-900">
+                        {mentalMathsSessions.length > 0 && mentalMathsSessions[mentalMathsSessions.length - 1]?.difficulty
+                          ? String(mentalMathsSessions[mentalMathsSessions.length - 1].difficulty).replace("stage_", "Stage ")
+                          : "–"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+                    <h3 className="text-base font-medium text-slate-900 mb-4">
+                      Avg time per question (last 10 sessions)
+                    </h3>
+                    <div className="h-64 sm:h-72 min-h-[200px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={mentalMathsChartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                          <XAxis
+                            dataKey="displayDate"
+                            tick={{ fontSize: 12, fill: "#64748b" }}
+                            stroke="#94a3b8"
+                          />
+                          <YAxis
+                            tick={{ fontSize: 12, fill: "#64748b" }}
+                            stroke="#94a3b8"
+                            domain={["auto", "auto"]}
+                            tickFormatter={(v) => `${(v / 1000).toFixed(0)}s`}
+                          />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: "#fff",
+                              border: "1px solid #e2e8f0",
+                              borderRadius: "8px",
+                            }}
+                            labelFormatter={(_, payload) =>
+                              payload?.[0]?.payload?.displayDate ?? ""
+                            }
+                            formatter={(value: number | undefined) =>
+                              [`${((value ?? 0) / 1000).toFixed(1)}s`, "Avg time"]
+                            }
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="wpm"
+                            stroke="#7c3aed"
+                            strokeWidth={2}
+                            dot={{ fill: "#7c3aed", r: 4 }}
                             activeDot={{ r: 6 }}
                           />
                         </LineChart>
