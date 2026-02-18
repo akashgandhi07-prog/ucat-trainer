@@ -15,6 +15,7 @@ import { appendGuestSession } from "../lib/guestSessions";
 import { supabase } from "../lib/supabase";
 import { supabaseLog } from "../lib/logger";
 import { withRetry } from "../lib/retry";
+import { getSessionSaveErrorMessage } from "../lib/sessionSaveError";
 import type { TrainingDifficulty } from "../types/training";
 import { pickNewRandomPassage } from "../lib/passages";
 import { getSiteBaseUrl } from "../lib/siteUrl";
@@ -114,16 +115,12 @@ export default function ReaderPage() {
     setSuggestedChunkSize(nextSize);
   }, [phase, guidedChunkingEnabled, guidedChunkSize, quizCorrect, quizTotal]);
 
-  if (!configureState) {
-    return <Navigate to="/" replace />;
-  }
-
   const passageText = passage?.text ?? "";
   const wordCount = passageText.trim().split(/\s+/).filter(Boolean).length;
-  const questionCount = Math.min(3, configureState.questionCount ?? 3);
+  const questionCount = configureState ? Math.min(3, configureState.questionCount ?? 3) : 3;
   const WPM_MIN = 200;
   const WPM_MAX = 900;
-  const difficulty: TrainingDifficulty = configureState.difficulty ?? "medium";
+  const difficulty: TrainingDifficulty = configureState?.difficulty ?? "medium";
 
   const handleReaderFinish = useCallback((finishedWpm: number, opts?: { timeSpentSeconds: number; usedOvertime?: boolean }) => {
     if (opts?.timeSpentSeconds != null && opts.timeSpentSeconds > 0) {
@@ -199,7 +196,7 @@ export default function ReaderPage() {
           userId: user.id,
         });
         if (!mountedRef.current) return;
-        setSaveError("Failed to save. Please try again.");
+        setSaveError(getSessionSaveErrorMessage(err));
       } finally {
         if (mountedRef.current) setSaveInProgress(false);
       }
@@ -251,10 +248,14 @@ export default function ReaderPage() {
         ...(readingTimeSeconds != null && readingTimeSeconds > 0 && { time_seconds: readingTimeSeconds }),
       });
     }
-  }, [phase, handleSaveProgress, user, wpm, quizCorrect, quizTotal, passage?.id, difficulty]);
+  }, [phase, handleSaveProgress, user, wpm, quizCorrect, quizTotal, passage?.id, difficulty, readingTimeSeconds]);
 
   const skipLinkClass =
     "absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-slate-900 font-medium rounded-lg ring-2 ring-blue-600 opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
+
+  if (!configureState) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="flex flex-col min-h-screen">

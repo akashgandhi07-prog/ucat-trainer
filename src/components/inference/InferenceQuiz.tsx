@@ -1,7 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import SelectablePassage, {
-  getSelectionFromPassage,
-} from "./SelectablePassage";
+import SelectablePassage from "./SelectablePassage";
+import { getSelectionFromPassage } from "./inferenceSelection";
 import { compareSelection, getSpanText } from "../../utils/inferenceComparison";
 import type {
   InferenceQuestion,

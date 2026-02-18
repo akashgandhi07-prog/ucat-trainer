@@ -182,8 +182,9 @@ function pickNounQuadFromSamePool(): {
 
 /** Build one macro block: three-sentence chain (A–B categorical, B–C relative, C–D majority) and five conclusions. */
 function buildMacroChainBlock(
-  _blockId: string
+  _blockId: string // reserved for future block id
 ): Omit<SyllogismQuestion, "id" | "macro_block_id">[] {
+  void _blockId;
   const { A, B, C, D } = pickNounQuadFromSamePool();
   const sent1 = buildCategoricalAllSentence(A, B);
   const sent2 = buildRelativeSomeSentence(B, C);

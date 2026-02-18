@@ -13,6 +13,7 @@ import { appendGuestSession } from "../lib/guestSessions";
 import { supabase } from "../lib/supabase";
 import { supabaseLog } from "../lib/logger";
 import { withRetry } from "../lib/retry";
+import { getSessionSaveErrorMessage } from "../lib/sessionSaveError";
 import type { TrainingDifficulty } from "../types/training";
 import { pickNewRandomPassage } from "../lib/passages";
 import { getSiteBaseUrl } from "../lib/siteUrl";
@@ -168,7 +169,7 @@ export default function RapidRecallPage() {
           userId: user.id,
         });
         if (!mountedRef.current) return;
-        setSaveError("Failed to save. Please try again.");
+        setSaveError(getSessionSaveErrorMessage(err));
       } finally {
         if (mountedRef.current) setSaving(false);
       }

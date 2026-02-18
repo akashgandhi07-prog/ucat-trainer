@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { BookOpen, Calculator, Scale } from "lucide-react";
 import Header from "../components/layout/Header";
+import Footer from "../components/layout/Footer";
+import TutoringUpsell from "../components/layout/TutoringUpsell";
 import SEOHead from "../components/seo/SEOHead";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 
@@ -98,9 +100,11 @@ export default function HomePage() {
                                 <div className="absolute inset-0 border-2 border-transparent group-hover:border-primary/10 rounded-2xl pointer-events-none transition-colors" />
                             </button>
                         </div>
+                        <TutoringUpsell variant="inline" />
                     </div>
                 </div>
             </main>
+            <Footer />
         </div>
     );
 }

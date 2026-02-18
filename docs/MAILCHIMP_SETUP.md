@@ -37,9 +37,22 @@ This app integrates with Mailchimp in two ways:
 - **API key**: Mailchimp → Account → Extras → API keys → Create a key
 - **List ID**: Mailchimp → Audience → All contacts → Settings → Audience name and defaults → Audience ID
 
-### Optional: Add merge tags in Mailchimp
+### Merge fields and tag
 
-Your audience has default `FNAME` and `LNAME` merge tags. The integration sends first and last name automatically.
+The Edge Function sends these merge fields for every new signup (and updates them when the contact already exists):
+
+| Mailchimp field   | Merge tag | Value sent |
+|-------------------|-----------|------------|
+| First Name        | `FNAME`   | From registration form |
+| Last Name         | `LNAME`   | From registration form |
+| Entry Year        | `MERGE8`  | e.g. `2026` |
+| Sign Up Source    | `MERGE9`  | Always `skills trainer` |
+| Year (dropdown)   | `MERGE18` | e.g. `2026 Entry (Starting University September 2026)` or `Other` |
+| Uni Subject       | `MERGE19` | Medicine, Dentistry, Veterinary Medicine, or Other |
+
+Every synced contact is also tagged **skillstrainer** (the tag is created automatically in Mailchimp when first used). You can segment or automate on this tag.
+
+Ensure your Mailchimp audience has merge fields for **Entry Year** (MERGE8), **Sign Up Source** (MERGE9), **Year** (MERGE18), and **Uni Subject** (MERGE19) if you use them. Default `FNAME` and `LNAME` are always sent.
 
 ---
 

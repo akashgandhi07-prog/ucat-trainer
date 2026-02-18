@@ -33,9 +33,16 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
     };
   }, []);
 
-  useEffect(() => {
-    if (logic.status === "active") setExactInput("");
-  }, [logic.status, logic.questionIndex]);
+  // Clear input when starting a stage or advancing to next question (avoid setState-in-effect)
+  const handleStageStart = useCallback((stageIndex: number) => {
+    setExactInput("");
+    logic.startStage(stageIndex);
+    onStageStart?.(stageIndex);
+  }, [logic, onStageStart]);
+  const handleGoToNext = useCallback(() => {
+    setExactInput("");
+    logic.goToNext();
+  }, [logic]);
 
   // Auto-focus answer input on each new exact-answer question so user can type immediately
   useEffect(() => {
@@ -52,11 +59,11 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
       if (e.key !== "Enter" && e.key !== " ") return;
       if (Date.now() - reviewShownAtRef.current < 400) return;
       e.preventDefault();
-      logic.goToNext();
+      handleGoToNext();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [logic.status, logic.goToNext]);
+  }, [logic.status, handleGoToNext]);
 
   const handleSubmitExact = useCallback(() => {
     if (submitLocked || logic.status !== "active") return;
@@ -128,10 +135,7 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
                 <button
                   type="button"
                   disabled={!unlocked}
-                  onClick={() => {
-                    logic.startStage(i);
-                    onStageStart?.(i);
-                  }}
+                  onClick={() => handleStageStart(i)}
                   className={`w-full flex items-center justify-between rounded-xl border px-5 py-4 text-left transition-colors min-h-[52px] ${
                     unlocked
                       ? "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50 text-slate-900"
@@ -195,7 +199,7 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
         </div>
         <button
           type="button"
-          onClick={logic.goToNext}
+          onClick={handleGoToNext}
           className="w-full min-h-[48px] rounded-xl bg-indigo-600 text-white font-semibold shadow-sm hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
         >
           {isLast ? "See summary" : "Next question"}
@@ -235,7 +239,7 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
           {canTryNextStage && (
             <button
               type="button"
-              onClick={() => logic.startStage(s.stageIndex + 1)}
+              onClick={() => handleStageStart(s.stageIndex + 1)}
               className="w-full min-h-[48px] rounded-xl bg-indigo-600 text-white font-semibold shadow-sm hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
             >
               Next stage →
@@ -243,7 +247,7 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
           )}
           <button
             type="button"
-            onClick={() => logic.startStage(s.stageIndex)}
+            onClick={() => handleStageStart(s.stageIndex)}
             className="w-full min-h-[48px] rounded-xl border border-slate-200 bg-white text-slate-800 font-medium hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2"
           >
             Try again (same stage)

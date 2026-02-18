@@ -9,8 +9,9 @@ import { saveSyllogismSession } from "../../utils/syllogismStorage";
 import { trackEvent, setActiveTrainer, clearActiveTrainer } from "../../lib/analytics";
 import type { SyllogismQuestion, LogicGroup } from "../../types/syllogisms";
 
+// User-facing message when no questions are available (do not expose seed script or env vars).
 const SEED_ERROR_MESSAGE =
-  "No syllogism questions found. Please run the seed script: npm run seed:syllogisms (requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env).";
+  "No syllogism questions available. Please try again later or contact support.";
 
 /** Always produce a readable string for the UI (avoids "[object Object]" for Supabase/PostgrestError). */
 function toErrorMessage(e: unknown): string {
@@ -135,8 +136,9 @@ export function useSyllogismLogic(mode: SyllogismMode) {
         )
         .limit(count * 3);
       if (fetchErr) throw fetchErr;
+      type DbRow = { id: string; macro_block_id?: string; stimulus_text: string; conclusion_text: string; is_correct: boolean; logic_group: string; trick_type: string; explanation: string };
       const rawList: SyllogismQuestion[] =
-        data?.map((row: any) => ({
+        data?.map((row: DbRow) => ({
           id: row.id,
           macro_block_id: row.macro_block_id ?? row.id,
           stimulus_text: row.stimulus_text,
@@ -191,7 +193,7 @@ export function useSyllogismLogic(mode: SyllogismMode) {
           () =>
             reject(
               new Error(
-                "Request timed out. Check your connection and try again, or run the seed script if the database is empty."
+                "Request timed out. Check your connection and try again."
               )
             ),
           MACRO_FETCH_TIMEOUT_MS
@@ -206,8 +208,9 @@ export function useSyllogismLogic(mode: SyllogismMode) {
       ]);
       const { data: rows, error: fetchErr } = result;
       if (fetchErr) throw fetchErr;
+      type DbRow = { id: string; macro_block_id?: string; stimulus_text: string; conclusion_text: string; is_correct: boolean; logic_group: string; trick_type: string; explanation: string };
       const raw =
-        rows?.map((row: any) => ({
+        rows?.map((row: DbRow) => ({
           id: row.id,
           macro_block_id: row.macro_block_id ?? row.id,
           stimulus_text: row.stimulus_text,
@@ -355,6 +358,7 @@ export function useSyllogismLogic(mode: SyllogismMode) {
     });
 
     return summary;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- userAnswers kept for consistency with summary computation
   }, [
     questions,
     userAnswers,

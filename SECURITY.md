@@ -53,6 +53,13 @@ flowchart LR
   - If it is ever leaked in a public repository, **rotate the key** in the Supabase dashboard and redeploy.
   - After rotation, update the environment variables wherever the app is deployed.
 
+### Secrets checklist
+
+- **Client code**: Only `VITE_*` environment variables are exposed to the browser by Vite. Never reference `SUPABASE_SERVICE_ROLE_KEY` or any other non-`VITE_` secret in client-side code (e.g. `src/`).
+- **Service role key**: `SUPABASE_SERVICE_ROLE_KEY` must only exist in server-side or local dev env (e.g. seed scripts run via Node, Supabase Edge Function secrets). It must never be committed or shipped to the client.
+- **If a key is committed**: Rotate the key immediately in the Supabase dashboard (or the relevant service), update env vars everywhere the app runs, and if the repo is public consider purging the secret from git history (e.g. `git filter-branch` or BFG).
+- **Verify .env is ignored**: Run `git check-ignore -v .env` and ensure `.env` is listed as ignored.
+
 ## Logging and Error Handling
 
 - `src/lib/logger.ts`:
@@ -86,6 +93,31 @@ flowchart LR
   - Server-side:
     - Length constraints are enforced in the `bug_reports` table as described above.
 
+### Database constraints (length limits)
+
+To prevent DoS and storage abuse, the following CHECK constraints are applied (see `supabase/full-schema-setup.sql` and migration `014_security_constraints.sql`):
+
+- **profiles**: `full_name` ≤ 500, `first_name` ≤ 200, `last_name` ≤ 200, `entry_year` ≤ 20 (each nullable).
+- **analytics_events**: `session_id` ≤ 64, `event_name` ≤ 128, `pathname`/`referrer` ≤ 2048 (nullable), `event_properties` must be a JSON object and serialized size ≤ 10000 bytes.
+
+The client (e.g. `src/lib/analytics.ts`) caps payloads to match these limits before insert.
+
+## Mailchimp Edge Function
+
+The `add-mailchimp-subscriber` Edge Function is secured as follows:
+
+- **Authentication**: Requires `Authorization: Bearer <jwt>`. The JWT is verified with Supabase Auth; the request is rejected with 403 if missing or invalid.
+- **Email match**: `body.email` must match the authenticated user’s email (case-insensitive). This limits subscriptions to the user who just signed up.
+- **Input caps**: `firstName` and `lastName` are trimmed and capped at 100 characters each; `stream` and `entry_year` are similarly capped.
+- **Rate limiting**: One successful request per `auth.uid()` per 60 seconds (in-memory per instance). Returns 429 when exceeded.
+
+Any new Edge Functions that accept user input or perform privileged actions should follow similar patterns (JWT verification, input validation, rate limiting where appropriate).
+
+## Secure headers and CSP
+
+- **Recommended HTTP headers** (applied via `vercel.json` or your host’s config): `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`.
+- **Content-Security-Policy**: Defined in `index.html` and tuned for the app (e.g. `connect-src` includes Supabase). When adding new third-party scripts or origins, update the CSP accordingly. Avoid `unsafe-inline` / `unsafe-eval` for scripts where possible.
+
 ## Checklist for New Features
 
 When adding new features, use this checklist:
@@ -111,4 +143,6 @@ When adding new features, use this checklist:
 5. **Secrets and configuration**
    - Store secrets and keys only in environment variables, not in source files.
    - Ensure `.env*` files remain ignored by version control.
+
+New features must follow this checklist; when in doubt, refer to the sections above (RLS, input validation, Mailchimp auth, DB constraints, secure headers).
 

@@ -41,9 +41,22 @@ export async function getProfile(userId: string): Promise<Profile | null> {
   }
 }
 
+const FULL_NAME_MAX = 500;
+const FIRST_NAME_MAX = 200;
+const LAST_NAME_MAX = 200;
+const ENTRY_YEAR_MAX = 20;
+
+function cap(s: string | null | undefined, max: number): string | null {
+  if (s == null) return null;
+  const t = s.trim();
+  if (!t) return null;
+  return t.length <= max ? t : t.slice(0, max);
+}
+
 /**
  * Upsert profile (full_name, stream) for the given user. Creates a minimal row if neither name nor stream
  * are provided (e.g. login-only flow). No-op if profiles table doesn't exist or RLS fails.
+ * Name and entry_year are capped to match DB constraints.
  */
 export async function upsertProfile(
   userId: string,
@@ -56,7 +69,7 @@ export async function upsertProfile(
     emailMarketingOptIn?: boolean | null;
   }
 ): Promise<{ ok: boolean; error?: string }> {
-  const name = fullName?.trim() || null;
+  const name = cap(fullName, FULL_NAME_MAX);
   const validStream: Stream | null =
     stream &&
       ["Medicine", "Dentistry", "Veterinary Medicine", "Other", "Undecided"].includes(
@@ -73,13 +86,13 @@ export async function upsertProfile(
     if (validStream != null) payload.stream = validStream;
     if (extra) {
       if (extra.firstName !== undefined) {
-        payload.first_name = extra.firstName?.trim() || null;
+        payload.first_name = cap(extra.firstName, FIRST_NAME_MAX);
       }
       if (extra.lastName !== undefined) {
-        payload.last_name = extra.lastName?.trim() || null;
+        payload.last_name = cap(extra.lastName, LAST_NAME_MAX);
       }
       if (extra.entryYear !== undefined) {
-        payload.entry_year = extra.entryYear || null;
+        payload.entry_year = cap(extra.entryYear, ENTRY_YEAR_MAX);
       }
       if (extra.emailMarketingOptIn !== undefined) {
         payload.email_marketing_opt_in = !!extra.emailMarketingOptIn;

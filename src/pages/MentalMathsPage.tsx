@@ -2,6 +2,7 @@ import { useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import Header from "../components/layout/Header";
+import Footer from "../components/layout/Footer";
 import { MentalMathsEngine } from "../components/mentalMaths/MentalMathsEngine";
 import { difficultyFromStageIndex } from "../components/mentalMaths/mentalMathsStages";
 import { SKILL_TEACHING } from "../data/teaching";
@@ -79,6 +80,7 @@ export default function MentalMathsPage() {
           </div>
         </div>
       </main>
+      <Footer />
     </div>
   );
 }

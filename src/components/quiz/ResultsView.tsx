@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import type { QuestionBreakdownItem } from "./DistortionQuiz";
 import ReReadPassageModal from "./ReReadPassageModal";
+import TutoringUpsell from "../layout/TutoringUpsell";
 
 export type WpmRating =
   | "too_slow"
@@ -287,6 +288,7 @@ export default function ResultsView({
           Change settings
         </Link>
       </div>
+      <TutoringUpsell variant="postDrill" />
     </div>
   );
 }

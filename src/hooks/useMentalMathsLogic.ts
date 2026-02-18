@@ -44,8 +44,13 @@ export function useMentalMathsLogic(onSessionComplete?: (stats: MentalMathsSumma
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      // Read refs in cleanup to clear whatever timers are current at unmount
+      /* eslint-disable-next-line react-hooks/exhaustive-deps -- capture refs in cleanup to clear current timers */
+      const t = timeoutRef.current;
+      /* eslint-disable-next-line react-hooks/exhaustive-deps */
+      const i = intervalRef.current;
+      if (t) clearTimeout(t);
+      if (i) clearInterval(i);
     };
   }, []);
 
@@ -205,7 +210,6 @@ export function useMentalMathsLogic(onSessionComplete?: (stats: MentalMathsSumma
     questionCount,
     responseTimesMs,
     correctCount,
-    lastCorrect,
     currentStage,
     onSessionComplete,
   ]);

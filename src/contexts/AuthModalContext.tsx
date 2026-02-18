@@ -23,6 +23,7 @@ export function AuthModalProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (user && isOpen) {
+      /* eslint-disable-next-line react-hooks/set-state-in-effect -- close modal when user signs in */
       closeAuthModal();
     }
   }, [user, isOpen, closeAuthModal]);
@@ -35,6 +36,7 @@ export function AuthModalProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+/* eslint-disable react-refresh/only-export-components -- context exports Provider and hook */
 export function useAuthModal(): AuthModalContextValue {
   const ctx = useContext(AuthModalContext);
   if (!ctx) {

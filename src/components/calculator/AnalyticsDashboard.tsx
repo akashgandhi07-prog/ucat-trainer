@@ -1,7 +1,13 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
+interface ChartDataPoint {
+    name: string;
+    kps: number;
+    accuracy: number;
+}
+
 interface AnalyticsDashboardProps {
-    data: any[];
+    data: ChartDataPoint[];
 }
 
 export const AnalyticsDashboard = ({ data }: AnalyticsDashboardProps) => {
@@ -26,7 +32,7 @@ export const AnalyticsDashboard = ({ data }: AnalyticsDashboardProps) => {
                     <YAxis yAxisId="right" orientation="right" stroke="#10b981" domain={[0, 100]} />
                     <Tooltip
                         contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                        formatter={(value: any, name: any) => [value, name === 'kps' ? 'KPS' : 'Accuracy %']}
+                        formatter={(value: number | string | undefined, name: string | undefined) => [value ?? 0, name === 'kps' ? 'KPS' : 'Accuracy %']}
                         labelFormatter={() => ''}
                     />
                     <Line yAxisId="left" type="monotone" dataKey="kps" stroke="#6366f1" strokeWidth={2} dot={{ fill: '#6366f1' }} activeDot={{ r: 8 }} name="KPS" />

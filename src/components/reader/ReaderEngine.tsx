@@ -108,10 +108,7 @@ export default function ReaderEngine({
     [wordCount, wpm]
   );
 
-  // Keep remainingSeconds in sync when not playing (e.g. initial load or after reset)
-  useEffect(() => {
-    if (!isPlaying) setRemainingSeconds(totalReadingSeconds);
-  }, [isPlaying, totalReadingSeconds]);
+  // When not playing, display uses totalReadingSeconds (see timerSeconds below). When playing starts, countdown effect sets remainingSeconds.
 
   // Countdown tick: update remaining time every second while playing; when it hits 0, pause and show "More time?" modal
   useEffect(() => {
@@ -179,6 +176,7 @@ export default function ReaderEngine({
       mountedRef.current = false;
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- currentWordIndex/onFinish intentionally omitted to avoid restarting animation on every word
   }, [isPlaying, wpm, words.length, useChunking, effectiveChunkSize, totalReadingSeconds]);
 
   const handlePlayPause = () => {
@@ -436,7 +434,7 @@ export default function ReaderEngine({
                 onClick={handleFinish}
                 className="min-h-[44px] px-4 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-1.5"
               >
-                <span aria-hidden>▶ |</span>
+                <span aria-hidden>▶ |</span>
                 Finish
               </button>
             </div>
@@ -529,7 +527,7 @@ export default function ReaderEngine({
                 onClick={handleFinish}
                 className="min-h-[44px] px-4 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-1.5"
               >
-                <span aria-hidden>▶ |</span>
+                <span aria-hidden>▶ |</span>
                 Finish
               </button>
             </div>

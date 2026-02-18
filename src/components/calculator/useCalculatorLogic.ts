@@ -309,7 +309,8 @@ export const useCalculatorLogic = ({ lagEnabled, onInput }: UseCalculatorLogicPr
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [lagEnabled]); // Re-bind only if lag setting changes. logic functions are stable-ish or we accept stale closures if they used state directly, but they use functional updates.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-bind only when lagEnabled changes; handlers use stable logic
+    }, [lagEnabled]);
 
     // Return checks
     return {

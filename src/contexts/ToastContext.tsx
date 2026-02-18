@@ -42,6 +42,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+/* eslint-disable-next-line react-refresh/only-export-components -- context exports Provider and hook */
 export function useToast(): ToastContextValue {
   const ctx = useContext(ToastContext);
   if (!ctx) {

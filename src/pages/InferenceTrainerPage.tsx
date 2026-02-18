@@ -16,6 +16,7 @@ import { appendGuestSession } from "../lib/guestSessions";
 import { supabase } from "../lib/supabase";
 import { supabaseLog } from "../lib/logger";
 import { withRetry } from "../lib/retry";
+import { getSessionSaveErrorMessage } from "../lib/sessionSaveError";
 import type { TrainingDifficulty } from "../types/training";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 import SEOHead from "../components/seo/SEOHead";
@@ -31,6 +32,7 @@ type LocationState = {
 
 function pickPassageWithInference(
   currentId?: string | null,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- reserved for future difficulty filtering
   _difficulty?: TrainingDifficulty
 ): Passage | null {
   const candidates = PASSAGES.filter((p) =>
@@ -201,7 +203,7 @@ export default function InferenceTrainerPage() {
           userId: user.id,
         });
         if (!mountedRef.current) return;
-        setSaveError("Failed to save. Please try again.");
+        setSaveError(getSessionSaveErrorMessage(err));
       } finally {
         if (mountedRef.current) setSaving(false);
       }

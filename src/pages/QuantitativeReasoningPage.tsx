@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Calculator, Brain, ArrowLeft } from "lucide-react";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
+import TutoringUpsell from "../components/layout/TutoringUpsell";
 import SEOHead from "../components/seo/SEOHead";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 
@@ -33,6 +34,9 @@ export default function QuantitativeReasoningPage() {
             <p className="mt-2 text-muted-foreground">
               Choose a trainer to build calculator fluency or mental maths speed.
             </p>
+            <div className="mt-4">
+              <TutoringUpsell variant="hub" />
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">

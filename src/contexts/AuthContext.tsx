@@ -22,6 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Use a ref for user so the onAuthStateChange closure always has the latest value
   const userRef = useRef(user);
+  /* eslint-disable-next-line react-hooks/refs -- intentional: keep ref in sync with user for listener closure */
   userRef.current = user;
 
   // Skip setState after unmount (e.g. when fetchProfile is called from auth listener and user navigates away)
@@ -144,6 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const rows = guestSessions.map((g) => ({
             user_id: session.user.id,
             training_type: g.training_type,
+            difficulty: g.difficulty ?? null,
             wpm: g.wpm ?? null,
             correct: g.correct,
             total: g.total,
@@ -155,6 +157,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (!error) {
             clearGuestSessions();
             showToast("History successfully synced!", { variant: "success" });
+          } else {
+            authLog.error("Guest sessions merge failed", { message: error.message, code: error.code });
+            showToast("Couldn't sync your guest history. It's still saved on this device.", { variant: "error" });
           }
           authLog.info("Guest sessions merge", {
             count: guestSessions.length,
@@ -200,6 +205,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Fallback: if INITIAL_SESSION never fires (e.g. edge case / env), stop loading after a short delay
   const loadingRef = useRef(loading);
+  /* eslint-disable-next-line react-hooks/refs -- intentional: keep ref in sync for timeout callback */
   loadingRef.current = loading;
   useEffect(() => {
     const fallbackMs = 2500;
@@ -252,6 +258,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+/* eslint-disable react-refresh/only-export-components -- context exports Provider and hook */
 export function useAuth(): AuthState {
   const ctx = useContext(AuthContext);
   if (!ctx) {

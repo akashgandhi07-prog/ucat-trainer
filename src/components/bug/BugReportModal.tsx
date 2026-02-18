@@ -161,6 +161,7 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
     onClose();
   };
 
+  /* eslint-disable-next-line react-hooks/incompatible-library -- React Hook Form watch() used intentionally for dynamic labels */
   const feedbackType = watch("feedbackType");
   const isBug = feedbackType === "bug";
   const title = isBug ? "Report a bug" : "Suggest an improvement";

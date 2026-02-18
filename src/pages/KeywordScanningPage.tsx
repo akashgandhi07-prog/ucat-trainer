@@ -11,6 +11,7 @@ import { appendGuestSession } from "../lib/guestSessions";
 import { supabase } from "../lib/supabase";
 import { supabaseLog } from "../lib/logger";
 import { withRetry } from "../lib/retry";
+import { getSessionSaveErrorMessage } from "../lib/sessionSaveError";
 import type { TrainingDifficulty } from "../types/training";
 import { pickNewRandomPassage } from "../lib/passages";
 import { getSiteBaseUrl } from "../lib/siteUrl";
@@ -85,6 +86,7 @@ export default function KeywordScanningPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [bestTimeSeconds, setBestTimeSeconds] = useState<number | null>(null);
+  const [resultsElapsedSeconds, setResultsElapsedSeconds] = useState<number | null>(null);
   const hasAutoSavedRef = useRef(false);
   const mountedRef = useRef(true);
   const { user } = useAuth();
@@ -161,9 +163,11 @@ export default function KeywordScanningPage() {
 
   useEffect(() => {
     if (foundCount >= targets.length && targets.length > 0) {
+      /* eslint-disable-next-line react-hooks/set-state-in-effect -- transition to results with elapsed time */
+      setResultsElapsedSeconds(Math.round((Date.now() - startTime) / 1000));
       setPhase("results");
     }
-  }, [foundCount, targets.length]);
+  }, [foundCount, targets.length, startTime]);
 
   const handleSaveProgress = useCallback(
     async (opts?: { skipRestart?: boolean }) => {
@@ -206,7 +210,7 @@ export default function KeywordScanningPage() {
           userId: user.id,
         });
         if (mountedRef.current) {
-          setSaveError("Failed to save. Please try again.");
+          setSaveError(getSessionSaveErrorMessage(err));
         }
         if (mountedRef.current) setSaving(false);
         return;
@@ -229,13 +233,14 @@ export default function KeywordScanningPage() {
         setStartTime(Date.now());
       }
     },
-    [user, foundCount, targets.length, startTime, openAuthModal]
+    [user, foundCount, targets.length, startTime, openAuthModal, difficulty]
   );
 
   useEffect(() => {
     if (phase !== "results" || hasAutoSavedRef.current) return;
     hasAutoSavedRef.current = true;
     if (user) {
+      /* eslint-disable-next-line react-hooks/set-state-in-effect -- auto-save on results */
       handleSaveProgress({ skipRestart: true });
     } else {
       const timeSeconds = Math.round((Date.now() - startTime) / 1000);
@@ -256,7 +261,7 @@ export default function KeywordScanningPage() {
   const canonicalUrl = getSiteBaseUrl() ? `${getSiteBaseUrl()}/train/keyword-scanning` : undefined;
 
   if (phase === "results") {
-    const elapsed = Math.round((Date.now() - startTime) / 1000);
+    const elapsed = resultsElapsedSeconds ?? 0;
     const isPerfect = foundCount === targets.length;
     const isNewBest = isPerfect && (bestTimeSeconds == null || elapsed < bestTimeSeconds);
     const skipLinkClass =
@@ -368,7 +373,10 @@ export default function KeywordScanningPage() {
                 </span>
               </div>
               <button
-                onClick={() => setPhase("results")}
+                onClick={() => {
+                  setResultsElapsedSeconds(Math.round((Date.now() - startTime) / 1000));
+                  setPhase("results");
+                }}
                 className="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline px-2 py-1"
               >
                 Finish & View Results

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Timer, ArrowRight, RotateCcw } from 'lucide-react';
 
 interface DrillActiveAreaProps {
@@ -29,7 +29,15 @@ export const DrillActiveArea = ({
     onNextQuestion
 }: DrillActiveAreaProps) => {
     const scrollRef = useRef<HTMLDivElement>(null);
-    const [progress, setProgress] = useState(0);
+
+    const progress = useMemo(() => {
+        if (expectedKeystrokes && expectedKeystrokes.length > 0) {
+            const matchCount = userKeystrokes.length;
+            const total = expectedKeystrokes.length;
+            return Math.min((matchCount / total) * 100, 100);
+        }
+        return 0;
+    }, [userKeystrokes, expectedKeystrokes]);
 
     // Auto-scroll typing history
     useEffect(() => {
@@ -37,18 +45,6 @@ export const DrillActiveArea = ({
             scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
         }
     }, [userKeystrokes]);
-
-    // Calculate progress based on expected keystrokes matches (simple heuristic)
-    useEffect(() => {
-        if (expectedKeystrokes && expectedKeystrokes.length > 0) {
-            // This is a naive visual progress, real accuracy logic is in the drill component
-            const matchCount = userKeystrokes.length;
-            const total = expectedKeystrokes.length;
-            setProgress(Math.min((matchCount / total) * 100, 100));
-        } else {
-            setProgress(0);
-        }
-    }, [userKeystrokes, expectedKeystrokes]);
 
     return (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full animate-in fade-in zoom-in-95 duration-300">

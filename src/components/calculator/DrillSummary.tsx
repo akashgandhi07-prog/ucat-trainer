@@ -1,4 +1,5 @@
 import { RefreshCw, Menu, Trophy, Target, Clock, AlertCircle } from 'lucide-react';
+import TutoringUpsell from '../layout/TutoringUpsell';
 
 interface DrillSummaryProps {
     drillName: string;
@@ -91,6 +92,7 @@ export const DrillSummary = ({
                     Retry
                 </button>
             </div>
+            <TutoringUpsell variant="postDrill" />
         </div>
     );
 };

@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useBugReportModal } from "../../contexts/BugReportContext";
+import TutoringUpsell from "./TutoringUpsell";
 
 export default function Footer() {
   const { openBugReport } = useBugReportModal();
@@ -21,6 +22,7 @@ export default function Footer() {
             Feedback
           </button>
         </nav>
+        <TutoringUpsell variant="footer" />
         <p className="text-center text-sm text-slate-500">
           © 2026 TheUKCATPeople. Secure & Encrypted.
         </p>

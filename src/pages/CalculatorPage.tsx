@@ -7,6 +7,19 @@ import { ArrowLeft, Clock, Activity, Brain, Trash2, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getHistory, saveSession, getAggregatedStats, clearHistory } from '../utils/analyticsStorage';
 import type { GameSession } from '../utils/analyticsStorage';
+
+type LastDrillStats = {
+  drillName?: string;
+  kps?: string;
+  accuracy?: number;
+  score?: number;
+  totalQuestions?: number;
+  correctQuestions?: number;
+  timeTaken?: string;
+  bestKey?: string | null;
+  worstKey?: string | null;
+  stageName?: string;
+};
 import { calculateLevel } from '../utils/xpSystem';
 import { KeyHeatmap } from '../components/calculator/KeyHeatmap';
 import { ShortcutsModal } from '../components/calculator/ShortcutsModal';
@@ -54,7 +67,7 @@ const CalculatorPage = () => {
     const [difficulty, setDifficulty] = useState<Difficulty>('easy');
     const [history, setHistory] = useState<GameSession[]>([]);
     const [aggregates, setAggregates] = useState({ averageKps: 0, averageAccuracy: 0, totalSessions: 0 });
-    const [lastDrillStats, setLastDrillStats] = useState<any>(null); // For summary screen
+    const [lastDrillStats, setLastDrillStats] = useState<LastDrillStats | null>(null);
 
     const { level, progress, rank } = calculateLevel(aggregates.totalSessions, aggregates.averageAccuracy);
 
@@ -103,22 +116,22 @@ const CalculatorPage = () => {
         setUserKeystrokes([]);
     }, []);
 
-    useEffect(() => {
-        loadData();
-    }, []);
-
-    const loadData = () => {
+    const loadData = useCallback(() => {
         const hist = getHistory();
         setHistory(hist.reverse());
         setAggregates(getAggregatedStats());
-    };
+    }, []);
 
-    const handleDrillComplete = useCallback((stats: any) => {
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
+
+    const handleDrillComplete = useCallback((stats: LastDrillStats) => {
         clearActiveTrainer();
         const sessionData = {
-            kps: parseFloat(stats.kps),
+            kps: parseFloat(stats.kps ?? '0'),
             accuracy: stats.accuracy,
-            mode: (activeDrill || 'free') as any,
+            mode: activeDrill ?? 'free',
             correctQuestions: stats.correctQuestions,
             totalQuestions: stats.totalQuestions,
             timeTaken: stats.timeTaken
@@ -127,6 +140,7 @@ const CalculatorPage = () => {
         loadData();
         setLastDrillStats({ ...stats, drillName: activeDrill });
         setActiveDrill(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- loadData intentionally omitted to avoid loop
     }, [activeDrill]);
 
     const handleRetry = () => {

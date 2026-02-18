@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Scale, Zap, LayoutList, ChevronRight } from "lucide-react";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
+import TutoringUpsell from "../components/layout/TutoringUpsell";
 import SEOHead from "../components/seo/SEOHead";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 
@@ -33,6 +34,9 @@ export default function DecisionMakingPage() {
                 Train logical reasoning and syllogisms for the UCAT.
               </p>
             </div>
+          </div>
+          <div className="mb-8">
+            <TutoringUpsell variant="hub" />
           </div>
 
           <section className="space-y-4">

@@ -136,6 +136,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (!user || !isAdmin) {
+      /* eslint-disable-next-line react-hooks/set-state-in-effect -- stop loading when auth resolved */
       setLoading(false);
       return;
     }

@@ -1,12 +1,46 @@
 /**
  * Product analytics module. Sends events to Supabase analytics_events table.
  * Session ID persists in sessionStorage per tab. Honors analytics opt-out.
+ * Payloads are capped to match DB constraints and prevent abuse.
  */
 
 import { supabase } from "./supabase";
 
 const SESSION_ID_KEY = "ucat_analytics_session_id";
 const OPT_OUT_KEY = "ucat_analytics_opt_out";
+
+const PATHNAME_MAX = 2048;
+const REFERRER_MAX = 2048;
+const EVENT_NAME_MAX = 128;
+const SESSION_ID_MAX = 64;
+const EVENT_PROPERTIES_MAX_BYTES = 10000;
+
+function truncate(str: string, max: number): string {
+  if (str.length <= max) return str;
+  return str.slice(0, max);
+}
+
+/** Sanitize event_properties so serialized size is within limit; returns plain object. */
+function capEventProperties(
+  props: Record<string, string | number | boolean | null | undefined> | null | undefined
+): Record<string, string | number | boolean | null | undefined> {
+  if (!props || typeof props !== "object" || Array.isArray(props)) return {};
+  const out: Record<string, string | number | boolean | null | undefined> = {};
+  for (const k of Object.keys(props)) {
+    const key = truncate(String(k), 128);
+    const v = props[k];
+    if (v === null || v === undefined) out[key] = null;
+    else if (typeof v === "string") out[key] = truncate(v, 500);
+    else if (typeof v === "number" || typeof v === "boolean") out[key] = v;
+  }
+  let s = JSON.stringify(out);
+  while (s.length > EVENT_PROPERTIES_MAX_BYTES && Object.keys(out).length > 0) {
+    const lastKey = Object.keys(out).pop()!;
+    delete out[lastKey];
+    s = JSON.stringify(out);
+  }
+  return out;
+}
 
 let _activeTrainer: {
   training_type: string;
@@ -69,18 +103,19 @@ export async function trackEvent(
   if (typeof window === "undefined") return;
 
   try {
-    const session_id = getOrCreateSessionId();
+    const rawSessionId = getOrCreateSessionId();
+    const session_id = truncate(rawSessionId, SESSION_ID_MAX);
     const { data: { user } } = await supabase.auth.getUser();
-    const pathname = window.location.pathname;
-    const referrer = document.referrer || undefined;
+    const pathname = truncate(window.location.pathname, PATHNAME_MAX);
+    const referrer = truncate(document.referrer || "", REFERRER_MAX) || undefined;
 
     const payload = {
       user_id: user?.id ?? null,
       session_id,
-      event_name,
-      event_properties: properties ?? {},
+      event_name: truncate(event_name, EVENT_NAME_MAX),
+      event_properties: capEventProperties(properties ?? {}),
       pathname,
-      referrer,
+      referrer: referrer || null,
     };
 
     const { error } = await supabase.from("analytics_events").insert(payload);
@@ -120,11 +155,11 @@ function sendAbandonmentSync(
 
   const payload = {
     user_id,
-    session_id,
+    session_id: truncate(session_id, SESSION_ID_MAX),
     event_name: "trainer_abandoned",
-    event_properties: { training_type, phase, time_spent_seconds },
-    pathname: window.location.pathname,
-    referrer: document.referrer || undefined,
+    event_properties: capEventProperties({ training_type, phase, time_spent_seconds }),
+    pathname: truncate(window.location.pathname, PATHNAME_MAX),
+    referrer: truncate(document.referrer || "", REFERRER_MAX) || undefined,
   };
 
   const body = JSON.stringify(payload);

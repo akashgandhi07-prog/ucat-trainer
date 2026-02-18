@@ -1,16 +1,134 @@
 // Supabase Edge Function: Add new signups to Mailchimp audience
 // Deploy: supabase functions deploy add-mailchimp-subscriber
 // Secrets: MAILCHIMP_API_KEY, MAILCHIMP_LIST_ID (set via Supabase Dashboard)
+// Auth: Requires Authorization Bearer JWT; body.email must match authenticated user's email.
+
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "https://ucat.theukcatpeople.co.uk",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const FIRST_NAME_MAX = 100;
+const LAST_NAME_MAX = 100;
+const STREAM_MAX = 100;
+const ENTRY_YEAR_MAX = 20;
+const RATE_LIMIT_MS = 60_000;
+
+// In-memory rate limit: uid -> last request timestamp (per instance)
+const rateLimitMap = new Map<string, number>();
+
 interface SubscriberPayload {
   email: string;
   firstName?: string;
   lastName?: string;
+  stream?: string;
+  entryYear?: string;
+}
+
+// Minimal MD5 for Mailchimp subscriber_hash (lowercase email -> hex)
+function md5Hex(s: string): string {
+  const utf8 = new TextEncoder().encode(s);
+  const F = (x: number, y: number, z: number) => (x & y) | (~x & z);
+  const G = (x: number, y: number, z: number) => (x & z) | (y & ~z);
+  const H = (x: number, y: number, z: number) => x ^ y ^ z;
+  const I = (x: number, y: number, z: number) => y ^ (x | ~z);
+  const rot = (v: number, n: number) => (v << n) | (v >>> (32 - n));
+  const add = (a: number, b: number) => ((a + b) >>> 0) & 0xffffffff;
+
+  const K = new Uint32Array(64);
+  for (let i = 0; i < 64; i++) K[i] = (0x100000000 * Math.abs(Math.sin(i + 1))) >>> 0;
+  const S = [7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 5, 9, 14, 20, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21];
+
+  const len = utf8.length;
+  const numBlocks = Math.ceil((len + 9) / 64);
+  const totalBytes = numBlocks * 64;
+  const buf = new Uint8Array(totalBytes);
+  buf.set(utf8);
+  buf[len] = 0x80;
+  const view = new DataView(buf.buffer);
+  const lenBits = len * 8;
+  view.setUint32(totalBytes - 8, lenBits & 0xffffffff, true);
+  view.setUint32(totalBytes - 4, Math.floor(lenBits / 0x100000000), true);
+  const M = new Uint32Array(16);
+
+  let a0 = 0x67452301, b0 = 0xefcdab89, c0 = 0x98badcfe, d0 = 0x10325476;
+  for (let block = 0; block < numBlocks; block++) {
+    for (let i = 0; i < 16; i++) M[i] = view.getUint32((block * 64) + i * 4, true);
+    let A = a0, B = b0, C = c0, D = d0;
+    for (let i = 0; i < 64; i++) {
+      let f: number, g: number;
+      if (i < 16) {
+        f = F(B, C, D);
+        g = i;
+      } else if (i < 32) {
+        f = G(B, C, D);
+        g = (5 * i + 1) % 16;
+      } else if (i < 48) {
+        f = H(B, C, D);
+        g = (3 * i + 5) % 16;
+      } else {
+        f = I(B, C, D);
+        g = (7 * i) % 16;
+      }
+      f = add(add(add(f, A), K[i]), M[g]);
+      A = D;
+      D = C;
+      C = B;
+      B = add(B, rot(f, S[i]));
+    }
+    a0 = add(a0, A);
+    b0 = add(b0, B);
+    c0 = add(c0, C);
+    d0 = add(d0, D);
+  }
+  return [a0, b0, c0, d0].map((x) => {
+    const b = new ArrayBuffer(4);
+    new DataView(b).setUint32(0, x, true);
+    return Array.from(new Uint8Array(b)).map((c) => c.toString(16).padStart(2, "0")).join("");
+  }).join("");
+}
+
+function cap(s: string, max: number): string {
+  if (s.length <= max) return s;
+  return s.slice(0, max);
+}
+
+function buildMergeFields(body: SubscriberPayload): Record<string, string> {
+  const firstName = cap(
+    typeof body.firstName === "string" ? body.firstName.trim() : "",
+    FIRST_NAME_MAX
+  );
+  const lastName = cap(
+    typeof body.lastName === "string" ? body.lastName.trim() : "",
+    LAST_NAME_MAX
+  );
+  const stream = cap(
+    typeof body.stream === "string" ? body.stream.trim() : "",
+    STREAM_MAX
+  );
+  const entryYear = cap(
+    typeof body.entryYear === "string" ? body.entryYear.trim() : "",
+    ENTRY_YEAR_MAX
+  );
+
+  const merge: Record<string, string> = {};
+  if (firstName) merge.FNAME = firstName;
+  if (lastName) merge.LNAME = lastName;
+  merge.MERGE9 = "skills trainer"; // Sign Up Source
+  if (entryYear) {
+    merge.MERGE8 = entryYear; // Entry Year (text)
+    const y = entryYear.replace(/\D/g, "");
+    if (["2025", "2026", "2027", "2028"].includes(y)) {
+      merge.MERGE18 = `${y} Entry (Starting University September ${y})`; // Year dropdown
+    } else {
+      merge.MERGE18 = "Other";
+    }
+  }
+  if (stream) merge.MERGE19 = stream; // Uni Subject
+
+  return merge;
 }
 
 Deno.serve(async (req) => {
@@ -26,6 +144,30 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({ error: "Mailchimp integration not configured" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return new Response(
+      JSON.stringify({ error: "Authorization required" }),
+      { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+  const token = authHeader.slice(7);
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return new Response(
+      JSON.stringify({ error: "Server configuration error" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+  const { data: { user }, error: authError } = await createClient(supabaseUrl, supabaseAnonKey).auth.getUser(token);
+  if (authError || !user?.email) {
+    return new Response(
+      JSON.stringify({ error: "Invalid or expired session" }),
+      { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 
@@ -47,32 +189,58 @@ Deno.serve(async (req) => {
     );
   }
 
-  const firstName = typeof body.firstName === "string" ? body.firstName.trim() : "";
-  const lastName = typeof body.lastName === "string" ? body.lastName.trim() : "";
+  if (user.email.toLowerCase() !== email) {
+    return new Response(
+      JSON.stringify({ error: "Email must match your account" }),
+      { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
 
+  const now = Date.now();
+  const uid = user.id;
+  const last = rateLimitMap.get(uid);
+  if (last != null && now - last < RATE_LIMIT_MS) {
+    return new Response(
+      JSON.stringify({ error: "Please try again in a minute" }),
+      { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+  rateLimitMap.set(uid, now);
+  for (const [k, t] of rateLimitMap.entries()) {
+    if (now - t > RATE_LIMIT_MS) rateLimitMap.delete(k);
+  }
+
+  const mergeFields = buildMergeFields(body);
   const dcMatch = apiKey.match(/-([a-z0-9]+)$/i);
   const datacenter = dcMatch ? dcMatch[1] : "us1";
   const baseUrl = `https://${datacenter}.api.mailchimp.com/3.0`;
-
-  const mergeFields: Record<string, string> = {};
-  if (firstName) mergeFields.FNAME = firstName;
-  if (lastName) mergeFields.LNAME = lastName;
-
-  const payload = {
-    email_address: email,
-    status: "subscribed" as const,
-    merge_fields: Object.keys(mergeFields).length > 0 ? mergeFields : undefined,
+  const auth = btoa(`anystring:${apiKey}`);
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: `Basic ${auth}`,
   };
 
-  const auth = btoa(`anystring:${apiKey}`);
+  const addTag = async (): Promise<void> => {
+    const subscriberHash = md5Hex(email);
+    await fetch(`${baseUrl}/lists/${listId}/members/${subscriberHash}/tags`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        tags: [{ name: "skillstrainer", status: "active" }],
+      }),
+    });
+  };
 
   try {
+    const payload = {
+      email_address: email,
+      status: "subscribed" as const,
+      merge_fields: Object.keys(mergeFields).length > 0 ? mergeFields : undefined,
+    };
+
     const res = await fetch(`${baseUrl}/lists/${listId}/members`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Basic ${auth}`,
-      },
+      headers,
       body: JSON.stringify(payload),
     });
 
@@ -80,8 +248,18 @@ Deno.serve(async (req) => {
 
     if (!res.ok) {
       if (res.status === 400 && data?.title === "Member Exists") {
+        const subscriberHash = md5Hex(email);
+        const patchRes = await fetch(`${baseUrl}/lists/${listId}/members/${subscriberHash}`, {
+          method: "PATCH",
+          headers,
+          body: JSON.stringify({ merge_fields: mergeFields }),
+        });
+        if (!patchRes.ok) {
+          console.error("Mailchimp PATCH member failed", patchRes.status, await patchRes.json().catch(() => ({})));
+        }
+        await addTag();
         return new Response(
-          JSON.stringify({ ok: true, message: "Already subscribed" }),
+          JSON.stringify({ ok: true, message: "Already subscribed; updated and tagged" }),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
@@ -92,6 +270,7 @@ Deno.serve(async (req) => {
       );
     }
 
+    await addTag();
     return new Response(
       JSON.stringify({ ok: true, message: "Subscriber added" }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }

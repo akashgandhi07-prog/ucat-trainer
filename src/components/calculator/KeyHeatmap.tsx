@@ -1,8 +1,7 @@
-// Mock intensity data for the numpad keys
-const getKeyIntensity = (_key: string) => {
-    // In a real implementation, this would come from a map of average latencies per key
-    // For now, let's randomize slightly to show the heatmap effect
-    const intensity = Math.random();
+// Mock intensity data for the numpad keys (deterministic per key for stable UI)
+const getKeyIntensity = (key: string) => {
+    const seed = key.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+    const intensity = (seed % 100) / 100;
     if (intensity > 0.8) return 'bg-red-200 text-red-800';
     if (intensity > 0.5) return 'bg-yellow-200 text-yellow-800';
     return 'bg-slate-100 text-slate-600'; // Neutral

@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import { useCalculatorLogic } from './useCalculatorLogic';
 import './calculator.css';
 
@@ -32,6 +32,29 @@ export const CalculatorEngine = ({ lagEnabled, onInput, onStateChange, active }:
     const isDragging = useRef(false);
     const dragStart = useRef({ x: 0, y: 0 });
     const elemStart = useRef({ x: 0, y: 0 });
+    const handleMouseMoveRef = useRef<(e: MouseEvent) => void>(() => {});
+    const handleMouseUpRef = useRef<() => void>(() => {});
+
+    const handleMouseMove = useCallback((e: MouseEvent) => {
+        if (!isDragging.current) return;
+        const dx = e.clientX - dragStart.current.x;
+        const dy = e.clientY - dragStart.current.y;
+        setPosition({
+            x: elemStart.current.x + dx,
+            y: elemStart.current.y + dy
+        });
+    }, []);
+
+    const handleMouseUp = useCallback(() => {
+        isDragging.current = false;
+        document.removeEventListener('mousemove', handleMouseMoveRef.current);
+        document.removeEventListener('mouseup', handleMouseUpRef.current);
+    }, []);
+
+    useEffect(() => {
+        handleMouseMoveRef.current = handleMouseMove;
+        handleMouseUpRef.current = handleMouseUp;
+    });
 
     const handleMouseDown = (e: React.MouseEvent) => {
         isDragging.current = true;
@@ -42,27 +65,11 @@ export const CalculatorEngine = ({ lagEnabled, onInput, onStateChange, active }:
         document.addEventListener('mouseup', handleMouseUp);
     };
 
-    const handleMouseMove = (e: MouseEvent) => {
-        if (!isDragging.current) return;
-        const dx = e.clientX - dragStart.current.x;
-        const dy = e.clientY - dragStart.current.y;
-        setPosition({
-            x: elemStart.current.x + dx,
-            y: elemStart.current.y + dy
-        });
-    };
-
-    const handleMouseUp = () => {
-        isDragging.current = false;
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-    };
-
     // Cleanup listeners on unmount
     useEffect(() => {
         return () => {
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
+            document.removeEventListener('mousemove', handleMouseMoveRef.current);
+            document.removeEventListener('mouseup', handleMouseUpRef.current);
         };
     }, []);
     useEffect(() => {

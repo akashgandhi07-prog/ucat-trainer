@@ -70,6 +70,15 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
 
+  // Sync mode to initialMode when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: reset modal tab when opened
+      setMode(initialMode);
+      trackEvent("auth_modal_opened", { trigger: initialMode });
+    }
+  }, [isOpen, initialMode]);
+
   const {
     register,
     control,
@@ -89,13 +98,6 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
       entryYear: "2026",
     },
   });
-
-  useEffect(() => {
-    if (isOpen) {
-      setMode(initialMode);
-      trackEvent("auth_modal_opened", { trigger: initialMode });
-    }
-  }, [isOpen, initialMode]);
 
   const onSubmit = async (data: AuthFormData) => {
     const trimmedEmail = data.email.trim();
@@ -195,6 +197,8 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
             email: trimmedEmail,
             firstName,
             lastName,
+            stream: data.stream ?? undefined,
+            entryYear: data.entryYear ?? undefined,
           },
         })
         .then(({ error }) => {

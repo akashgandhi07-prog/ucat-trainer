@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
+import TutoringUpsell from "../components/layout/TutoringUpsell";
 import { PASSAGES } from "../data/passages";
 import type { Passage } from "../data/passages";
 import { getTipForMode } from "../data/tips";
@@ -68,7 +69,9 @@ function getEstimatedScoreImpactCopy(
   mode: TrainingType,
   difficulty: TrainingDifficulty,
   wpm: number,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- kept for API consistency
   _lastSession: { correct: number; total: number; wpm: number | null } | null,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- kept for API consistency
   _sessionCount: number
 ): string {
   if (mode !== "speed_reading") {
@@ -240,6 +243,7 @@ export default function VerbalReasoningPage() {
 
   useEffect(() => {
     const prefs = loadGuidedChunkingPrefs();
+    /* eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate from localStorage on mount */
     setGuidedChunkingEnabled(prefs.enabled);
     setGuidedChunkSize(prefs.chunkSize);
   }, []);
@@ -250,6 +254,7 @@ export default function VerbalReasoningPage() {
 
   useEffect(() => {
     if (mode !== "speed_reading" || !user) {
+      /* eslint-disable-next-line react-hooks/set-state-in-effect -- clear when mode/user changes */
       setSuggestedWpm(null);
       setAverageWpm(null);
       return;
@@ -296,6 +301,7 @@ export default function VerbalReasoningPage() {
 
   useEffect(() => {
     if (!user) {
+      /* eslint-disable-next-line react-hooks/set-state-in-effect -- clear streak when logged out */
       setStreak(0);
       setLastPracticedLabel(null);
       setStreakFetched(false);
@@ -330,6 +336,7 @@ export default function VerbalReasoningPage() {
 
   useEffect(() => {
     if (!user) {
+      /* eslint-disable-next-line react-hooks/set-state-in-effect -- clear when logged out */
       setLastSessionAtDifficulty(null);
       setSessionCountAtDifficulty(0);
       setAvgAccuracyAtDifficulty(null);
@@ -526,6 +533,9 @@ export default function VerbalReasoningPage() {
             <p className="mt-4 text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
               Free, evidence-based training to boost reading speed, recall, and accuracy — designed for UK medical &amp; dental applicants.
             </p>
+            <div className="mt-4">
+              <TutoringUpsell variant="hub" />
+            </div>
           </div>
         </header>
 

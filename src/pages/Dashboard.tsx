@@ -27,6 +27,7 @@ import { PASSAGES } from "../data/passages";
 import SEOHead from "../components/seo/SEOHead";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
+import TutoringUpsell from "../components/layout/TutoringUpsell";
 import { getGuestSessions } from "../lib/guestSessions";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 import { trackEvent } from "../lib/analytics";
@@ -633,6 +634,7 @@ export default function Dashboard() {
       }
     }
     return set.size;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- sevenDaysAgo derived from stable today
   }, [sessions]);
   const streak = useMemo(() => {
     if (sessions.length === 0) return 0;
@@ -1424,6 +1426,9 @@ export default function Dashboard() {
         </div>
 
         {user ? renderAuthenticatedDashboard() : renderGuestDashboard()}
+        <div className="mt-10">
+          <TutoringUpsell variant="banner" />
+        </div>
       </main>
       <Footer />
     </div>

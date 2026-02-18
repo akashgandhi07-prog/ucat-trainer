@@ -6,8 +6,22 @@ import { CALCULATOR_STAGES, getHighestUnlockedStage, setHighestUnlockedStage } f
 
 export type Difficulty = 'easy' | 'medium' | 'hard';
 
+export interface DrillCompleteScore {
+    kps: string;
+    accuracy: number;
+    score?: number;
+    totalQuestions?: number;
+    correctQuestions?: number;
+    timeTaken?: string;
+    bestKey?: string;
+    worstKey?: string;
+    stagePassed?: boolean;
+    stageIndex?: number;
+    stageName?: string;
+}
+
 interface DrillProps {
-    onComplete: (score: any) => void;
+    onComplete: (score: DrillCompleteScore) => void;
     isActive: boolean;
     userKeystrokes: string[];
     onInput?: (key: string) => void;
@@ -127,7 +141,7 @@ const getExpectedKeystrokes = (text: string): string[] => {
         return keys;
     }
 
-    const tokens = text.match(/(\d+|\+|\-|\*|\/|x|÷|%)/g);
+    const tokens = text.match(/(\d+|\+|-|\*|\/|x|÷|%)/g);
     if (!tokens) return [];
 
     const keys: string[] = [];
@@ -160,8 +174,12 @@ export const SprintDrill = ({ onComplete, isActive, userKeystrokes, onQuestionCo
         correctQuestions: 0,
         keyStats: {} as Record<string, { total: number; correct: number }>
     });
-    const startTimeRef = useRef<number>(Date.now());
+    const startTimeRef = useRef<number>(0);
     const [displayScore, setDisplayScore] = useState(0);
+
+    useEffect(() => {
+        if (isActive) startTimeRef.current = Date.now();
+    }, [isActive]);
 
     // Sync Ref with current keystrokes for final calculation
     const currentKeystrokesRef = useRef<string[]>([]);
@@ -308,6 +326,7 @@ export const SprintDrill = ({ onComplete, isActive, userKeystrokes, onQuestionCo
             onQuestionComplete();
         }
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only run when lastCalculated changes
     }, [lastCalculated]);
 
 
@@ -345,12 +364,12 @@ export const SprintDrill = ({ onComplete, isActive, userKeystrokes, onQuestionCo
     );
 };
 
-export const FingerTwisterDrill = ({ onComplete: _onComplete, isActive: _isActive, userKeystrokes, onQuestionComplete, onFinish: _onFinish, currentCalculatorValue, difficulty, lastCalculated }: DrillProps) => {
+export const FingerTwisterDrill = ({ onComplete: _onComplete, isActive: _isActive, userKeystrokes, onQuestionComplete, onFinish, currentCalculatorValue, difficulty, lastCalculated }: DrillProps) => {
     // Generate numbers that are physically far (1 -> 9, 7 -> 3)
     const [currentSum, setCurrentSum] = useState({ text: '1 + 9', answer: 10 });
     const [score, setScore] = useState(0); // This serves as correct questions count
 
-    const startTimeRef = useRef<number>(Date.now());
+    const startTimeRef = useRef<number>(0);
     const statsRef = useRef({
         totalQuestions: 0,
         keystrokes: 0
@@ -361,6 +380,7 @@ export const FingerTwisterDrill = ({ onComplete: _onComplete, isActive: _isActiv
         if (_isActive) {
             startTimeRef.current = Date.now();
             statsRef.current = { totalQuestions: 0, keystrokes: 0 };
+            /* eslint-disable-next-line react-hooks/set-state-in-effect -- reset when entering FingerTwister */
             setScore(0);
         }
     }, [_isActive]);
@@ -395,8 +415,8 @@ export const FingerTwisterDrill = ({ onComplete: _onComplete, isActive: _isActiv
             correctQuestions: correct,
             timeTaken: `${Math.round(timeElapsed)}s`
         });
-        if (_onFinish) _onFinish();
-    }, [_onComplete, score, _onFinish]);
+        onFinish?.();
+    }, [_onComplete, score, onFinish]);
 
     const lastProcessedCalculation = useRef<number>(0);
 
@@ -407,11 +427,12 @@ export const FingerTwisterDrill = ({ onComplete: _onComplete, isActive: _isActiv
         statsRef.current.totalQuestions++;
         const expected = currentSum.answer;
         const actual = parseFloat(currentCalculatorValue || '0');
+        /* eslint-disable react-hooks/set-state-in-effect -- update FingerTwister score/next when calculation validated */
         if (Math.abs(actual - expected) < 0.0001) {
             setScore(s => s + 1);
         }
-        // ALWAYS advance
         setCurrentSum(generateSum(difficulty));
+        /* eslint-enable react-hooks/set-state-in-effect */
         onQuestionComplete?.();
     }, [lastCalculated, currentCalculatorValue, currentSum, difficulty, onQuestionComplete, _isActive]);
 
@@ -433,11 +454,11 @@ export const FingerTwisterDrill = ({ onComplete: _onComplete, isActive: _isActiv
     );
 };
 
-export const MemoryMarathonDrill = ({ onComplete: _onComplete, isActive: _isActive, userKeystrokes, onQuestionComplete, onFinish: _onFinish, currentCalculatorValue, difficulty: _difficulty, lastCalculated: _lastCalculated }: DrillProps) => {
+export const MemoryMarathonDrill = ({ onComplete: _onComplete, isActive: _isActive, userKeystrokes, onQuestionComplete, onFinish: _onFinish, currentCalculatorValue }: DrillProps) => {
     const [currentSum, setCurrentSum] = useState(generateSum('memory'));
     const [score, setScore] = useState(0);
 
-    const startTimeRef = useRef<number>(Date.now());
+    const startTimeRef = useRef<number>(0);
     const statsRef = useRef({
         totalQuestions: 0
     });
@@ -446,6 +467,7 @@ export const MemoryMarathonDrill = ({ onComplete: _onComplete, isActive: _isActi
         if (_isActive) {
             startTimeRef.current = Date.now();
             statsRef.current = { totalQuestions: 0 };
+            /* eslint-disable-next-line react-hooks/set-state-in-effect -- reset when entering MemoryMarathon */
             setScore(0);
         }
     }, [_isActive]);
@@ -467,7 +489,8 @@ export const MemoryMarathonDrill = ({ onComplete: _onComplete, isActive: _isActi
             correctQuestions: correct,
             timeTaken: `${Math.round(timeElapsed)}s`
         });
-    }, [_onComplete, score]);
+        _onFinish?.();
+    }, [_onComplete, score, _onFinish]);
 
     const handleNextQuestion = useCallback(() => {
         statsRef.current.totalQuestions++;
@@ -603,7 +626,7 @@ export const StagesDrill = ({
     const [stageFailed, setStageFailed] = useState(false);
     const [stagePassedStats, setStagePassedStats] = useState<StagePassedStats | null>(null);
 
-    const startTimeRef = useRef<number>(Date.now());
+    const startTimeRef = useRef<number>(0);
     const lastProcessedCalculation = useRef<number>(0);
 
     const stage = CALCULATOR_STAGES[currentStageIndex];
@@ -614,6 +637,7 @@ export const StagesDrill = ({
     useEffect(() => {
         if (isActive) {
             const startIndex = getHighestUnlockedStage();
+            /* eslint-disable react-hooks/set-state-in-effect -- reset stages drill when entering */
             setCurrentStageIndex(startIndex);
             setQuestionsAnswered(0);
             setCorrectCount(0);
@@ -621,6 +645,7 @@ export const StagesDrill = ({
             setStagePassedStats(null);
             const s = CALCULATOR_STAGES[startIndex];
             setCurrentProblem(s ? generateUCATStyleQuestion(s.difficulty) : { text: '0', answer: 0 });
+            /* eslint-enable react-hooks/set-state-in-effect */
             startTimeRef.current = Date.now();
         }
     }, [isActive]);
@@ -632,7 +657,7 @@ export const StagesDrill = ({
         onQuestionComplete?.();
     }, [currentStageIndex, onQuestionComplete]);
 
-    const handleStagePassed = useCallback((nextCorrect: number, _nextAnswered: number) => {
+    const handleStagePassed = useCallback((nextCorrect: number) => {
         setHighestUnlockedStage(currentStageIndex + 1);
         const timeElapsed = (Date.now() - startTimeRef.current) / 1000;
         const safeTime = timeElapsed < 1 ? 1 : timeElapsed;
@@ -689,15 +714,17 @@ export const StagesDrill = ({
 
         const nextAnswered = questionsAnswered + 1;
         const nextCorrect = correctCount + (isCorrect ? 1 : 0);
+        /* eslint-disable react-hooks/set-state-in-effect -- update stage progress when calculation validated */
         setQuestionsAnswered(nextAnswered);
         setCorrectCount(nextCorrect);
+        /* eslint-enable react-hooks/set-state-in-effect */
 
         if (nextAnswered < questionCount) {
             advanceToNextQuestion();
         } else {
             const accuracyPct = questionCount > 0 ? (nextCorrect / questionCount) * 100 : 0;
             if (accuracyPct >= requiredAccuracy) {
-                handleStagePassed(nextCorrect, nextAnswered);
+                handleStagePassed(nextCorrect);
             } else {
                 setStageFailed(true);
             }
@@ -789,7 +816,7 @@ export const StagesDrill = ({
                 } else {
                     const accuracyPct = questionCount > 0 ? (newCorrect / questionCount) * 100 : 0;
                     if (accuracyPct >= requiredAccuracy) {
-                        handleStagePassed(newCorrect, newAnswered);
+                        handleStagePassed(newCorrect);
                     } else {
                         setStageFailed(true);
                     }
