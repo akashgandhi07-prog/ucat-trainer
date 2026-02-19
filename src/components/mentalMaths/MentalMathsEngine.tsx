@@ -51,7 +51,7 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
     }
   }, [logic.status, logic.questionIndex, logic.currentQuestion?.kind]);
 
-  // Enter (or Space) on review advances to next question — ignore for 400ms so the submit Enter doesn’t skip feedback
+  // Enter (or Space) on review advances to next question - ignore for 400ms so the submit Enter doesn’t skip feedback
   useEffect(() => {
     if (logic.status !== "review") return;
     reviewShownAtRef.current = Date.now();
@@ -194,13 +194,13 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
             {correct ? `Correct!${answerLine}` : `Incorrect.${answerLine}`}
           </p>
           <p className="text-sm text-slate-600 mt-1">
-            Score: {logic.correctCount} / {logic.questionIndex + 1} — press Enter or click below
+            Score: {logic.correctCount} / {logic.questionIndex + 1} - press Enter or click below
           </p>
         </div>
         <button
           type="button"
           onClick={handleGoToNext}
-          className="w-full min-h-[48px] rounded-xl bg-indigo-600 text-white font-semibold shadow-sm hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          className="w-full min-h-[48px] rounded-xl bg-primary text-primary-foreground font-semibold shadow-sm hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
         >
           {isLast ? "See summary" : "Next question"}
         </button>
@@ -240,7 +240,7 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
             <button
               type="button"
               onClick={() => handleStageStart(s.stageIndex + 1)}
-              className="w-full min-h-[48px] rounded-xl bg-indigo-600 text-white font-semibold shadow-sm hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              className="w-full min-h-[48px] rounded-xl bg-primary text-primary-foreground font-semibold shadow-sm hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
             >
               Next stage →
             </button>
@@ -255,7 +255,7 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
           <button
             type="button"
             onClick={logic.backToIdle}
-            className="w-full min-h-[48px] rounded-xl bg-slate-900 text-white font-semibold hover:bg-slate-800 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-600 focus:ring-offset-2"
+            className="w-full min-h-[48px] rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-600 focus:ring-offset-2"
           >
             Back to menu
           </button>
@@ -323,7 +323,7 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
               type="button"
               disabled={submitLocked || exactInput === ""}
               onClick={handleSubmitExact}
-              className="min-h-[48px] flex-1 min-w-[140px] rounded-xl bg-indigo-600 text-white font-semibold shadow-sm hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              className="min-h-[48px] flex-1 min-w-[140px] rounded-xl bg-primary text-primary-foreground font-semibold shadow-sm hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
             >
               Submit
             </button>

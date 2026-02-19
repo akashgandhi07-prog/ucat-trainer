@@ -592,14 +592,14 @@ const StagePassedView = ({
                 {stats.isLastStage ? (
                     <button
                         onClick={onFinish}
-                        className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-sm transition-colors"
+                        className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-xl shadow-sm transition-colors"
                     >
                         Back to menu
                     </button>
                 ) : (
                     <button
                         onClick={onContinue}
-                        className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-sm transition-colors"
+                        className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-xl shadow-sm transition-colors"
                     >
                         {nextStageName}
                         <ChevronRight className="w-5 h-5" />
@@ -789,7 +789,7 @@ export const StagesDrill = ({
                     </p>
                     <button
                         onClick={retryStage}
-                        className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-sm transition-colors"
+                        className="px-6 py-3 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-lg shadow-sm transition-colors"
                     >
                         Retry stage
                     </button>

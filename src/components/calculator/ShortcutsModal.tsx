@@ -115,7 +115,7 @@ export const ShortcutsModal = ({ isOpen, onClose }: ShortcutsModalProps) => {
                             </div>
                             <div className="flex items-center gap-4">
                                 <kbd className="px-2 py-1 bg-emerald-50 border border-emerald-100 rounded text-sm font-semibold text-emerald-700 min-w-[2rem] text-center">X</kbd>
-                                <span className="text-slate-600">Square Root (√) — after entering the number</span>
+                                <span className="text-slate-600">Square Root (√) - after entering the number</span>
                             </div>
                         </div>
                     </section>

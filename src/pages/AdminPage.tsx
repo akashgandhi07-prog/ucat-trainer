@@ -245,7 +245,7 @@ export default function AdminPage() {
                 <button
                   type="button"
                   onClick={() => openAuthModal("login")}
-                  className="min-h-[44px] px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                  className="min-h-[44px] px-5 py-2.5 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
                 >
                   Sign in
                 </button>

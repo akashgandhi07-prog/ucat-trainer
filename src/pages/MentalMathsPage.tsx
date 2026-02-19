@@ -14,6 +14,8 @@ import { saveMentalMathsSession } from "../utils/analyticsStorage";
 import { appendGuestSession } from "../lib/guestSessions";
 import type { MentalMathsSummaryStats } from "../hooks/useMentalMathsLogic";
 import SEOHead from "../components/seo/SEOHead";
+import TrainerFaqSection from "../components/seo/TrainerFaqSection";
+import { trainerFaqs } from "../data/trainerFaqs";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 
 const teaching = SKILL_TEACHING.mental_maths;
@@ -30,12 +32,12 @@ export default function MentalMathsPage() {
   }, []);
 
   const base = getSiteBaseUrl();
-  const canonicalUrl = base ? `${base}/train/mentalMaths` : undefined;
+  const canonicalUrl = base ? `${base}/ucat-mental-maths-trainer` : undefined;
   const breadcrumbs = base
     ? [
         { name: "Home", url: `${base}/` },
-        { name: "Quantitative Reasoning", url: `${base}/quantitative` },
-        { name: "Mental Maths", url: `${base}/train/mentalMaths` },
+        { name: "Quantitative Reasoning", url: `${base}/ucat-quantitative-reasoning-practice` },
+        { name: "Mental Maths", url: `${base}/ucat-mental-maths-trainer` },
       ]
     : undefined;
 
@@ -98,6 +100,12 @@ export default function MentalMathsPage() {
           </div>
         </div>
       </main>
+      <TrainerFaqSection
+        id="mental-maths-faq"
+        title="UCAT mental maths trainer FAQs"
+        intro="Answers to common questions about building fast, reliable mental arithmetic for the UCAT Quantitative Reasoning section."
+        faqs={trainerFaqs.mentalMaths}
+      />
       <Footer />
     </div>
   );

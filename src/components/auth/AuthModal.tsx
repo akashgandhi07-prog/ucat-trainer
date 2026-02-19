@@ -242,7 +242,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
     status === "loading" ? "Please wait…" : isForgot ? "Send reset link" : isRegister ? "Create account" : "Sign in";
 
   const inputClass =
-    "w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent";
+    "w-full border border-border rounded-lg px-3 py-2 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent";
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={(open) => { if (!open) handleClose(); }}>
@@ -430,21 +430,21 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
           )}
 
           {message && (
-            <p className={`text-sm ${status === "error" ? "text-red-600" : "text-green-600"}`}>{message}</p>
+            <p className={`text-sm ${status === "error" ? "text-destructive" : "text-training-success"}`}>{message}</p>
           )}
 
           <div className="flex gap-2">
             <button
               type="button"
               onClick={handleClose}
-              className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50"
+              className="flex-1 px-4 py-2 border border-border text-foreground rounded-lg hover:bg-secondary"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={status === "loading"}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50"
             >
               {submitLabel}
             </button>
@@ -456,7 +456,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
                 <button
                   type="button"
                   onClick={() => setMode("login")}
-                  className="text-blue-600 hover:underline font-medium"
+                  className="text-primary hover:underline font-medium"
                 >
                   Back to sign in
                 </button>
@@ -466,7 +466,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
                 <button
                   type="button"
                   onClick={() => setMode("forgot")}
-                  className="text-blue-600 hover:underline font-medium"
+                  className="text-primary hover:underline font-medium"
                 >
                   Forgot password?
                 </button>
@@ -475,7 +475,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
                 <button
                   type="button"
                   onClick={() => setMode("register")}
-                  className="text-blue-600 hover:underline font-medium"
+                  className="text-primary hover:underline font-medium"
                 >
                   Create one
                 </button>
@@ -486,7 +486,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
                 <button
                   type="button"
                   onClick={() => setMode("login")}
-                  className="text-blue-600 hover:underline font-medium"
+                  className="text-primary hover:underline font-medium"
                 >
                   Sign in
                 </button>

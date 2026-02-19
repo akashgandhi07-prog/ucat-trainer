@@ -24,7 +24,7 @@ export default function TutoringUpsell({ variant }: TutoringUpsellProps) {
           >
             {TUTORING_COPY.ratedTrustpilot}
           </a>
-          {" — "}
+          {" - "}
           <a
             href={UCAT_TUTORING_URL}
             className="text-slate-600 hover:text-blue-600 transition-colors font-medium"
@@ -74,7 +74,7 @@ export default function TutoringUpsell({ variant }: TutoringUpsellProps) {
     return (
       <div className="rounded-lg border border-slate-200 bg-slate-50/80 px-4 py-3 text-center">
         <p className="text-sm text-slate-600">
-          {TUTORING_COPY.boostScore} —{" "}
+          {TUTORING_COPY.boostScore} -{" "}
           <a
             href={UCAT_TUTORING_URL}
             className="font-medium text-blue-600 hover:underline"

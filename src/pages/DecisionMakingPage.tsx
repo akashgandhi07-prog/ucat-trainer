@@ -2,18 +2,20 @@ import { useNavigate } from "react-router-dom";
 import { Scale, Zap, LayoutList, ChevronRight } from "lucide-react";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
-import TutoringUpsell from "../components/layout/TutoringUpsell";
+import BreadcrumbNav from "../components/layout/BreadcrumbNav";
 import SEOHead from "../components/seo/SEOHead";
+import TrainerFaqSection from "../components/seo/TrainerFaqSection";
+import { trainerFaqs } from "../data/trainerFaqs";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 
 export default function DecisionMakingPage() {
   const navigate = useNavigate();
   const base = getSiteBaseUrl();
-  const canonicalUrl = base ? `${base}/decision-making` : undefined;
+  const canonicalUrl = base ? `${base}/ucat-decision-making-practice` : undefined;
   const breadcrumbs = base
     ? [
         { name: "Home", url: `${base}/` },
-        { name: "Decision Making", url: `${base}/decision-making` },
+        { name: "Decision Making", url: `${base}/ucat-decision-making-practice` },
       ]
     : undefined;
 
@@ -28,6 +30,7 @@ export default function DecisionMakingPage() {
       <Header />
       <main className="flex-1 py-5 sm:py-8 md:py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto">
+          <BreadcrumbNav items={breadcrumbs} />
           <div className="flex items-center gap-2 sm:gap-3 mb-5 sm:mb-8">
             <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl bg-amber-50 text-amber-600 shrink-0">
               <Scale className="w-6 h-6 sm:w-8 sm:h-8" />
@@ -41,10 +44,6 @@ export default function DecisionMakingPage() {
               </p>
             </div>
           </div>
-          <div className="mb-5 sm:mb-8">
-            <TutoringUpsell variant="hub" />
-          </div>
-
           <section className="space-y-3 sm:space-y-4">
             <h2 className="text-base sm:text-lg font-semibold text-slate-900">
               Syllogisms Trainer
@@ -97,6 +96,12 @@ export default function DecisionMakingPage() {
           </section>
         </div>
       </main>
+      <TrainerFaqSection
+        id="decision-making-faq"
+        title="Common questions about the UCAT Decision Making skills trainers"
+        intro="Answers to common questions about UCAT Decision Making, with a particular focus on using syllogism micro and macro drills to build reliable logical reasoning."
+        faqs={trainerFaqs.decisionHub}
+      />
       <Footer />
     </div>
   );

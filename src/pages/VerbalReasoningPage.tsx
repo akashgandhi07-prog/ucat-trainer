@@ -27,6 +27,8 @@ import {
 import { getStreakAndLastPracticed } from "../lib/streakUtils";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 import SEOHead from "../components/seo/SEOHead";
+import TrainerFaqSection from "../components/seo/TrainerFaqSection";
+import { trainerFaqs } from "../data/trainerFaqs";
 import { trackEvent } from "../lib/analytics";
 
 const WPM_MIN = 200;
@@ -102,7 +104,7 @@ function getCalibrationLabel(
 ): string {
   if (mode !== "speed_reading") {
     if (sessionCount > 0) return `${sessionCount} session${sessionCount !== 1 ? "s" : ""} at this difficulty`;
-    return "—";
+    return "-";
   }
   if (wpm >= 301 && wpm <= 450) {
     const suffix = sessionCount > 0 ? ` · ${sessionCount} run${sessionCount !== 1 ? "s" : ""} at ${TRAINING_DIFFICULTY_LABELS[difficulty]}` : "";
@@ -540,7 +542,7 @@ export default function VerbalReasoningPage() {
               Master UCAT Verbal Reasoning.
             </h1>
             <p className="mt-3 sm:mt-4 text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Free, evidence-based training to boost reading speed, recall, and accuracy — designed for UK medical &amp; dental applicants.
+              Free, evidence-based training to boost reading speed, recall, and accuracy - designed for UK medical &amp; dental applicants.
             </p>
             <div className="mt-4">
               <TutoringUpsell variant="hub" />
@@ -984,6 +986,12 @@ export default function VerbalReasoningPage() {
             </div>
           </div>
         </section>
+        <TrainerFaqSection
+          id="verbal-faq"
+          title="Common questions about UCAT Verbal Reasoning practice"
+          intro="Answers to common questions about how to use the Verbal Reasoning hub, and how speed reading, rapid recall, keyword scanning and inference practice fit together for the UCAT."
+          faqs={trainerFaqs.verbalHub}
+        />
       </main>
 
       {/* Sticky mobile CTA */}

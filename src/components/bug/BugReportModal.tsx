@@ -271,7 +271,7 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
           </div>
           {message && (
             <p
-              className={`text-sm ${status === "error" ? "text-red-600" : "text-green-600"}`}
+              className={`text-sm ${status === "error" ? "text-destructive" : "text-training-success"}`}
             >
               {message}
             </p>
@@ -287,7 +287,7 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
             <button
               type="submit"
               disabled={status === "loading" || (rateLimitRemaining !== null && rateLimitRemaining > 0)}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50"
             >
               {rateLimitRemaining !== null && rateLimitRemaining > 0
                 ? `Wait ${rateLimitRemaining}s`

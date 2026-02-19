@@ -4,6 +4,8 @@ import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import TutoringUpsell from "../components/layout/TutoringUpsell";
 import SEOHead from "../components/seo/SEOHead";
+import TrainerFaqSection from "../components/seo/TrainerFaqSection";
+import { trainerFaqs } from "../data/trainerFaqs";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 
 export default function HomePage() {
@@ -105,6 +107,12 @@ export default function HomePage() {
                         <TutoringUpsell variant="inline" />
                     </div>
                 </div>
+                <TrainerFaqSection
+                    id="home-faq"
+                    title="Common questions about this UCAT trainer"
+                    intro="Answers to common questions about how to use this free UCAT practice platform alongside your main question bank and the official resources."
+                    faqs={trainerFaqs.home}
+                />
             </main>
             <Footer />
         </div>

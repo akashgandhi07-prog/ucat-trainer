@@ -209,7 +209,7 @@ const CalculatorPage = () => {
                     <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-slate-600">Pearson Lag (40ms)</span>
                         <button
-                            className={`w-12 h-6 rounded-full p-1 transition-colors ${lagEnabled ? 'bg-blue-600' : 'bg-slate-300'}`}
+                            className={`w-12 h-6 rounded-full p-1 transition-colors ${lagEnabled ? 'bg-primary' : 'bg-muted'}`}
                             onClick={(e) => { e.stopPropagation(); setLagEnabled(!lagEnabled); }}
                         >
                             <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform ${lagEnabled ? 'translate-x-6' : 'translate-x-0'}`} />
@@ -222,7 +222,7 @@ const CalculatorPage = () => {
                 {/* Mobile-only notice: best on desktop with keyboard */}
                 <MobileDesktopNotice />
 
-                {/* Left column part 1: XP + Drills — mobile order 1, desktop col 1 row 1 */}
+                {/* Left column part 1: XP + Drills - mobile order 1, desktop col 1 row 1 */}
                 <div className="order-1 lg:col-span-4 lg:col-start-1 lg:row-start-1 space-y-6">
                     {/* XP Banner */}
                     <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl shadow-sm p-6 text-white relative overflow-hidden">
@@ -288,7 +288,7 @@ const CalculatorPage = () => {
                     </div>
                 </div>
 
-                {/* Center: Calculator Playground — mobile order 2, desktop col 2 span 2 rows */}
+                {/* Center: Calculator Playground - mobile order 2, desktop col 2 span 2 rows */}
                 <div className="order-2 lg:col-span-8 lg:col-start-5 lg:row-start-1 lg:row-span-2 flex flex-col xl:flex-row gap-6 items-start">
 
                     {/* Active Drill Area */}
@@ -360,7 +360,7 @@ const CalculatorPage = () => {
                     </div>
                 </div>
 
-                {/* Stats — mobile order 3 (bottom), desktop col 1 row 2 */}
+                {/* Stats - mobile order 3 (bottom), desktop col 1 row 2 */}
                 <div className="order-3 lg:col-span-4 lg:col-start-1 lg:row-start-2">
                     <div className="bg-white rounded-xl shadow-sm p-6">
                         <div className="flex items-center justify-between mb-4">

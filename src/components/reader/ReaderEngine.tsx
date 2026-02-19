@@ -285,7 +285,7 @@ export default function ReaderEngine({
 
     if (useChunking) {
       // Group words into chunks. Each chunk is a wrapper that uses the same flex/gap
-      // layout as the paragraph so text positions stay identical—only the background changes.
+      // layout as the paragraph so text positions stay identical-only the background changes.
       const chunks: string[][] = [];
       for (let i = 0; i < paragraphWords.length; i += effectiveChunkSize) {
         chunks.push(paragraphWords.slice(i, i + effectiveChunkSize));
@@ -364,7 +364,7 @@ export default function ReaderEngine({
               <button
                 type="button"
                 onClick={handleMoreTimeNo}
-                className="min-h-[44px] px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                className="min-h-[44px] px-5 py-2.5 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
               >
                 No, go to questions
               </button>
@@ -432,7 +432,7 @@ export default function ReaderEngine({
               <button
                 type="button"
                 onClick={handleFinish}
-                className="min-h-[44px] px-4 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-1.5"
+                className="min-h-[44px] px-4 py-2.5 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors flex items-center justify-center gap-1.5"
               >
                 <span aria-hidden>▶ |</span>
                 Finish
@@ -525,7 +525,7 @@ export default function ReaderEngine({
               <button
                 type="button"
                 onClick={handleFinish}
-                className="min-h-[44px] px-4 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-1.5"
+                className="min-h-[44px] px-4 py-2.5 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors flex items-center justify-center gap-1.5"
               >
                 <span aria-hidden>▶ |</span>
                 Finish

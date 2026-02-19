@@ -167,8 +167,8 @@ export default function ResultsView({
                 <div
                   key={i}
                   className={`rounded-xl border p-4 ${isCorrect
-                      ? "bg-green-50 border-green-200"
-                      : "bg-red-50 border-red-200"
+                      ? "bg-training-success-muted border-training-success"
+                      : "bg-destructive-muted border-destructive"
                     }`}
                 >
                   <div className="flex items-center justify-between gap-2 mb-2">
@@ -217,7 +217,7 @@ export default function ResultsView({
       )}
 
       {saveError && (
-        <p className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2">
+        <p className="mb-4 text-sm text-destructive bg-destructive-muted border border-destructive rounded-lg px-4 py-2">
           {saveError}
         </p>
       )}
@@ -241,7 +241,7 @@ export default function ResultsView({
               type="button"
               onClick={onTrySameSettings}
               disabled={saving}
-              className="min-h-[44px] px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+              className="min-h-[44px] px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
             >
               Same settings
             </button>

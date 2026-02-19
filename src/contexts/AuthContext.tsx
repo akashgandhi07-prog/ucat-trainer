@@ -54,7 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         authLog.error("getSession returned error", error);
-        // Don't early-return — fall through to finally
+        // Don't early-return - fall through to finally
       } else {
         resolvedUser = session?.user ?? null;
         authLog.info("Session resolved", {
@@ -75,11 +75,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSessionLoadFailed(true);
         authLog.info("Session load failed flag set", { scope: "loadSession", reason: "retry exhaustion" });
       } else {
-        authLog.info("Stale session cleared after AbortError — user can log in fresh");
+        authLog.info("Stale session cleared after AbortError - user can log in fresh");
       }
     }
 
-    // Always runs — fix #3 (no fragile early-return before finally)
+    // Always runs - fix #3 (no fragile early-return before finally)
     if (!mountedRef.current) return;
     setUser(resolvedUser);
     if (resolvedUser) {
@@ -98,7 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(false);
   }, []);
 
-  /* ── mount: listener only (fix #7 — no double-load) ────────── */
+  /* ── mount: listener only (fix #7 - no double-load) ────────── */
   useEffect(() => {
     let mounted = true;
     let initialLoadDone = false;
@@ -116,7 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const u = session?.user ?? null;
       setSessionLoadFailed(false);
 
-      // INITIAL_SESSION is the first event — use it instead of manual loadSession
+      // INITIAL_SESSION is the first event - use it instead of manual loadSession
       if (event === "INITIAL_SESSION") {
         setUser(u);
         if (u) {

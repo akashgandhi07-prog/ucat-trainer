@@ -86,7 +86,7 @@ export const DrillSummary = ({
                 </button>
                 <button
                     onClick={onRetry}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors shadow-sm hover:shadow"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-lg transition-colors shadow-sm hover:shadow"
                 >
                     <RefreshCw className="w-4 h-4" />
                     Retry

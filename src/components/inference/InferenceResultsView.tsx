@@ -36,7 +36,7 @@ export default function InferenceResultsView({
         </span>
       </div>
       <h1 className="text-2xl font-bold text-slate-900 mb-1">
-        Inference Trainer — Results
+        Inference Trainer - Results
       </h1>
       <p className="text-slate-600 text-sm mb-8">
         {passageTitle ? passageTitle : "Session complete"}
@@ -129,8 +129,8 @@ export default function InferenceResultsView({
                   key={i}
                   className={`rounded-xl border p-4 ${
                     isCorrect
-                      ? "bg-emerald-50 border-emerald-200"
-                      : "bg-red-50 border-red-200"
+                      ? "bg-training-success-muted border-training-success"
+                      : "bg-destructive-muted border-destructive"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2 mb-2">
@@ -138,8 +138,8 @@ export default function InferenceResultsView({
                     <span
                       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${
                         isCorrect
-                          ? "bg-emerald-200 text-emerald-800"
-                          : "bg-red-200 text-red-800"
+                          ? "bg-training-success-muted text-training-success"
+                          : "bg-destructive-muted text-destructive"
                       }`}
                     >
                       {item.result === "correct"
@@ -178,7 +178,7 @@ export default function InferenceResultsView({
       )}
 
       {saveError && (
-        <p className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2">
+        <p className="mb-4 text-sm text-destructive bg-destructive-muted border border-destructive rounded-lg px-4 py-2">
           {saveError}
         </p>
       )}
@@ -196,7 +196,7 @@ export default function InferenceResultsView({
         type="button"
         onClick={onRestart}
         disabled={saving}
-        className="min-h-[44px] px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-70 disabled:cursor-not-allowed"
+        className="min-h-[44px] px-6 py-2.5 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 disabled:opacity-70 disabled:cursor-not-allowed"
       >
         Try another passage
       </button>

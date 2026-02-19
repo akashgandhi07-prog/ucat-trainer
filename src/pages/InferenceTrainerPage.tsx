@@ -20,6 +20,9 @@ import { getSessionSaveErrorMessage } from "../lib/sessionSaveError";
 import type { TrainingDifficulty } from "../types/training";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 import SEOHead from "../components/seo/SEOHead";
+import TrainerFaqSection from "../components/seo/TrainerFaqSection";
+import BreadcrumbNav from "../components/layout/BreadcrumbNav";
+import { trainerFaqs } from "../data/trainerFaqs";
 import { trackEvent, setActiveTrainer, clearActiveTrainer } from "../lib/analytics";
 
 type Phase = "active" | "results";
@@ -315,7 +318,7 @@ export default function InferenceTrainerPage() {
               onClick={() =>
                 setPassage(pickPassageWithInference(passage.id, difficulty))
               }
-              className="min-h-[44px] px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="min-h-[44px] px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
             >
               Try another passage
             </button>
@@ -332,12 +335,12 @@ export default function InferenceTrainerPage() {
   }
 
   const base = getSiteBaseUrl();
-  const canonicalUrl = base ? `${base}/train/inference` : undefined;
+  const canonicalUrl = base ? `${base}/ucat-inference-trainer` : undefined;
   const breadcrumbs = base
     ? [
         { name: "Home", url: `${base}/` },
-        { name: "Verbal Reasoning", url: `${base}/verbal` },
-        { name: "Inference", url: `${base}/train/inference` },
+        { name: "Verbal Reasoning", url: `${base}/ucat-verbal-reasoning-practice` },
+        { name: "Inference", url: `${base}/ucat-inference-trainer` },
       ]
     : undefined;
 
@@ -359,6 +362,11 @@ export default function InferenceTrainerPage() {
 
       {phase === "active" && (
         <>
+          <div className="px-4 pt-4">
+            <div className="max-w-5xl mx-auto">
+              <BreadcrumbNav items={breadcrumbs} />
+            </div>
+          </div>
           <InferenceSessionHeader
             elapsedSeconds={elapsedSeconds}
             correct={runningCorrect + quizCorrect}
@@ -403,6 +411,13 @@ export default function InferenceTrainerPage() {
           />
         </main>
       )}
+
+      <TrainerFaqSection
+        id="inference-faq"
+        title="Common questions about the UCAT inference trainer"
+        intro="Answers to common questions about tackling inference-style Verbal Reasoning items and using this trainer to build strict, text-based reasoning for the UCAT."
+        faqs={trainerFaqs.inference}
+      />
 
       <Footer />
     </div>

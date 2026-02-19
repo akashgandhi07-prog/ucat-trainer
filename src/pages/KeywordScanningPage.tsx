@@ -16,6 +16,9 @@ import type { TrainingDifficulty } from "../types/training";
 import { pickNewRandomPassage } from "../lib/passages";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 import SEOHead from "../components/seo/SEOHead";
+import TrainerFaqSection from "../components/seo/TrainerFaqSection";
+import BreadcrumbNav from "../components/layout/BreadcrumbNav";
+import { trainerFaqs } from "../data/trainerFaqs";
 import { trackEvent, setActiveTrainer, clearActiveTrainer } from "../lib/analytics";
 
 type Phase = "scanning" | "results";
@@ -259,12 +262,12 @@ export default function KeywordScanningPage() {
   }
 
   const base = getSiteBaseUrl();
-  const canonicalUrl = base ? `${base}/train/keyword-scanning` : undefined;
+  const canonicalUrl = base ? `${base}/ucat-keyword-scanning-trainer` : undefined;
   const breadcrumbs = base
     ? [
         { name: "Home", url: `${base}/` },
-        { name: "Verbal Reasoning", url: `${base}/verbal` },
-        { name: "Keyword Scanning", url: `${base}/train/keyword-scanning` },
+        { name: "Verbal Reasoning", url: `${base}/ucat-verbal-reasoning-practice` },
+        { name: "Keyword Scanning", url: `${base}/ucat-keyword-scanning-trainer` },
       ]
     : undefined;
 
@@ -287,7 +290,11 @@ export default function KeywordScanningPage() {
           Skip to main content
         </a>
         <Header />
-        <main id="main-content" className="flex-1 flex items-center justify-center py-12 px-4" tabIndex={-1}>
+        <main id="main-content" className="flex-1 flex flex-col py-12 px-4" tabIndex={-1}>
+          <div className="w-full max-w-4xl mx-auto mb-4">
+            <BreadcrumbNav items={breadcrumbs} />
+          </div>
+          <div className="flex-1 flex items-center justify-center">
           <div className="w-full max-w-md mx-auto text-center">
             <h2 className="text-xl font-semibold text-slate-900 mb-6">
               Keyword Scanning - Results
@@ -316,7 +323,7 @@ export default function KeywordScanningPage() {
               )}
             </div>
             {saveError && (
-              <p className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2">
+              <p className="mb-4 text-sm text-destructive bg-destructive-muted border border-destructive rounded-lg px-4 py-2">
                 {saveError}
               </p>
             )}
@@ -336,7 +343,7 @@ export default function KeywordScanningPage() {
                 setStartTime(Date.now());
                 setPassage((current) => pickNewRandomPassage(current?.id, difficulty));
               }}
-              className="min-h-[44px] px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700"
+              className="min-h-[44px] px-6 py-3 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90"
             >
               Try another passage
             </button>
@@ -448,7 +455,14 @@ export default function KeywordScanningPage() {
           </div>
         </div>
       </main>
+      <TrainerFaqSection
+        id="keyword-scanning-faq"
+        title="Common questions about the UCAT keyword scanning trainer"
+        intro="Frequently asked questions about using keyword scanning techniques to cope with UCAT Verbal Reasoning timing while keeping answers strictly tied to the passage."
+        faqs={trainerFaqs.keywordScanning}
+      />
       <Footer />
     </div>
   );
 }
+

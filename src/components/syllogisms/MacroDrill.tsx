@@ -6,12 +6,12 @@ const DRAG_DATA_KEY = "application/x-syllogism-answer";
 function getFeedbackLabel(isCorrect: boolean, actuallyFollows: boolean): string {
   if (isCorrect) {
     return actuallyFollows
-      ? "Correct – the conclusion does follow."
-      : "Correct – the conclusion does not follow.";
+      ? "Correct - the conclusion does follow."
+      : "Correct - the conclusion does not follow.";
   }
   return actuallyFollows
-    ? "Incorrect – the conclusion does follow."
-    : "Incorrect – the conclusion does not follow.";
+    ? "Incorrect - the conclusion does follow."
+    : "Incorrect - the conclusion does not follow.";
 }
 
 export default function MacroDrill() {
@@ -191,8 +191,8 @@ export default function MacroDrill() {
                         "border-b border-slate-200 last:border-b-0 pb-2 last:pb-0 " +
                         (showFeedback
                           ? isCorrect
-                            ? "rounded-lg bg-green-50 px-2 pt-1.5 pb-2"
-                            : "rounded-lg bg-red-50 px-2 pt-1.5 pb-2"
+                            ? "rounded-lg bg-training-success-muted px-2 pt-1.5 pb-2"
+                            : "rounded-lg bg-destructive-muted px-2 pt-1.5 pb-2"
                           : "")
                       }
                     >
@@ -247,8 +247,8 @@ export default function MacroDrill() {
                                   No
                                 </button>
                               </span>
-                              {/* Desktop: show dash and rely on drag-drop */}
-                              <span className="hidden lg:inline w-24 text-center">—</span>
+              {/* Desktop: show dash and rely on drag-drop */}
+                              <span className="hidden lg:inline w-24 text-center">-</span>
                             </>
                           )}
                         </div>
@@ -259,7 +259,7 @@ export default function MacroDrill() {
                           <p className="text-slate-700">
                             <span className="font-semibold text-slate-900">Correct: {q.is_correct ? "Yes" : "No"}</span>
                             {" · "}
-                            <span className={isCorrect ? "text-green-600" : "text-red-600"}>
+                            <span className={isCorrect ? "text-training-success" : "text-destructive"}>
                               {feedbackLabel}
                             </span>
                           </p>
@@ -272,7 +272,7 @@ export default function MacroDrill() {
               </ol>
 
               {submitError && (
-                <div className="rounded-md border border-red-200 bg-red-50 p-3">
+                <div className="rounded-md border border-destructive bg-destructive-muted p-3">
                   <p className="text-base text-red-700">{submitError}</p>
                 </div>
               )}
@@ -296,7 +296,7 @@ export default function MacroDrill() {
                       type="button"
                       onClick={() => fetchMacroBlock()}
                       disabled={loading}
-                      className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2.5 text-base font-semibold text-white hover:bg-slate-800 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-50"
+                      className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-base font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     >
                       {loading ? "Loading…" : "Next drill"}
                     </button>
@@ -305,7 +305,7 @@ export default function MacroDrill() {
                       type="button"
                       onClick={handleSubmit}
                       disabled={questions.length === 0}
-                      className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2.5 text-base font-semibold text-white hover:bg-slate-800 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-50"
+                      className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-base font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     >
                       Submit answers
                     </button>

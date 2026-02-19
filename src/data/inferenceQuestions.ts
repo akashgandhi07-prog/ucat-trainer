@@ -30,7 +30,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that UK law requires supporting patient decision-making before declaring incapacity.",
         correctSpans: [q1],
         explanation:
-          "This sentence states that the UK legal framework requires every effort to support decision making before capacity is deemed absent—directly answering the question.",
+          "This sentence states that the UK legal framework requires every effort to support decision making before capacity is deemed absent-directly answering the question.",
         difficulty: "medium",
       });
     }
@@ -63,7 +63,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that family involvement can create additional ethical tension.",
         correctSpans: [q3],
         explanation:
-          "Family intervention based on their view of what is best can lead to further conflicts—additional tension in decision-making.",
+          "Family intervention based on their view of what is best can lead to further conflicts-additional tension in decision-making.",
         difficulty: "medium",
       });
     }
@@ -116,7 +116,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that earlier historians emphasised invasion as the main cause.",
         correctSpans: [q3],
         explanation:
-          "Early theories focused entirely on military invasions—contrasting with the multi-factor view that follows.",
+          "Early theories focused entirely on military invasions-contrasting with the multi-factor view that follows.",
         difficulty: "medium",
       });
     }
@@ -169,7 +169,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that drug development is losing the race against resistance.",
         correctSpans: [q3],
         explanation:
-          "The pace of discovery is slow compared to bacterial evolution—inferring that development lags behind.",
+          "The pace of discovery is slow compared to bacterial evolution-inferring that development lags behind.",
         difficulty: "medium",
       });
     }
@@ -241,7 +241,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that confidentiality has limits even when it is highly valued.",
         correctSpans: [q2],
         explanation:
-          "The duty is paramount but never absolute—directly stating that confidentiality has limits.",
+          "The duty is paramount but never absolute-directly stating that confidentiality has limits.",
         difficulty: "medium",
       });
     }
@@ -257,7 +257,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that breaching confidentiality may discourage young people from seeking care.",
         correctSpans: [q3],
         explanation:
-          "Breaking trust could deter adolescents from seeking help—the inferred consequence of breaching confidentiality.",
+          "Breaking trust could deter adolescents from seeking help-the inferred consequence of breaching confidentiality.",
         difficulty: "medium",
       });
     }
@@ -293,7 +293,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that the Silk Road had effects beyond trade in material goods.",
         correctSpans: [q2],
         explanation:
-          "This sentence states that the Silk Road enabled the transmission of ideas, technologies, and diseases—not only goods.",
+          "This sentence states that the Silk Road enabled the transmission of ideas, technologies, and diseases-not only goods.",
         difficulty: "medium",
       });
     }
@@ -345,7 +345,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer how new oceanic crust is formed.",
         correctSpans: [q2],
         explanation:
-          "At divergent boundaries plates move apart, allowing magma to rise and form new crust—directly describing the mechanism.",
+          "At divergent boundaries plates move apart, allowing magma to rise and form new crust-directly describing the mechanism.",
         difficulty: "medium",
       });
     }
@@ -397,7 +397,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer why allocation criteria must be made visible to the public.",
         correctSpans: [q2],
         explanation:
-          "Transparency is stated as crucial to maintain public trust—the inferred reason for making criteria visible.",
+          "Transparency is stated as crucial to maintain public trust-the inferred reason for making criteria visible.",
         difficulty: "medium",
       });
     }
@@ -413,7 +413,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that utilitarian allocation may unfairly disadvantage some patients.",
         correctSpans: [q3],
         explanation:
-          "This method can disadvantage the elderly or those with disabilities—directly stating who may be unfairly disadvantaged.",
+          "This method can disadvantage the elderly or those with disabilities-directly stating who may be unfairly disadvantaged.",
         difficulty: "medium",
       });
     }
@@ -433,7 +433,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that historians link the printing press to the scientific revolution.",
         correctSpans: [q1],
         explanation:
-          "The sentence states that the ability to disseminate findings accurately was necessary for the scientific revolution—a capability the press provided.",
+          "The sentence states that the ability to disseminate findings accurately was necessary for the scientific revolution-a capability the press provided.",
         difficulty: "hard",
       });
     }
@@ -449,7 +449,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that state censorship of the press was largely ineffective.",
         correctSpans: [q2],
         explanation:
-          "The flow of information proved difficult to stem despite attempts at control—inferring ineffectiveness of censorship.",
+          "The flow of information proved difficult to stem despite attempts at control-inferring ineffectiveness of censorship.",
         difficulty: "medium",
       });
     }
@@ -465,7 +465,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that before the press books were largely restricted to the wealthy.",
         correctSpans: [q3],
         explanation:
-          "Books were rare and expensive items for the elite—inferring restriction to the wealthy.",
+          "Books were rare and expensive items for the elite-inferring restriction to the wealthy.",
         difficulty: "easy",
       });
     }
@@ -501,7 +501,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer why each enzyme binds only to certain substrates.",
         correctSpans: [q2],
         explanation:
-          "The unique three-dimensional shape of the active site determines specificity—directly explaining selective binding.",
+          "The unique three-dimensional shape of the active site determines specificity-directly explaining selective binding.",
         difficulty: "medium",
       });
     }
@@ -537,7 +537,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that opponents of germline editing worry about a slide from therapy to enhancement.",
         correctSpans: [q1],
         explanation:
-          "The slippery slope towards eugenics implies a progression from therapeutic use to non-therapeutic selection—the critics' concern.",
+          "The slippery slope towards eugenics implies a progression from therapeutic use to non-therapeutic selection-the critics' concern.",
         difficulty: "hard",
       });
     }
@@ -553,7 +553,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that embryo editing raises a consent problem for the person whose genome is changed.",
         correctSpans: [q2],
         explanation:
-          "The future child cannot agree to the alteration—directly stating the consent issue for the affected individual.",
+          "The future child cannot agree to the alteration-directly stating the consent issue for the affected individual.",
         difficulty: "medium",
       });
     }
@@ -569,7 +569,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that embryo editing could harm future generations.",
         correctSpans: [q3],
         explanation:
-          "Unintended mutations could be passed down to future generations—directly stating potential harm to descendants.",
+          "Unintended mutations could be passed down to future generations-directly stating potential harm to descendants.",
         difficulty: "medium",
       });
     }
@@ -621,7 +621,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that the true death toll may have been higher than official records.",
         correctSpans: [q3],
         explanation:
-          "Some historians suggest the deaths of the poor may have gone unrecorded—inferring the true toll could be higher.",
+          "Some historians suggest the deaths of the poor may have gone unrecorded-inferring the true toll could be higher.",
         difficulty: "medium",
       });
     }
@@ -641,7 +641,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer what provides the energy for the hydrological cycle to operate.",
         correctSpans: [q1],
         explanation:
-          "Solar energy is stated as what drives the process—directly identifying the energy source.",
+          "Solar energy is stated as what drives the process-directly identifying the energy source.",
         difficulty: "easy",
       });
     }
@@ -657,7 +657,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that human-induced climate change is affecting the water cycle.",
         correctSpans: [q2],
         explanation:
-          "Climate change is intensifying the cycle and causing more severe droughts—affecting the hydrological cycle.",
+          "Climate change is intensifying the cycle and causing more severe droughts-affecting the hydrological cycle.",
         difficulty: "medium",
       });
     }
@@ -673,7 +673,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that the water cycle is being altered by human activity.",
         correctSpans: [q3],
         explanation:
-          "Human activities are increasingly disrupting the balance of the cycle—directly stating alteration by humans.",
+          "Human activities are increasingly disrupting the balance of the cycle-directly stating alteration by humans.",
         difficulty: "medium",
       });
     }
@@ -693,7 +693,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that doctors may sometimes withhold the truth for the patient's psychological protection.",
         correctSpans: [q1],
         explanation:
-          "Therapeutic privilege allows withholding information when it would cause serious psychological harm—the exception to full disclosure.",
+          "Therapeutic privilege allows withholding information when it would cause serious psychological harm-the exception to full disclosure.",
         difficulty: "hard",
       });
     }
@@ -709,7 +709,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that patient autonomy can override the default duty to disclose.",
         correctSpans: [q2],
         explanation:
-          "When a patient requests not to be told, the physician should respect that wish—autonomy limiting disclosure.",
+          "When a patient requests not to be told, the physician should respect that wish-autonomy limiting disclosure.",
         difficulty: "medium",
       });
     }
@@ -725,7 +725,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that truth-telling practices may vary across cultures.",
         correctSpans: [q3],
         explanation:
-          "Cultural differences play a role; in some societies the family rather than the individual is the decision-making unit—inferring variation in practice.",
+          "Cultural differences play a role; in some societies the family rather than the individual is the decision-making unit-inferring variation in practice.",
         difficulty: "medium",
       });
     }
@@ -745,7 +745,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that Fleming anticipated the problem of antibiotic resistance.",
         correctSpans: [q1],
         explanation:
-          "Fleming warned that bacteria could develop resistance if the drug was misused—an early anticipation of the resistance problem.",
+          "Fleming warned that bacteria could develop resistance if the drug was misused-an early anticipation of the resistance problem.",
         difficulty: "medium",
       });
     }
@@ -761,7 +761,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer why Florey and Chain prioritised mass producing penicillin.",
         correctSpans: [q2],
         explanation:
-          "The urgent need for antibiotics during the Second World War drove their work—the stated reason for mass production.",
+          "The urgent need for antibiotics during the Second World War drove their work-the stated reason for mass production.",
         difficulty: "easy",
       });
     }
@@ -777,7 +777,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that Fleming noticed the mould had an antibacterial effect.",
         correctSpans: [q3],
         explanation:
-          "Fleming observed that bacteria surrounding the mould had been destroyed—the initial observation of the antibacterial effect.",
+          "Fleming observed that bacteria surrounding the mould had been destroyed-the initial observation of the antibacterial effect.",
         difficulty: "easy",
       });
     }
@@ -797,7 +797,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that Manchester became a model for industrial urbanisation.",
         correctSpans: [q1],
         explanation:
-          "Manchester is cited as the first industrial city and the archetype for rapid urbanisation—the model for others.",
+          "Manchester is cited as the first industrial city and the archetype for rapid urbanisation-the model for others.",
         difficulty: "easy",
       });
     }
@@ -813,7 +813,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that industrialisation increased inequality between owners and workers.",
         correctSpans: [q2],
         explanation:
-          "Wealth for factory owners contrasted with dire conditions for the working class—inferring increased inequality.",
+          "Wealth for factory owners contrasted with dire conditions for the working class-inferring increased inequality.",
         difficulty: "medium",
       });
     }
@@ -829,7 +829,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer why workers turned to trade unions.",
         correctSpans: [q3],
         explanation:
-          "Workers realised collective action was the only way to improve their lot—the stated reason for forming unions.",
+          "Workers realised collective action was the only way to improve their lot-the stated reason for forming unions.",
         difficulty: "medium",
       });
     }
@@ -849,7 +849,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer the name for the point beyond which nothing can escape a black hole.",
         correctSpans: [q1],
         explanation:
-          "The event horizon is defined as the boundary of no return—the point beyond which nothing escapes.",
+          "The event horizon is defined as the boundary of no return-the point beyond which nothing escapes.",
         difficulty: "easy",
       });
     }
@@ -865,7 +865,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that black holes are detected indirectly.",
         correctSpans: [q2],
         explanation:
-          "The black hole is invisible but its presence can be inferred by interaction with other matter—indirect detection.",
+          "The black hole is invisible but its presence can be inferred by interaction with other matter-indirect detection.",
         difficulty: "medium",
       });
     }
@@ -881,7 +881,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that black holes may not last forever.",
         correctSpans: [q3],
         explanation:
-          "Hawking proposed that black holes can eventually evaporate—inferring they do not last forever.",
+          "Hawking proposed that black holes can eventually evaporate-inferring they do not last forever.",
         difficulty: "medium",
       });
     }
@@ -917,7 +917,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that opponents base their view on the moral status of animals.",
         correctSpans: [q2],
         explanation:
-          "Opponents contend animals are sentient with an intrinsic right to life—the moral basis for their view.",
+          "Opponents contend animals are sentient with an intrinsic right to life-the moral basis for their view.",
         difficulty: "medium",
       });
     }
@@ -933,7 +933,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that researchers are expected to minimise animal use and suffering.",
         correctSpans: [q3],
         explanation:
-          "The Three Rs (Replacement, Reduction, Refinement) guide oversight—minimising use and suffering.",
+          "The Three Rs (Replacement, Reduction, Refinement) guide oversight-minimising use and suffering.",
         difficulty: "medium",
       });
     }
@@ -953,7 +953,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that the suffrage movement was divided over strategy.",
         correctSpans: [q1],
         explanation:
-          "The movement split into two camps—peaceful suffragists vs militant suffragettes—division over strategy.",
+          "The movement split into two camps-peaceful suffragists vs militant suffragettes-division over strategy.",
         difficulty: "medium",
       });
     }
@@ -969,7 +969,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that the war changed the suffragettes' approach.",
         correctSpans: [q2],
         explanation:
-          "The war led to a suspension of militant activities as women joined the war effort—a change in approach.",
+          "The war led to a suspension of militant activities as women joined the war effort-a change in approach.",
         difficulty: "medium",
       });
     }
@@ -985,7 +985,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer why support for women's suffrage may have grown during the war.",
         correctSpans: [q3],
         explanation:
-          "Women's contribution to the war effort is credited with shifting public opinion—inferring why support grew.",
+          "Women's contribution to the war effort is credited with shifting public opinion-inferring why support grew.",
         difficulty: "medium",
       });
     }
@@ -1005,7 +1005,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer how overgrazing leads to land degradation.",
         correctSpans: [q1],
         explanation:
-          "Livestock remove vegetation that protects soil from erosion—the mechanism linking overgrazing to degradation.",
+          "Livestock remove vegetation that protects soil from erosion-the mechanism linking overgrazing to degradation.",
         difficulty: "medium",
       });
     }
@@ -1021,7 +1021,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that climate change worsens desertification.",
         correctSpans: [q2],
         explanation:
-          "Climate change exacerbates the problem by altering rainfall and evaporation—worsening desertification.",
+          "Climate change exacerbates the problem by altering rainfall and evaporation-worsening desertification.",
         difficulty: "medium",
       });
     }
@@ -1037,7 +1037,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
           "Identify the part of the text from which we can infer that desertification is defined by loss of productivity rather than spreading sand.",
         correctSpans: [q3],
         explanation:
-          "Desertification is the decline in biological productivity rather than expansion of deserts—the definition.",
+          "Desertification is the decline in biological productivity rather than expansion of deserts-the definition.",
         difficulty: "hard",
       });
     }
@@ -1050,7 +1050,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
     const q2 = spanFor(text, "However libertarians argue that the state should never have the power to force a medical intervention upon a competent adult.");
     if (q2) { questions.push({ id: "inf_21_q2", passageId: "pass_21", questionText: "Identify the part of the text from which we can infer that some oppose mandates on grounds of bodily freedom.", correctSpans: [q2], explanation: "Libertarians argue the state should not force a medical intervention on a competent adult.", difficulty: "medium", }); }
     const q3 = spanFor(text, "The legitimacy depends on proportionality.");
-    if (q3) { questions.push({ id: "inf_21_q3", passageId: "pass_21", questionText: "Identify the part of the text from which we can infer that the justification for mandates depends on the scale of the threat.", correctSpans: [q3], explanation: "Legitimacy depends on proportionality—the response must match the threat.", difficulty: "hard", }); }
+    if (q3) { questions.push({ id: "inf_21_q3", passageId: "pass_21", questionText: "Identify the part of the text from which we can infer that the justification for mandates depends on the scale of the threat.", correctSpans: [q3], explanation: "Legitimacy depends on proportionality-the response must match the threat.", difficulty: "hard", }); }
   }
 
   // pass_22: The Mayan Civilisation
@@ -1060,7 +1060,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
     const q2 = spanFor(text, "The reasons for this collapse include overpopulation environmental degradation and prolonged drought.");
     if (q2) { questions.push({ id: "inf_22_q2", passageId: "pass_22", questionText: "Identify the part of the text from which we can infer that scholars cite multiple causes for the Maya collapse.", correctSpans: [q2], explanation: "Overpopulation, environmental degradation, and prolonged drought are listed as reasons.", difficulty: "medium", }); }
     const q3 = spanFor(text, "Despite this collapse the Mayan people did not disappear.");
-    if (q3) { questions.push({ id: "inf_22_q3", passageId: "pass_22", questionText: "Identify the part of the text from which we can infer that Maya culture survived the collapse.", correctSpans: [q3], explanation: "The Mayan people did not disappear—culture and people survived.", difficulty: "easy", }); }
+    if (q3) { questions.push({ id: "inf_22_q3", passageId: "pass_22", questionText: "Identify the part of the text from which we can infer that Maya culture survived the collapse.", correctSpans: [q3], explanation: "The Mayan people did not disappear-culture and people survived.", difficulty: "easy", }); }
   }
 
   // pass_23: Photosynthesis and Energy
@@ -1080,7 +1080,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
     const q2 = spanFor(text, "Jurisdictions that have legalized assisted dying usually implement strict safeguards to protect the vulnerable from coercion.");
     if (q2) { questions.push({ id: "inf_24_q2", passageId: "pass_24", questionText: "Identify the part of the text from which we can infer that legalisation is accompanied by protective measures.", correctSpans: [q2], explanation: "Strict safeguards are implemented to protect the vulnerable from coercion.", difficulty: "medium", }); }
     const q3 = spanFor(text, "Religious groups often oppose the practice on the grounds that life is a gift that should not be discarded.");
-    if (q3) { questions.push({ id: "inf_24_q3", passageId: "pass_24", questionText: "Identify the part of the text from which we can infer why some religious groups oppose assisted dying.", correctSpans: [q3], explanation: "Life is a gift that should not be discarded—the religious objection.", difficulty: "easy", }); }
+    if (q3) { questions.push({ id: "inf_24_q3", passageId: "pass_24", questionText: "Identify the part of the text from which we can infer why some religious groups oppose assisted dying.", correctSpans: [q3], explanation: "Life is a gift that should not be discarded-the religious objection.", difficulty: "easy", }); }
   }
 
   // pass_25: The Apollo 11 Mission
@@ -1120,7 +1120,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
     const q2 = spanFor(text, "When CO2 dissolves in seawater it forms carbonic acid which lowers the pH of the water making it more acidic.");
     if (q2) { questions.push({ id: "inf_28_q2", passageId: "pass_28", questionText: "Identify the part of the text from which we can infer the chemical mechanism that makes the ocean more acidic.", correctSpans: [q2], explanation: "CO2 forms carbonic acid, which lowers pH.", difficulty: "medium", }); }
     const q3 = spanFor(text, "the rate of acidification is currently faster than any event in the last 300 million years.");
-    if (q3) { questions.push({ id: "inf_28_q3", passageId: "pass_28", questionText: "Identify the part of the text from which we can infer that current acidification is unprecedented in scale.", correctSpans: [q3], explanation: "Faster than any event in the last 300 million years—unprecedented.", difficulty: "medium", }); }
+    if (q3) { questions.push({ id: "inf_28_q3", passageId: "pass_28", questionText: "Identify the part of the text from which we can infer that current acidification is unprecedented in scale.", correctSpans: [q3], explanation: "Faster than any event in the last 300 million years-unprecedented.", difficulty: "medium", }); }
   }
 
   // pass_29: Opt Out Organ Donation
@@ -1128,7 +1128,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
     const q1 = spanFor(text, "Consequently many countries including parts of the UK have shifted to a deemed consent or opt out system where every adult is presumed to be a donor unless they have recorded a decision to the contrary.");
     if (q1) { questions.push({ id: "inf_29_q1", passageId: "pass_29", questionText: "Identify the part of the text from which we can infer how an opt-out system works.", correctSpans: [q1], explanation: "Every adult is presumed a donor unless they have recorded a decision to the contrary.", difficulty: "medium", }); }
     const q2 = spanFor(text, "Critics however contend that deemed consent undermines the fundamental principle of bodily autonomy.");
-    if (q2) { questions.push({ id: "inf_29_q2", passageId: "pass_29", questionText: "Identify the part of the text from which we can infer why some oppose opt-out donation.", correctSpans: [q2], explanation: "Deemed consent undermines bodily autonomy—the critics' objection.", difficulty: "medium", }); }
+    if (q2) { questions.push({ id: "inf_29_q2", passageId: "pass_29", questionText: "Identify the part of the text from which we can infer why some oppose opt-out donation.", correctSpans: [q2], explanation: "Deemed consent undermines bodily autonomy-the critics' objection.", difficulty: "medium", }); }
     const q3 = spanFor(text, "The success of such systems depends heavily on public trust and effective communication.");
     if (q3) { questions.push({ id: "inf_29_q3", passageId: "pass_29", questionText: "Identify the part of the text from which we can infer what opt-out systems need to work well.", correctSpans: [q3], explanation: "Success depends on public trust and effective communication.", difficulty: "easy", }); }
   }
@@ -1138,7 +1138,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
     const q1 = spanFor(text, "Before this event Japan had effectively isolated itself from the rest of the world for over two centuries under the sakoku policy.");
     if (q1) { questions.push({ id: "inf_30_q1", passageId: "pass_30", questionText: "Identify the part of the text from which we can infer that Japan was closed to the world before the Meiji period.", correctSpans: [q1], explanation: "Japan had isolated itself for over two centuries under sakoku.", difficulty: "easy", }); }
     const q2 = spanFor(text, "The slogan rich country strong army guided national policy as Japan sought to establish itself as a global power.");
-    if (q2) { questions.push({ id: "inf_30_q2", passageId: "pass_30", questionText: "Identify the part of the text from which we can infer the main aim of Meiji policy.", correctSpans: [q2], explanation: "Rich country, strong army—economic and military strength as national goals.", difficulty: "medium", }); }
+    if (q2) { questions.push({ id: "inf_30_q2", passageId: "pass_30", questionText: "Identify the part of the text from which we can infer the main aim of Meiji policy.", correctSpans: [q2], explanation: "Rich country, strong army-economic and military strength as national goals.", difficulty: "medium", }); }
     const q3 = spanFor(text, "By the early twentieth century Japan had transformed from a secluded feudal society into a modern industrial empire capable of defeating a European power in the Russo Japanese War.");
     if (q3) { questions.push({ id: "inf_30_q3", passageId: "pass_30", questionText: "Identify the part of the text from which we can infer that Japan's modernisation was rapid and successful.", correctSpans: [q3], explanation: "Transformed into a modern industrial empire capable of defeating a European power.", difficulty: "medium", }); }
   }
@@ -1160,7 +1160,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
     const q2 = spanFor(text, "However when that stage is reached the patient may appear content. Opponents argue that carrying out euthanasia in such cases violates the current interests of the patient.");
     if (q2) { questions.push({ id: "inf_32_q2", passageId: "pass_32", questionText: "Identify the part of the text from which we can infer that opponents appeal to the patient's current state.", correctSpans: [q2], explanation: "The patient may appear content; opponents say euthanasia violates current interests.", difficulty: "hard", }); }
     const q3 = spanFor(text, "Proponents conversely argue that the right to self determination extends to one's future self.");
-    if (q3) { questions.push({ id: "inf_32_q3", passageId: "pass_32", questionText: "Identify the part of the text from which we can infer that supporters appeal to prior wishes.", correctSpans: [q3], explanation: "Self-determination extends to one's future self—prior wishes count.", difficulty: "medium", }); }
+    if (q3) { questions.push({ id: "inf_32_q3", passageId: "pass_32", questionText: "Identify the part of the text from which we can infer that supporters appeal to prior wishes.", correctSpans: [q3], explanation: "Self-determination extends to one's future self-prior wishes count.", difficulty: "medium", }); }
   }
 
   // pass_33: The French Revolution
@@ -1222,7 +1222,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
     const q1 = spanFor(text, "The First Opium War was triggered by China's attempt to suppress the opium trade which Britain had used to balance its trade deficit.");
     if (q1) { questions.push({ id: "inf_39_q1", passageId: "pass_39", questionText: "Identify the part of the text from which we can infer why Britain promoted the opium trade.", correctSpans: [q1], explanation: "Britain used the opium trade to balance its trade deficit.", difficulty: "medium", }); }
     const q2 = spanFor(text, "The resulting Treaty of Nanking was the first of the Unequal Treaties.");
-    if (q2) { questions.push({ id: "inf_39_q2", passageId: "pass_39", questionText: "Identify the part of the text from which we can infer that the treaty was imposed on China.", correctSpans: [q2], explanation: "First of the Unequal Treaties—imposed and one-sided.", difficulty: "medium", }); }
+    if (q2) { questions.push({ id: "inf_39_q2", passageId: "pass_39", questionText: "Identify the part of the text from which we can infer that the treaty was imposed on China.", correctSpans: [q2], explanation: "First of the Unequal Treaties-imposed and one-sided.", difficulty: "medium", }); }
     const q3 = spanFor(text, "They marked the beginning of the Century of Humiliation a period of foreign imperialism and internal chaos that would eventually lead to the fall of the imperial system.");
     if (q3) { questions.push({ id: "inf_39_q3", passageId: "pass_39", questionText: "Identify the part of the text from which we can infer the long-term significance of the wars for China.", correctSpans: [q3], explanation: "Beginning of Century of Humiliation and path to fall of imperial system.", difficulty: "medium", }); }
   }
@@ -1230,7 +1230,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
     const q1 = spanFor(text, "However the use of embryonic stem cells is ethically controversial because obtaining them involves the destruction of a human embryo.");
     if (q1) { questions.push({ id: "inf_40_q1", passageId: "pass_40", questionText: "Identify the part of the text from which we can infer why embryonic stem cell research is contested.", correctSpans: [q1], explanation: "Obtaining them involves destruction of a human embryo.", difficulty: "medium", }); }
     const q2 = spanFor(text, "Recent advances in induced pluripotent stem cells offer a potential solution.");
-    if (q2) { questions.push({ id: "inf_40_q2", passageId: "pass_40", questionText: "Identify the part of the text from which we can infer that an alternative may avoid the ethical problem.", correctSpans: [q2], explanation: "iPSCs offer a potential solution—alternative to embryonic.", difficulty: "medium", }); }
+    if (q2) { questions.push({ id: "inf_40_q2", passageId: "pass_40", questionText: "Identify the part of the text from which we can infer that an alternative may avoid the ethical problem.", correctSpans: [q2], explanation: "iPSCs offer a potential solution-alternative to embryonic.", difficulty: "medium", }); }
     const q3 = spanFor(text, "These are adult cells that have been genetically reprogrammed to an embryonic stem cell like state.");
     if (q3) { questions.push({ id: "inf_40_q3", passageId: "pass_40", questionText: "Identify the part of the text from which we can infer how iPSCs are produced.", correctSpans: [q3], explanation: "Adult cells genetically reprogrammed to embryonic-like state.", difficulty: "medium", }); }
   }
@@ -1292,9 +1292,9 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
   }
   if (passageId === "pass_48") {
     const q1 = spanFor(text, "The partition was based on religious lines creating significant displacement.");
-    if (q1) { questions.push({ id: "inf_48_q1", passageId: "pass_48", questionText: "Identify the part of the text from which we can infer why partition caused mass migration.", correctSpans: [q1], explanation: "Based on religious lines—creating displacement.", difficulty: "medium", }); }
+    if (q1) { questions.push({ id: "inf_48_q1", passageId: "pass_48", questionText: "Identify the part of the text from which we can infer why partition caused mass migration.", correctSpans: [q1], explanation: "Based on religious lines-creating displacement.", difficulty: "medium", }); }
     const q2 = spanFor(text, "The partition also left the issue of Kashmir unresolved leading to decades of conflict and multiple wars between the two nations.");
-    if (q2) { questions.push({ id: "inf_48_q2", passageId: "pass_48", questionText: "Identify the part of the text from which we can infer a lasting consequence of partition.", correctSpans: [q2], explanation: "Kashmir unresolved—decades of conflict and wars.", difficulty: "medium", }); }
+    if (q2) { questions.push({ id: "inf_48_q2", passageId: "pass_48", questionText: "Identify the part of the text from which we can infer a lasting consequence of partition.", correctSpans: [q2], explanation: "Kashmir unresolved-decades of conflict and wars.", difficulty: "medium", }); }
     const q3 = spanFor(text, "It serves as a stark reminder of the catastrophic consequences of poorly managed and hasty decolonisation.");
     if (q3) { questions.push({ id: "inf_48_q3", passageId: "pass_48", questionText: "Identify the part of the text from which we can infer the passage's conclusion about how decolonisation was done.", correctSpans: [q3], explanation: "Catastrophic consequences of poorly managed and hasty decolonisation.", difficulty: "hard", }); }
   }
@@ -1308,7 +1308,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
   }
   if (passageId === "pass_50") {
     const q1 = spanFor(text, "However the use of AI raises significant ethical and liability issues such as the black box problem where the algorithm's reasoning is opaque.");
-    if (q1) { questions.push({ id: "inf_50_q1", passageId: "pass_50", questionText: "Identify the part of the text from which we can infer why doctors may distrust AI diagnosis.", correctSpans: [q1], explanation: "Black box problem—algorithm's reasoning is opaque.", difficulty: "medium", }); }
+    if (q1) { questions.push({ id: "inf_50_q1", passageId: "pass_50", questionText: "Identify the part of the text from which we can infer why doctors may distrust AI diagnosis.", correctSpans: [q1], explanation: "Black box problem-algorithm's reasoning is opaque.", difficulty: "medium", }); }
     const q2 = spanFor(text, "There is also the risk of algorithmic bias if the AI is trained on data that is not representative of the diverse patient population.");
     if (q2) { questions.push({ id: "inf_50_q2", passageId: "pass_50", questionText: "Identify the part of the text from which we can infer that AI can perpetuate inequality.", correctSpans: [q2], explanation: "Algorithmic bias if data is not representative.", difficulty: "medium", }); }
     const q3 = spanFor(text, "The goal is to support clinicians rather than replace their vital judgment.");
@@ -1318,7 +1318,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
     const q1 = spanFor(text, "If each herder seeks to maximize their own gain they will add more cattle to the land eventually leading to overgrazing and the destruction of the resource for everyone.");
     if (q1) { questions.push({ id: "inf_51_q1", passageId: "pass_51", questionText: "Identify the part of the text from which we can infer how individual self-interest can destroy a shared resource.", correctSpans: [q1], explanation: "Adding more cattle leads to overgrazing and destruction for everyone.", difficulty: "medium", }); }
     const q2 = spanFor(text, "Since no single person owns the resource there is often little incentive to conserve it.");
-    if (q2) { questions.push({ id: "inf_51_q2", passageId: "pass_51", questionText: "Identify the part of the text from which we can infer why common resources are overused.", correctSpans: [q2], explanation: "No single owner—little incentive to conserve.", difficulty: "medium", }); }
+    if (q2) { questions.push({ id: "inf_51_q2", passageId: "pass_51", questionText: "Identify the part of the text from which we can infer why common resources are overused.", correctSpans: [q2], explanation: "No single owner-little incentive to conserve.", difficulty: "medium", }); }
     const q3 = spanFor(text, "To prevent this tragedy societies must implement regulations such as quotas taxes or private property rights.");
     if (q3) { questions.push({ id: "inf_51_q3", passageId: "pass_51", questionText: "Identify the part of the text from which we can infer possible solutions to the tragedy of the commons.", correctSpans: [q3], explanation: "Regulations such as quotas, taxes, or private property.", difficulty: "medium", }); }
   }
@@ -1360,7 +1360,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
     const q2 = spanFor(text, "One of the key predictions of the theory was that light from distant stars would bend as it passed near the Sun which was confirmed during a solar eclipse in 1919.");
     if (q2) { questions.push({ id: "inf_56_q2", passageId: "pass_56", questionText: "Identify the part of the text from which we can infer that general relativity was confirmed by observation.", correctSpans: [q2], explanation: "Light bending confirmed during 1919 solar eclipse.", difficulty: "medium", }); }
     const q3 = spanFor(text, "Today the theory is essential for the functioning of global positioning systems which must account for time dilation caused by Earth's gravity.");
-    if (q3) { questions.push({ id: "inf_56_q3", passageId: "pass_56", questionText: "Identify the part of the text from which we can infer a practical application of general relativity.", correctSpans: [q3], explanation: "GPS must account for time dilation—practical application.", difficulty: "medium", }); }
+    if (q3) { questions.push({ id: "inf_56_q3", passageId: "pass_56", questionText: "Identify the part of the text from which we can infer a practical application of general relativity.", correctSpans: [q3], explanation: "GPS must account for time dilation-practical application.", difficulty: "medium", }); }
   }
   if (passageId === "pass_57") {
     const q1 = spanFor(text, "Proponents argue that UBI simplifies the welfare system by removing complex bureaucracy and eliminating the poverty trap where people lose benefits when they start working.");
@@ -1372,7 +1372,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
   }
   if (passageId === "pass_58") {
     const q1 = spanFor(text, "European crusaders returned home with a taste for Eastern luxury goods such as silk spices and sugar which stimulated trade.");
-    if (q1) { questions.push({ id: "inf_58_q1", passageId: "pass_58", questionText: "Identify the part of the text from which we can infer that the Crusades increased European demand for Eastern goods.", correctSpans: [q1], explanation: "Returned with taste for Eastern goods—stimulated trade.", difficulty: "medium", }); }
+    if (q1) { questions.push({ id: "inf_58_q1", passageId: "pass_58", questionText: "Identify the part of the text from which we can infer that the Crusades increased European demand for Eastern goods.", correctSpans: [q1], explanation: "Returned with taste for Eastern goods-stimulated trade.", difficulty: "medium", }); }
     const q2 = spanFor(text, "Furthermore the Crusades facilitated the exchange of knowledge as Europeans rediscovered classical texts preserved by Muslim scholars.");
     if (q2) { questions.push({ id: "inf_58_q2", passageId: "pass_58", questionText: "Identify the part of the text from which we can infer an intellectual consequence of the Crusades.", correctSpans: [q2], explanation: "Exchange of knowledge; rediscovery of classical texts.", difficulty: "medium", }); }
     const q3 = spanFor(text, "While the Crusades are often remembered for their violence they also played a significant role in the economic and cultural integration of the Mediterranean region.");
@@ -1412,7 +1412,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
   }
   if (passageId === "pass_63") {
     const q1 = spanFor(text, "It works by ensuring that the trait is passed on to nearly all offspring bypassing the usual rules of inheritance.");
-    if (q1) { questions.push({ id: "inf_63_q1", passageId: "pass_63", questionText: "Identify the part of the text from which we can infer how gene drive differs from normal inheritance.", correctSpans: [q1], explanation: "Trait passed to nearly all offspring—bypassing usual rules.", difficulty: "medium", }); }
+    if (q1) { questions.push({ id: "inf_63_q1", passageId: "pass_63", questionText: "Identify the part of the text from which we can infer how gene drive differs from normal inheritance.", correctSpans: [q1], explanation: "Trait passed to nearly all offspring-bypassing usual rules.", difficulty: "medium", }); }
     const q2 = spanFor(text, "Critics worry that releasing such a powerful tool into the wild could have unintended consequences for the ecosystem such as the extinction of a species that other animals depend on for food.");
     if (q2) { questions.push({ id: "inf_63_q2", passageId: "pass_63", questionText: "Identify the part of the text from which we can infer an ecological risk of gene drive.", correctSpans: [q2], explanation: "Unintended consequences; possible extinction of a species.", difficulty: "medium", }); }
     const q3 = spanFor(text, "There is also the question of governance as a gene drive released in one country would likely spread across international borders without the consent of neighbouring nations.");
@@ -1436,7 +1436,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
   }
   if (passageId === "pass_66") {
     const q1 = spanFor(text, "Proponents argue that an individual mandate is necessary to ensure the stability of the insurance market by preventing a situation where only sick people buy insurance which would cause premiums to skyrocket. This is known as adverse selection.");
-    if (q1) { questions.push({ id: "inf_66_q1", passageId: "pass_66", questionText: "Identify the part of the text from which we can infer why mandates are said to stabilise insurance markets.", correctSpans: [q1], explanation: "Prevents only sick people buying—avoids adverse selection.", difficulty: "medium", }); }
+    if (q1) { questions.push({ id: "inf_66_q1", passageId: "pass_66", questionText: "Identify the part of the text from which we can infer why mandates are said to stabilise insurance markets.", correctSpans: [q1], explanation: "Prevents only sick people buying-avoids adverse selection.", difficulty: "medium", }); }
     const q2 = spanFor(text, "Critics however view an individual mandate as an overreach of government power and an infringement on personal liberty.");
     if (q2) { questions.push({ id: "inf_66_q2", passageId: "pass_66", questionText: "Identify the part of the text from which we can infer why some oppose mandatory insurance.", correctSpans: [q2], explanation: "Overreach of government; infringement on personal liberty.", difficulty: "easy", }); }
     const q3 = spanFor(text, "It also reduces the burden on taxpayers who often end up paying for the care of the uninsured through emergency services.");
@@ -1448,7 +1448,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
     const q2 = spanFor(text, "The Battle of Plassey in 1757 was a decisive moment that established British influence in Bengal.");
     if (q2) { questions.push({ id: "inf_67_q2", passageId: "pass_67", questionText: "Identify the part of the text from which we can infer when British control in India began to take hold.", correctSpans: [q2], explanation: "Plassey 1757 established British influence in Bengal.", difficulty: "easy", }); }
     const q3 = spanFor(text, "Regional governors began to assert their independence leading to the fragmentation of the empire into smaller competing states.");
-    if (q3) { questions.push({ id: "inf_67_q3", passageId: "pass_67", questionText: "Identify the part of the text from which we can infer how the Mughal Empire fragmented.", correctSpans: [q3], explanation: "Governors asserted independence—fragmentation into competing states.", difficulty: "medium", }); }
+    if (q3) { questions.push({ id: "inf_67_q3", passageId: "pass_67", questionText: "Identify the part of the text from which we can infer how the Mughal Empire fragmented.", correctSpans: [q3], explanation: "Governors asserted independence-fragmentation into competing states.", difficulty: "medium", }); }
   }
   if (passageId === "pass_68") {
     const q1 = spanFor(text, "While our DNA sequence is fixed throughout our lives the way our genes are turned on or off can be influenced by our environment and lifestyle.");
@@ -1456,7 +1456,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
     const q2 = spanFor(text, "One common epigenetic mechanism is DNA methylation where a chemical group is added to the DNA molecule to silence a specific gene.");
     if (q2) { questions.push({ id: "inf_68_q2", passageId: "pass_68", questionText: "Identify the part of the text from which we can infer one way gene expression is modified.", correctSpans: [q2], explanation: "DNA methylation silences a specific gene.", difficulty: "medium", }); }
     const q3 = spanFor(text, "For example studies have shown that the descendants of people who experienced famine may have an increased risk of obesity and diabetes due to epigenetic changes.");
-    if (q3) { questions.push({ id: "inf_68_q3", passageId: "pass_68", questionText: "Identify the part of the text from which we can infer that environmental effects can be passed to offspring.", correctSpans: [q3], explanation: "Descendants of famine survivors—epigenetic changes.", difficulty: "medium", }); }
+    if (q3) { questions.push({ id: "inf_68_q3", passageId: "pass_68", questionText: "Identify the part of the text from which we can infer that environmental effects can be passed to offspring.", correctSpans: [q3], explanation: "Descendants of famine survivors-epigenetic changes.", difficulty: "medium", }); }
   }
   if (passageId === "pass_69") {
     const q1 = spanFor(text, "However critics worry that facial recognition enables mass surveillance on an unprecedented scale.");
@@ -1492,7 +1492,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
   }
   if (passageId === "pass_73") {
     const q1 = spanFor(text, "The conference established the principle of effective occupation.");
-    if (q1) { questions.push({ id: "inf_73_q1", passageId: "pass_73", questionText: "Identify the part of the text from which we can infer the rule for claiming African territory.", correctSpans: [q1], explanation: "Effective occupation—administrative presence required.", difficulty: "medium", }); }
+    if (q1) { questions.push({ id: "inf_73_q1", passageId: "pass_73", questionText: "Identify the part of the text from which we can infer the rule for claiming African territory.", correctSpans: [q1], explanation: "Effective occupation-administrative presence required.", difficulty: "medium", }); }
     const q2 = spanFor(text, "The conference led to a rapid scramble for Africa where borders were drawn by Europeans without any regard for the existing linguistic or ethnic divisions of the African people.");
     if (q2) { questions.push({ id: "inf_73_q2", passageId: "pass_73", questionText: "Identify the part of the text from which we can infer why African borders caused problems.", correctSpans: [q2], explanation: "Borders drawn without regard for linguistic or ethnic divisions.", difficulty: "medium", }); }
     const q3 = spanFor(text, "By 1900 almost the entire continent was under European rule with the exception of Ethiopia and Liberia.");
@@ -1502,7 +1502,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
     const q1 = spanFor(text, "Research has shown that an imbalance in the microbiome known as dysbiosis is linked to a range of health conditions including inflammatory bowel disease obesity and even mental health disorders like anxiety and depression.");
     if (q1) { questions.push({ id: "inf_74_q1", passageId: "pass_74", questionText: "Identify the part of the text from which we can infer that gut health is linked to other conditions.", correctSpans: [q1], explanation: "Dysbiosis linked to IBD, obesity, anxiety, depression.", difficulty: "medium", }); }
     const q2 = spanFor(text, "This connection between the gut and the brain is known as the gut brain axis.");
-    if (q2) { questions.push({ id: "inf_74_q2", passageId: "pass_74", questionText: "Identify the part of the text from which we can infer that the gut and brain communicate.", correctSpans: [q2], explanation: "Gut-brain axis—connection between gut and brain.", difficulty: "easy", }); }
+    if (q2) { questions.push({ id: "inf_74_q2", passageId: "pass_74", questionText: "Identify the part of the text from which we can infer that the gut and brain communicate.", correctSpans: [q2], explanation: "Gut-brain axis-connection between gut and brain.", difficulty: "easy", }); }
     const q3 = spanFor(text, "Fecal microbiota transplants have shown promise in treating certain severe infections by restoring a healthy balance of bacteria.");
     if (q3) { questions.push({ id: "inf_74_q3", passageId: "pass_74", questionText: "Identify the part of the text from which we can infer a treatment that restores the microbiome.", correctSpans: [q3], explanation: "Fecal microbiota transplants restore healthy balance.", difficulty: "medium", }); }
   }

@@ -209,7 +209,7 @@ export default function InferenceQuiz({
           {!feedback ? (
             <>
               {emptySelectionError && (
-                <p className="text-sm text-red-600 mb-3 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                <p className="text-sm text-destructive mb-3 bg-destructive-muted border border-destructive rounded-lg px-3 py-2">
                   Please select part of the passage before submitting.
                 </p>
               )}
@@ -217,7 +217,7 @@ export default function InferenceQuiz({
                 <button
                   type="button"
                   onClick={handleSubmit}
-                  className="min-h-[44px] px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                  className="min-h-[44px] px-6 py-2.5 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
                 >
                   Submit
                 </button>
@@ -235,10 +235,10 @@ export default function InferenceQuiz({
               <div
                 className={`rounded-lg border p-4 ${
                   feedback.result === "correct"
-                    ? "bg-emerald-50 border-emerald-200"
+                    ? "bg-training-success-muted border-training-success"
                     : feedback.result === "partial"
-                    ? "bg-amber-50 border-amber-200"
-                    : "bg-red-50 border-red-200"
+                    ? "bg-warning-muted border-warning"
+                    : "bg-destructive-muted border-destructive"
                 }`}
               >
                 <p className="font-semibold text-slate-900 mb-1">
@@ -267,7 +267,7 @@ export default function InferenceQuiz({
               <button
                 type="button"
                 onClick={handleNext}
-                className="min-h-[44px] px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                className="min-h-[44px] px-6 py-2.5 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
               >
                 Next question
               </button>

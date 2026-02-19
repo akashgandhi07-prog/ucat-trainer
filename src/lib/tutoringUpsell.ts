@@ -21,7 +21,7 @@ export const TUTORING_COPY = {
   /** Single trust line for footer: no repetition of reviews/students elsewhere */
   trustLine: "10,000+ students taught · 14+ years experience. UCAT Experts.",
   /** Short line for inline/hub: sits next to 1-1 UCAT Tutoring link (no doctor/dentist here) */
-  expertLine: "UCAT Experts —",
+  expertLine: "UCAT Experts -",
   boostScore: "Want to boost your score? Our 1-1 UCAT tutoring is rated 5★",
   wantExpertTips: "Want expert tips?",
 } as const;

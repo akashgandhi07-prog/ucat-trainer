@@ -27,7 +27,7 @@ export const TIPS: Record<TrainingType, string[]> = {
   ],
   inference_trainer: [
     "Look for the sentence that directly answers the question; avoid restatements.",
-    "Narrow to the precise evidence—don't select more than you need.",
+    "Narrow to the precise evidence-don't select more than you need.",
     "Read the question carefully to understand what inference is being asked.",
   ],
   mental_maths: [

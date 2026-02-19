@@ -38,7 +38,7 @@ export default function SyllogismAnalytics({ sessions }: Props) {
         </p>
         <Link
           to="/decision-making"
-          className="inline-flex mt-4 px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors"
+          className="inline-flex mt-4 px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
         >
           Go to Syllogisms Trainer
         </Link>
@@ -140,7 +140,7 @@ export default function SyllogismAnalytics({ sessions }: Props) {
               </div>
               <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-slate-900 rounded-full transition-all duration-300"
+                  className="h-full bg-primary rounded-full transition-all duration-300"
                   style={{ width: displayPct != null ? `${displayPct}%` : "0%" }}
                 />
               </div>

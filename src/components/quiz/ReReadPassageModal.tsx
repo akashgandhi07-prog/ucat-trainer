@@ -39,7 +39,7 @@ export default function ReReadPassageModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-full min-h-[44px] px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800"
+            className="w-full min-h-[44px] px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
           >
             Close
           </button>

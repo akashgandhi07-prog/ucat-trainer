@@ -13,7 +13,7 @@ export async function withRetry<T>(
       return await fn();
     } catch (e) {
       lastError = e;
-      // AbortError means the request was cancelled — retrying won't help
+      // AbortError means the request was cancelled - retrying won't help
       if (e instanceof Error && (e.name === "AbortError" || e.message.includes("aborted"))) {
         throw e;
       }

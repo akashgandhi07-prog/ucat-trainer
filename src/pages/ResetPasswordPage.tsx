@@ -133,7 +133,7 @@ export default function ResetPasswordPage() {
                   />
                 </div>
                 {message && (
-                  <p className={`text-sm ${status === "error" ? "text-red-600" : "text-green-600"}`}>
+                  <p className={`text-sm ${status === "error" ? "text-destructive" : "text-training-success"}`}>
                     {message}
                   </p>
                 )}
@@ -141,14 +141,14 @@ export default function ResetPasswordPage() {
                   <button
                     type="button"
                     onClick={() => navigate("/")}
-                    className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50"
+                    className="flex-1 px-4 py-2 border border-border text-foreground rounded-lg hover:bg-secondary"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={status === "loading"}
-                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                    className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50"
                   >
                     {status === "loading" ? "Updating…" : "Update password"}
                   </button>

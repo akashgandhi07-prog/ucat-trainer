@@ -18,6 +18,8 @@ import type { TrainingDifficulty } from "../types/training";
 import { pickNewRandomPassage } from "../lib/passages";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 import SEOHead from "../components/seo/SEOHead";
+import TrainerFaqSection from "../components/seo/TrainerFaqSection";
+import { trainerFaqs } from "../data/trainerFaqs";
 import { trackEvent, setActiveTrainer, clearActiveTrainer } from "../lib/analytics";
 
 type Phase = "reading" | "questions" | "results";
@@ -219,12 +221,12 @@ export default function RapidRecallPage() {
     "absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-slate-900 font-medium rounded-lg ring-2 ring-blue-600 opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
 
   const base = getSiteBaseUrl();
-  const canonicalUrl = base ? `${base}/train/rapid-recall` : undefined;
+  const canonicalUrl = base ? `${base}/ucat-rapid-recall-trainer` : undefined;
   const breadcrumbs = base
     ? [
         { name: "Home", url: `${base}/` },
-        { name: "Verbal Reasoning", url: `${base}/verbal` },
-        { name: "Rapid Recall", url: `${base}/train/rapid-recall` },
+        { name: "Verbal Reasoning", url: `${base}/ucat-verbal-reasoning-practice` },
+        { name: "Rapid Recall", url: `${base}/ucat-rapid-recall-trainer` },
       ]
     : undefined;
 
@@ -259,7 +261,7 @@ export default function RapidRecallPage() {
                     <button
                       type="button"
                       onClick={handleMoreTimeNo}
-                      className="min-h-[44px] px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                  className="min-h-[44px] px-5 py-2.5 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
                     >
                       No, go to questions
                     </button>
@@ -290,7 +292,7 @@ export default function RapidRecallPage() {
               <button
                 type="button"
                 onClick={handleFinishReading}
-                className="min-h-[44px] px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors"
+                className="min-h-[44px] px-4 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg shadow-sm transition-colors"
               >
                 Finish &amp; start questions
               </button>
@@ -450,7 +452,7 @@ export default function RapidRecallPage() {
                         setPhase("reading");
                         setPassage((current) => pickNewRandomPassage(current?.id, difficulty));
                       }}
-                      className="min-h-[44px] px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                      className="min-h-[44px] px-6 py-3 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
                     >
                       Try again with {nextTimeSuggestion}s
                     </button>
@@ -466,7 +468,7 @@ export default function RapidRecallPage() {
                     className={`min-h-[44px] px-6 py-3 font-medium rounded-lg transition-colors ${
                       canPushPace
                         ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                        : "bg-blue-600 text-white hover:bg-blue-700"
+                        : "bg-primary text-primary-foreground hover:bg-primary/90"
                     }`}
                   >
                     Try another passage
@@ -482,6 +484,12 @@ export default function RapidRecallPage() {
           </div>
         )}
       </main>
+      <TrainerFaqSection
+        id="rapid-recall-faq"
+        title="Common questions about the UCAT Rapid Recall trainer"
+        intro="Guidance on how to use this Rapid Recall trainer to strengthen True/False/Can’t Tell style reasoning and short-term retention for UCAT Verbal Reasoning."
+        faqs={trainerFaqs.rapidRecall}
+      />
       <Footer />
     </div>
   );

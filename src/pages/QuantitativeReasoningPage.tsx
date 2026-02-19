@@ -2,18 +2,21 @@ import { useNavigate } from "react-router-dom";
 import { Calculator, Brain, ArrowLeft } from "lucide-react";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
+import BreadcrumbNav from "../components/layout/BreadcrumbNav";
 import TutoringUpsell from "../components/layout/TutoringUpsell";
 import SEOHead from "../components/seo/SEOHead";
+import TrainerFaqSection from "../components/seo/TrainerFaqSection";
+import { trainerFaqs } from "../data/trainerFaqs";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 
 export default function QuantitativeReasoningPage() {
   const navigate = useNavigate();
   const base = getSiteBaseUrl();
-  const canonicalUrl = base ? `${base}/quantitative` : undefined;
+  const canonicalUrl = base ? `${base}/ucat-quantitative-reasoning-practice` : undefined;
   const breadcrumbs = base
     ? [
         { name: "Home", url: `${base}/` },
-        { name: "Quantitative Reasoning", url: `${base}/quantitative` },
+        { name: "Quantitative Reasoning", url: `${base}/ucat-quantitative-reasoning-practice` },
       ]
     : undefined;
 
@@ -28,6 +31,7 @@ export default function QuantitativeReasoningPage() {
       <Header />
       <main className="flex-1 py-5 sm:py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
+          <BreadcrumbNav items={breadcrumbs} />
           <button
             type="button"
             onClick={() => navigate("/")}
@@ -96,6 +100,12 @@ export default function QuantitativeReasoningPage() {
           </div>
         </div>
       </main>
+      <TrainerFaqSection
+        id="quant-faq"
+        title="UCAT Quantitative Reasoning hub FAQs"
+        intro="Guidance on using the Quantitative Reasoning hub, calculator trainer and mental maths practice to raise your UCAT QR score."
+        faqs={trainerFaqs.quantHub}
+      />
       <Footer />
     </div>
   );

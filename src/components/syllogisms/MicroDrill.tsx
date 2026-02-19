@@ -149,7 +149,7 @@ export default function MicroDrill() {
                       onClick={() => submitAnswer(true)}
                       onPointerDown={(e) => e.currentTarget.releasePointerCapture?.(e.pointerId)}
                       disabled={loading && questions.length === 0}
-                      className="min-h-[44px] px-5 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 touch-manipulation select-none"
+                      className="min-h-[44px] px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 touch-manipulation select-none"
                     >
                       Yes, it follows
                     </button>
@@ -184,7 +184,7 @@ export default function MicroDrill() {
                       <button
                         type="button"
                         onClick={() => advanceToNext()}
-                        className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+                        className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                       >
                         Next question
                       </button>
@@ -230,7 +230,7 @@ export default function MicroDrill() {
                   <button
                     type="button"
                     onClick={() => fetchMicroQuestions(MICRO_BATCH_SIZE)}
-                    className="mt-4 inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-50"
+                    className="mt-4 inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   >
                     Start another micro drill
                   </button>

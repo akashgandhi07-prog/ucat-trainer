@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useLocation, Navigate } from "react-router-dom";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
+import BreadcrumbNav from "../components/layout/BreadcrumbNav";
 import ReaderEngine from "../components/reader/ReaderEngine";
 import DistortionQuiz from "../components/quiz/DistortionQuiz";
 import ResultsView from "../components/quiz/ResultsView";
@@ -10,6 +11,7 @@ import { useAuth } from "../hooks/useAuth";
 import { useAuthModal } from "../contexts/AuthModalContext";
 import type { Passage } from "../data/passages";
 import SEOHead from "../components/seo/SEOHead";
+import TrainerFaqSection from "../components/seo/TrainerFaqSection";
 import type { SessionInsertPayload } from "../types/session";
 import { appendGuestSession } from "../lib/guestSessions";
 import { supabase } from "../lib/supabase";
@@ -19,6 +21,7 @@ import { getSessionSaveErrorMessage } from "../lib/sessionSaveError";
 import type { TrainingDifficulty } from "../types/training";
 import { pickNewRandomPassage } from "../lib/passages";
 import { getSiteBaseUrl } from "../lib/siteUrl";
+import { trainerFaqs } from "../data/trainerFaqs";
 import {
   clampChunkSize,
   getSuggestedChunkSize,
@@ -253,17 +256,13 @@ export default function ReaderPage() {
   const skipLinkClass =
     "absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-slate-900 font-medium rounded-lg ring-2 ring-blue-600 opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
 
-  if (!configureState) {
-    return <Navigate to="/" replace />;
-  }
-
   const base = getSiteBaseUrl();
-  const readerCanonical = base ? `${base}/reader` : undefined;
+  const readerCanonical = base ? `${base}/ucat-verbal-reasoning-speed-reading-trainer` : undefined;
   const readerBreadcrumbs = base
     ? [
         { name: "Home", url: `${base}/` },
-        { name: "Verbal Reasoning", url: `${base}/verbal` },
-        { name: "Speed Reading", url: `${base}/reader` },
+        { name: "Verbal Reasoning", url: `${base}/ucat-verbal-reasoning-practice` },
+        { name: "Speed Reading", url: `${base}/ucat-verbal-reasoning-speed-reading-trainer` },
       ]
     : undefined;
 
@@ -280,7 +279,11 @@ export default function ReaderPage() {
         Skip to main content
       </a>
       <Header />
-      <main id="main-content" className="flex-1 flex items-center justify-center py-12 px-4 min-w-0" tabIndex={-1}>
+      <main id="main-content" className="flex-1 flex flex-col py-8 px-4 min-w-0" tabIndex={-1}>
+        <div className="w-full max-w-5xl mx-auto mb-4">
+          <BreadcrumbNav items={readerBreadcrumbs} />
+        </div>
+        <div className="flex-1 flex items-center justify-center">
         {phase === "reading" && (
           <ReaderEngine
             key={`reading-${readingKey}`}
@@ -323,7 +326,14 @@ export default function ReaderPage() {
             onAcceptSuggestedChunkSize={handleApplySuggestedChunkSize}
           />
         )}
+        </div>
       </main>
+      <TrainerFaqSection
+        id="speed-reading-faq"
+        title="Common questions about the UCAT speed reading trainer"
+        intro="Frequently asked questions about using this speed reading tool to build safe words-per-minute targets and better Verbal Reasoning timing for the UCAT."
+        faqs={trainerFaqs.speedReading}
+      />
       <Footer />
     </div>
   );

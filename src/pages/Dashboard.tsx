@@ -494,6 +494,23 @@ export default function Dashboard() {
   const keywordDifficultyBreakdown = useMemo(() => computeDifficultyBreakdown(keywordSessions), [keywordSessions]);
   const keywordLastSession = useMemo(() => formatLastSession(keywordSessions), [keywordSessions]);
 
+  // --- Inference Trainer ---
+  const inferenceSessions = byType.inference_trainer;
+  const inferenceAvg =
+    inferenceSessions.length > 0
+      ? Math.round(
+          (inferenceSessions.reduce((sum, s) => sum + (s.total > 0 ? (s.correct / s.total) * 100 : 0), 0) /
+            inferenceSessions.length)
+        )
+      : 0;
+  const inferenceBestAccuracy =
+    inferenceSessions.length > 0
+      ? Math.max(...inferenceSessions.map((s) => (s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0)))
+      : 0;
+  const inferenceAccuracyChart = useMemo(() => computeAccuracyChart(inferenceSessions), [inferenceSessions]);
+  const inferenceDifficultyBreakdown = useMemo(() => computeDifficultyBreakdown(inferenceSessions), [inferenceSessions]);
+  const inferenceLastSession = useMemo(() => formatLastSession(inferenceSessions), [inferenceSessions]);
+
   // --- Calculator Trainer ---
   const calculatorSessions = byType.calculator;
   const calculatorAvgAccuracy =
@@ -762,14 +779,14 @@ export default function Dashboard() {
               <button
                 type="button"
                 onClick={() => openAuthModal("register")}
-                className="min-h-[44px] px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                className="min-h-[44px] px-5 py-2.5 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
               >
                 Create free account
               </button>
               <button
                 type="button"
                 onClick={() => openAuthModal("login")}
-                className="min-h-[44px] px-5 py-2.5 border border-slate-200 text-slate-800 font-medium rounded-lg hover:bg-slate-50 transition-colors"
+                className="min-h-[44px] px-5 py-2.5 border border-border text-foreground font-medium rounded-lg hover:bg-secondary transition-colors"
               >
                 Sign in
               </button>
@@ -793,14 +810,14 @@ export default function Dashboard() {
               <button
                 type="button"
                 onClick={() => openAuthModal("register")}
-                className="min-h-[44px] px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              className="min-h-[44px] px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
               >
                 Register to save progress
               </button>
               <button
                 type="button"
                 onClick={() => openAuthModal("login")}
-                className="min-h-[44px] px-4 py-2 border border-slate-200 text-sm font-medium text-slate-800 rounded-lg hover:bg-slate-50 transition-colors"
+                className="min-h-[44px] px-4 py-2 border border-border text-sm font-medium text-foreground rounded-lg hover:bg-secondary transition-colors"
               >
                 Sign in
               </button>
@@ -978,7 +995,7 @@ export default function Dashboard() {
               </p>
               <Link
                 to="/"
-                className="inline-flex min-h-[44px] items-center justify-center px-6 py-3 bg-slate-800 text-white font-medium rounded-lg hover:bg-slate-700 transition-colors"
+                  className="inline-flex min-h-[44px] items-center justify-center px-6 py-3 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
               >
                 Explore trainers
               </Link>
@@ -1216,7 +1233,7 @@ export default function Dashboard() {
               )}
             </section>
 
-            <section>
+            <section className="mb-10">
               <h2 className="text-lg font-semibold text-slate-900 mb-4">
                 {TRAINING_TYPE_LABELS.keyword_scanning}
               </h2>
@@ -1256,7 +1273,59 @@ export default function Dashboard() {
               )}
             </section>
 
-            <section>
+            <section className="mb-10">
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">
+                {TRAINING_TYPE_LABELS.inference_trainer}
+              </h2>
+              {inferenceSessions.length === 0 ? (
+                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                  <p className="text-slate-500">No Inference Trainer sessions yet. Practice identifying evidence that supports inferences.</p>
+                  <Link
+                    to="/train/inference"
+                  className="inline-flex mt-4 px-4 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
+                  >
+                    Go to Inference Trainer
+                  </Link>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                      <p className="text-sm font-medium text-slate-500">Average accuracy</p>
+                      <p className="text-2xl font-bold text-slate-900">{inferenceAvg}%</p>
+                    </div>
+                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                      <p className="text-sm font-medium text-slate-500">Best accuracy</p>
+                      <p className="text-2xl font-bold text-slate-900">{inferenceBestAccuracy}%</p>
+                    </div>
+                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                      <p className="text-sm font-medium text-slate-500">Sessions</p>
+                      <p className="text-2xl font-bold text-slate-900">{inferenceSessions.length}</p>
+                    </div>
+                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                      <p className="text-sm font-medium text-slate-500">Last session</p>
+                      <p className="text-lg font-bold text-slate-900">{inferenceLastSession ?? "–"}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-3 text-sm text-slate-600 mb-4">
+                    <span>{inferenceSessions.length} session{inferenceSessions.length !== 1 ? "s" : ""}</span>
+                    {inferenceLastSession && <span>Last: {inferenceLastSession}</span>}
+                    <Link
+                      to="/train/inference"
+                      className="text-indigo-600 font-medium hover:underline"
+                    >
+                      Practice again →
+                    </Link>
+                  </div>
+                  {renderAccuracyChart(inferenceAccuracyChart, "Accuracy over time")}
+                  <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm mt-4">
+                    {renderDifficultyBreakdown(inferenceDifficultyBreakdown)}
+                  </div>
+                </>
+              )}
+            </section>
+
+            <section className="mb-10">
               <h2 className="text-lg font-semibold text-slate-900 mb-4">
                 {TRAINING_TYPE_LABELS.calculator}
               </h2>
@@ -1266,7 +1335,7 @@ export default function Dashboard() {
                   <p className="text-slate-500">No Calculator sessions yet. Start the Calculator Trainer to track your speed.</p>
                   <Link
                     to="/train/calculator"
-                    className="inline-flex mt-4 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+                  className="inline-flex mt-4 px-4 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
                   >
                     Go to Calculator
                   </Link>
@@ -1356,7 +1425,7 @@ export default function Dashboard() {
                   <p className="text-slate-500">No Mental Maths sessions yet. Build speed and estimation without the calculator.</p>
                   <Link
                     to="/train/mentalMaths"
-                    className="inline-flex mt-4 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+                  className="inline-flex mt-4 px-4 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
                   >
                     Go to Mental Maths Trainer
                   </Link>

@@ -5,11 +5,11 @@ export type InferenceQuestion = {
   id: string;
   passageId: string;
   questionText: string;
-  /** Primary correct span(s) — character offsets; accept if user overlaps any sufficiently */
+  /** Primary correct span(s) - character offsets; accept if user overlaps any sufficiently */
   correctSpans: TextSpan[];
   /** Optional: alternate valid spans (e.g. longer context) */
   alternateSpans?: TextSpan[];
-  /** 1–2 sentence explanation shown after answer */
+  /** 1-2 sentence explanation shown after answer */
   explanation: string;
   difficulty?: "easy" | "medium" | "hard";
 };

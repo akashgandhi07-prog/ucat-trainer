@@ -434,7 +434,7 @@ export default function DistortionQuiz({
         <button
           type="button"
           onClick={() => onComplete(0, 0, [])}
-          className="min-h-[44px] px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700"
+          className="min-h-[44px] px-6 py-3 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90"
         >
           Continue to results
         </button>
@@ -465,8 +465,8 @@ export default function DistortionQuiz({
             type="button"
             onClick={() => setCurrentIndex(i)}
             className={`min-w-[44px] min-h-[44px] rounded-lg font-medium text-[14px] inline-flex items-center justify-center relative ${i === currentIndex
-              ? "bg-blue-600 text-white"
-              : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
+              ? "bg-primary text-primary-foreground"
+              : "bg-card border border-border text-foreground hover:bg-secondary"
               }`}
           >
             {i + 1}
@@ -545,7 +545,7 @@ export default function DistortionQuiz({
             <button
               type="button"
               onClick={() => setCurrentIndex((i) => i + 1)}
-              className="min-h-[44px] px-4 py-2 bg-slate-900 text-white text-[15px] rounded-lg hover:bg-slate-800 flex items-center justify-center gap-2"
+              className="min-h-[44px] px-4 py-2 bg-primary text-primary-foreground text-[15px] rounded-lg hover:bg-primary/90 flex items-center justify-center gap-2"
             >
               Next →
             </button>
@@ -567,8 +567,8 @@ export default function DistortionQuiz({
                 }
               }}
               className={`min-h-[44px] px-4 py-2 text-white text-[15px] rounded-lg flex items-center justify-center ${allAnswered
-                ? "bg-blue-600 hover:bg-blue-700"
-                : "bg-amber-600 hover:bg-amber-700"
+                ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                : "bg-amber-600 text-white hover:bg-amber-700"
                 }`}
             >
               {allAnswered ? "Finish" : "Finish (unanswered)"}
