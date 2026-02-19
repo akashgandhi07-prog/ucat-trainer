@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import {
   LineChart,
   Line,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -90,6 +92,24 @@ const EVENT_LABELS: Record<string, string> = {
   bug_report_opened: "Bug report / feedback opened",
 };
 
+type NewUserRow = {
+  user_id: string;
+  full_name: string | null;
+  created_at: string;
+  email: string;
+  speed_reading: number;
+  rapid_recall: number;
+  keyword_scanning: number;
+  calculator: number;
+  inference_trainer: number;
+  mental_maths: number;
+  syllogism_micro: number;
+  syllogism_macro: number;
+  total_questions: number;
+  session_correct: number;
+  event_counts: Record<string, number>;
+};
+
 type FeedbackRow = {
   id: string;
   user_id: string | null;
@@ -110,6 +130,7 @@ type AnalyticsSummary = {
   funnel: Record<string, Record<string, number>>;
   unique_sessions: number;
   unique_users: number;
+  signups_by_day?: Array<{ date: string; signups: number }>;
 };
 
 function getDateRangeParams(range: AdminDateRange): { since_ts: string | null; until_ts: string | null } {
@@ -246,6 +267,7 @@ export default function AdminPage() {
   const [userSortDir, setUserSortDir] = useState<"asc" | "desc">("desc");
   const [userFilterMinQuestions, setUserFilterMinQuestions] = useState<number>(0);
   const [userFilterEmail, setUserFilterEmail] = useState<string>("");
+  const [newUsers, setNewUsers] = useState<NewUserRow[]>([]);
 
   const USER_TABLE_COLUMNS: { key: UserSortKey; label: string }[] = [
     { key: "display_name", label: "Name" },
@@ -278,10 +300,11 @@ export default function AdminPage() {
     const rpcParams = { since_ts, until_ts };
 
     (async () => {
-      const [statsRes, analyticsRes, usageRes] = await Promise.all([
+      const [statsRes, analyticsRes, usageRes, newUsersRes] = await Promise.all([
         supabase.rpc("get_admin_stats", rpcParams),
         supabase.rpc("get_analytics_summary", rpcParams),
         supabase.rpc("get_admin_usage_summary", rpcParams),
+        supabase.rpc("get_admin_new_users", { ...rpcParams, limit_rows: 300 }),
       ]);
       if (!mounted) return;
       if (statsRes.error) {
@@ -302,6 +325,12 @@ export default function AdminPage() {
         setUsageSummary(null);
       } else {
         setUsageSummary(usageRes.data as UsageSummaryResponse);
+      }
+      if (newUsersRes.error) {
+        dashboardLog.warn("Admin new users failed", { message: newUsersRes.error.message });
+        setNewUsers([]);
+      } else {
+        setNewUsers((newUsersRes.data as NewUserRow[]) ?? []);
       }
 
       const { data: feedbackData, error: feedbackErr } = await supabase
@@ -502,6 +531,34 @@ export default function AdminPage() {
           </div>
         </div>
 
+        {stats && usageSummary && (
+          <section className="mb-8" aria-label="Key metrics">
+            <h2 className="text-sm font-semibold text-slate-600 mb-3">Key metrics</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                <p className="text-sm font-medium text-slate-500">Total users</p>
+                <p className="text-2xl font-bold text-slate-900">{stats.total_users}</p>
+              </div>
+              <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                <p className="text-sm font-medium text-slate-500">New sign-ups (in range)</p>
+                <p className="text-2xl font-bold text-slate-900">{usageSummary.summary.new_users}</p>
+              </div>
+              <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                <p className="text-sm font-medium text-slate-500">Active users (in range)</p>
+                <p className="text-2xl font-bold text-slate-900">{usageSummary.summary.active_users}</p>
+              </div>
+              <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                <p className="text-sm font-medium text-slate-500">Total questions (in range)</p>
+                <p className="text-2xl font-bold text-slate-900">{Number(usageSummary.summary.total_questions).toLocaleString()}</p>
+              </div>
+              <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                <p className="text-sm font-medium text-slate-500">Total time (in range)</p>
+                <p className="text-2xl font-bold text-slate-900">{formatTimeSeconds(usageSummary.summary.total_time_seconds)}</p>
+              </div>
+            </div>
+          </section>
+        )}
+
         <section className="mb-10">
           <h2 className="text-lg font-semibold text-slate-900 mb-4">Statistics</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -585,7 +642,128 @@ export default function AdminPage() {
             </section>
 
             <section className="mb-10">
+              <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+                <h2 className="text-lg font-semibold text-slate-900">New users by date</h2>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const headers = ["Date", "Full name", "Email", "Activity"];
+                    const escape = (v: string | null) => {
+                      if (v == null) return "";
+                      const s = String(v);
+                      if (s.includes(",") || s.includes('"') || s.includes("\n")) return `"${s.replace(/"/g, '""')}"`;
+                      return s;
+                    };
+                    const rows = newUsers.map((row) => {
+                      const eventParts = Object.entries(row.event_counts ?? {})
+                        .filter(([, n]) => n > 0)
+                        .map(([name, n]) => `${EVENT_LABELS[name] ?? name.replace(/_/g, " ")}: ${n}`);
+                      const sessions: string[] = [];
+                      if (row.speed_reading) sessions.push(`${row.speed_reading} speed reading`);
+                      if (row.rapid_recall) sessions.push(`${row.rapid_recall} rapid recall`);
+                      if (row.keyword_scanning) sessions.push(`${row.keyword_scanning} keyword scanning`);
+                      if (row.calculator) sessions.push(`${row.calculator} calculator`);
+                      if (row.inference_trainer) sessions.push(`${row.inference_trainer} inference`);
+                      if (row.mental_maths) sessions.push(`${row.mental_maths} mental maths`);
+                      if (row.syllogism_micro) sessions.push(`${row.syllogism_micro} syllogism micro`);
+                      if (row.syllogism_macro) sessions.push(`${row.syllogism_macro} syllogism macro`);
+                      const activityParts = [
+                        eventParts.length ? eventParts.join("; ") : "",
+                        sessions.length ? `Sessions: ${sessions.join("; ")}` : null,
+                        row.total_questions > 0 ? `${row.total_questions} questions answered` : null,
+                      ].filter(Boolean);
+                      const activityText = activityParts.join(" · ") || "—";
+                      const dateStr = row.created_at ? new Date(row.created_at).toLocaleDateString(undefined, { dateStyle: "medium" }) : "—";
+                      return [dateStr, row.full_name || "—", row.email || "—", activityText].map(escape).join(",");
+                    });
+                    downloadText("new-users-by-date.csv", [headers.join(","), ...rows].join("\n"), "text/csv;charset=utf-8");
+                  }}
+                  className="min-h-[44px] px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
+                >
+                  Export CSV
+                </button>
+              </div>
+              <p className="text-sm text-slate-600 mb-2">
+                Sign-ups in the selected date range, with full name and what they&apos;ve looked at and done (page views, drills, sessions).
+              </p>
+              {newUsers.length > 0 && (
+                <p className="text-sm text-slate-700 mb-4">
+                  {(() => {
+                    const activated = newUsers.filter((u) => u.total_questions > 0).length;
+                    const total = newUsers.length;
+                    const pct = total ? ((activated / total) * 100).toFixed(1) : "0";
+                    return `${pct}% of new sign-ups in this range completed at least one drill (${activated} of ${total}).`;
+                  })()}
+                </p>
+              )}
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+                <table className="w-full text-sm min-w-[700px]">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50">
+                      <th className="px-4 py-2 text-left font-medium text-slate-700">Date</th>
+                      <th className="px-4 py-2 text-left font-medium text-slate-700">Full name</th>
+                      <th className="px-4 py-2 text-left font-medium text-slate-700">Email</th>
+                      <th className="px-4 py-2 text-left font-medium text-slate-700">Activity</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {newUsers.map((row) => {
+                      const eventParts = Object.entries(row.event_counts ?? {})
+                        .filter(([, n]) => n > 0)
+                        .map(([name, n]) => `${EVENT_LABELS[name] ?? name.replace(/_/g, " ")}: ${n}`);
+                      const sessions: string[] = [];
+                      if (row.speed_reading) sessions.push(`${row.speed_reading} speed reading`);
+                      if (row.rapid_recall) sessions.push(`${row.rapid_recall} rapid recall`);
+                      if (row.keyword_scanning) sessions.push(`${row.keyword_scanning} keyword scanning`);
+                      if (row.calculator) sessions.push(`${row.calculator} calculator`);
+                      if (row.inference_trainer) sessions.push(`${row.inference_trainer} inference`);
+                      if (row.mental_maths) sessions.push(`${row.mental_maths} mental maths`);
+                      if (row.syllogism_micro) sessions.push(`${row.syllogism_micro} syllogism micro`);
+                      if (row.syllogism_macro) sessions.push(`${row.syllogism_macro} syllogism macro`);
+                      const activityParts = [
+                        eventParts.length ? eventParts.join("; ") : null,
+                        sessions.length ? `Sessions: ${sessions.join("; ")}` : null,
+                        row.total_questions > 0 ? `${row.total_questions} questions answered` : null,
+                      ].filter(Boolean);
+                      const activityText = activityParts.length ? activityParts.join(" · ") : "—";
+                      return (
+                        <tr key={row.user_id} className="border-b border-slate-100 hover:bg-slate-50">
+                          <td className="px-4 py-2 text-slate-600 whitespace-nowrap">
+                            {row.created_at ? new Date(row.created_at).toLocaleDateString(undefined, { dateStyle: "medium" }) : "—"}
+                          </td>
+                          <td className="px-4 py-2 text-slate-900 font-medium">
+                            {row.full_name || "—"}
+                          </td>
+                          <td className="px-4 py-2 text-slate-700 truncate max-w-[200px]" title={row.email || ""}>
+                            {row.email || "—"}
+                          </td>
+                          <td className="px-4 py-2 text-slate-600 text-xs max-w-[400px]">
+                            {activityText}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                {newUsers.length === 0 && (
+                  <p className="px-4 py-6 text-slate-500 text-center">No new users in this date range.</p>
+                )}
+              </div>
+            </section>
+
+            <section className="mb-10">
               <h2 className="text-lg font-semibold text-slate-900 mb-4">Trainer usage (sessions, questions, time in range)</h2>
+              {Object.keys(usageSummary.trainer_usage).length > 0 && (
+                <p className="text-sm text-slate-700 mb-3">
+                  Most used this period:{" "}
+                  {Object.entries(usageSummary.trainer_usage)
+                    .sort(([, a], [, b]) => (b as number) - (a as number))
+                    .slice(0, 3)
+                    .map(([key, count]) => `${key.replace(/_/g, " ")} (${count} sessions)`)
+                    .join(", ")}
+                  .
+                </p>
+              )}
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                 <table className="w-full text-sm">
                   <thead>
@@ -847,6 +1025,25 @@ export default function AdminPage() {
                   </div>
                 </div>
             )}
+            {analytics.signups_by_day && analytics.signups_by_day.length > 0 && (
+              <div className="mt-6 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-4">
+                <h3 className="text-sm font-semibold text-slate-700 mb-3">New sign-ups over time</h3>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={analytics.signups_by_day} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#94a3b8" />
+                      <YAxis tick={{ fontSize: 11 }} stroke="#94a3b8" allowDecimals={false} />
+                      <Tooltip contentStyle={{ fontSize: 12 }} labelFormatter={(v) => String(v)} />
+                      <Bar dataKey="signups" name="Sign-ups" fill="#0ea5e9" radius={[2, 2, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+            {(!analytics.signups_by_day || analytics.signups_by_day.length === 0) && (
+              <p className="mt-4 text-sm text-slate-500">No sign-ups in this date range for the chart.</p>
+            )}
             {analytics.funnel && Object.keys(analytics.funnel).length > 0 && (
               <div className="mt-6 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                 <h3 className="text-sm font-semibold text-slate-700 px-4 py-3 border-b border-slate-200">Funnel (opened → started → completed / abandoned)</h3>
@@ -875,6 +1072,20 @@ export default function AdminPage() {
                         ))}
                     </tbody>
                   </table>
+                </div>
+                <div className="px-4 py-3 border-t border-slate-100 bg-slate-50/50">
+                  <p className="text-xs font-medium text-slate-600">Completed after start:</p>
+                  <p className="text-sm text-slate-700 mt-1">
+                    {Object.entries(analytics.funnel)
+                      .sort(([a], [b]) => a.localeCompare(b))
+                      .map(([type, counts]) => {
+                        const started = counts.trainer_started ?? 0;
+                        const completed = counts.trainer_completed ?? 0;
+                        const pct = started > 0 ? ((completed / started) * 100).toFixed(1) : "—";
+                        return `${type.replace(/_/g, " ")}: ${pct}%`;
+                      })
+                      .join(" · ")}
+                  </p>
                 </div>
               </div>
             )}

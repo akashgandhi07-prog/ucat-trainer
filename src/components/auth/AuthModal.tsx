@@ -108,7 +108,8 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
   const onSubmit = async (data: AuthFormData) => {
     const trimmedEmail = data.email.trim();
 
-    if (mode === "forgot") {
+    try {
+      if (mode === "forgot") {
       setStatus("loading");
       setMessage("");
       const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
@@ -162,7 +163,6 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
       email: trimmedEmail,
       password: data.password!,
       options: {
-        emailRedirectTo: getEmailConfirmRedirectUrl(),
         data: {
           full_name: fullName,
           first_name: firstName,
@@ -196,8 +196,14 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
         : "Account created. Please check your email to confirm your address, then sign in with your password."
     );
 
-    if (signUpData?.user?.confirmed_at) {
-      handleClose();
+      if (signUpData?.user?.confirmed_at) {
+        handleClose();
+      }
+    } catch (err) {
+      const rawMessage = err instanceof Error ? err.message : String(err);
+      authLog.error("Auth request failed", { message: rawMessage, email: trimmedEmail, err });
+      setStatus("error");
+      setMessage(getUserFriendlyAuthError(rawMessage || "Something went wrong. Please try again."));
     }
   };
 
