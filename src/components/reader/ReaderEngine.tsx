@@ -418,11 +418,11 @@ export default function ReaderEngine({
                 Show timer
               </label>
             </div>
-            <div className="flex flex-wrap items-center gap-2 mb-3 justify-start">
+            <div className="flex flex-col gap-2 mb-4">
               <button
                 type="button"
                 onClick={handlePlayPause}
-                className="min-h-[44px] px-4 py-2.5 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-1.5"
+                className="w-full min-h-[48px] px-4 py-2.5 bg-green-600 text-white text-base font-semibold rounded-full hover:bg-green-700 transition-colors flex items-center justify-center gap-1.5"
               >
                 <span aria-hidden>
                   {isPlaying ? "‖‖" : "▶"}
@@ -432,34 +432,36 @@ export default function ReaderEngine({
               <button
                 type="button"
                 onClick={handleFinish}
-                className="min-h-[44px] px-4 py-2.5 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors flex items-center justify-center gap-1.5"
+                className="w-full min-h-[44px] px-4 py-2.5 bg-white text-primary border border-primary font-medium rounded-full hover:bg-primary/5 transition-colors flex items-center justify-center gap-1.5"
               >
-                <span aria-hidden>▶ |</span>
-                Finish
+                Finish and go to questions
               </button>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handleWpmDecrement}
-                disabled={isPlaying}
-                className="min-w-[44px] min-h-[44px] rounded-lg border border-slate-200 bg-white text-slate-700 font-medium hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center"
-                aria-label="Decrease WPM"
-              >
-                −
-              </button>
-              <span className="min-w-[5rem] text-center font-semibold text-slate-900">
-                {wpm} WPM
-              </span>
-              <button
-                type="button"
-                onClick={handleWpmIncrement}
-                disabled={isPlaying}
-                className="min-w-[44px] min-h-[44px] rounded-lg border border-slate-200 bg-white text-slate-700 font-medium hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center"
-                aria-label="Increase WPM"
-              >
-                +
-              </button>
+            <div className="flex items-center gap-3 justify-between">
+              <span className="text-xs text-slate-500">Reading speed</span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleWpmDecrement}
+                  disabled={isPlaying}
+                  className="min-w-[40px] min-h-[40px] rounded-lg border border-slate-200 bg-white text-slate-700 font-medium hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center"
+                  aria-label="Decrease WPM"
+                >
+                  −
+                </button>
+                <span className="min-w-[4.5rem] text-center text-sm font-semibold text-slate-900">
+                  {wpm} WPM
+                </span>
+                <button
+                  type="button"
+                  onClick={handleWpmIncrement}
+                  disabled={isPlaying}
+                  className="min-w-[40px] min-h-[40px] rounded-lg border border-slate-200 bg-white text-slate-700 font-medium hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center"
+                  aria-label="Increase WPM"
+                >
+                  +
+                </button>
+              </div>
             </div>
           </div>
           {content}
