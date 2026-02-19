@@ -264,14 +264,27 @@ export default function MacroDrill() {
                   </p>
                 )}
                 <div className="flex-1" />
-                <button
-                  type="button"
-                  onClick={handleSubmit}
-                  disabled={questions.length === 0 || sessionFinished}
-                  className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2.5 text-base font-semibold text-white hover:bg-slate-800 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-50"
-                >
-                  {sessionFinished ? "Submitted" : "Submit answers"}
-                </button>
+                <div className="flex items-center gap-2 flex-wrap justify-end">
+                  {sessionFinished ? (
+                    <button
+                      type="button"
+                      onClick={() => fetchMacroBlock()}
+                      disabled={loading}
+                      className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2.5 text-base font-semibold text-white hover:bg-slate-800 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-50"
+                    >
+                      {loading ? "Loading…" : "Next drill"}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleSubmit}
+                      disabled={questions.length === 0}
+                      className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2.5 text-base font-semibold text-white hover:bg-slate-800 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-50"
+                    >
+                      Submit answers
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
