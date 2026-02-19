@@ -24,9 +24,42 @@ type AdminStats = {
   sessions_keyword_scanning: number;
   sessions_calculator: number;
   sessions_inference_trainer: number;
+  sessions_mental_maths?: number;
   syllogism_sessions_count: number;
   bug_reports_count: number;
   suggestions_count: number;
+};
+
+export type UsageSummaryPayload = {
+  total_sessions: number;
+  total_questions: number;
+  active_users: number;
+  guest_sessions: number;
+  new_users: number;
+};
+
+export type TrainerUsagePayload = Record<string, number>;
+
+export type AdminUserRow = {
+  user_id: string;
+  email: string;
+  speed_reading: number;
+  rapid_recall: number;
+  keyword_scanning: number;
+  calculator: number;
+  inference_trainer: number;
+  mental_maths: number;
+  syllogism_micro: number;
+  syllogism_macro: number;
+  total_questions: number;
+  last_active_at: string | null;
+};
+
+type UsageSummaryResponse = {
+  summary: UsageSummaryPayload;
+  trainer_usage: TrainerUsagePayload;
+  guest_activity: Record<string, number>;
+  users: AdminUserRow[];
 };
 
 type FeedbackRow = {
@@ -117,6 +150,34 @@ function buildChartData(byDay: AnalyticsSummary["by_day"]): Array<Record<string,
   });
 }
 
+function filterAndSortUsers(
+  users: AdminUserRow[],
+  sortKey: keyof AdminUserRow,
+  sortDir: "asc" | "desc",
+  minQuestions: number,
+  emailQuery: string
+): AdminUserRow[] {
+  let out = users.filter(
+    (u) =>
+      u.total_questions >= minQuestions &&
+      (emailQuery === "" || (u.email && u.email.toLowerCase().includes(emailQuery.toLowerCase())))
+  );
+  out = [...out].sort((a, b) => {
+    const aVal = a[sortKey];
+    const bVal = b[sortKey];
+    if (aVal == null && bVal == null) return 0;
+    if (aVal == null) return sortDir === "asc" ? -1 : 1;
+    if (bVal == null) return sortDir === "asc" ? 1 : -1;
+    if (typeof aVal === "string" && typeof bVal === "string") {
+      const c = aVal.localeCompare(bVal);
+      return sortDir === "asc" ? c : -c;
+    }
+    const n = (aVal as number) - (bVal as number);
+    return sortDir === "asc" ? n : -n;
+  });
+  return out;
+}
+
 export default function AdminPage() {
   const {
     user,
@@ -129,10 +190,15 @@ export default function AdminPage() {
   const [dateRange, setDateRange] = useState<AdminDateRange>("30");
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
+  const [usageSummary, setUsageSummary] = useState<UsageSummaryResponse | null>(null);
   const [feedback, setFeedback] = useState<FeedbackRow[]>([]);
   const [feedbackFilter, setFeedbackFilter] = useState<FeedbackFilter>("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userSortKey, setUserSortKey] = useState<keyof AdminUserRow>("total_questions");
+  const [userSortDir, setUserSortDir] = useState<"asc" | "desc">("desc");
+  const [userFilterMinQuestions, setUserFilterMinQuestions] = useState<number>(0);
+  const [userFilterEmail, setUserFilterEmail] = useState<string>("");
 
   useEffect(() => {
     if (!user || !isAdmin) {
@@ -146,9 +212,10 @@ export default function AdminPage() {
     const rpcParams = { since_ts, until_ts };
 
     (async () => {
-      const [statsRes, analyticsRes] = await Promise.all([
+      const [statsRes, analyticsRes, usageRes] = await Promise.all([
         supabase.rpc("get_admin_stats", rpcParams),
         supabase.rpc("get_analytics_summary", rpcParams),
+        supabase.rpc("get_admin_usage_summary", rpcParams),
       ]);
       if (!mounted) return;
       if (statsRes.error) {
@@ -164,12 +231,18 @@ export default function AdminPage() {
       } else {
         setAnalytics(analyticsRes.data as AnalyticsSummary);
       }
+      if (usageRes.error) {
+        dashboardLog.warn("Admin usage summary failed", { message: usageRes.error.message });
+        setUsageSummary(null);
+      } else {
+        setUsageSummary(usageRes.data as UsageSummaryResponse);
+      }
 
       const { data: feedbackData, error: feedbackErr } = await supabase
         .from("bug_reports")
         .select("id, user_id, type, description, page_url, created_at")
         .order("created_at", { ascending: false })
-        .limit(50);
+        .limit(200);
       if (!mounted) return;
       if (feedbackErr) {
         dashboardLog.warn("Admin feedback fetch failed", { message: feedbackErr.message });
@@ -337,7 +410,7 @@ export default function AdminPage() {
         Skip to main content
       </a>
       <Header />
-      <main id="main-content" className="flex-1 max-w-4xl mx-auto px-4 py-8" tabIndex={-1}>
+      <main id="main-content" className="flex-1 max-w-6xl mx-auto px-4 py-8" tabIndex={-1}>
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-bold text-slate-900">Admin</h1>
           <Link to="/" className="min-h-[44px] inline-flex items-center justify-center py-2 text-blue-600 font-medium hover:underline">
@@ -403,11 +476,169 @@ export default function AdminPage() {
               <p className="text-2xl font-bold text-slate-900">{stats?.sessions_inference_trainer ?? 0}</p>
             </div>
             <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+              <p className="text-sm font-medium text-slate-500">Mental maths sessions</p>
+              <p className="text-2xl font-bold text-slate-900">{stats?.sessions_mental_maths ?? 0}</p>
+            </div>
+            <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
               <p className="text-sm font-medium text-slate-500">Syllogism sessions</p>
               <p className="text-2xl font-bold text-slate-900">{stats?.syllogism_sessions_count ?? 0}</p>
             </div>
           </div>
         </section>
+
+        {usageSummary && (
+          <>
+            <section className="mb-10">
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">Usage summary</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                  <p className="text-sm font-medium text-slate-500">Total sessions</p>
+                  <p className="text-2xl font-bold text-slate-900">{usageSummary.summary.total_sessions}</p>
+                </div>
+                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                  <p className="text-sm font-medium text-slate-500">Total questions</p>
+                  <p className="text-2xl font-bold text-slate-900">{Number(usageSummary.summary.total_questions).toLocaleString()}</p>
+                </div>
+                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                  <p className="text-sm font-medium text-slate-500">Active users (in range)</p>
+                  <p className="text-2xl font-bold text-slate-900">{usageSummary.summary.active_users}</p>
+                </div>
+                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                  <p className="text-sm font-medium text-slate-500">Guest sessions</p>
+                  <p className="text-2xl font-bold text-slate-900">{usageSummary.summary.guest_sessions}</p>
+                </div>
+                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                  <p className="text-sm font-medium text-slate-500">New sign-ups (in range)</p>
+                  <p className="text-2xl font-bold text-slate-900">{usageSummary.summary.new_users}</p>
+                </div>
+              </div>
+            </section>
+
+            <section className="mb-10">
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">Trainer usage (sessions completed)</h2>
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50">
+                      <th className="px-4 py-2 text-left font-medium text-slate-700">Trainer</th>
+                      <th className="px-4 py-2 text-right font-medium text-slate-700">Sessions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(usageSummary.trainer_usage)
+                      .sort(([, a], [, b]) => (b as number) - (a as number))
+                      .map(([key, count]) => (
+                        <tr key={key} className="border-b border-slate-100">
+                          <td className="px-4 py-2 text-slate-700">{key.replace(/_/g, " ")}</td>
+                          <td className="px-4 py-2 text-right font-medium text-slate-900">{String(count)}</td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            {Object.keys(usageSummary.guest_activity).length > 0 && (
+              <section className="mb-10">
+                <h2 className="text-lg font-semibold text-slate-900 mb-4">Guest activity (anon)</h2>
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                  <ul className="divide-y divide-slate-200 max-h-48 overflow-y-auto">
+                    {Object.entries(usageSummary.guest_activity)
+                      .sort(([, a], [, b]) => b - a)
+                      .map(([eventName, count]) => (
+                        <li key={eventName} className="px-4 py-2 flex justify-between text-sm">
+                          <span className="text-slate-700">{eventName}</span>
+                          <span className="font-medium text-slate-900">{count}</span>
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              </section>
+            )}
+
+            <section className="mb-10">
+              <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+                <h2 className="text-lg font-semibold text-slate-900">Per-user activity</h2>
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="text-sm text-slate-600">
+                    Min questions:{" "}
+                    <input
+                      type="number"
+                      min={0}
+                      value={userFilterMinQuestions}
+                      onChange={(e) => setUserFilterMinQuestions(Math.max(0, parseInt(e.target.value, 10) || 0))}
+                      className="w-20 px-2 py-1 border border-slate-200 rounded text-slate-900"
+                    />
+                  </label>
+                  <input
+                    type="search"
+                    placeholder="Filter by email"
+                    value={userFilterEmail}
+                    onChange={(e) => setUserFilterEmail(e.target.value)}
+                    className="min-w-[160px] px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-400"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const filtered = filterAndSortUsers(usageSummary.users, userSortKey, userSortDir, userFilterMinQuestions, userFilterEmail);
+                      const headers = ["email", "total_questions", "speed_reading", "rapid_recall", "keyword_scanning", "calculator", "inference_trainer", "mental_maths", "syllogism_micro", "syllogism_macro", "last_active_at"];
+                      const escape = (v: string | number | null) => {
+                        if (v == null) return "";
+                        const s = String(v);
+                        if (s.includes(",") || s.includes('"') || s.includes("\n")) return `"${s.replace(/"/g, '""')}"`;
+                        return s;
+                      };
+                      const toCell = (val: unknown): string | number | null =>
+                        val === null || val === undefined ? null : typeof val === "string" || typeof val === "number" ? val : String(val);
+                      const rows = filtered.map((u) => headers.map((h) => escape(toCell((u as Record<string, unknown>)[h]))).join(","));
+                      downloadText("admin-users-export.csv", [headers.join(","), ...rows].join("\n"), "text/csv;charset=utf-8");
+                    }}
+                    className="min-h-[44px] px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
+                  >
+                    Export CSV
+                  </button>
+                </div>
+              </div>
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+                <table className="w-full text-sm min-w-[720px]">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50">
+                      {(["email", "total_questions", "speed_reading", "calculator", "syllogism_micro", "syllogism_macro", "last_active_at"] as const).map((key) => (
+                        <th
+                          key={key}
+                          className="px-3 py-2 text-left font-medium text-slate-700 whitespace-nowrap cursor-pointer hover:bg-slate-100"
+                          onClick={() => {
+                            if (userSortKey === key) setUserSortDir((d) => (d === "asc" ? "desc" : "asc"));
+                            else setUserSortKey(key);
+                          }}
+                        >
+                          {key.replace(/_/g, " ")}
+                          {userSortKey === key ? (userSortDir === "asc" ? " ↑" : " ↓") : ""}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filterAndSortUsers(usageSummary.users, userSortKey, userSortDir, userFilterMinQuestions, userFilterEmail).map((u) => (
+                      <tr key={u.user_id} className="border-b border-slate-100 hover:bg-slate-50">
+                        <td className="px-3 py-2 text-slate-900 font-medium">{u.email || "(no email)"}</td>
+                        <td className="px-3 py-2 text-right">{u.total_questions}</td>
+                        <td className="px-3 py-2 text-right">{u.speed_reading}</td>
+                        <td className="px-3 py-2 text-right">{u.calculator}</td>
+                        <td className="px-3 py-2 text-right">{u.syllogism_micro}</td>
+                        <td className="px-3 py-2 text-right">{u.syllogism_macro}</td>
+                        <td className="px-3 py-2 text-slate-600">{u.last_active_at ? new Date(u.last_active_at).toLocaleString() : "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {filterAndSortUsers(usageSummary.users, userSortKey, userSortDir, userFilterMinQuestions, userFilterEmail).length === 0 && (
+                  <p className="px-4 py-6 text-slate-500 text-center">No users match the filters.</p>
+                )}
+              </div>
+            </section>
+          </>
+        )}
 
         {analytics && (
           <section className="mb-10">
@@ -533,7 +764,7 @@ export default function AdminPage() {
 
         <section>
           <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-            <h2 className="text-lg font-semibold text-slate-900">Recent feedback</h2>
+            <h2 className="text-lg font-semibold text-slate-900">Bugs & feedback</h2>
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
