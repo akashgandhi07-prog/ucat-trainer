@@ -149,8 +149,8 @@ export default function MacroDrill() {
             )}
             <p className="mt-2 text-sm font-medium text-slate-700">
               Place &lsquo;Yes&rsquo; if the conclusion does follow. Place
-              &lsquo;No&rsquo; if the conclusion does not follow. Drag from the
-              Yes/No panel into each answer box.
+              &lsquo;No&rsquo; if it does not. On desktop, drag from the panel
+              into each box; on mobile, tap Yes or No in each row.
             </p>
           </div>
         </section>
@@ -196,22 +196,22 @@ export default function MacroDrill() {
                           : "")
                       }
                     >
-                      <div className="grid grid-cols-[minmax(0,1fr)_6rem] items-center gap-3">
+                      <div className="grid grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-[minmax(0,1fr)_6rem] items-center gap-3">
                         {/* Conclusion text – no extra box, just number + text */}
                         <p className="text-base text-slate-900 leading-snug py-0.5">
                           <span className="font-semibold text-slate-600">{index + 1}.</span> {q.conclusion_text}
                         </p>
 
-                        {/* Answer: single compact cell, drop zone when empty */}
+                        {/* Answer: drop zone on desktop; on mobile/touch use tap buttons (drag doesn't work well) */}
                         <div
                           className={
-                            "flex h-10 w-24 flex-shrink-0 items-center justify-center rounded text-base font-medium transition-colors " +
+                            "flex flex-shrink-0 items-center justify-center gap-1 rounded text-base font-medium transition-colors min-h-10 " +
                             (userAnswer === true
-                              ? "bg-slate-100 text-slate-900"
+                              ? "bg-slate-100 text-slate-900 w-24"
                               : userAnswer === false
-                                ? "bg-slate-100 text-slate-900"
+                                ? "bg-slate-100 text-slate-900 w-24"
                                 : isDropTarget
-                                  ? "bg-sky-100 text-sky-700 ring-1 ring-sky-300"
+                                  ? "bg-sky-100 text-sky-700 ring-1 ring-sky-300 w-24"
                                   : "bg-slate-50 text-slate-400")
                           }
                           onDragOver={interactive ? (e) => handleDragOver(e, index) : undefined}
@@ -224,7 +224,33 @@ export default function MacroDrill() {
                               : undefined
                           }
                         >
-                          {userAnswer === true ? "Yes" : userAnswer === false ? "No" : "—"}
+                          {userAnswer === true ? (
+                            "Yes"
+                          ) : userAnswer === false ? (
+                            "No"
+                          ) : (
+                            <>
+                              {/* Tap targets for mobile (drag-drop doesn't work on touch) */}
+                              <span className="flex gap-1 lg:hidden">
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggle(index, true)}
+                                  className="min-h-[36px] min-w-[3rem] rounded border border-slate-300 bg-white px-2 text-sm font-medium text-slate-800 shadow-sm hover:border-slate-400 hover:bg-slate-50 active:bg-slate-100 touch-manipulation"
+                                >
+                                  Yes
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggle(index, false)}
+                                  className="min-h-[36px] min-w-[3rem] rounded border border-slate-300 bg-white px-2 text-sm font-medium text-slate-800 shadow-sm hover:border-slate-400 hover:bg-slate-50 active:bg-slate-100 touch-manipulation"
+                                >
+                                  No
+                                </button>
+                              </span>
+                              {/* Desktop: show dash and rely on drag-drop */}
+                              <span className="hidden lg:inline w-24 text-center">—</span>
+                            </>
+                          )}
                         </div>
                       </div>
 

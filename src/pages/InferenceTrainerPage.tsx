@@ -62,6 +62,12 @@ export default function InferenceTrainerPage() {
   const [questionBreakdown, setQuestionBreakdown] = useState<
     InferenceBreakdownItem[]
   >([]);
+  const [runningCorrect, setRunningCorrect] = useState(0);
+  const [runningTotal, setRunningTotal] = useState(0);
+  const [runningBreakdown, setRunningBreakdown] = useState<
+    InferenceBreakdownItem[]
+  >([]);
+  const [quizKey, setQuizKey] = useState(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -130,14 +136,35 @@ export default function InferenceTrainerPage() {
     []
   );
 
+  const handleNextQuestion = useCallback(
+    (correct: number, total: number, breakdown: InferenceBreakdownItem[]) => {
+      setRunningCorrect((c) => c + correct);
+      setRunningTotal((t) => t + total);
+      setRunningBreakdown((b) => [...b, ...breakdown]);
+      const stayOnSamePassage = Math.random() < 0.5;
+      if (stayOnSamePassage && passage) {
+        setQuizKey((k) => k + 1);
+      } else {
+        setPassage((p) =>
+          pickPassageWithInference(p?.id ?? null, difficulty)
+        );
+        setQuizKey((k) => k + 1);
+      }
+    },
+    [difficulty, passage]
+  );
+
   const handleEndSession = useCallback(() => {
     setShowEndConfirm(true);
   }, []);
 
   const handleConfirmEnd = useCallback(() => {
     setShowEndConfirm(false);
+    setRunningCorrect((c) => c + quizCorrect);
+    setRunningTotal((t) => t + quizTotal);
+    setRunningBreakdown((b) => [...b, ...questionBreakdown]);
     setPhase("results");
-  }, []);
+  }, [quizCorrect, quizTotal, questionBreakdown]);
 
   const handleCancelEnd = useCallback(() => {
     setShowEndConfirm(false);
@@ -145,13 +172,15 @@ export default function InferenceTrainerPage() {
 
   const handleSaveProgress = useCallback(
     async (opts?: { skipRestart?: boolean }) => {
+      const correctToSave = phase === "results" ? runningCorrect : quizCorrect;
+      const totalToSave = phase === "results" ? runningTotal : quizTotal;
       if (!user) {
         appendGuestSession({
           training_type: "inference_trainer",
           difficulty,
           wpm: null,
-          correct: quizCorrect,
-          total: quizTotal,
+          correct: correctToSave,
+          total: totalToSave,
           time_seconds: elapsedSeconds,
         });
         openAuthModal();
@@ -164,8 +193,8 @@ export default function InferenceTrainerPage() {
         training_type: "inference_trainer",
         difficulty,
         wpm: null,
-        correct: quizCorrect,
-        total: quizTotal,
+        correct: correctToSave,
+        total: totalToSave,
         passage_id: passage?.id ?? null,
         time_seconds: elapsedSeconds,
       };
@@ -188,6 +217,10 @@ export default function InferenceTrainerPage() {
           setQuizCorrect(0);
           setQuizTotal(0);
           setQuestionBreakdown([]);
+          setRunningCorrect(0);
+          setRunningTotal(0);
+          setRunningBreakdown([]);
+          setQuizKey((k) => k + 1);
           setCurrentIndex(0);
           startTimeRef.current = Date.now();
           setElapsedSeconds(0);
@@ -210,6 +243,9 @@ export default function InferenceTrainerPage() {
     },
     [
       user,
+      phase,
+      runningCorrect,
+      runningTotal,
       quizCorrect,
       quizTotal,
       passage?.id,
@@ -225,6 +261,10 @@ export default function InferenceTrainerPage() {
     setQuizCorrect(0);
     setQuizTotal(0);
     setQuestionBreakdown([]);
+    setRunningCorrect(0);
+    setRunningTotal(0);
+    setRunningBreakdown([]);
+    setQuizKey((k) => k + 1);
     setCurrentIndex(0);
     startTimeRef.current = Date.now();
     setElapsedSeconds(0);
@@ -241,8 +281,8 @@ export default function InferenceTrainerPage() {
         training_type: "inference_trainer",
         difficulty,
         wpm: null,
-        correct: quizCorrect,
-        total: quizTotal,
+        correct: runningCorrect,
+        total: runningTotal,
         time_seconds: elapsedSeconds,
       });
     }
@@ -250,8 +290,8 @@ export default function InferenceTrainerPage() {
     phase,
     user,
     handleSaveProgress,
-    quizCorrect,
-    quizTotal,
+    runningCorrect,
+    runningTotal,
     elapsedSeconds,
     difficulty,
   ]);
@@ -321,8 +361,8 @@ export default function InferenceTrainerPage() {
         <>
           <InferenceSessionHeader
             elapsedSeconds={elapsedSeconds}
-            correct={quizCorrect}
-            total={quizTotal}
+            correct={runningCorrect + quizCorrect}
+            total={runningTotal + quizTotal}
             currentIndex={currentIndex}
             questionCount={effectiveQuestionCount}
             onEndSession={handleEndSession}
@@ -336,9 +376,11 @@ export default function InferenceTrainerPage() {
             tabIndex={-1}
           >
             <InferenceQuiz
+              key={`${passage.id}-${quizKey}`}
               passageText={passage.text}
               questions={questions}
               onComplete={handleQuizComplete}
+              onNextQuestion={handleNextQuestion}
               onProgressChange={handleProgressChange}
               onBreakdownChange={handleBreakdownChange}
             />
@@ -349,12 +391,12 @@ export default function InferenceTrainerPage() {
       {phase === "results" && (
         <main id="main-content" className="flex-1 py-12 px-4" tabIndex={-1}>
           <InferenceResultsView
-            correct={quizCorrect}
-            total={quizTotal}
+            correct={runningCorrect}
+            total={runningTotal}
             timeSeconds={elapsedSeconds}
             passageTitle={passage.title}
             passageText={passage.text}
-            breakdown={questionBreakdown}
+            breakdown={runningBreakdown}
             onRestart={handleRestart}
             saveError={saveError}
             saving={saving}

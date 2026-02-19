@@ -515,14 +515,14 @@ export default function VerbalReasoningPage() {
       <main id="main-content" className="flex-1 pb-24 sm:pb-0" tabIndex={-1}>
         {/* Hero */}
         <header className="border-b border-border bg-card">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-14 text-center">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10 md:py-14 text-center">
             {displayName && (
-              <p className="text-sm font-medium text-muted-foreground mb-3">
+              <p className="text-sm font-medium text-muted-foreground mb-2 sm:mb-3">
                 Welcome back, {displayName}.
               </p>
             )}
             {user && streakFetched && (streak > 0 || lastPracticedLabel != null) && (
-              <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 mb-4 text-sm text-muted-foreground">
+              <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 mb-3 sm:mb-4 text-xs sm:text-sm text-muted-foreground">
                 {streak > 0 && (
                   <span className="font-medium text-training-success">{streak}-day streak</span>
                 )}
@@ -532,14 +532,14 @@ export default function VerbalReasoningPage() {
               </div>
             )}
             {user && streakFetched && streak === 0 && lastPracticedLabel == null && (
-              <p className="text-sm text-muted-foreground text-center mb-4">
+              <p className="text-xs sm:text-sm text-muted-foreground text-center mb-3 sm:mb-4">
                 Start a session to begin your streak.
               </p>
             )}
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-foreground">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-foreground">
               Master UCAT Verbal Reasoning.
             </h1>
-            <p className="mt-4 text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            <p className="mt-3 sm:mt-4 text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
               Free, evidence-based training to boost reading speed, recall, and accuracy — designed for UK medical &amp; dental applicants.
             </p>
             <div className="mt-4">
@@ -549,11 +549,11 @@ export default function VerbalReasoningPage() {
         </header>
 
         {/* Skill selector */}
-        <section className="max-w-5xl mx-auto px-4 sm:px-6 pt-10 pb-6">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-[0.2em] text-center mb-6">
+        <section className="max-w-5xl mx-auto px-4 sm:px-6 pt-5 sm:pt-8 md:pt-10 pb-4 sm:pb-6">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-[0.2em] text-center mb-3 sm:mb-6">
             Pick a skill to train
           </p>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {SKILLS.map(({ type, icon, summary, benefit }) => {
               const isActive = mode === type;
               return (
@@ -561,33 +561,33 @@ export default function VerbalReasoningPage() {
                   key={type}
                   type="button"
                   onClick={() => setMode(type)}
-                  className={`group relative flex flex-col rounded-xl border p-5 text-left transition-all duration-200 ${isActive
+                  className={`group relative flex flex-col rounded-lg sm:rounded-xl border p-3 sm:p-4 md:p-5 text-left transition-all duration-200 ${isActive
                       ? "border-primary bg-training-active-muted shadow-md ring-1 ring-primary/20"
                       : "border-border bg-card shadow-sm hover:border-primary/40 hover:shadow-md"
                     }`}
                 >
-                  <div className="flex flex-col gap-2 mb-3">
+                  <div className="flex flex-col gap-1 sm:gap-2 mb-2 sm:mb-3">
                     <span
-                      className={`inline-flex h-10 w-10 items-center justify-center rounded-lg shrink-0 ${isActive ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"
+                      className={`inline-flex h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 items-center justify-center rounded-lg shrink-0 [&>svg]:w-4 [&>svg]:h-4 sm:[&>svg]:w-5 sm:[&>svg]:h-5 ${isActive ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"
                         }`}
                     >
                       {icon}
                     </span>
                     <span
-                      className={`text-[10px] font-bold uppercase tracking-widest leading-tight ${isActive ? "text-primary" : "text-muted-foreground"
+                      className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-widest leading-tight ${isActive ? "text-primary" : "text-muted-foreground"
                         }`}
                     >
                       {benefit}
                     </span>
                   </div>
-                  <p className="text-base font-semibold text-foreground">
+                  <p className="text-sm sm:text-base font-semibold text-foreground">
                     {TRAINING_TYPE_LABELS[type]}
                   </p>
-                  <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                  <p className="mt-1 sm:mt-1.5 text-xs sm:text-sm leading-relaxed text-muted-foreground">
                     {summary}
                   </p>
                   {isActive && (
-                    <span className="absolute -bottom-px left-6 right-6 h-0.5 rounded-full bg-primary" />
+                    <span className="absolute -bottom-px left-3 right-3 sm:left-4 sm:right-4 md:left-6 md:right-6 h-0.5 rounded-full bg-primary" />
                   )}
                 </button>
               );

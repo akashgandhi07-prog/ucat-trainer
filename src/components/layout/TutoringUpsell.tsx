@@ -14,37 +14,40 @@ type TutoringUpsellProps = {
 export default function TutoringUpsell({ variant }: TutoringUpsellProps) {
   if (variant === "footer") {
     return (
-      <p className="text-center text-sm text-slate-500 mb-2" aria-label="Rated 5 out of 5 on Trustpilot">
-        <a
-          href={TRUSTPILOT_URL}
-          className="text-slate-600 hover:text-blue-600 transition-colors"
-          {...EXTERNAL_LINK_PROPS}
-        >
-          {TUTORING_COPY.ratedTrustpilot}
-        </a>
-        {". "}
-        <a
-          href={UCAT_TUTORING_URL}
-          className="text-slate-600 hover:text-blue-600 transition-colors font-medium"
-          {...EXTERNAL_LINK_PROPS}
-        >
-          {TUTORING_COPY.footerCta}
-        </a>
-        .
-      </p>
+      <div className="text-center text-sm text-slate-500 mb-2 space-y-1" aria-label="Trust and tutoring info">
+        <p>
+          {TUTORING_COPY.trustLine}{" "}
+          <a
+            href={TRUSTPILOT_URL}
+            className="text-slate-600 hover:text-blue-600 transition-colors"
+            {...EXTERNAL_LINK_PROPS}
+          >
+            {TUTORING_COPY.ratedTrustpilot}
+          </a>
+          {" — "}
+          <a
+            href={UCAT_TUTORING_URL}
+            className="text-slate-600 hover:text-blue-600 transition-colors font-medium"
+            {...EXTERNAL_LINK_PROPS}
+          >
+            {TUTORING_COPY.footerCta}
+          </a>
+          .
+        </p>
+      </div>
     );
   }
 
   if (variant === "inline") {
     return (
       <p className="text-center text-sm text-muted-foreground mt-6">
-        {TUTORING_COPY.fromTeam} —{" "}
+        {TUTORING_COPY.expertLine}{" "}
         <a
           href={UCAT_TUTORING_URL}
           className="text-blue-600 hover:underline font-medium"
           {...EXTERNAL_LINK_PROPS}
         >
-          UCAT 1-1 Tutoring
+          {TUTORING_COPY.linkText}
         </a>
         .
       </p>
@@ -53,15 +56,8 @@ export default function TutoringUpsell({ variant }: TutoringUpsellProps) {
 
   if (variant === "hub") {
     return (
-      <p className="text-center text-sm text-muted-foreground" aria-label="Rated 5 out of 5 on Trustpilot">
-        <a
-          href={TRUSTPILOT_URL}
-          className="text-muted-foreground hover:text-blue-600 transition-colors"
-          {...EXTERNAL_LINK_PROPS}
-        >
-          {TUTORING_COPY.ratedTrustpilot}
-        </a>
-        {" — "}
+      <p className="text-center text-sm text-muted-foreground">
+        {TUTORING_COPY.expertLine}{" "}
         <a
           href={UCAT_TUTORING_URL}
           className="text-blue-600 hover:underline font-medium"

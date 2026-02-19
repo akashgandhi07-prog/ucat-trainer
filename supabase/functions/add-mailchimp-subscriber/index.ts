@@ -120,7 +120,7 @@ function buildMergeFields(body: SubscriberPayload): Record<string, string> {
   if (entryYear) {
     merge.MERGE8 = entryYear; // Entry Year (text)
     const y = entryYear.replace(/\D/g, "");
-    if (["2025", "2026", "2027", "2028"].includes(y)) {
+    if (["2026", "2027", "2028", "2029"].includes(y)) {
       merge.MERGE18 = `${y} Entry (Starting University September ${y})`; // Year dropdown
     } else {
       merge.MERGE18 = "Other";

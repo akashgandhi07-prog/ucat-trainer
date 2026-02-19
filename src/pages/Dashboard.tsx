@@ -31,6 +31,7 @@ import TutoringUpsell from "../components/layout/TutoringUpsell";
 import { getGuestSessions } from "../lib/guestSessions";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 import { trackEvent } from "../lib/analytics";
+import { upsertProfile } from "../lib/profileApi";
 import type { SessionRow } from "../types/session";
 import type { SyllogismSession } from "../types/syllogisms";
 import SyllogismAnalytics from "../components/dashboard/SyllogismAnalytics";
@@ -45,6 +46,15 @@ type AccuracyChartPoint = {
   date: string;
   accuracy: number;
   displayDate: string;
+};
+
+/** Unified recent activity row (sessions table + syllogism_sessions) for dashboard. */
+type RecentActivityItem = {
+  id: string;
+  created_at: string;
+  label: string;
+  timeDisplay: string;
+  scoreDisplay: string;
 };
 
 type DifficultyStats = {
@@ -108,6 +118,7 @@ export default function Dashboard() {
     loading: authLoading,
     sessionLoadFailed,
     retryGetSession,
+    refetchProfile,
   } = useAuth();
   const { openBugReport } = useBugReportModal();
   const { openAuthModal } = useAuthModal();
@@ -124,6 +135,38 @@ export default function Dashboard() {
   const [targetWpmError, setTargetWpmError] = useState<string | null>(null);
   const [guestSummary, setGuestSummary] = useState<GuestDashboardSummary | null>(null);
   const [syllogismSessions, setSyllogismSessions] = useState<SyllogismSession[]>([]);
+
+  // UCAT exam date (April–September only). Synced from profile when it loads.
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const defaultUcatYear = currentYear + (now.getMonth() >= 3 ? 1 : 0); // next exam window
+  const [ucatYear, setUcatYear] = useState<number>(defaultUcatYear);
+  const [ucatMonth, setUcatMonth] = useState<4 | 5 | 6 | 7 | 8 | 9>(4);
+  const [ucatDay, setUcatDay] = useState(1);
+  const [ucatSaveStatus, setUcatSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+
+  const ucatMonthMaxDay = (m: number) => (m === 4 || m === 6 || m === 9 ? 30 : 31); // April, June, Sept = 30
+
+  useEffect(() => {
+    const raw = profile?.ucat_exam_date;
+    if (!raw || typeof raw !== "string") return;
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw.trim());
+    if (!match) return;
+    const y = parseInt(match[1], 10);
+    const m = parseInt(match[2], 10);
+    const d = parseInt(match[3], 10);
+    if (Number.isFinite(y) && [4, 5, 6, 7, 8, 9].includes(m) && d >= 1 && d <= 31) {
+      setUcatYear(y);
+      setUcatMonth(m as 4 | 5 | 6 | 7 | 8 | 9);
+      setUcatDay(Math.min(d, ucatMonthMaxDay(m)));
+    }
+  }, [profile?.ucat_exam_date]);
+
+  // Clamp day when month changes (e.g. 31 → September)
+  useEffect(() => {
+    const maxDay = ucatMonthMaxDay(ucatMonth);
+    if (ucatDay > maxDay) setUcatDay(maxDay);
+  }, [ucatMonth, ucatDay]);
 
   // Track dashboard view once auth state is known (so we can tag authenticated vs guest)
   useEffect(() => {
@@ -539,10 +582,30 @@ export default function Dashboard() {
       }),
     }));
 
-  const recentSessions = useMemo(
-    () => [...sessions].reverse().slice(0, 30),
-    [sessions]
-  );
+  const recentActivity = useMemo((): RecentActivityItem[] => {
+    const fromSessions: RecentActivityItem[] = sessions.map((s) => {
+      const type = getTrainingType(s);
+      return {
+        id: s.id,
+        created_at: s.created_at,
+        label: TRAINING_TYPE_LABELS[type],
+        timeDisplay:
+          s.time_seconds != null && s.time_seconds > 0 ? `${s.time_seconds}s` : "–",
+        scoreDisplay: formatSessionScore(s),
+      };
+    });
+    const fromSyllogism: RecentActivityItem[] = syllogismSessions.map((s) => ({
+      id: `syllogism-${s.id}`,
+      created_at: s.created_at,
+      label: s.mode === "macro" ? "Decision Making (Macro)" : "Decision Making (Micro)",
+      timeDisplay: s.average_time_per_decision > 0 ? `${Math.round(s.average_time_per_decision * s.total_questions)}s` : "–",
+      scoreDisplay: s.mode === "macro" ? `${s.score} pts` : `${s.score} / ${s.total_questions} correct`,
+    }));
+    const merged = [...fromSessions, ...fromSyllogism].sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+    return merged.slice(0, 30);
+  }, [sessions, syllogismSessions]);
 
   // Shared difficulty breakdown renderer
   const renderDifficultyBreakdown = (breakdown: Record<TrainingDifficulty, DifficultyStats>) => {
@@ -838,22 +901,86 @@ export default function Dashboard() {
                 <span className="text-slate-500">Last Check-up:</span>
                 <span className="text-slate-900 font-medium">{lastCheckUp}</span>
               </div>
+              {user && (
+                <div className="border-t border-slate-200 pt-3 mt-3">
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <span className="text-slate-500">UCAT exam date:</span>
+                    <span className="text-xs text-slate-400">(April–September only)</span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <select
+                      value={ucatYear}
+                      onChange={(e) => setUcatYear(parseInt(e.target.value, 10))}
+                      className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+                      aria-label="Exam year"
+                    >
+                      {[currentYear, currentYear + 1, currentYear + 2].map((y) => (
+                        <option key={y} value={y}>{y}</option>
+                      ))}
+                    </select>
+                    <select
+                      value={ucatMonth}
+                      onChange={(e) => setUcatMonth(parseInt(e.target.value, 10) as 4 | 5 | 6 | 7 | 8 | 9)}
+                      className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+                      aria-label="Exam month"
+                    >
+                      <option value={4}>April</option>
+                      <option value={5}>May</option>
+                      <option value={6}>June</option>
+                      <option value={7}>July</option>
+                      <option value={8}>August</option>
+                      <option value={9}>September</option>
+                    </select>
+                    <select
+                      value={ucatDay}
+                      onChange={(e) => setUcatDay(parseInt(e.target.value, 10))}
+                      className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+                      aria-label="Exam day"
+                    >
+                      {Array.from({ length: ucatMonthMaxDay(ucatMonth) }, (_, i) => i + 1).map((d) => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      disabled={ucatSaveStatus === "saving"}
+                      onClick={async () => {
+                        if (!user || !profile) return;
+                        setUcatSaveStatus("saving");
+                        const day = Math.min(ucatDay, ucatMonthMaxDay(ucatMonth));
+                        const iso = `${ucatYear}-${String(ucatMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                        const { ok } = await upsertProfile(user.id, profile.full_name ?? null, profile.stream ?? null, { ucatExamDate: iso });
+                        if (ok) {
+                          setUcatSaveStatus("saved");
+                          await refetchProfile();
+                          setTimeout(() => setUcatSaveStatus("idle"), 2000);
+                        } else {
+                          setUcatSaveStatus("error");
+                          setTimeout(() => setUcatSaveStatus("idle"), 3000);
+                        }
+                      }}
+                      className="ml-1 min-h-[32px] rounded bg-slate-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-600 disabled:opacity-60"
+                    >
+                      {ucatSaveStatus === "saving" ? "Saving…" : ucatSaveStatus === "saved" ? "Saved" : ucatSaveStatus === "error" ? "Error" : "Save"}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </section>
 
-        {sessions.length === 0 ? (
+        {sessions.length === 0 && syllogismSessions.length === 0 ? (
           <section className="mb-10">
-            <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-6 text-center">
-              <p className="text-amber-900 font-serif text-lg mb-1">Rx</p>
-              <p className="text-slate-800 font-medium mb-4">
-                Establish your baseline speed.
+            <div className="bg-slate-100 border border-slate-200 rounded-xl p-6 text-center">
+              <p className="text-slate-700 font-medium mb-4">
+                No sessions yet. Pick any trainer from the home page to get started.
               </p>
               <Link
-                to="/?mode=speed_reading"
-                className="inline-flex min-h-[44px] items-center justify-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                to="/"
+                className="inline-flex min-h-[44px] items-center justify-center px-6 py-3 bg-slate-800 text-white font-medium rounded-lg hover:bg-slate-700 transition-colors"
               >
-                Start Calibration Test
+                Explore trainers
               </Link>
             </div>
           </section>
@@ -1312,7 +1439,7 @@ export default function Dashboard() {
               <SyllogismAnalytics sessions={syllogismSessions} />
             </section>
 
-            {recentSessions.length > 0 && (
+            {recentActivity.length > 0 && (
               <section className="mt-10">
                 <h2 className="text-lg font-semibold text-slate-900 mb-4">Recent activity</h2>
                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -1327,10 +1454,10 @@ export default function Dashboard() {
                         </tr>
                       </thead>
                       <tbody>
-                        {recentSessions.map((session) => (
-                          <tr key={session.id} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50">
+                        {recentActivity.map((item) => (
+                          <tr key={item.id} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50">
                             <td className="px-4 py-3 text-slate-700 whitespace-nowrap">
-                              {new Date(session.created_at).toLocaleString(undefined, {
+                              {new Date(item.created_at).toLocaleString(undefined, {
                                 day: "numeric",
                                 month: "short",
                                 year: "numeric",
@@ -1339,15 +1466,13 @@ export default function Dashboard() {
                               })}
                             </td>
                             <td className="px-4 py-3 text-slate-900 font-medium">
-                              {TRAINING_TYPE_LABELS[getTrainingType(session)]}
+                              {item.label}
                             </td>
                             <td className="px-4 py-3 text-slate-700">
-                              {session.time_seconds != null && session.time_seconds > 0
-                                ? `${session.time_seconds}s`
-                                : "–"}
+                              {item.timeDisplay}
                             </td>
                             <td className="px-4 py-3 text-slate-900">
-                              {formatSessionScore(session)}
+                              {item.scoreDisplay}
                             </td>
                           </tr>
                         ))}

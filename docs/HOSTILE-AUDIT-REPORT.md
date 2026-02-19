@@ -1,6 +1,6 @@
 # Hostile SRE Audit Report - The UKCAT People
 
-**Audit date:** Feb 2025  
+**Audit date:** Feb 2026  
 **Scope:** Destructive mindset across Monkey Test, Data Corruption, Accessibility, and Prod Safety.
 
 ---

@@ -17,6 +17,12 @@ type InferenceQuizProps = {
     total: number,
     breakdown: InferenceBreakdownItem[]
   ) => void;
+  /** Called when user presses Next on the last question: request another question (same or new passage). */
+  onNextQuestion?: (
+    correct: number,
+    total: number,
+    breakdown: InferenceBreakdownItem[]
+  ) => void;
   onProgressChange?: (correct: number, total: number, currentIndex: number) => void;
   onBreakdownChange?: (breakdown: InferenceBreakdownItem[]) => void;
 };
@@ -25,6 +31,7 @@ export default function InferenceQuiz({
   passageText,
   questions,
   onComplete,
+  onNextQuestion,
   onProgressChange,
   onBreakdownChange,
 }: InferenceQuizProps) {
@@ -131,7 +138,14 @@ export default function InferenceQuiz({
   const handleNext = useCallback(() => {
     setFeedback(null);
     setEmptySelectionError(false);
-    if (isLastQuestion) {
+    if (isLastQuestion && onNextQuestion) {
+      const total = questions.length;
+      const correct = [...answers.values()].filter(
+        (a) => a.result === "correct" || a.result === "partial"
+      ).length;
+      const breakdown = [...answers.values()];
+      onNextQuestion(correct, total, breakdown);
+    } else if (isLastQuestion) {
       const total = questions.length;
       const correct = [...answers.values()].filter(
         (a) => a.result === "correct" || a.result === "partial"
@@ -141,7 +155,7 @@ export default function InferenceQuiz({
     } else {
       setCurrentIndex((i) => i + 1);
     }
-  }, [isLastQuestion, questions.length, answers, onComplete]);
+  }, [isLastQuestion, questions.length, answers, onNextQuestion, onComplete]);
 
   const highlights: { span: TextSpan; type: "correct" | "incorrect" }[] = [];
   if (feedback?.show && feedback.userSpan) {
@@ -255,7 +269,7 @@ export default function InferenceQuiz({
                 onClick={handleNext}
                 className="min-h-[44px] px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
               >
-                {isLastQuestion ? "Finish" : "Next question"}
+                Next question
               </button>
             </div>
           )}

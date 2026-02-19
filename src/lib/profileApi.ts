@@ -16,6 +16,8 @@ export type Profile = {
   role?: string | null;
   entry_year?: string | null;
   email_marketing_opt_in?: boolean;
+  /** UCAT exam date (April–September only). ISO date string YYYY-MM-DD. */
+  ucat_exam_date?: string | null;
 };
 
 /**
@@ -25,7 +27,7 @@ export async function getProfile(userId: string): Promise<Profile | null> {
   try {
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, full_name, stream, updated_at, role, entry_year, email_marketing_opt_in")
+      .select("id, full_name, stream, updated_at, role, entry_year, email_marketing_opt_in, ucat_exam_date")
       .eq("id", userId)
       .maybeSingle();
 
@@ -67,6 +69,8 @@ export async function upsertProfile(
     lastName?: string | null;
     entryYear?: string | null;
     emailMarketingOptIn?: boolean | null;
+    /** UCAT exam date. ISO date YYYY-MM-DD; must be in April (4) through September (9). */
+    ucatExamDate?: string | null;
   }
 ): Promise<{ ok: boolean; error?: string }> {
   const name = cap(fullName, FULL_NAME_MAX);
@@ -100,9 +104,12 @@ export async function upsertProfile(
           payload.email_marketing_opt_in_at = new Date().toISOString();
         }
       }
+      if (extra.ucatExamDate !== undefined) {
+        payload.ucat_exam_date = extra.ucatExamDate && extra.ucatExamDate.trim() ? extra.ucatExamDate.trim() : null;
+      }
     }
     const { error } = await supabase.from("profiles").upsert(
-      payload as { id: string; full_name?: string; stream?: string; updated_at: string },
+      payload as { id: string; full_name?: string; stream?: string; updated_at: string; ucat_exam_date?: string | null },
       { onConflict: "id" }
     );
 

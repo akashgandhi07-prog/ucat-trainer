@@ -26,50 +26,50 @@ export default function DecisionMakingPage() {
         breadcrumbs={breadcrumbs}
       />
       <Header />
-      <main className="flex-1 py-12 px-4 sm:px-6 lg:px-8">
+      <main className="flex-1 py-5 sm:py-8 md:py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="p-3 rounded-xl bg-amber-50 text-amber-600">
-              <Scale className="w-8 h-8" />
+          <div className="flex items-center gap-2 sm:gap-3 mb-5 sm:mb-8">
+            <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl bg-amber-50 text-amber-600 shrink-0">
+              <Scale className="w-6 h-6 sm:w-8 sm:h-8" />
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
                 Decision Making
               </h1>
-              <p className="text-slate-600 mt-0.5">
+              <p className="text-slate-600 mt-0.5 text-sm sm:text-base">
                 Train logical reasoning and syllogisms for the UCAT.
               </p>
             </div>
           </div>
-          <div className="mb-8">
+          <div className="mb-5 sm:mb-8">
             <TutoringUpsell variant="hub" />
           </div>
 
-          <section className="space-y-4">
-            <h2 className="text-lg font-semibold text-slate-900">
+          <section className="space-y-3 sm:space-y-4">
+            <h2 className="text-base sm:text-lg font-semibold text-slate-900">
               Syllogisms Trainer
             </h2>
-            <p className="text-slate-600 text-sm">
+            <p className="text-slate-600 text-xs sm:text-sm">
               Decide whether conclusions follow from given premises. Use micro
               drills for speed and pattern recognition, or macro drills for
               full UCAT-style stimulus with five conclusions.
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <button
                 type="button"
                 onClick={() => navigate("/train/syllogism/micro")}
-                className="group flex flex-col items-stretch p-6 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:border-amber-200 transition-all duration-200 text-left"
+                className="group flex flex-col items-stretch p-4 sm:p-5 md:p-6 bg-white border border-slate-200 rounded-lg sm:rounded-xl shadow-sm hover:shadow-md hover:border-amber-200 transition-all duration-200 text-left"
               >
-                <div className="flex items-center justify-between gap-2 mb-3">
-                  <span className="p-2 rounded-lg bg-amber-50 text-amber-600">
-                    <Zap className="w-5 h-5" />
+                <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3">
+                  <span className="p-1.5 sm:p-2 rounded-lg bg-amber-50 text-amber-600">
+                    <Zap className="w-4 h-4 sm:w-5 sm:h-5" />
                   </span>
-                  <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-amber-600 group-hover:translate-x-0.5 transition-all" />
+                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 group-hover:text-amber-600 group-hover:translate-x-0.5 transition-all shrink-0" />
                 </div>
-                <h3 className="font-semibold text-slate-900 group-hover:text-amber-700 transition-colors">
+                <h3 className="font-semibold text-slate-900 group-hover:text-amber-700 transition-colors text-sm sm:text-base">
                   Micro Drill
                 </h3>
-                <p className="mt-1 text-sm text-slate-600">
+                <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-slate-600">
                   One premise, one conclusion. Build instant pattern recognition
                   with keyboard shortcuts.
                 </p>
@@ -77,18 +77,18 @@ export default function DecisionMakingPage() {
               <button
                 type="button"
                 onClick={() => navigate("/train/syllogism/macro")}
-                className="group flex flex-col items-stretch p-6 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:border-amber-200 transition-all duration-200 text-left"
+                className="group flex flex-col items-stretch p-4 sm:p-5 md:p-6 bg-white border border-slate-200 rounded-lg sm:rounded-xl shadow-sm hover:shadow-md hover:border-amber-200 transition-all duration-200 text-left"
               >
-                <div className="flex items-center justify-between gap-2 mb-3">
-                  <span className="p-2 rounded-lg bg-amber-50 text-amber-600">
-                    <LayoutList className="w-5 h-5" />
+                <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3">
+                  <span className="p-1.5 sm:p-2 rounded-lg bg-amber-50 text-amber-600">
+                    <LayoutList className="w-4 h-4 sm:w-5 sm:h-5" />
                   </span>
-                  <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-amber-600 group-hover:translate-x-0.5 transition-all" />
+                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 group-hover:text-amber-600 group-hover:translate-x-0.5 transition-all shrink-0" />
                 </div>
-                <h3 className="font-semibold text-slate-900 group-hover:text-amber-700 transition-colors">
+                <h3 className="font-semibold text-slate-900 group-hover:text-amber-700 transition-colors text-sm sm:text-base">
                   Macro Drill
                 </h3>
-                <p className="mt-1 text-sm text-slate-600">
+                <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-slate-600">
                   Full stimulus with five conclusions. UCAT-style layout with
                   sticky passage and Yes/No for each.
                 </p>

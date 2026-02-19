@@ -38,68 +38,68 @@ export default function HomePage() {
                             </p>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8 max-w-4xl mx-auto">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-5 md:gap-8 max-w-4xl mx-auto">
                             {/* Verbal Reasoning Card */}
                             <button
                                 onClick={() => navigate("/verbal")}
-                                className="group relative flex flex-col items-center p-4 sm:p-8 bg-card border border-border rounded-2xl shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-300 text-center"
+                                className="group relative flex flex-col items-center p-3 sm:p-5 md:p-8 bg-card border border-border rounded-xl sm:rounded-2xl shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-300 text-center"
                                 aria-label="Verbal Reasoning – speed reading, rapid recall, keyword scanning"
                             >
-                                <div className="p-3 sm:p-4 rounded-full bg-blue-50 text-blue-600 group-hover:bg-blue-100 group-hover:scale-110 transition-transform duration-300 shrink-0">
-                                    <BookOpen className="w-8 h-8 sm:w-10 sm:h-10" aria-hidden />
+                                <div className="p-2.5 sm:p-3 md:p-4 rounded-full bg-blue-50 text-blue-600 group-hover:bg-blue-100 group-hover:scale-110 transition-transform duration-300 shrink-0">
+                                    <BookOpen className="w-7 h-7 sm:w-9 sm:h-9 md:w-10 md:h-10" aria-hidden />
                                 </div>
-                                <h2 className="mt-2 sm:mt-4 text-lg sm:text-2xl font-bold text-foreground group-hover:text-primary transition-colors">
+                                <h2 className="mt-1.5 sm:mt-3 md:mt-4 text-base sm:text-xl md:text-2xl font-bold text-foreground group-hover:text-primary transition-colors">
                                     Verbal Reasoning
                                 </h2>
-                                <p className="mt-1 sm:mt-2 text-muted-foreground leading-snug text-sm sm:text-base">
+                                <p className="mt-0.5 sm:mt-1 md:mt-2 text-muted-foreground leading-snug text-xs sm:text-sm md:text-base">
                                     Speed reading, rapid recall and keyword scanning drills.
                                 </p>
-                                <span className="mt-2 sm:mt-4 text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
+                                <span className="mt-1.5 sm:mt-2 md:mt-4 text-xs sm:text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
                                     Start Training &rarr;
                                 </span>
-                                <div className="absolute inset-0 border-2 border-transparent group-hover:border-primary/10 rounded-2xl pointer-events-none transition-colors" />
+                                <div className="absolute inset-0 border-2 border-transparent group-hover:border-primary/10 rounded-xl sm:rounded-2xl pointer-events-none transition-colors" />
                             </button>
 
                             {/* Decision Making Card */}
                             <button
                                 onClick={() => navigate("/decision-making")}
-                                className="group relative flex flex-col items-center p-4 sm:p-8 bg-card border border-border rounded-2xl shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-300 text-center"
+                                className="group relative flex flex-col items-center p-3 sm:p-5 md:p-8 bg-card border border-border rounded-xl sm:rounded-2xl shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-300 text-center"
                                 aria-label="Decision Making – syllogism micro and macro drills"
                             >
-                                <div className="p-3 sm:p-4 rounded-full bg-amber-50 text-amber-600 group-hover:bg-amber-100 group-hover:scale-110 transition-transform duration-300 shrink-0">
-                                    <Scale className="w-8 h-8 sm:w-10 sm:h-10" aria-hidden />
+                                <div className="p-2.5 sm:p-3 md:p-4 rounded-full bg-amber-50 text-amber-600 group-hover:bg-amber-100 group-hover:scale-110 transition-transform duration-300 shrink-0">
+                                    <Scale className="w-7 h-7 sm:w-9 sm:h-9 md:w-10 md:h-10" aria-hidden />
                                 </div>
-                                <h2 className="mt-2 sm:mt-4 text-lg sm:text-2xl font-bold text-foreground group-hover:text-primary transition-colors">
+                                <h2 className="mt-1.5 sm:mt-3 md:mt-4 text-base sm:text-xl md:text-2xl font-bold text-foreground group-hover:text-primary transition-colors">
                                     Decision Making
                                 </h2>
-                                <p className="mt-1 sm:mt-2 text-muted-foreground leading-snug text-sm sm:text-base">
+                                <p className="mt-0.5 sm:mt-1 md:mt-2 text-muted-foreground leading-snug text-xs sm:text-sm md:text-base">
                                     Syllogism micro and macro drills for full UCAT-style practice.
                                 </p>
-                                <span className="mt-2 sm:mt-4 text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
+                                <span className="mt-1.5 sm:mt-2 md:mt-4 text-xs sm:text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
                                     Start Training &rarr;
                                 </span>
-                                <div className="absolute inset-0 border-2 border-transparent group-hover:border-primary/10 rounded-2xl pointer-events-none transition-colors" />
+                                <div className="absolute inset-0 border-2 border-transparent group-hover:border-primary/10 rounded-xl sm:rounded-2xl pointer-events-none transition-colors" />
                             </button>
 
                             {/* Quantitative Reasoning Card */}
                             <button
                                 onClick={() => navigate("/quantitative")}
-                                className="group relative flex flex-col items-center p-4 sm:p-8 bg-card border border-border rounded-2xl shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-300 text-center"
+                                className="group relative flex flex-col items-center p-3 sm:p-5 md:p-8 bg-card border border-border rounded-xl sm:rounded-2xl shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-300 text-center"
                                 aria-label="Quantitative Reasoning – calculator and mental maths"
                             >
-                                <div className="p-3 sm:p-4 rounded-full bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100 group-hover:scale-110 transition-transform duration-300 shrink-0">
-                                    <Calculator className="w-8 h-8 sm:w-10 sm:h-10" aria-hidden />
+                                <div className="p-2.5 sm:p-3 md:p-4 rounded-full bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100 group-hover:scale-110 transition-transform duration-300 shrink-0">
+                                    <Calculator className="w-7 h-7 sm:w-9 sm:h-9 md:w-10 md:h-10" aria-hidden />
                                 </div>
-                                <h2 className="mt-2 sm:mt-4 text-lg sm:text-2xl font-bold text-foreground group-hover:text-primary transition-colors">
+                                <h2 className="mt-1.5 sm:mt-3 md:mt-4 text-base sm:text-xl md:text-2xl font-bold text-foreground group-hover:text-primary transition-colors">
                                     Quantitative Reasoning
                                 </h2>
-                                <p className="mt-1 sm:mt-2 text-muted-foreground leading-snug text-sm sm:text-base">
+                                <p className="mt-0.5 sm:mt-1 md:mt-2 text-muted-foreground leading-snug text-xs sm:text-sm md:text-base">
                                     Calculator and mental maths: keypad speed and non-calculator fluency.
                                 </p>
-                                <span className="mt-2 sm:mt-4 text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
+                                <span className="mt-1.5 sm:mt-2 md:mt-4 text-xs sm:text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
                                     Start Training &rarr;
                                 </span>
-                                <div className="absolute inset-0 border-2 border-transparent group-hover:border-primary/10 rounded-2xl pointer-events-none transition-colors" />
+                                <div className="absolute inset-0 border-2 border-transparent group-hover:border-primary/10 rounded-xl sm:rounded-2xl pointer-events-none transition-colors" />
                             </button>
                         </div>
                         <TutoringUpsell variant="inline" />

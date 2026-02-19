@@ -1,6 +1,9 @@
 import { Link } from "react-router-dom";
 import { useBugReportModal } from "../../contexts/BugReportContext";
+import { PACKAGE_LINKS } from "../../lib/tutoringUpsell";
 import TutoringUpsell from "./TutoringUpsell";
+
+const externalLinkProps = { target: "_blank" as const, rel: "noopener noreferrer" };
 
 export default function Footer() {
   const { openBugReport } = useBugReportModal();
@@ -21,6 +24,13 @@ export default function Footer() {
           >
             Feedback
           </button>
+        </nav>
+        <nav className="flex justify-center items-center gap-x-4 gap-y-1 text-sm text-slate-500 mb-3 flex-wrap" aria-label="Application support">
+          {PACKAGE_LINKS.map(({ label, href }) => (
+            <a key={href} href={href} className="hover:text-slate-700 transition-colors" {...externalLinkProps}>
+              {label}
+            </a>
+          ))}
         </nav>
         <TutoringUpsell variant="footer" />
         <p className="text-center text-sm text-slate-500">

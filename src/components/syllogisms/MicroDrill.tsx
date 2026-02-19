@@ -82,7 +82,7 @@ export default function MicroDrill() {
   return (
     <div className="px-4 pb-8">
       <div className="w-full max-w-3xl mx-auto pt-4">
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8 overflow-hidden">
             <div className="flex items-baseline justify-between gap-4 mb-4">
               <div>
                 <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">
@@ -176,7 +176,7 @@ export default function MicroDrill() {
                       >
                         {feedbackLabel}
                       </p>
-                      <div className="rounded-lg border border-slate-200 bg-white/60 p-3">
+                      <div className="rounded-lg border border-slate-200 bg-white p-3">
                         <p className="text-sm text-slate-700">
                           {current.explanation}
                         </p>

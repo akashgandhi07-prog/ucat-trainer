@@ -28,6 +28,12 @@ alter table public.profiles add column if not exists daily_reads integer default
 alter table public.profiles add column if not exists entry_year text;
 alter table public.profiles add column if not exists email_marketing_opt_in boolean default false;
 alter table public.profiles add column if not exists email_marketing_opt_in_at timestamptz;
+alter table public.profiles add column if not exists ucat_exam_date date;
+
+-- UCAT exam window: April–September only (exam runs each year in this window)
+alter table public.profiles drop constraint if exists profiles_ucat_exam_date_month_check;
+alter table public.profiles add constraint profiles_ucat_exam_date_month_check
+  check (ucat_exam_date is null or extract(month from ucat_exam_date) in (4, 5, 6, 7, 8, 9));
 
 -- Stream constraint
 alter table public.profiles drop constraint if exists profiles_stream_check;
@@ -103,7 +109,7 @@ update public.sessions set training_type = 'speed_reading' where training_type i
 -- Constraints (drop + re-add for idempotency — only AFTER columns exist)
 alter table public.sessions drop constraint if exists sessions_training_type_check;
 alter table public.sessions add constraint sessions_training_type_check
-  check (training_type in ('speed_reading', 'rapid_recall', 'keyword_scanning', 'calculator', 'inference_trainer'));
+  check (training_type in ('speed_reading', 'rapid_recall', 'keyword_scanning', 'calculator', 'inference_trainer', 'mental_maths'));
 
 alter table public.sessions drop constraint if exists sessions_difficulty_check;
 alter table public.sessions add constraint sessions_difficulty_check
@@ -112,7 +118,8 @@ alter table public.sessions add constraint sessions_difficulty_check
     or difficulty in (
       'easy', 'medium', 'hard',               -- verbal drills
       'sprint', 'fingerTwister', 'memory',   -- calculator modes
-      'stages', 'free'                       -- calculator modes
+      'stages', 'free',                      -- calculator modes
+      'stage_1', 'stage_2', 'stage_3', 'stage_4'  -- mental maths
     )
   );
 
@@ -139,7 +146,7 @@ create policy "Users can insert own sessions"
   on public.sessions for insert with check (auth.uid() = user_id);
 
 comment on table public.sessions is
-  'Training sessions (speed_reading, rapid_recall, keyword_scanning, calculator, inference_trainer).';
+  'Training sessions (speed_reading, rapid_recall, keyword_scanning, calculator, inference_trainer, mental_maths).';
 comment on column public.sessions.time_seconds is
   'Duration in seconds (e.g. scan time for keyword_scanning, reading window for rapid_recall/inference_trainer, drill duration for calculator).';
 comment on column public.sessions.difficulty is
@@ -399,6 +406,8 @@ begin
     'sessions_calculator', (select count(*)::int from public.sessions where training_type = 'calculator'
       and (since_ts is null or created_at >= since_ts) and (until_ts is null or created_at <= until_ts)),
     'sessions_inference_trainer', (select count(*)::int from public.sessions where training_type = 'inference_trainer'
+      and (since_ts is null or created_at >= since_ts) and (until_ts is null or created_at <= until_ts)),
+    'sessions_mental_maths', (select count(*)::int from public.sessions where training_type = 'mental_maths'
       and (since_ts is null or created_at >= since_ts) and (until_ts is null or created_at <= until_ts)),
     'syllogism_sessions_count', (select count(*)::int from public.syllogism_sessions
       where (since_ts is null or created_at >= since_ts) and (until_ts is null or created_at <= until_ts)),

@@ -65,6 +65,12 @@ function getResetRedirectUrl(): string {
   return `${origin}${path}`;
 }
 
+/** Used for email confirmation link so users land on your domain (e.g. production) not Supabase default. */
+function getEmailConfirmRedirectUrl(): string {
+  if (typeof window === "undefined") return "";
+  return window.location.origin;
+}
+
 export default function AuthModal({ isOpen, onClose, initialMode = "login" }: AuthModalProps) {
   const [mode, setMode] = useState<Mode>(initialMode);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -156,6 +162,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
       email: trimmedEmail,
       password: data.password!,
       options: {
+        emailRedirectTo: getEmailConfirmRedirectUrl(),
         data: {
           full_name: fullName,
           first_name: firstName,
