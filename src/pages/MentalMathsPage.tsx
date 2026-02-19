@@ -33,6 +33,9 @@ export default function MentalMathsPage() {
 
   const base = getSiteBaseUrl();
   const canonicalUrl = base ? `${base}/ucat-mental-maths-trainer` : undefined;
+  const ogImageUrl = base ? `${base}/og-trainer.png` : undefined;
+  const ogImageAlt =
+    "UCAT mental maths trainer interface showing timed arithmetic questions and progress";
   const breadcrumbs = base
     ? [
         { name: "Home", url: `${base}/` },
@@ -67,6 +70,8 @@ export default function MentalMathsPage() {
         title="UCAT Mental Maths Trainer"
         description="Build speed and accuracy in mental arithmetic for UCAT Quantitative Reasoning. Timed stages with progress tracking."
         canonicalUrl={canonicalUrl}
+        imageUrl={ogImageUrl}
+        imageAlt={ogImageAlt}
         breadcrumbs={breadcrumbs}
       />
       <Header />

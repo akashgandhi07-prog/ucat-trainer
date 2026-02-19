@@ -9,10 +9,18 @@ interface SEOHeadProps {
   canonicalUrl?: string;
   /** Absolute URL for og:image and twitter:image (e.g. https://ucat.theukcatpeople.co.uk/og-trainer.png) */
   imageUrl?: string;
+  /** Optional alt text describing the social/OG image content. */
+  imageAlt?: string;
   /** Breadcrumbs for BreadcrumbList JSON-LD (improves snippet display). Use absolute URLs. */
   breadcrumbs?: BreadcrumbItem[];
   /** Optional: real aggregate rating data. Omit or pass real values only (Google policy). */
   aggregateRating?: { ratingValue: string; reviewCount: string };
+  /** Optional: social profile URLs for the Organization schema. */
+  organizationSameAs?: string[];
+  /** Optional: Twitter/X handle for the site account (e.g. @TheUKCATPeople). */
+  twitterSite?: string;
+  /** Optional: Twitter/X handle for the content creator. */
+  twitterCreator?: string;
   /** When true, ask search engines not to index this page (e.g. reset password, account pages). */
   noindex?: boolean;
 }
@@ -20,13 +28,14 @@ interface SEOHeadProps {
 const SITE_NAME = "TheUKCATPeople";
 
 /** Organization schema – referenced by WebSite and SoftwareApplication */
-function buildOrganizationSchema(siteBaseUrl: string) {
+function buildOrganizationSchema(siteBaseUrl: string, sameAs?: string[]) {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
     "@id": `${siteBaseUrl}/#organization`,
     name: SITE_NAME,
     url: "https://www.theukcatpeople.co.uk",
+    ...(sameAs && sameAs.length > 0 ? { sameAs } : null),
   };
 }
 
@@ -120,8 +129,12 @@ export default function SEOHead({
   description,
   canonicalUrl,
   imageUrl,
+  imageAlt,
   breadcrumbs,
   aggregateRating,
+  organizationSameAs,
+  twitterSite,
+  twitterCreator,
   noindex,
 }: SEOHeadProps) {
   const fullTitle = `${title} | ${SITE_NAME}`;
@@ -132,7 +145,7 @@ export default function SEOHead({
   const scripts: object[] = [];
 
   if (siteBaseUrl && !noindex) {
-    scripts.push(buildOrganizationSchema(siteBaseUrl));
+    scripts.push(buildOrganizationSchema(siteBaseUrl, organizationSameAs));
     scripts.push(buildWebSiteSchema(siteBaseUrl, description));
   }
 
@@ -169,12 +182,16 @@ export default function SEOHead({
           <meta property="og:image" content={imageUrl} />
           <meta property="og:image:width" content={String(OG_IMAGE_DEFAULT_WIDTH)} />
           <meta property="og:image:height" content={String(OG_IMAGE_DEFAULT_HEIGHT)} />
+          {imageAlt && <meta property="og:image:alt" content={imageAlt} />}
         </>
       )}
       <meta name="twitter:card" content={imageUrl ? "summary_large_image" : "summary"} />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
+      {twitterSite && <meta name="twitter:site" content={twitterSite} />}
+      {twitterCreator && <meta name="twitter:creator" content={twitterCreator} />}
       {imageUrl && <meta name="twitter:image" content={imageUrl} />}
+      {imageUrl && imageAlt && <meta name="twitter:image:alt" content={imageAlt} />}
       {scripts.map((jsonLd, i) => (
         <script key={i} type="application/ld+json">
           {JSON.stringify(jsonLd)}

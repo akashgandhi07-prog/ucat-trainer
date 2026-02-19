@@ -493,6 +493,8 @@ export default function VerbalReasoningPage() {
   const base = getSiteBaseUrl();
   const canonicalUrl = base ? `${base}${location.pathname}` : undefined;
   const ogImageUrl = base ? `${base}/og-trainer.png` : undefined;
+  const ogImageAlt =
+    "UCAT Verbal Reasoning hub showing speed reading, rapid recall and keyword scanning trainers";
   const breadcrumbs =
     base && location.pathname !== "/"
       ? [
@@ -508,6 +510,7 @@ export default function VerbalReasoningPage() {
         description="Free speed reading, rapid recall and keyword scanning practice for the UCAT. Built by TheUKCATPeople for UK medical and dental applicants."
         canonicalUrl={canonicalUrl}
         imageUrl={ogImageUrl}
+        imageAlt={ogImageAlt}
         breadcrumbs={breadcrumbs}
       />
       <a href="#main-content" className={skipLinkClass}>

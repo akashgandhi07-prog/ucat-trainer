@@ -422,7 +422,7 @@ export default function ReaderEngine({
               <button
                 type="button"
                 onClick={handlePlayPause}
-                className="w-full min-h-[48px] px-4 py-2.5 bg-green-600 text-white text-base font-semibold rounded-full hover:bg-green-700 transition-colors flex items-center justify-center gap-1.5"
+                className="w-full min-h-[48px] px-4 py-2.5 bg-emerald-700 text-white text-base font-semibold rounded-full shadow-sm hover:bg-emerald-800 transition-colors flex items-center justify-center gap-1.5"
               >
                 <span aria-hidden>
                   {isPlaying ? "‖‖" : "▶"}
@@ -517,7 +517,7 @@ export default function ReaderEngine({
               <button
                 type="button"
                 onClick={handlePlayPause}
-                className="min-h-[44px] px-4 py-2.5 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-1.5"
+                className="min-h-[44px] px-4 py-2.5 bg-emerald-700 text-white font-medium rounded-lg shadow-sm hover:bg-emerald-800 transition-colors flex items-center justify-center gap-1.5"
               >
                 <span aria-hidden>
                   {isPlaying ? "‖‖" : "▶"}

@@ -258,6 +258,9 @@ export default function ReaderPage() {
 
   const base = getSiteBaseUrl();
   const readerCanonical = base ? `${base}/ucat-verbal-reasoning-speed-reading-trainer` : undefined;
+  const ogImageUrl = base ? `${base}/og-trainer.png` : undefined;
+  const ogImageAlt =
+    "UCAT speed reading trainer showing a timed passage and progress statistics for Verbal Reasoning practice";
   const readerBreadcrumbs = base
     ? [
         { name: "Home", url: `${base}/` },
@@ -272,7 +275,8 @@ export default function ReaderPage() {
         title="Free UCAT Speed Reading Trainer"
         description="Practice dense academic texts with speed reading and scanning tools to improve your UCAT Verbal Reasoning scores."
         canonicalUrl={readerCanonical}
-        imageUrl={base ? `${base}/og-trainer.png` : undefined}
+        imageUrl={ogImageUrl}
+        imageAlt={ogImageAlt}
         breadcrumbs={readerBreadcrumbs}
       />
       <a href="#main-content" className={skipLinkClass}>

@@ -33,6 +33,7 @@ type AdminStats = {
 export type UsageSummaryPayload = {
   total_sessions: number;
   total_questions: number;
+  total_time_seconds?: number;
   active_users: number;
   guest_sessions: number;
   new_users: number;
@@ -43,6 +44,7 @@ export type TrainerUsagePayload = Record<string, number>;
 export type AdminUserRow = {
   user_id: string;
   email: string;
+  display_name?: string;
   speed_reading: number;
   rapid_recall: number;
   keyword_scanning: number;
@@ -52,14 +54,40 @@ export type AdminUserRow = {
   syllogism_micro: number;
   syllogism_macro: number;
   total_questions: number;
+  session_correct?: number;
+  session_questions?: number;
+  total_time_seconds?: number;
+  days_active?: number;
+  last_wpm?: number | null;
+  avg_wpm?: number | null;
   last_active_at: string | null;
 };
 
 type UsageSummaryResponse = {
   summary: UsageSummaryPayload;
   trainer_usage: TrainerUsagePayload;
+  trainer_questions?: Record<string, number>;
+  trainer_time_seconds?: Record<string, number>;
   guest_activity: Record<string, number>;
   users: AdminUserRow[];
+};
+
+/** Human-readable labels for analytics event names (so admins know what each event means). */
+const EVENT_LABELS: Record<string, string> = {
+  page_view: "Page views",
+  trainer_opened: "Trainer page opened",
+  trainer_started: "Drill started",
+  trainer_completed: "Drill completed",
+  trainer_abandoned: "Drill abandoned (left mid-session)",
+  trainer_mode_selected: "Calculator mode selected",
+  dashboard_viewed: "Dashboard viewed",
+  dashboard_loaded: "Dashboard loaded",
+  sign_in: "Sign in",
+  sign_out: "Sign out",
+  sign_up: "Sign up",
+  auth_modal_opened: "Auth modal opened",
+  shortcuts_opened: "Calculator shortcuts opened",
+  bug_report_opened: "Bug report / feedback opened",
 };
 
 type FeedbackRow = {
@@ -91,6 +119,15 @@ function getDateRangeParams(range: AdminDateRange): { since_ts: string | null; u
   const since = new Date(until);
   since.setDate(since.getDate() - days);
   return { since_ts: since.toISOString(), until_ts: until.toISOString() };
+}
+
+function formatTimeSeconds(seconds: number | undefined | null): string {
+  if (seconds == null || seconds <= 0) return "—";
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m`;
+  return `${seconds}s`;
 }
 
 function downloadText(filename: string, text: string, mimeType: string): void {
@@ -152,7 +189,7 @@ function buildChartData(byDay: AnalyticsSummary["by_day"]): Array<Record<string,
 
 function filterAndSortUsers(
   users: AdminUserRow[],
-  sortKey: keyof AdminUserRow,
+  sortKey: keyof AdminUserRow | "accuracy",
   sortDir: "asc" | "desc",
   minQuestions: number,
   emailQuery: string
@@ -163,8 +200,17 @@ function filterAndSortUsers(
       (emailQuery === "" || (u.email && u.email.toLowerCase().includes(emailQuery.toLowerCase())))
   );
   out = [...out].sort((a, b) => {
-    const aVal = a[sortKey];
-    const bVal = b[sortKey];
+    let aVal: string | number | null | undefined;
+    let bVal: string | number | null | undefined;
+    if (sortKey === "accuracy") {
+      const aDen = a.session_questions ?? 0;
+      const bDen = b.session_questions ?? 0;
+      aVal = aDen > 0 ? ((a.session_correct ?? 0) / aDen) * 100 : null;
+      bVal = bDen > 0 ? ((b.session_correct ?? 0) / bDen) * 100 : null;
+    } else {
+      aVal = a[sortKey];
+      bVal = b[sortKey];
+    }
     if (aVal == null && bVal == null) return 0;
     if (aVal == null) return sortDir === "asc" ? -1 : 1;
     if (bVal == null) return sortDir === "asc" ? 1 : -1;
@@ -195,10 +241,30 @@ export default function AdminPage() {
   const [feedbackFilter, setFeedbackFilter] = useState<FeedbackFilter>("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [userSortKey, setUserSortKey] = useState<keyof AdminUserRow>("total_questions");
+  type UserSortKey = keyof AdminUserRow | "accuracy";
+  const [userSortKey, setUserSortKey] = useState<UserSortKey>("total_questions");
   const [userSortDir, setUserSortDir] = useState<"asc" | "desc">("desc");
   const [userFilterMinQuestions, setUserFilterMinQuestions] = useState<number>(0);
   const [userFilterEmail, setUserFilterEmail] = useState<string>("");
+
+  const USER_TABLE_COLUMNS: { key: UserSortKey; label: string }[] = [
+    { key: "display_name", label: "Name" },
+    { key: "email", label: "Email" },
+    { key: "last_active_at", label: "Last access" },
+    { key: "total_questions", label: "Questions" },
+    { key: "accuracy", label: "Accuracy %" },
+    { key: "total_time_seconds", label: "Time spent" },
+    { key: "days_active", label: "Days active" },
+    { key: "last_wpm", label: "WPM (last)" },
+    { key: "speed_reading", label: "Speed reading" },
+    { key: "rapid_recall", label: "Rapid recall" },
+    { key: "keyword_scanning", label: "Keyword scanning" },
+    { key: "calculator", label: "Calculator" },
+    { key: "inference_trainer", label: "Inference" },
+    { key: "mental_maths", label: "Mental maths" },
+    { key: "syllogism_micro", label: "Syllogism micro" },
+    { key: "syllogism_macro", label: "Syllogism macro" },
+  ];
 
   useEffect(() => {
     if (!user || !isAdmin) {
@@ -490,7 +556,7 @@ export default function AdminPage() {
           <>
             <section className="mb-10">
               <h2 className="text-lg font-semibold text-slate-900 mb-4">Usage summary</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
                 <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                   <p className="text-sm font-medium text-slate-500">Total sessions</p>
                   <p className="text-2xl font-bold text-slate-900">{usageSummary.summary.total_sessions}</p>
@@ -498,6 +564,10 @@ export default function AdminPage() {
                 <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                   <p className="text-sm font-medium text-slate-500">Total questions</p>
                   <p className="text-2xl font-bold text-slate-900">{Number(usageSummary.summary.total_questions).toLocaleString()}</p>
+                </div>
+                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                  <p className="text-sm font-medium text-slate-500">Total time spent</p>
+                  <p className="text-2xl font-bold text-slate-900">{formatTimeSeconds(usageSummary.summary.total_time_seconds)}</p>
                 </div>
                 <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                   <p className="text-sm font-medium text-slate-500">Active users (in range)</p>
@@ -515,13 +585,15 @@ export default function AdminPage() {
             </section>
 
             <section className="mb-10">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">Trainer usage (sessions completed)</h2>
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">Trainer usage (sessions, questions, time in range)</h2>
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-slate-200 bg-slate-50">
                       <th className="px-4 py-2 text-left font-medium text-slate-700">Trainer</th>
                       <th className="px-4 py-2 text-right font-medium text-slate-700">Sessions</th>
+                      <th className="px-4 py-2 text-right font-medium text-slate-700">Questions</th>
+                      <th className="px-4 py-2 text-right font-medium text-slate-700">Time spent</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -531,6 +603,14 @@ export default function AdminPage() {
                         <tr key={key} className="border-b border-slate-100">
                           <td className="px-4 py-2 text-slate-700">{key.replace(/_/g, " ")}</td>
                           <td className="px-4 py-2 text-right font-medium text-slate-900">{String(count)}</td>
+                          <td className="px-4 py-2 text-right text-slate-700">
+                            {usageSummary.trainer_questions?.[key] != null
+                              ? Number(usageSummary.trainer_questions[key]).toLocaleString()
+                              : "—"}
+                          </td>
+                          <td className="px-4 py-2 text-right text-slate-600">
+                            {formatTimeSeconds(usageSummary.trainer_time_seconds?.[key])}
+                          </td>
                         </tr>
                       ))}
                   </tbody>
@@ -581,7 +661,7 @@ export default function AdminPage() {
                     type="button"
                     onClick={() => {
                       const filtered = filterAndSortUsers(usageSummary.users, userSortKey, userSortDir, userFilterMinQuestions, userFilterEmail);
-                      const headers = ["email", "total_questions", "speed_reading", "rapid_recall", "keyword_scanning", "calculator", "inference_trainer", "mental_maths", "syllogism_micro", "syllogism_macro", "last_active_at"];
+                      const headers = ["display_name", "email", "last_active_at", "total_questions", "session_correct", "session_questions", "accuracy_pct", "total_time_seconds", "time_formatted", "days_active", "last_wpm", "avg_wpm", "speed_reading", "rapid_recall", "keyword_scanning", "calculator", "inference_trainer", "mental_maths", "syllogism_micro", "syllogism_macro"];
                       const escape = (v: string | number | null) => {
                         if (v == null) return "";
                         const s = String(v);
@@ -590,7 +670,32 @@ export default function AdminPage() {
                       };
                       const toCell = (val: unknown): string | number | null =>
                         val === null || val === undefined ? null : typeof val === "string" || typeof val === "number" ? val : String(val);
-                      const rows = filtered.map((u) => headers.map((h) => escape(toCell((u as Record<string, unknown>)[h]))).join(","));
+                      const rows = filtered.map((u) => {
+                        const acc = (u.session_questions ?? 0) > 0 ? ((u.session_correct ?? 0) / (u.session_questions ?? 1) * 100).toFixed(1) : "";
+                        const row: Record<string, string | number | null> = {
+                          display_name: u.display_name || "",
+                          email: u.email || "",
+                          last_active_at: u.last_active_at ?? "",
+                          total_questions: u.total_questions,
+                          session_correct: u.session_correct ?? "",
+                          session_questions: u.session_questions ?? "",
+                          accuracy_pct: acc,
+                          total_time_seconds: u.total_time_seconds ?? "",
+                          time_formatted: formatTimeSeconds(u.total_time_seconds),
+                          days_active: u.days_active ?? "",
+                          last_wpm: u.last_wpm ?? "",
+                          avg_wpm: u.avg_wpm ?? "",
+                          speed_reading: u.speed_reading,
+                          rapid_recall: u.rapid_recall,
+                          keyword_scanning: u.keyword_scanning,
+                          calculator: u.calculator,
+                          inference_trainer: u.inference_trainer,
+                          mental_maths: u.mental_maths,
+                          syllogism_micro: u.syllogism_micro,
+                          syllogism_macro: u.syllogism_macro,
+                        };
+                        return headers.map((h) => escape(toCell(row[h]))).join(",");
+                      });
                       downloadText("admin-users-export.csv", [headers.join(","), ...rows].join("\n"), "text/csv;charset=utf-8");
                     }}
                     className="min-h-[44px] px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
@@ -600,19 +705,19 @@ export default function AdminPage() {
                 </div>
               </div>
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
-                <table className="w-full text-sm min-w-[720px]">
+                <table className="w-full text-sm min-w-[800px]">
                   <thead>
                     <tr className="border-b border-slate-200 bg-slate-50">
-                      {(["email", "total_questions", "speed_reading", "calculator", "syllogism_micro", "syllogism_macro", "last_active_at"] as const).map((key) => (
+                      {USER_TABLE_COLUMNS.map(({ key, label }) => (
                         <th
                           key={key}
-                          className="px-3 py-2 text-left font-medium text-slate-700 whitespace-nowrap cursor-pointer hover:bg-slate-100"
+                          className="px-2 py-2 text-left font-medium text-slate-700 whitespace-nowrap cursor-pointer hover:bg-slate-100"
                           onClick={() => {
                             if (userSortKey === key) setUserSortDir((d) => (d === "asc" ? "desc" : "asc"));
                             else setUserSortKey(key);
                           }}
                         >
-                          {key.replace(/_/g, " ")}
+                          {label}
                           {userSortKey === key ? (userSortDir === "asc" ? " ↑" : " ↓") : ""}
                         </th>
                       ))}
@@ -621,13 +726,23 @@ export default function AdminPage() {
                   <tbody>
                     {filterAndSortUsers(usageSummary.users, userSortKey, userSortDir, userFilterMinQuestions, userFilterEmail).map((u) => (
                       <tr key={u.user_id} className="border-b border-slate-100 hover:bg-slate-50">
-                        <td className="px-3 py-2 text-slate-900 font-medium">{u.email || "(no email)"}</td>
-                        <td className="px-3 py-2 text-right">{u.total_questions}</td>
-                        <td className="px-3 py-2 text-right">{u.speed_reading}</td>
-                        <td className="px-3 py-2 text-right">{u.calculator}</td>
-                        <td className="px-3 py-2 text-right">{u.syllogism_micro}</td>
-                        <td className="px-3 py-2 text-right">{u.syllogism_macro}</td>
-                        <td className="px-3 py-2 text-slate-600">{u.last_active_at ? new Date(u.last_active_at).toLocaleString() : "—"}</td>
+                        {USER_TABLE_COLUMNS.map(({ key }) => {
+                          if (key === "display_name") return <td key={key} className="px-2 py-2 text-slate-900 font-medium">{u.display_name || "—"}</td>;
+                          if (key === "email") return <td key={key} className="px-2 py-2 text-slate-700">{u.email || "—"}</td>;
+                          if (key === "last_active_at") return <td key={key} className="px-2 py-2 text-slate-600 text-xs">{u.last_active_at ? new Date(u.last_active_at).toLocaleString() : "—"}</td>;
+                          if (key === "accuracy") {
+                            const total = u.session_questions ?? 0;
+                            const correct = u.session_correct ?? 0;
+                            const pct = total > 0 ? ((correct / total) * 100).toFixed(1) : "—";
+                            return <td key={key} className="px-2 py-2 text-right">{pct}</td>;
+                          }
+                          if (key === "total_time_seconds") return <td key={key} className="px-2 py-2 text-right text-slate-700">{formatTimeSeconds(u.total_time_seconds)}</td>;
+                          if (key === "days_active") return <td key={key} className="px-2 py-2 text-right">{u.days_active ?? "—"}</td>;
+                          if (key === "last_wpm") return <td key={key} className="px-2 py-2 text-right">{u.last_wpm != null ? u.last_wpm : "—"}</td>;
+                          const val = u[key];
+                          const num = typeof val === "number" ? val : null;
+                          return <td key={key} className="px-2 py-2 text-right">{num != null ? num : "—"}</td>;
+                        })}
                       </tr>
                     ))}
                   </tbody>
@@ -665,6 +780,7 @@ export default function AdminPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                 <h3 className="text-sm font-semibold text-slate-700 px-4 py-3 border-b border-slate-200">Event counts</h3>
+                <p className="px-4 py-1 text-xs text-slate-500 border-b border-slate-100">What each event means (in selected date range)</p>
                 <ul className="divide-y divide-slate-200 max-h-64 overflow-y-auto">
                   {Object.entries(analytics.event_counts ?? {}).length === 0 ? (
                     <li className="px-4 py-3 text-slate-500 text-sm">No events in range</li>
@@ -672,9 +788,12 @@ export default function AdminPage() {
                     Object.entries(analytics.event_counts ?? {})
                       .sort(([, a], [, b]) => (b as number) - (a as number))
                       .map(([name, count]) => (
-                        <li key={name} className="px-4 py-2 flex justify-between text-sm">
-                          <span className="text-slate-700">{name}</span>
-                          <span className="font-medium text-slate-900">{String(count)}</span>
+                        <li key={name} className="px-4 py-2 flex justify-between items-baseline gap-2 text-sm">
+                          <span className="text-slate-700 min-w-0">
+                            <span className="font-medium">{EVENT_LABELS[name] ?? name.replace(/_/g, " ")}</span>
+                            {EVENT_LABELS[name] && <span className="text-slate-400 text-xs ml-1">({name})</span>}
+                          </span>
+                          <span className="font-medium text-slate-900 shrink-0">{String(count)}</span>
                         </li>
                       ))
                   )}

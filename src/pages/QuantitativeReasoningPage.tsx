@@ -13,6 +13,9 @@ export default function QuantitativeReasoningPage() {
   const navigate = useNavigate();
   const base = getSiteBaseUrl();
   const canonicalUrl = base ? `${base}/ucat-quantitative-reasoning-practice` : undefined;
+  const ogImageUrl = base ? `${base}/og-trainer.png` : undefined;
+  const ogImageAlt =
+    "UCAT Quantitative Reasoning hub highlighting calculator and mental maths trainers";
   const breadcrumbs = base
     ? [
         { name: "Home", url: `${base}/` },
@@ -26,6 +29,8 @@ export default function QuantitativeReasoningPage() {
         title="Quantitative Reasoning | UCAT Trainer"
         description="Calculator and mental maths practice for UCAT Quantitative Reasoning. Master the on-screen calculator and build speed without it."
         canonicalUrl={canonicalUrl}
+        imageUrl={ogImageUrl}
+        imageAlt={ogImageAlt}
         breadcrumbs={breadcrumbs}
       />
       <Header />

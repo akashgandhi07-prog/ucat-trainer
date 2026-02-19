@@ -196,24 +196,6 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
         : "Account created. Please check your email to confirm your address, then sign in with your password."
     );
 
-    // Add to Mailchimp audience (fire-and-forget; registration continues either way)
-    if (signUpData?.user && import.meta.env.VITE_SUPABASE_URL) {
-      supabase.functions
-        .invoke("add-mailchimp-subscriber", {
-          body: {
-            email: trimmedEmail,
-            firstName,
-            lastName,
-            stream: data.stream ?? undefined,
-            entryYear: data.entryYear ?? undefined,
-          },
-        })
-        .then(({ error }) => {
-          if (error) authLog.warn("Mailchimp subscribe failed", { error: error?.message });
-        })
-        .catch(() => { });
-    }
-
     if (signUpData?.user?.confirmed_at) {
       handleClose();
     }

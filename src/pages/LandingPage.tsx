@@ -14,6 +14,8 @@ export default function HomePage() {
     const canonicalUrl = base ? `${base}/` : undefined;
     const ogImageUrl = base ? `${base}/og-trainer.png` : undefined;
     const breadcrumbs = base ? [{ name: "Home", url: `${base}/` }] : undefined;
+    const ogImageAlt =
+        "Free UCAT Skills Trainer interface for Verbal Reasoning, Decision Making, and Quantitative Reasoning practice";
 
     return (
         <div className="flex flex-col min-h-screen bg-background font-sans">
@@ -22,6 +24,7 @@ export default function HomePage() {
                 description="Free UCAT practice tools for Verbal Reasoning, Decision Making, and Quantitative Reasoning. Master speed reading, syllogisms, mental math, and calculator usage."
                 canonicalUrl={canonicalUrl}
                 imageUrl={ogImageUrl}
+                imageAlt={ogImageAlt}
                 breadcrumbs={breadcrumbs}
             />
             <Header />

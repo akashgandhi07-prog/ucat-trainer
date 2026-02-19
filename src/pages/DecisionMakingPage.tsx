@@ -12,6 +12,9 @@ export default function DecisionMakingPage() {
   const navigate = useNavigate();
   const base = getSiteBaseUrl();
   const canonicalUrl = base ? `${base}/ucat-decision-making-practice` : undefined;
+  const ogImageUrl = base ? `${base}/og-trainer.png` : undefined;
+  const ogImageAlt =
+    "UCAT Decision Making hub with cards linking to syllogism micro and macro drills";
   const breadcrumbs = base
     ? [
         { name: "Home", url: `${base}/` },
@@ -25,6 +28,8 @@ export default function DecisionMakingPage() {
         title="UCAT Decision Making | TheUKCATPeople"
         description="Practice UCAT Decision Making with syllogism drills. Build pattern recognition with micro drills and full stimulus practice with macro drills."
         canonicalUrl={canonicalUrl}
+        imageUrl={ogImageUrl}
+        imageAlt={ogImageAlt}
         breadcrumbs={breadcrumbs}
       />
       <Header />

@@ -1,0 +1,7 @@
+# Supabase project config (used by CLI for link, db push, etc.)
+
+[functions.add-mailchimp-subscriber]
+# Allow invocation without Authorization header so the DB trigger (pg_net) and
+# webhook callers can reach the function. Auth is enforced inside the function
+# via the webhook secret in the request body.
+verify_jwt = false

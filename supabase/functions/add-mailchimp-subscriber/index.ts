@@ -1,13 +1,14 @@
 // Supabase Edge Function: Add new signups to Mailchimp audience
 // Deploy: supabase functions deploy add-mailchimp-subscriber
-// Secrets: MAILCHIMP_API_KEY, MAILCHIMP_LIST_ID (set via Supabase Dashboard)
-// Auth: Requires Authorization Bearer JWT; body.email must match authenticated user's email.
+// Secrets: MAILCHIMP_API_KEY, MAILCHIMP_LIST_ID, MAILCHIMP_WEBHOOK_SECRET (for DB trigger)
+// Auth: Either (1) webhook: body.secret === MAILCHIMP_WEBHOOK_SECRET and body.record, or
+//        (2) Bearer JWT with body.email matching authenticated user.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "https://ucat.theukcatpeople.co.uk",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-webhook-secret",
 };
 
 const FIRST_NAME_MAX = 100;
@@ -25,6 +26,12 @@ interface SubscriberPayload {
   lastName?: string;
   stream?: string;
   entryYear?: string;
+}
+
+/** auth.users row shape from DB webhook (record) */
+interface AuthUserRecord {
+  email?: string;
+  raw_user_meta_data?: Record<string, unknown>;
 }
 
 // Minimal MD5 for Mailchimp subscriber_hash (lowercase email -> hex)
@@ -131,6 +138,69 @@ function buildMergeFields(body: SubscriberPayload): Record<string, string> {
   return merge;
 }
 
+function payloadFromAuthRecord(record: AuthUserRecord): SubscriberPayload | null {
+  const email = typeof record?.email === "string" ? record.email.trim().toLowerCase() : "";
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null;
+  const meta = record?.raw_user_meta_data && typeof record.raw_user_meta_data === "object" ? record.raw_user_meta_data : {};
+  return {
+    email,
+    firstName: typeof meta.first_name === "string" ? meta.first_name : undefined,
+    lastName: typeof meta.last_name === "string" ? meta.last_name : undefined,
+    stream: typeof meta.stream === "string" ? meta.stream : undefined,
+    entryYear: typeof meta.entry_year === "string" ? meta.entry_year : undefined,
+  };
+}
+
+async function addToMailchimp(
+  apiKey: string,
+  listId: string,
+  email: string,
+  mergeFields: Record<string, string>
+): Promise<{ ok: boolean; message: string }> {
+  const dcMatch = apiKey.match(/-([a-z0-9]+)$/i);
+  const datacenter = dcMatch ? dcMatch[1] : "us1";
+  const baseUrl = `https://${datacenter}.api.mailchimp.com/3.0`;
+  const auth = btoa(`anystring:${apiKey}`);
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: `Basic ${auth}`,
+  };
+  const addTag = async (): Promise<void> => {
+    const subscriberHash = md5Hex(email);
+    await fetch(`${baseUrl}/lists/${listId}/members/${subscriberHash}/tags`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ tags: [{ name: "skillstrainer", status: "active" }] }),
+    });
+  };
+  const payload = {
+    email_address: email,
+    status: "subscribed" as const,
+    merge_fields: Object.keys(mergeFields).length > 0 ? mergeFields : undefined,
+  };
+  const res = await fetch(`${baseUrl}/lists/${listId}/members`, { method: "POST", headers, body: JSON.stringify(payload) });
+  const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+  if (!res.ok) {
+    if (res.status === 400 && data?.title === "Member Exists") {
+      const subscriberHash = md5Hex(email);
+      await fetch(`${baseUrl}/lists/${listId}/members/${subscriberHash}`, {
+        method: "PATCH",
+        headers,
+        body: JSON.stringify({ merge_fields: mergeFields }),
+      });
+      await addTag();
+      return { ok: true, message: "Already subscribed; updated and tagged" };
+    }
+    const detail = typeof data?.detail === "string" ? data.detail : (data?.title as string) || "Unknown";
+    console.error("Mailchimp API error", res.status, data);
+    const err = new Error(detail) as Error & { status?: number };
+    err.status = res.status;
+    throw err;
+  }
+  await addTag();
+  return { ok: true, message: "Subscriber added" };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -138,6 +208,7 @@ Deno.serve(async (req) => {
 
   const apiKey = Deno.env.get("MAILCHIMP_API_KEY");
   const listId = Deno.env.get("MAILCHIMP_LIST_ID");
+  const webhookSecret = Deno.env.get("MAILCHIMP_WEBHOOK_SECRET");
 
   if (!apiKey || !listId) {
     console.error("MAILCHIMP_API_KEY or MAILCHIMP_LIST_ID not configured");
@@ -145,6 +216,56 @@ Deno.serve(async (req) => {
       JSON.stringify({ error: "Mailchimp integration not configured" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
+  }
+
+  let rawBody: unknown;
+  try {
+    rawBody = await req.json();
+  } catch {
+    return new Response(
+      JSON.stringify({ error: "Invalid JSON body" }),
+      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  const body = rawBody as Record<string, unknown> | null;
+  const headerSecret = req.headers.get("x-webhook-secret");
+  const hasWebhookSecret = typeof webhookSecret === "string" && webhookSecret.length > 0;
+  const recordFromBody = body?.record as AuthUserRecord | undefined;
+  const bodySecret = body?.secret;
+  const isWebhookBySecret =
+    hasWebhookSecret &&
+    (bodySecret === webhookSecret || headerSecret === webhookSecret) &&
+    recordFromBody &&
+    typeof recordFromBody === "object";
+
+  if (isWebhookBySecret) {
+    const subscriberPayload = payloadFromAuthRecord(recordFromBody);
+    if (!subscriberPayload) {
+      return new Response(
+        JSON.stringify({ error: "Valid email is required in record" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    const mergeFields = buildMergeFields(subscriberPayload);
+    try {
+      const result = await addToMailchimp(apiKey, listId, subscriberPayload.email, mergeFields);
+      return new Response(JSON.stringify(result), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to add subscriber";
+      const status = (err as { status?: number }).status;
+      console.error("Mailchimp webhook request failed", err);
+      const body: { error: string; detail?: string } = { error: "Failed to add subscriber" };
+      if (status && message) body.detail = `Mailchimp ${status}: ${message}`;
+      else if (message) body.detail = message;
+      return new Response(
+        JSON.stringify(body),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
   }
 
   const authHeader = req.headers.get("Authorization");
@@ -171,24 +292,14 @@ Deno.serve(async (req) => {
     );
   }
 
-  let body: SubscriberPayload;
-  try {
-    body = await req.json() as SubscriberPayload;
-  } catch {
-    return new Response(
-      JSON.stringify({ error: "Invalid JSON body" }),
-      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-  }
-
-  const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+  const userBody = body as SubscriberPayload;
+  const email = typeof userBody?.email === "string" ? userBody.email.trim().toLowerCase() : "";
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return new Response(
       JSON.stringify({ error: "Valid email is required" }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
-
   if (user.email.toLowerCase() !== email) {
     return new Response(
       JSON.stringify({ error: "Email must match your account" }),
@@ -210,71 +321,13 @@ Deno.serve(async (req) => {
     if (now - t > RATE_LIMIT_MS) rateLimitMap.delete(k);
   }
 
-  const mergeFields = buildMergeFields(body);
-  const dcMatch = apiKey.match(/-([a-z0-9]+)$/i);
-  const datacenter = dcMatch ? dcMatch[1] : "us1";
-  const baseUrl = `https://${datacenter}.api.mailchimp.com/3.0`;
-  const auth = btoa(`anystring:${apiKey}`);
-  const headers = {
-    "Content-Type": "application/json",
-    Authorization: `Basic ${auth}`,
-  };
-
-  const addTag = async (): Promise<void> => {
-    const subscriberHash = md5Hex(email);
-    await fetch(`${baseUrl}/lists/${listId}/members/${subscriberHash}/tags`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        tags: [{ name: "skillstrainer", status: "active" }],
-      }),
-    });
-  };
-
+  const mergeFields = buildMergeFields(userBody);
   try {
-    const payload = {
-      email_address: email,
-      status: "subscribed" as const,
-      merge_fields: Object.keys(mergeFields).length > 0 ? mergeFields : undefined,
-    };
-
-    const res = await fetch(`${baseUrl}/lists/${listId}/members`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(payload),
+    const result = await addToMailchimp(apiKey, listId, email, mergeFields);
+    return new Response(JSON.stringify(result), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-
-    const data = await res.json().catch(() => ({})) as Record<string, unknown>;
-
-    if (!res.ok) {
-      if (res.status === 400 && data?.title === "Member Exists") {
-        const subscriberHash = md5Hex(email);
-        const patchRes = await fetch(`${baseUrl}/lists/${listId}/members/${subscriberHash}`, {
-          method: "PATCH",
-          headers,
-          body: JSON.stringify({ merge_fields: mergeFields }),
-        });
-        if (!patchRes.ok) {
-          console.error("Mailchimp PATCH member failed", patchRes.status, await patchRes.json().catch(() => ({})));
-        }
-        await addTag();
-        return new Response(
-          JSON.stringify({ ok: true, message: "Already subscribed; updated and tagged" }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      console.error("Mailchimp API error", res.status, data);
-      return new Response(
-        JSON.stringify({ error: (data?.detail as string) || "Failed to add subscriber" }),
-        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    await addTag();
-    return new Response(
-      JSON.stringify({ ok: true, message: "Subscriber added" }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
   } catch (err) {
     console.error("Mailchimp request failed", err);
     return new Response(

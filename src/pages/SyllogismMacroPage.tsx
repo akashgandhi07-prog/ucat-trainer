@@ -21,6 +21,9 @@ export default function SyllogismMacroPage() {
   }, []);
   const base = getSiteBaseUrl();
   const canonicalUrl = base ? `${base}/ucat-syllogism-practice-macro-drills` : undefined;
+  const ogImageUrl = base ? `${base}/og-trainer.png` : undefined;
+  const ogImageAlt =
+    "UCAT syllogism macro drill interface with full stimulus and five Yes/No conclusions";
   const breadcrumbs = base
     ? [
         { name: "Home", url: `${base}/` },
@@ -35,6 +38,8 @@ export default function SyllogismMacroPage() {
         title="Syllogism Macro Drill | UCAT Decision Making"
         description="UCAT-style syllogism drill: full stimulus with five conclusions. Sticky passage and Yes/No judgements."
         canonicalUrl={canonicalUrl}
+        imageUrl={ogImageUrl}
+        imageAlt={ogImageAlt}
         breadcrumbs={breadcrumbs}
       />
       <Header />
