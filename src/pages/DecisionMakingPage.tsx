@@ -8,8 +8,13 @@ import { getSiteBaseUrl } from "../lib/siteUrl";
 
 export default function DecisionMakingPage() {
   const navigate = useNavigate();
-  const canonicalUrl = getSiteBaseUrl()
-    ? `${getSiteBaseUrl()}/decision-making`
+  const base = getSiteBaseUrl();
+  const canonicalUrl = base ? `${base}/decision-making` : undefined;
+  const breadcrumbs = base
+    ? [
+        { name: "Home", url: `${base}/` },
+        { name: "Decision Making", url: `${base}/decision-making` },
+      ]
     : undefined;
 
   return (
@@ -18,6 +23,7 @@ export default function DecisionMakingPage() {
         title="UCAT Decision Making | TheUKCATPeople"
         description="Practice UCAT Decision Making with syllogism drills. Build pattern recognition with micro drills and full stimulus practice with macro drills."
         canonicalUrl={canonicalUrl}
+        breadcrumbs={breadcrumbs}
       />
       <Header />
       <main className="flex-1 py-12 px-4 sm:px-6 lg:px-8">

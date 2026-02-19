@@ -488,8 +488,16 @@ export default function VerbalReasoningPage() {
     "absolute left-4 top-4 z-[100] px-4 py-2 bg-card text-foreground font-medium rounded-lg ring-2 ring-primary opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
 
   const location = useLocation();
-  const canonicalUrl = getSiteBaseUrl() ? `${getSiteBaseUrl()}${location.pathname}` : undefined;
-  const ogImageUrl = getSiteBaseUrl() ? `${getSiteBaseUrl()}/og-trainer.png` : undefined;
+  const base = getSiteBaseUrl();
+  const canonicalUrl = base ? `${base}${location.pathname}` : undefined;
+  const ogImageUrl = base ? `${base}/og-trainer.png` : undefined;
+  const breadcrumbs =
+    base && location.pathname !== "/"
+      ? [
+          { name: "Home", url: `${base}/` },
+          { name: "Verbal Reasoning", url: `${base}${location.pathname}` },
+        ]
+      : undefined;
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -498,6 +506,7 @@ export default function VerbalReasoningPage() {
         description="Free speed reading, rapid recall and keyword scanning practice for the UCAT. Built by TheUKCATPeople for UK medical and dental applicants."
         canonicalUrl={canonicalUrl}
         imageUrl={ogImageUrl}
+        breadcrumbs={breadcrumbs}
       />
       <a href="#main-content" className={skipLinkClass}>
         Skip to main content

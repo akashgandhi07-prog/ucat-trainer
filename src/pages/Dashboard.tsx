@@ -242,7 +242,12 @@ export default function Dashboard() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: true })
       .then(({ data, error }) => {
-        if (cancelled || error) return;
+        if (cancelled) return;
+        if (error) {
+          dashboardLog.warn("Syllogism sessions fetch failed", { message: error.message, code: error.code });
+          setSyllogismSessions([]);
+          return;
+        }
         setSyllogismSessions((data as SyllogismSession[]) ?? []);
       });
     return () => {
@@ -1377,12 +1382,22 @@ export default function Dashboard() {
     );
   }
 
+  const base = getSiteBaseUrl();
+  const dashboardCanonical = base ? `${base}/dashboard` : undefined;
+  const breadcrumbs = base
+    ? [
+        { name: "Home", url: `${base}/` },
+        { name: "Dashboard", url: `${base}/dashboard` },
+      ]
+    : undefined;
+
   return (
     <div className="flex flex-col min-h-screen bg-slate-50">
       <SEOHead
         title="UCAT Verbal Reasoning Dashboard & Analytics"
         description="Track your reading speed (WPM) and accuracy for the UCAT medical entrance exam. Free trainer for UK medical students."
-        canonicalUrl={getSiteBaseUrl() ? `${getSiteBaseUrl()}/dashboard` : undefined}
+        canonicalUrl={dashboardCanonical}
+        breadcrumbs={breadcrumbs}
       />
       <a href="#main-content" className={skipLinkClass}>
         Skip to main content

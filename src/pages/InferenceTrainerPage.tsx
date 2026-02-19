@@ -291,8 +291,14 @@ export default function InferenceTrainerPage() {
     );
   }
 
-  const canonicalUrl = getSiteBaseUrl()
-    ? `${getSiteBaseUrl()}/train/inference`
+  const base = getSiteBaseUrl();
+  const canonicalUrl = base ? `${base}/train/inference` : undefined;
+  const breadcrumbs = base
+    ? [
+        { name: "Home", url: `${base}/` },
+        { name: "Verbal Reasoning", url: `${base}/verbal` },
+        { name: "Inference", url: `${base}/train/inference` },
+      ]
     : undefined;
 
   return (
@@ -301,6 +307,7 @@ export default function InferenceTrainerPage() {
         title="UCAT Inference Trainer"
         description="Practice identifying evidence that supports inferences in UCAT Verbal Reasoning. Select the relevant text from passages."
         canonicalUrl={canonicalUrl}
+        breadcrumbs={breadcrumbs}
       />
       <a
         href="#main-content"

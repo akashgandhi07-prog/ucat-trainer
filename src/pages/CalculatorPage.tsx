@@ -26,6 +26,8 @@ import { ShortcutsModal } from '../components/calculator/ShortcutsModal';
 import { Keyboard } from 'lucide-react';
 import { DrillSummary } from '../components/calculator/DrillSummary';
 import { trackEvent, setActiveTrainer, clearActiveTrainer } from '../lib/analytics';
+import SEOHead from '../components/seo/SEOHead';
+import { getSiteBaseUrl } from '../lib/siteUrl';
 
 const MOBILE_NOTICE_KEY = 'calculator-mobile-notice-dismissed';
 
@@ -170,15 +172,31 @@ const CalculatorPage = () => {
         accuracy: h.accuracy
     }));
 
+    const base = getSiteBaseUrl();
+    const canonicalUrl = base ? `${base}/train/calculator` : undefined;
+    const breadcrumbs = base
+        ? [
+            { name: 'Home', url: `${base}/` },
+            { name: 'Quantitative Reasoning', url: `${base}/quantitative` },
+            { name: 'Calculator', url: `${base}/train/calculator` },
+        ]
+        : undefined;
+
     return (
         <div className="min-h-screen bg-slate-100 flex flex-col" onClick={() => setIsFocused(true)}>
+            <SEOHead
+                title="UCAT Calculator Trainer"
+                description="Practice the on-screen calculator for UCAT Quantitative Reasoning. Sprint, Finger Twister, Memory Marathon and staged drills with Pearson-style lag."
+                canonicalUrl={canonicalUrl}
+                breadcrumbs={breadcrumbs}
+            />
             {/* Header */}
             <div className="bg-white shadow-sm p-4 flex items-center justify-between z-10">
                 <div className="flex items-center gap-4">
                     <Link to="/" className="p-2 hover:bg-slate-100 rounded-full transition-colors">
                         <ArrowLeft className="w-6 h-6 text-slate-600" />
                     </Link>
-                    <h1 className="text-xl font-bold text-slate-800">UCAT Mastery Engine</h1>
+                    <h1 className="text-xl font-bold text-slate-800">Quantitative Reasoning</h1>
                 </div>
                 <div className="flex gap-4">
                     <button

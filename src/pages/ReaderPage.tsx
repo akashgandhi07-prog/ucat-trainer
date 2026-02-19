@@ -257,13 +257,24 @@ export default function ReaderPage() {
     return <Navigate to="/" replace />;
   }
 
+  const base = getSiteBaseUrl();
+  const readerCanonical = base ? `${base}/reader` : undefined;
+  const readerBreadcrumbs = base
+    ? [
+        { name: "Home", url: `${base}/` },
+        { name: "Verbal Reasoning", url: `${base}/verbal` },
+        { name: "Speed Reading", url: `${base}/reader` },
+      ]
+    : undefined;
+
   return (
     <div className="flex flex-col min-h-screen">
       <SEOHead
         title="Free UCAT Speed Reading Trainer"
         description="Practice dense academic texts with speed reading and scanning tools to improve your UCAT Verbal Reasoning scores."
-        canonicalUrl={getSiteBaseUrl() ? `${getSiteBaseUrl()}/reader` : undefined}
-        imageUrl={getSiteBaseUrl() ? `${getSiteBaseUrl()}/og-trainer.png` : undefined}
+        canonicalUrl={readerCanonical}
+        imageUrl={base ? `${base}/og-trainer.png` : undefined}
+        breadcrumbs={readerBreadcrumbs}
       />
       <a href="#main-content" className={skipLinkClass}>
         Skip to main content

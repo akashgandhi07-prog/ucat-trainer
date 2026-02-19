@@ -76,6 +76,7 @@ export default function ResetPasswordPage() {
       <SEOHead
         title="Set new password"
         description="Set a new password for your UCAT Trainer account."
+        noindex
       />
       <div className="min-h-screen flex flex-col bg-slate-50">
         <Header />

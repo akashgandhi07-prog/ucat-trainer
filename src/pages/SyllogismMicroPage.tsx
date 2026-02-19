@@ -16,8 +16,14 @@ export default function SyllogismMicroPage() {
       pathname: "/train/syllogism/micro",
     });
   }, []);
-  const canonicalUrl = getSiteBaseUrl()
-    ? `${getSiteBaseUrl()}/train/syllogism/micro`
+  const base = getSiteBaseUrl();
+  const canonicalUrl = base ? `${base}/train/syllogism/micro` : undefined;
+  const breadcrumbs = base
+    ? [
+        { name: "Home", url: `${base}/` },
+        { name: "Decision Making", url: `${base}/decision-making` },
+        { name: "Syllogism Micro", url: `${base}/train/syllogism/micro` },
+      ]
     : undefined;
 
   return (
@@ -26,6 +32,7 @@ export default function SyllogismMicroPage() {
         title="Syllogism Micro Drill | UCAT Decision Making"
         description="Rapid syllogism drill: one premise, one conclusion. Build pattern recognition for UCAT Decision Making."
         canonicalUrl={canonicalUrl}
+        breadcrumbs={breadcrumbs}
       />
       <Header />
       <div className="flex-1 flex flex-col">

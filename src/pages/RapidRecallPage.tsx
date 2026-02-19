@@ -218,7 +218,15 @@ export default function RapidRecallPage() {
   const skipLinkClass =
     "absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-slate-900 font-medium rounded-lg ring-2 ring-blue-600 opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
 
-  const canonicalUrl = getSiteBaseUrl() ? `${getSiteBaseUrl()}/train/rapid-recall` : undefined;
+  const base = getSiteBaseUrl();
+  const canonicalUrl = base ? `${base}/train/rapid-recall` : undefined;
+  const breadcrumbs = base
+    ? [
+        { name: "Home", url: `${base}/` },
+        { name: "Verbal Reasoning", url: `${base}/verbal` },
+        { name: "Rapid Recall", url: `${base}/train/rapid-recall` },
+      ]
+    : undefined;
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -226,6 +234,7 @@ export default function RapidRecallPage() {
         title="UCAT Rapid Recall Practice"
         description="Test comprehension under time pressure with true/false statements. Free UCAT Verbal Reasoning training from TheUKCATPeople."
         canonicalUrl={canonicalUrl}
+        breadcrumbs={breadcrumbs}
       />
       <a href="#main-content" className={skipLinkClass}>
         Skip to main content

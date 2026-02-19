@@ -258,7 +258,15 @@ export default function KeywordScanningPage() {
     return <Navigate to="/?mode=keyword_scanning" replace />;
   }
 
-  const canonicalUrl = getSiteBaseUrl() ? `${getSiteBaseUrl()}/train/keyword-scanning` : undefined;
+  const base = getSiteBaseUrl();
+  const canonicalUrl = base ? `${base}/train/keyword-scanning` : undefined;
+  const breadcrumbs = base
+    ? [
+        { name: "Home", url: `${base}/` },
+        { name: "Verbal Reasoning", url: `${base}/verbal` },
+        { name: "Keyword Scanning", url: `${base}/train/keyword-scanning` },
+      ]
+    : undefined;
 
   if (phase === "results") {
     const elapsed = resultsElapsedSeconds ?? 0;
@@ -273,6 +281,7 @@ export default function KeywordScanningPage() {
           title="UCAT Keyword Scanning Trainer"
           description="Find target words in dense passages. Free keyword scanning practice for UCAT Verbal Reasoning from TheUKCATPeople."
           canonicalUrl={canonicalUrl}
+          breadcrumbs={breadcrumbs}
         />
         <a href="#main-content" className={skipLinkClass}>
           Skip to main content
@@ -352,6 +361,7 @@ export default function KeywordScanningPage() {
         title="UCAT Keyword Scanning Trainer"
         description="Find target words in dense passages. Free keyword scanning practice for UCAT Verbal Reasoning from TheUKCATPeople."
         canonicalUrl={canonicalUrl}
+        breadcrumbs={breadcrumbs}
       />
       <a href="#main-content" className={skipLinkClass}>
         Skip to main content

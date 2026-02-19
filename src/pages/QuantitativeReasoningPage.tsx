@@ -8,7 +8,14 @@ import { getSiteBaseUrl } from "../lib/siteUrl";
 
 export default function QuantitativeReasoningPage() {
   const navigate = useNavigate();
-  const canonicalUrl = getSiteBaseUrl() ? `${getSiteBaseUrl()}/quantitative` : undefined;
+  const base = getSiteBaseUrl();
+  const canonicalUrl = base ? `${base}/quantitative` : undefined;
+  const breadcrumbs = base
+    ? [
+        { name: "Home", url: `${base}/` },
+        { name: "Quantitative Reasoning", url: `${base}/quantitative` },
+      ]
+    : undefined;
 
   return (
     <div className="flex flex-col min-h-screen bg-background font-sans">
@@ -16,6 +23,7 @@ export default function QuantitativeReasoningPage() {
         title="Quantitative Reasoning | UCAT Trainer"
         description="Calculator and mental maths practice for UCAT Quantitative Reasoning. Master the on-screen calculator and build speed without it."
         canonicalUrl={canonicalUrl}
+        breadcrumbs={breadcrumbs}
       />
       <Header />
       <main className="flex-1 py-8 px-4 sm:px-6 lg:px-8">

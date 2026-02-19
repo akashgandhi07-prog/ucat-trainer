@@ -16,8 +16,14 @@ export default function SyllogismMacroPage() {
       pathname: "/train/syllogism/macro",
     });
   }, []);
-  const canonicalUrl = getSiteBaseUrl()
-    ? `${getSiteBaseUrl()}/train/syllogism/macro`
+  const base = getSiteBaseUrl();
+  const canonicalUrl = base ? `${base}/train/syllogism/macro` : undefined;
+  const breadcrumbs = base
+    ? [
+        { name: "Home", url: `${base}/` },
+        { name: "Decision Making", url: `${base}/decision-making` },
+        { name: "Syllogism Macro", url: `${base}/train/syllogism/macro` },
+      ]
     : undefined;
 
   return (
@@ -26,6 +32,7 @@ export default function SyllogismMacroPage() {
         title="Syllogism Macro Drill | UCAT Decision Making"
         description="UCAT-style syllogism drill: full stimulus with five conclusions. Sticky passage and Yes/No judgements."
         canonicalUrl={canonicalUrl}
+        breadcrumbs={breadcrumbs}
       />
       <Header />
       <div className="flex-1 flex flex-col">

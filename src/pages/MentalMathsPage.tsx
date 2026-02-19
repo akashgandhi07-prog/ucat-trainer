@@ -13,6 +13,8 @@ import { useAuthModal } from "../contexts/AuthModalContext";
 import { saveMentalMathsSession } from "../utils/analyticsStorage";
 import { appendGuestSession } from "../lib/guestSessions";
 import type { MentalMathsSummaryStats } from "../hooks/useMentalMathsLogic";
+import SEOHead from "../components/seo/SEOHead";
+import { getSiteBaseUrl } from "../lib/siteUrl";
 
 const teaching = SKILL_TEACHING.mental_maths;
 
@@ -26,6 +28,16 @@ export default function MentalMathsPage() {
       pathname: "/train/mentalMaths",
     });
   }, []);
+
+  const base = getSiteBaseUrl();
+  const canonicalUrl = base ? `${base}/train/mentalMaths` : undefined;
+  const breadcrumbs = base
+    ? [
+        { name: "Home", url: `${base}/` },
+        { name: "Quantitative Reasoning", url: `${base}/quantitative` },
+        { name: "Mental Maths", url: `${base}/train/mentalMaths` },
+      ]
+    : undefined;
 
   const handleSessionComplete = useCallback(
     (stats: MentalMathsSummaryStats) => {
@@ -49,6 +61,12 @@ export default function MentalMathsPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background font-sans">
+      <SEOHead
+        title="UCAT Mental Maths Trainer"
+        description="Build speed and accuracy in mental arithmetic for UCAT Quantitative Reasoning. Timed stages with progress tracking."
+        canonicalUrl={canonicalUrl}
+        breadcrumbs={breadcrumbs}
+      />
       <Header />
       <main className="flex-1 py-6 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto">
