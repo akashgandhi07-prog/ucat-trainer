@@ -126,6 +126,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             await upsertProfile(u.id, null, null);
             p = await getProfile(u.id);
           }
+          // Backfill stream from sign-up metadata if profile has none (e.g. legacy account)
+          const meta = u.user_metadata as Record<string, unknown> | null;
+          const metaStream = (meta?.stream as string | undefined) ?? undefined;
+          const validStreams = ["Medicine", "Dentistry", "Veterinary Medicine", "Other", "Undecided"];
+          if (p && !p.stream && metaStream && validStreams.includes(metaStream)) {
+            authLog.info("Backfilling stream from user_metadata", { userId: u.id, stream: metaStream });
+            await upsertProfile(u.id, p.full_name ?? null, metaStream);
+            if (mounted) p = (await getProfile(u.id)) ?? p;
+          }
           if (mounted) setProfile(p);
         } else {
           setProfile(null);

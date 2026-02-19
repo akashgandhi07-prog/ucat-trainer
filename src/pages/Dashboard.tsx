@@ -31,7 +31,7 @@ import TutoringUpsell from "../components/layout/TutoringUpsell";
 import { getGuestSessions } from "../lib/guestSessions";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 import { trackEvent } from "../lib/analytics";
-import { upsertProfile } from "../lib/profileApi";
+import { upsertProfile, type Stream } from "../lib/profileApi";
 import type { SessionRow } from "../types/session";
 import type { SyllogismSession } from "../types/syllogisms";
 import SyllogismAnalytics from "../components/dashboard/SyllogismAnalytics";
@@ -144,8 +144,35 @@ export default function Dashboard() {
   const [ucatMonth, setUcatMonth] = useState<4 | 5 | 6 | 7 | 8 | 9>(4);
   const [ucatDay, setUcatDay] = useState(1);
   const [ucatSaveStatus, setUcatSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [ucatEditing, setUcatEditing] = useState(false);
+
+  // Target stream edit (Clinical Record)
+  const STREAM_OPTIONS: { value: Stream; label: string }[] = [
+    { value: "Medicine", label: "Medicine" },
+    { value: "Dentistry", label: "Dentistry" },
+    { value: "Veterinary Medicine", label: "Veterinary Medicine" },
+    { value: "Other", label: "Other" },
+    { value: "Undecided", label: "Undecided" },
+  ];
+  const [streamEditing, setStreamEditing] = useState(false);
+  const [streamEditValue, setStreamEditValue] = useState<Stream>("Medicine");
+  const [streamSaveStatus, setStreamSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+
+  useEffect(() => {
+    if (streamEditing && profile?.stream) setStreamEditValue(profile.stream);
+    else if (!streamEditing) setStreamEditValue(profile?.stream ?? "Medicine");
+  }, [streamEditing, profile?.stream]);
 
   const ucatMonthMaxDay = (m: number) => (m === 4 || m === 6 || m === 9 ? 30 : 31); // April, June, Sept = 30
+  const MONTH_NAMES = ["", "", "", "", "April", "May", "June", "July", "August", "September"] as const;
+  const formatUcatDate = (iso: string) => {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso.trim());
+    if (!match) return iso;
+    const d = parseInt(match[3], 10);
+    const m = parseInt(match[2], 10);
+    const y = match[1];
+    return `${d} ${MONTH_NAMES[m] ?? ""} ${y}`;
+  };
 
   useEffect(() => {
     const raw = profile?.ucat_exam_date;
@@ -910,9 +937,63 @@ export default function Dashboard() {
                 <span className="text-slate-500">Candidate Name:</span>
                 <span className="text-slate-900 font-medium">{greetingName}</span>
               </div>
-              <div className="flex justify-between gap-4 border-b border-slate-100 pb-2">
+              <div className="flex justify-between gap-4 border-b border-slate-100 pb-2 items-center">
                 <span className="text-slate-500">Target Stream:</span>
-                <span className="text-slate-900 font-medium">{streamLabel}</span>
+                {streamEditing ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <select
+                      value={streamEditValue}
+                      onChange={(e) => setStreamEditValue(e.target.value as Stream)}
+                      className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+                      aria-label="Target stream"
+                    >
+                      {STREAM_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      disabled={streamSaveStatus === "saving"}
+                      onClick={async () => {
+                        if (!user || !profile) return;
+                        setStreamSaveStatus("saving");
+                        const { ok } = await upsertProfile(user.id, profile.full_name ?? null, streamEditValue);
+                        if (ok) {
+                          setStreamSaveStatus("saved");
+                          setStreamEditing(false);
+                          await refetchProfile();
+                          setTimeout(() => setStreamSaveStatus("idle"), 2000);
+                        } else {
+                          setStreamSaveStatus("error");
+                          setTimeout(() => setStreamSaveStatus("idle"), 3000);
+                        }
+                      }}
+                      className="min-h-[32px] rounded bg-slate-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-600 disabled:opacity-60"
+                    >
+                      {streamSaveStatus === "saving" ? "Saving…" : streamSaveStatus === "saved" ? "Saved" : streamSaveStatus === "error" ? "Error" : "Save"}
+                    </button>
+                    {profile?.stream && (
+                      <button
+                        type="button"
+                        onClick={() => setStreamEditing(false)}
+                        className="min-h-[32px] rounded border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-900 font-medium">{streamLabel}</span>
+                    <button
+                      type="button"
+                      onClick={() => setStreamEditing(true)}
+                      className="min-h-[32px] rounded border border-slate-300 bg-white px-2 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:border-slate-400"
+                    >
+                      Edit
+                    </button>
+                  </div>
+                )}
               </div>
               <div className="flex justify-between gap-4">
                 <span className="text-slate-500">Last Check-up:</span>
@@ -924,63 +1005,91 @@ export default function Dashboard() {
                     <span className="text-slate-500">UCAT exam date:</span>
                     <span className="text-xs text-slate-400">(April–September only)</span>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <select
-                      value={ucatYear}
-                      onChange={(e) => setUcatYear(parseInt(e.target.value, 10))}
-                      className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
-                      aria-label="Exam year"
-                    >
-                      {[currentYear, currentYear + 1, currentYear + 2].map((y) => (
-                        <option key={y} value={y}>{y}</option>
-                      ))}
-                    </select>
-                    <select
-                      value={ucatMonth}
-                      onChange={(e) => setUcatMonth(parseInt(e.target.value, 10) as 4 | 5 | 6 | 7 | 8 | 9)}
-                      className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
-                      aria-label="Exam month"
-                    >
-                      <option value={4}>April</option>
-                      <option value={5}>May</option>
-                      <option value={6}>June</option>
-                      <option value={7}>July</option>
-                      <option value={8}>August</option>
-                      <option value={9}>September</option>
-                    </select>
-                    <select
-                      value={ucatDay}
-                      onChange={(e) => setUcatDay(parseInt(e.target.value, 10))}
-                      className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
-                      aria-label="Exam day"
-                    >
-                      {Array.from({ length: ucatMonthMaxDay(ucatMonth) }, (_, i) => i + 1).map((d) => (
-                        <option key={d} value={d}>{d}</option>
-                      ))}
-                    </select>
-                    <button
-                      type="button"
-                      disabled={ucatSaveStatus === "saving"}
-                      onClick={async () => {
-                        if (!user || !profile) return;
-                        setUcatSaveStatus("saving");
-                        const day = Math.min(ucatDay, ucatMonthMaxDay(ucatMonth));
-                        const iso = `${ucatYear}-${String(ucatMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-                        const { ok } = await upsertProfile(user.id, profile.full_name ?? null, profile.stream ?? null, { ucatExamDate: iso });
-                        if (ok) {
-                          setUcatSaveStatus("saved");
-                          await refetchProfile();
-                          setTimeout(() => setUcatSaveStatus("idle"), 2000);
-                        } else {
-                          setUcatSaveStatus("error");
-                          setTimeout(() => setUcatSaveStatus("idle"), 3000);
-                        }
-                      }}
-                      className="ml-1 min-h-[32px] rounded bg-slate-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-600 disabled:opacity-60"
-                    >
-                      {ucatSaveStatus === "saving" ? "Saving…" : ucatSaveStatus === "saved" ? "Saved" : ucatSaveStatus === "error" ? "Error" : "Save"}
-                    </button>
-                  </div>
+                  {profile?.ucat_exam_date && !ucatEditing ? (
+                    <div className="flex flex-wrap items-center gap-3 flex-1">
+                      <div className="inline-flex items-center gap-2 rounded-lg bg-slate-50 border border-slate-200 px-3 py-2">
+                        <span className="text-slate-800 font-medium" aria-label="Saved exam date">
+                          {formatUcatDate(profile.ucat_exam_date)}
+                        </span>
+                        <span className="text-emerald-600 text-xs font-medium">Saved</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setUcatEditing(true)}
+                        className="min-h-[36px] rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-colors"
+                      >
+                        Edit
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <select
+                        value={ucatYear}
+                        onChange={(e) => setUcatYear(parseInt(e.target.value, 10))}
+                        className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+                        aria-label="Exam year"
+                      >
+                        {[currentYear, currentYear + 1, currentYear + 2].map((y) => (
+                          <option key={y} value={y}>{y}</option>
+                        ))}
+                      </select>
+                      <select
+                        value={ucatMonth}
+                        onChange={(e) => setUcatMonth(parseInt(e.target.value, 10) as 4 | 5 | 6 | 7 | 8 | 9)}
+                        className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+                        aria-label="Exam month"
+                      >
+                        <option value={4}>April</option>
+                        <option value={5}>May</option>
+                        <option value={6}>June</option>
+                        <option value={7}>July</option>
+                        <option value={8}>August</option>
+                        <option value={9}>September</option>
+                      </select>
+                      <select
+                        value={ucatDay}
+                        onChange={(e) => setUcatDay(parseInt(e.target.value, 10))}
+                        className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+                        aria-label="Exam day"
+                      >
+                        {Array.from({ length: ucatMonthMaxDay(ucatMonth) }, (_, i) => i + 1).map((d) => (
+                          <option key={d} value={d}>{d}</option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        disabled={ucatSaveStatus === "saving"}
+                        onClick={async () => {
+                          if (!user || !profile) return;
+                          setUcatSaveStatus("saving");
+                          const day = Math.min(ucatDay, ucatMonthMaxDay(ucatMonth));
+                          const iso = `${ucatYear}-${String(ucatMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                          const { ok } = await upsertProfile(user.id, profile.full_name ?? null, profile.stream ?? null, { ucatExamDate: iso });
+                          if (ok) {
+                            setUcatSaveStatus("saved");
+                            setUcatEditing(false);
+                            await refetchProfile();
+                            setTimeout(() => setUcatSaveStatus("idle"), 2000);
+                          } else {
+                            setUcatSaveStatus("error");
+                            setTimeout(() => setUcatSaveStatus("idle"), 3000);
+                          }
+                        }}
+                        className="ml-1 min-h-[32px] rounded bg-slate-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-600 disabled:opacity-60"
+                      >
+                        {ucatSaveStatus === "saving" ? "Saving…" : ucatSaveStatus === "saved" ? "Saved" : ucatSaveStatus === "error" ? "Error" : "Save"}
+                      </button>
+                      {profile?.ucat_exam_date && (
+                        <button
+                          type="button"
+                          onClick={() => setUcatEditing(false)}
+                          className="min-h-[32px] rounded border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
