@@ -58,6 +58,7 @@ export default function SyllogismMacroPage() {
         title="UCAT syllogism macro drill FAQs"
         intro="Frequently asked questions about long-form UCAT syllogism questions and how to use this macro drill to build Decision Making marks."
         faqs={trainerFaqs.syllogismMacro}
+        collapseIntoSingleAccordion
       />
       <Footer />
     </div>

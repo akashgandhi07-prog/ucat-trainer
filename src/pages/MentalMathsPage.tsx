@@ -105,6 +105,7 @@ export default function MentalMathsPage() {
         title="UCAT mental maths trainer FAQs"
         intro="Answers to common questions about building fast, reliable mental arithmetic for the UCAT Quantitative Reasoning section."
         faqs={trainerFaqs.mentalMaths}
+        collapseIntoSingleAccordion
       />
       <Footer />
     </div>

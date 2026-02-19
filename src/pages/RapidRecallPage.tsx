@@ -489,6 +489,7 @@ export default function RapidRecallPage() {
         title="Common questions about the UCAT Rapid Recall trainer"
         intro="Guidance on how to use this Rapid Recall trainer to strengthen True/False/Can’t Tell style reasoning and short-term retention for UCAT Verbal Reasoning."
         faqs={trainerFaqs.rapidRecall}
+        collapseIntoSingleAccordion
       />
       <Footer />
     </div>

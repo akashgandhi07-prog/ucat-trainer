@@ -464,6 +464,7 @@ export default function KeywordScanningPage() {
         title="Common questions about the UCAT keyword scanning trainer"
         intro="Frequently asked questions about using keyword scanning techniques to cope with UCAT Verbal Reasoning timing while keeping answers strictly tied to the passage."
         faqs={trainerFaqs.keywordScanning}
+        collapseIntoSingleAccordion
       />
       <Footer />
     </div>

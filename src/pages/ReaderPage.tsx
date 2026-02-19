@@ -333,6 +333,7 @@ export default function ReaderPage() {
         title="Common questions about the UCAT speed reading trainer"
         intro="Frequently asked questions about using this speed reading tool to build safe words-per-minute targets and better Verbal Reasoning timing for the UCAT."
         faqs={trainerFaqs.speedReading}
+        collapseIntoSingleAccordion
       />
       <Footer />
     </div>

@@ -424,6 +424,7 @@ export default function InferenceTrainerPage() {
         title="Common questions about the UCAT inference trainer"
         intro="Answers to common questions about tackling inference-style Verbal Reasoning items and using this trainer to build strict, text-based reasoning for the UCAT."
         faqs={trainerFaqs.inference}
+        collapseIntoSingleAccordion
       />
 
       <Footer />
