@@ -295,7 +295,7 @@ export default function KeywordScanningPage() {
             <BreadcrumbNav items={breadcrumbs} />
           </div>
           <div className="flex-1 flex items-center justify-center">
-          <div className="w-full max-w-md mx-auto text-center">
+            <div className="w-full max-w-md mx-auto text-center">
             <h2 className="text-xl font-semibold text-slate-900 mb-6">
               Keyword Scanning - Results
             </h2>
@@ -348,11 +348,15 @@ export default function KeywordScanningPage() {
               Try another passage
             </button>
             <div className="mt-4">
-              <Link to="/" className="min-h-[44px] inline-flex items-center justify-center py-2 text-sm text-slate-500 hover:text-blue-600">
+              <Link
+                to="/"
+                className="min-h-[44px] inline-flex items-center justify-center py-2 text-sm text-slate-500 hover:text-blue-600"
+              >
                 Back to Home
               </Link>
             </div>
           </div>
+        </div>
         </main>
         <Footer />
       </div>
