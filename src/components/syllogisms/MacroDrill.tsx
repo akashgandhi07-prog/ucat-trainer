@@ -43,6 +43,12 @@ export default function MacroDrill() {
 
   const stimulus = questions[0]?.stimulus_text ?? "";
 
+  const scrollToTopOfDrill = () => {
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   const handleToggle = useCallback(
     (index: number, value: boolean) => {
       if (sessionFinished) return;
@@ -294,7 +300,10 @@ export default function MacroDrill() {
                   {sessionFinished ? (
                     <button
                       type="button"
-                      onClick={() => fetchMacroBlock()}
+                      onClick={() => {
+                        scrollToTopOfDrill();
+                        fetchMacroBlock();
+                      }}
                       disabled={loading}
                       className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-base font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     >

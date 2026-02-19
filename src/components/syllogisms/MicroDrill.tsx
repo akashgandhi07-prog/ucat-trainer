@@ -3,6 +3,12 @@ import { useSyllogismLogic } from "./useSyllogismLogic";
 
 const MICRO_BATCH_SIZE = 10;
 
+function scrollTrainerToTop() {
+  if (typeof window !== "undefined") {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+}
+
 function getFeedbackLabel(isCorrect: boolean, actuallyFollows: boolean): string {
   if (isCorrect) {
     return actuallyFollows
@@ -183,7 +189,10 @@ export default function MicroDrill() {
                       </div>
                       <button
                         type="button"
-                        onClick={() => advanceToNext()}
+                        onClick={() => {
+                          scrollTrainerToTop();
+                          advanceToNext();
+                        }}
                         className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                       >
                         Next question

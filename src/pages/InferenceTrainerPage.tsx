@@ -33,6 +33,12 @@ type LocationState = {
   difficulty?: TrainingDifficulty;
 };
 
+function scrollTrainerToTop() {
+  if (typeof window !== "undefined") {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+}
+
 function pickPassageWithInference(
   currentId?: string | null,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- reserved for future difficulty filtering
@@ -144,6 +150,7 @@ export default function InferenceTrainerPage() {
       setRunningCorrect((c) => c + correct);
       setRunningTotal((t) => t + total);
       setRunningBreakdown((b) => [...b, ...breakdown]);
+      scrollTrainerToTop();
       const stayOnSamePassage = Math.random() < 0.5;
       if (stayOnSamePassage && passage) {
         setQuizKey((k) => k + 1);

@@ -5,6 +5,12 @@ import { MENTAL_MATHS_STAGES } from "./mentalMathsStages";
 
 const SUBMIT_LOCK_MS = 300;
 
+function scrollTrainerToTop() {
+  if (typeof window !== "undefined") {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+}
+
 interface MentalMathsEngineProps {
   onSessionComplete?: (stats: MentalMathsSummaryStats) => void;
   onStageStart?: (stageIndex: number) => void;
@@ -35,11 +41,13 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
 
   // Clear input when starting a stage or advancing to next question (avoid setState-in-effect)
   const handleStageStart = useCallback((stageIndex: number) => {
+    scrollTrainerToTop();
     setExactInput("");
     logic.startStage(stageIndex);
     onStageStart?.(stageIndex);
   }, [logic, onStageStart]);
   const handleGoToNext = useCallback(() => {
+    scrollTrainerToTop();
     setExactInput("");
     logic.goToNext();
   }, [logic]);
