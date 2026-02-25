@@ -303,6 +303,8 @@ export default function ReaderPage() {
         {phase === "quiz" && (
           <DistortionQuiz
             passageText={passageText}
+            passageId={passage?.id ?? "unknown"}
+            trainerType="speed_reading"
             onComplete={handleQuizComplete}
             questionCount={questionCount}
           />

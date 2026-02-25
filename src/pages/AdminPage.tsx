@@ -65,6 +65,29 @@ export type AdminUserRow = {
   last_active_at: string | null;
 };
 
+type RegistrationRow = {
+  user_id: string;
+  email: string;
+  display_name?: string;
+  created_at: string | null;
+  speed_reading: number;
+  rapid_recall: number;
+  keyword_scanning: number;
+  calculator: number;
+  inference_trainer: number;
+  mental_maths: number;
+  syllogism_micro: number;
+  syllogism_macro: number;
+  total_questions: number;
+  session_correct?: number;
+  session_questions?: number;
+  total_time_seconds?: number;
+  days_active?: number;
+  last_wpm?: number | null;
+  avg_wpm?: number | null;
+  last_active_at: string | null;
+};
+
 type UsageSummaryResponse = {
   summary: UsageSummaryPayload;
   trainer_usage: TrainerUsagePayload;
@@ -120,6 +143,24 @@ type FeedbackRow = {
 };
 
 type FeedbackFilter = "all" | "bug" | "suggestion";
+
+import type {
+  QuestionFeedbackIssueType,
+} from "../lib/questionFeedback";
+
+type QuestionFeedbackRow = {
+  id: string;
+  user_id: string | null;
+  trainer_type: string;
+  question_kind: string;
+  question_identifier: string;
+  issue_type: QuestionFeedbackIssueType;
+  comment: string | null;
+  passage_id: string | null;
+  session_id: string | null;
+  page_url: string | null;
+  created_at: string;
+};
 
 export type AdminDateRange = "all" | "7" | "30" | "90";
 
@@ -179,6 +220,54 @@ function exportFeedbackJson(feedback: FeedbackRow[]): void {
   downloadText(
     "feedback-export.json",
     JSON.stringify(feedback, null, 2),
+    "application/json"
+  );
+}
+
+function exportQuestionFeedbackCsv(rows: QuestionFeedbackRow[]): void {
+  const headers = [
+    "id",
+    "trainer_type",
+    "question_kind",
+    "question_identifier",
+    "issue_type",
+    "comment",
+    "passage_id",
+    "page_url",
+    "created_at",
+  ];
+  const escape = (v: string | null) => {
+    if (v == null) return "";
+    const s = String(v);
+    if (s.includes(",") || s.includes('"') || s.includes("\n")) {
+      return `"${s.replace(/"/g, '""')}"`;
+    }
+    return s;
+  };
+  const rowsOut = rows.map((r) =>
+    [
+      r.id,
+      r.trainer_type,
+      r.question_kind,
+      r.question_identifier,
+      r.issue_type,
+      escape(r.comment),
+      escape(r.passage_id),
+      escape(r.page_url),
+      r.created_at,
+    ].join(",")
+  );
+  downloadText(
+    "question-feedback-export.csv",
+    [headers.join(","), ...rowsOut].join("\n"),
+    "text/csv;charset=utf-8"
+  );
+}
+
+function exportQuestionFeedbackJson(rows: QuestionFeedbackRow[]): void {
+  downloadText(
+    "question-feedback-export.json",
+    JSON.stringify(rows, null, 2),
     "application/json"
   );
 }
@@ -245,6 +334,37 @@ function filterAndSortUsers(
   return out;
 }
 
+function filterAndSortRegistrations(
+  rows: RegistrationRow[],
+  sortKey: keyof RegistrationRow,
+  sortDir: "asc" | "desc",
+  query: string
+): RegistrationRow[] {
+  const trimmedQuery = query.trim().toLowerCase();
+  let out = rows;
+  if (trimmedQuery) {
+    out = rows.filter((r) => {
+      const name = (r.display_name ?? "").toLowerCase();
+      const email = (r.email ?? "").toLowerCase();
+      return name.includes(trimmedQuery) || email.includes(trimmedQuery);
+    });
+  }
+  out = [...out].sort((a, b) => {
+    let aVal = a[sortKey] as string | number | null | undefined;
+    let bVal = b[sortKey] as string | number | null | undefined;
+    if (aVal == null && bVal == null) return 0;
+    if (aVal == null) return sortDir === "asc" ? -1 : 1;
+    if (bVal == null) return sortDir === "asc" ? 1 : -1;
+    if (typeof aVal === "string" && typeof bVal === "string") {
+      const c = aVal.localeCompare(bVal);
+      return sortDir === "asc" ? c : -c;
+    }
+    const n = (aVal as number) - (bVal as number);
+    return sortDir === "asc" ? n : -n;
+  });
+  return out;
+}
+
 export default function AdminPage() {
   const {
     user,
@@ -260,6 +380,7 @@ export default function AdminPage() {
   const [usageSummary, setUsageSummary] = useState<UsageSummaryResponse | null>(null);
   const [feedback, setFeedback] = useState<FeedbackRow[]>([]);
   const [feedbackFilter, setFeedbackFilter] = useState<FeedbackFilter>("all");
+  const [questionFeedback, setQuestionFeedback] = useState<QuestionFeedbackRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   type UserSortKey = keyof AdminUserRow | "accuracy";
@@ -268,6 +389,11 @@ export default function AdminPage() {
   const [userFilterMinQuestions, setUserFilterMinQuestions] = useState<number>(0);
   const [userFilterEmail, setUserFilterEmail] = useState<string>("");
   const [newUsers, setNewUsers] = useState<NewUserRow[]>([]);
+  const [registrations, setRegistrations] = useState<RegistrationRow[]>([]);
+  type RegistrationSortKey = keyof RegistrationRow;
+  const [registrationSortKey, setRegistrationSortKey] = useState<RegistrationSortKey>("created_at");
+  const [registrationSortDir, setRegistrationSortDir] = useState<"asc" | "desc">("desc");
+  const [registrationFilterQuery, setRegistrationFilterQuery] = useState<string>("");
 
   const USER_TABLE_COLUMNS: { key: UserSortKey; label: string }[] = [
     { key: "display_name", label: "Name" },
@@ -278,6 +404,24 @@ export default function AdminPage() {
     { key: "total_time_seconds", label: "Time spent" },
     { key: "days_active", label: "Days active" },
     { key: "last_wpm", label: "WPM (last)" },
+    { key: "speed_reading", label: "Speed reading" },
+    { key: "rapid_recall", label: "Rapid recall" },
+    { key: "keyword_scanning", label: "Keyword scanning" },
+    { key: "calculator", label: "Calculator" },
+    { key: "inference_trainer", label: "Inference" },
+    { key: "mental_maths", label: "Mental maths" },
+    { key: "syllogism_micro", label: "Syllogism micro" },
+    { key: "syllogism_macro", label: "Syllogism macro" },
+  ];
+
+  const REGISTRATION_TABLE_COLUMNS: { key: RegistrationSortKey; label: string }[] = [
+    { key: "display_name", label: "Name" },
+    { key: "email", label: "Email" },
+    { key: "created_at", label: "Registered on" },
+    { key: "last_active_at", label: "Last active" },
+    { key: "days_active", label: "Days active" },
+    { key: "total_questions", label: "Questions" },
+    { key: "total_time_seconds", label: "Time spent" },
     { key: "speed_reading", label: "Speed reading" },
     { key: "rapid_recall", label: "Rapid recall" },
     { key: "keyword_scanning", label: "Keyword scanning" },
@@ -300,11 +444,12 @@ export default function AdminPage() {
     const rpcParams = { since_ts, until_ts };
 
     (async () => {
-      const [statsRes, analyticsRes, usageRes, newUsersRes] = await Promise.all([
+      const [statsRes, analyticsRes, usageRes, newUsersRes, registrationsRes] = await Promise.all([
         supabase.rpc("get_admin_stats", rpcParams),
         supabase.rpc("get_analytics_summary", rpcParams),
         supabase.rpc("get_admin_usage_summary", rpcParams),
         supabase.rpc("get_admin_new_users", { ...rpcParams, limit_rows: 300 }),
+        supabase.rpc("get_admin_registrations_overview", { limit_rows: 5000 }),
       ]);
       if (!mounted) return;
       if (statsRes.error) {
@@ -333,6 +478,13 @@ export default function AdminPage() {
         setNewUsers((newUsersRes.data as NewUserRow[]) ?? []);
       }
 
+      if (registrationsRes.error) {
+        dashboardLog.warn("Admin registrations failed", { message: registrationsRes.error.message });
+        setRegistrations([]);
+      } else {
+        setRegistrations((registrationsRes.data as RegistrationRow[]) ?? []);
+      }
+
       const { data: feedbackData, error: feedbackErr } = await supabase
         .from("bug_reports")
         .select("id, user_id, type, description, page_url, created_at")
@@ -343,6 +495,23 @@ export default function AdminPage() {
         dashboardLog.warn("Admin feedback fetch failed", { message: feedbackErr.message });
       } else {
         setFeedback((feedbackData as FeedbackRow[]) ?? []);
+      }
+
+      const { data: qfData, error: qfErr } = await supabase
+        .from("question_feedback")
+        .select(
+          "id, user_id, trainer_type, question_kind, question_identifier, issue_type, comment, passage_id, session_id, page_url, created_at"
+        )
+        .order("created_at", { ascending: false })
+        .limit(500);
+      if (!mounted) return;
+      if (qfErr) {
+        dashboardLog.warn("Admin question feedback fetch failed", {
+          message: qfErr.message,
+          code: qfErr.code,
+        });
+      } else {
+        setQuestionFeedback((qfData as QuestionFeedbackRow[]) ?? []);
       }
       setLoading(false);
     })();
@@ -751,6 +920,169 @@ export default function AdminPage() {
               </div>
             </section>
 
+            {registrations.length > 0 && (
+              <section className="mb-10">
+                <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+                  <div>
+                    <h2 className="text-lg font-semibold text-slate-900">All registrations (students)</h2>
+                    <p className="text-sm text-slate-600 mt-1">
+                      All registered users across all time, with per-trainer usage. Guest usage is shown separately below as
+                      {" "}“Guest activity (anon)”.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <input
+                      type="search"
+                      placeholder="Filter by name or email"
+                      value={registrationFilterQuery}
+                      onChange={(e) => setRegistrationFilterQuery(e.target.value)}
+                      className="min-w-[200px] px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-400"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const headers = REGISTRATION_TABLE_COLUMNS.map((c) => c.label.toLowerCase().replace(/\s+/g, "_"));
+                        const rows = filterAndSortRegistrations(
+                          registrations,
+                          registrationSortKey,
+                          registrationSortDir,
+                          registrationFilterQuery
+                        ).map((r) => {
+                          const escape = (v: string | number | null) => {
+                            if (v == null) return "";
+                            const s = String(v);
+                            if (s.includes(",") || s.includes("\"") || s.includes("\n")) return `"${s.replace(/"/g, "\"\"")}"`;
+                            return s;
+                          };
+                          const formatDate = (value: string | null, withTime: boolean) => {
+                            if (!value) return "";
+                            const d = new Date(value);
+                            return withTime
+                              ? d.toLocaleString()
+                              : d.toLocaleDateString(undefined, { dateStyle: "medium" });
+                          };
+                          const row: Record<string, string | number | null> = {
+                            name: r.display_name || "",
+                            email: r.email || "",
+                            registered_on: formatDate(r.created_at, false),
+                            last_active: formatDate(r.last_active_at, true),
+                            days_active: r.days_active ?? null,
+                            total_questions: r.total_questions,
+                            total_time_seconds: r.total_time_seconds ?? null,
+                            speed_reading: r.speed_reading,
+                            rapid_recall: r.rapid_recall,
+                            keyword_scanning: r.keyword_scanning,
+                            calculator: r.calculator,
+                            inference_trainer: r.inference_trainer,
+                            mental_maths: r.mental_maths,
+                            syllogism_micro: r.syllogism_micro,
+                            syllogism_macro: r.syllogism_macro,
+                          };
+                          return headers.map((h) => escape(row[h])).join(",");
+                        });
+                        downloadText(
+                          "admin-registrations-export.csv",
+                          [headers.join(","), ...rows].join("\n"),
+                          "text/csv;charset=utf-8"
+                        );
+                      }}
+                      className="min-h-[44px] px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
+                    >
+                      Export CSV
+                    </button>
+                  </div>
+                </div>
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+                  <table className="w-full text-sm min-w-[900px]">
+                    <thead>
+                      <tr className="border-b border-slate-200 bg-slate-50">
+                        {REGISTRATION_TABLE_COLUMNS.map(({ key, label }) => (
+                          <th
+                            key={key}
+                            className="px-2 py-2 text-left font-medium text-slate-700 whitespace-nowrap cursor-pointer hover:bg-slate-100"
+                            onClick={() => {
+                              if (registrationSortKey === key) {
+                                setRegistrationSortDir((d) => (d === "asc" ? "desc" : "asc"));
+                              } else {
+                                setRegistrationSortKey(key);
+                              }
+                            }}
+                          >
+                            {label}
+                            {registrationSortKey === key ? (registrationSortDir === "asc" ? " ↑" : " ↓") : ""}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filterAndSortRegistrations(
+                        registrations,
+                        registrationSortKey,
+                        registrationSortDir,
+                        registrationFilterQuery
+                      ).map((r) => (
+                        <tr key={r.user_id} className="border-b border-slate-100 hover:bg-slate-50">
+                          {REGISTRATION_TABLE_COLUMNS.map(({ key }) => {
+                            if (key === "display_name") {
+                              return (
+                                <td key={key} className="px-2 py-2 text-slate-900 font-medium">
+                                  {r.display_name || "—"}
+                                </td>
+                              );
+                            }
+                            if (key === "email") {
+                              return (
+                                <td key={key} className="px-2 py-2 text-slate-700">
+                                  {r.email || "—"}
+                                </td>
+                              );
+                            }
+                            if (key === "created_at") {
+                              return (
+                                <td key={key} className="px-2 py-2 text-slate-600 text-xs whitespace-nowrap">
+                                  {r.created_at
+                                    ? new Date(r.created_at).toLocaleDateString(undefined, { dateStyle: "medium" })
+                                    : "—"}
+                                </td>
+                              );
+                            }
+                            if (key === "last_active_at") {
+                              return (
+                                <td key={key} className="px-2 py-2 text-slate-600 text-xs whitespace-nowrap">
+                                  {r.last_active_at ? new Date(r.last_active_at).toLocaleString() : "—"}
+                                </td>
+                              );
+                            }
+                            if (key === "total_time_seconds") {
+                              return (
+                                <td key={key} className="px-2 py-2 text-right text-slate-700">
+                                  {formatTimeSeconds(r.total_time_seconds)}
+                                </td>
+                              );
+                            }
+                            if (key === "days_active") {
+                              return (
+                                <td key={key} className="px-2 py-2 text-right">
+                                  {r.days_active ?? "—"}
+                                </td>
+                              );
+                            }
+                            const val = r[key];
+                            const num = typeof val === "number" ? val : null;
+                            return (
+                              <td key={key} className="px-2 py-2 text-right">
+                                {num != null ? num : "—"}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            )}
+
             <section className="mb-10">
               <h2 className="text-lg font-semibold text-slate-900 mb-4">Trainer usage (sessions, questions, time in range)</h2>
               {Object.keys(usageSummary.trainer_usage).length > 0 && (
@@ -1089,6 +1421,155 @@ export default function AdminPage() {
                 </div>
               </div>
             )}
+          </section>
+        )}
+
+        {questionFeedback.length > 0 && (
+          <section className="mb-10">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+              <h2 className="text-lg font-semibold text-slate-900">Question feedback (DM & VR)</h2>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => exportQuestionFeedbackCsv(questionFeedback)}
+                  className="min-h-[44px] px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
+                >
+                  Export CSV
+                </button>
+                <button
+                  type="button"
+                  onClick={() => exportQuestionFeedbackJson(questionFeedback)}
+                  className="min-h-[44px] px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
+                >
+                  Export JSON
+                </button>
+              </div>
+            </div>
+            <p className="mb-3 text-sm text-slate-600">
+              Per-question reports from Decision Making syllogisms and Verbal Reasoning trainers. Use this to find
+              confusing or flawed items.
+            </p>
+            <div className="mb-4 bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+              {(() => {
+                const aggregatesMap = new Map<
+                  string,
+                  {
+                    trainer_type: string;
+                    question_kind: string;
+                    question_identifier: string;
+                    passage_id: string | null;
+                    total: number;
+                    last_created_at: string;
+                    issues: Record<QuestionFeedbackIssueType, number>;
+                  }
+                >();
+                questionFeedback.forEach((row) => {
+                  const key = `${row.trainer_type}::${row.question_identifier}`;
+                  let entry = aggregatesMap.get(key);
+                  if (!entry) {
+                    entry = {
+                      trainer_type: row.trainer_type,
+                      question_kind: row.question_kind,
+                      question_identifier: row.question_identifier,
+                      passage_id: row.passage_id,
+                      total: 0,
+                      last_created_at: row.created_at,
+                      issues: {
+                        wrong_answer: 0,
+                        unclear_wording: 0,
+                        too_hard: 0,
+                        too_easy: 0,
+                        typo: 0,
+                        other: 0,
+                      },
+                    };
+                    aggregatesMap.set(key, entry);
+                  }
+                  entry.total += 1;
+                  entry.issues[row.issue_type] += 1;
+                  if (row.created_at > entry.last_created_at) {
+                    entry.last_created_at = row.created_at;
+                  }
+                });
+                const aggregates = Array.from(aggregatesMap.values()).sort(
+                  (a, b) => b.total - a.total
+                );
+                return (
+                  <table className="w-full text-sm min-w-[800px]">
+                    <thead>
+                      <tr className="border-b border-slate-200 bg-slate-50">
+                        <th className="px-3 py-2 text-left font-medium text-slate-700">
+                          Trainer
+                        </th>
+                        <th className="px-3 py-2 text-left font-medium text-slate-700">
+                          Question ID
+                        </th>
+                        <th className="px-3 py-2 text-left font-medium text-slate-700">
+                          Passage ID
+                        </th>
+                        <th className="px-3 py-2 text-right font-medium text-slate-700">
+                          Reports
+                        </th>
+                        <th className="px-3 py-2 text-right font-medium text-slate-700">
+                          Wrong
+                        </th>
+                        <th className="px-3 py-2 text-right font-medium text-slate-700">
+                          Unclear
+                        </th>
+                        <th className="px-3 py-2 text-right font-medium text-slate-700">
+                          Too hard
+                        </th>
+                        <th className="px-3 py-2 text-right font-medium text-slate-700">
+                          Too easy
+                        </th>
+                        <th className="px-3 py-2 text-right font-medium text-slate-700">
+                          Typos
+                        </th>
+                        <th className="px-3 py-2 text-right font-medium text-slate-700">
+                          Last reported
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {aggregates.map((row) => (
+                        <tr key={`${row.trainer_type}:${row.question_identifier}`} className="border-b border-slate-100 hover:bg-slate-50">
+                          <td className="px-3 py-2 text-slate-700 whitespace-nowrap">
+                            {row.trainer_type.replace(/_/g, " ")}
+                          </td>
+                          <td className="px-3 py-2 text-slate-800 font-mono text-xs">
+                            {row.question_identifier}
+                          </td>
+                          <td className="px-3 py-2 text-slate-700 text-xs">
+                            {row.passage_id ?? "—"}
+                          </td>
+                          <td className="px-3 py-2 text-right font-semibold text-slate-900">
+                            {row.total}
+                          </td>
+                          <td className="px-3 py-2 text-right text-slate-800">
+                            {row.issues.wrong_answer || "—"}
+                          </td>
+                          <td className="px-3 py-2 text-right text-slate-800">
+                            {row.issues.unclear_wording || "—"}
+                          </td>
+                          <td className="px-3 py-2 text-right text-slate-800">
+                            {row.issues.too_hard || "—"}
+                          </td>
+                          <td className="px-3 py-2 text-right text-slate-800">
+                            {row.issues.too_easy || "—"}
+                          </td>
+                          <td className="px-3 py-2 text-right text-slate-800">
+                            {row.issues.typo || "—"}
+                          </td>
+                          <td className="px-3 py-2 text-right text-slate-700 whitespace-nowrap">
+                            {new Date(row.last_created_at).toLocaleString()}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                );
+              })()}
+            </div>
           </section>
         )}
 

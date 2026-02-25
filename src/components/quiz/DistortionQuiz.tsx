@@ -1,5 +1,7 @@
 import { useMemo, useState, useCallback, useEffect } from "react";
 import ReReadPassageModal from "./ReReadPassageModal";
+import QuestionFeedbackModal from "../feedback/QuestionFeedbackModal";
+import type { TrainingType } from "../../types/training";
 
 const NUM_QUESTIONS = 4;
 
@@ -259,6 +261,8 @@ type DistortionQuizProps = {
   onComplete: (correct: number, total: number, breakdown: QuestionBreakdownItem[]) => void;
   allowReRead?: boolean;
   questionCount?: number;
+  trainerType: TrainingType;
+  passageId: string;
 };
 
 function buildQuestions(passageText: string, count: number): Question[] {
@@ -342,6 +346,8 @@ export default function DistortionQuiz({
   onComplete,
   allowReRead = true,
   questionCount = NUM_QUESTIONS,
+  trainerType,
+  passageId,
 }: DistortionQuizProps) {
   const questions = useMemo(() => buildQuestions(passageText, questionCount), [passageText, questionCount]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -350,6 +356,7 @@ export default function DistortionQuiz({
   );
   const [flagged, setFlagged] = useState<Set<number>>(new Set());
   const [showReRead, setShowReRead] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const current = questions[currentIndex];
   const answeredCount = answers.filter((a) => a !== null).length;
@@ -482,17 +489,23 @@ export default function DistortionQuiz({
           <span className="text-[13px] font-medium text-ucat-muted">
             QUESTION {currentIndex + 1} OF {questions.length}
           </span>
-          <button
-            type="button"
-            onClick={toggleFlag}
-            className={`flex items-center justify-center gap-1.5 text-[13px] px-3 py-2 min-h-[44px] rounded ${flagged.has(currentIndex)
-              ? "bg-amber-100 text-amber-800"
-              : "text-ucat-muted hover:bg-slate-100"
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                toggleFlag();
+                setFeedbackOpen(true);
+              }}
+              className={`flex items-center justify-center gap-1.5 text-[13px] px-3 py-2 min-h-[44px] rounded ${
+                flagged.has(currentIndex)
+                  ? "bg-amber-100 text-amber-800"
+                  : "text-ucat-muted hover:bg-slate-100"
               }`}
-          >
-            <span aria-hidden>🚩</span>
-            Flag
-          </button>
+            >
+              <span aria-hidden>🚩</span>
+              Flag / report
+            </button>
+          </div>
         </div>
         <p className="text-[16px] leading-[1.5] text-ucat-body mb-6 font-normal">
           {current?.displayedSentence}?
@@ -593,6 +606,20 @@ export default function DistortionQuiz({
         onClose={() => setShowReRead(false)}
         passageText={passageText}
       />
+
+      {questions.length > 0 && (
+        <QuestionFeedbackModal
+          isOpen={feedbackOpen}
+          onClose={() => setFeedbackOpen(false)}
+          context={{
+            trainerType,
+            questionKind: "vr_tfct",
+            questionIdentifier: `distortion:${passageId}:${currentIndex}`,
+            passageId,
+            sessionId: null,
+          }}
+        />
+      )}
     </div>
   );
 }

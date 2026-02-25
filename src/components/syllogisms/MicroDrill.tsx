@@ -1,5 +1,6 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { useSyllogismLogic } from "./useSyllogismLogic";
+import QuestionFeedbackModal from "../feedback/QuestionFeedbackModal";
 
 const MICRO_BATCH_SIZE = 10;
 
@@ -34,6 +35,8 @@ export default function MicroDrill() {
     submitAnswer,
     advanceToNext,
   } = useSyllogismLogic("micro");
+
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const current = questions[currentIndex];
   const hasAnsweredCurrent =
@@ -98,15 +101,42 @@ export default function MicroDrill() {
                   Decide whether the conclusion must follow from the premises.
                 </p>
               </div>
-              <div className="text-right">
-                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                  Time
-                </p>
-                <p className="text-sm font-semibold text-slate-900">
-                  {totalElapsedSeconds}s
-                </p>
+              <div className="flex flex-col items-end gap-1 text-right">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!current) return;
+                    setFeedbackOpen(true);
+                  }}
+                  className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-800"
+                >
+                  <span aria-hidden>🚩</span>
+                  Report question
+                </button>
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    Time
+                  </p>
+                  <p className="text-sm font-semibold text-slate-900">
+                    {totalElapsedSeconds}s
+                  </p>
+                </div>
               </div>
             </div>
+
+            {current && (
+              <QuestionFeedbackModal
+                isOpen={feedbackOpen}
+                onClose={() => setFeedbackOpen(false)}
+                context={{
+                  trainerType: "syllogism_micro",
+                  questionKind: "dm_syllogism",
+                  questionIdentifier: `syllogism:${current.id}`,
+                  passageId: null,
+                  sessionId: null,
+                }}
+              />
+            )}
 
             {error && (
               <p className="mb-3 text-sm text-red-600">{error}</p>

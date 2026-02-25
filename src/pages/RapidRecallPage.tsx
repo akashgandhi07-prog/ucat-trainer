@@ -31,6 +31,19 @@ type LocationState = {
   difficulty?: TrainingDifficulty;
 };
 
+function RecallModeExplainer() {
+  return (
+    <div className="mb-4 rounded-lg bg-training-highlight-muted border border-primary/10 px-4 py-3 text-left">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary mb-1">
+        Recall mode
+      </p>
+      <p className="text-sm text-slate-800 leading-relaxed">
+        Recall mode focuses on whether you can remember exactly what the passage stated. The review after each run mainly points you back to the key sentence, rather than walking through a full exam-style reasoning chain.
+      </p>
+    </div>
+  );
+}
+
 export default function RapidRecallPage() {
   const location = useLocation();
   const state = location.state as LocationState | null;
@@ -245,6 +258,7 @@ export default function RapidRecallPage() {
       <main id="main-content" className="flex-1 flex items-center justify-center py-12 px-4" tabIndex={-1}>
         {phase === "reading" && (
           <div className="w-full max-w-3xl">
+            <RecallModeExplainer />
             {showMoreTimeModal && (
               <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" aria-modal="true" role="dialog" aria-labelledby="rapid-more-time-title">
                 <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 text-center">
@@ -301,15 +315,21 @@ export default function RapidRecallPage() {
         )}
 
         {phase === "questions" && (
-          <DistortionQuiz
-            passageText={passageText}
-            onComplete={handleQuizComplete}
-            allowReRead={false}
-          />
+          <div className="w-full max-w-2xl">
+            <RecallModeExplainer />
+            <DistortionQuiz
+              passageText={passageText}
+              passageId={passage.id}
+              trainerType="rapid_recall"
+              onComplete={handleQuizComplete}
+              allowReRead={false}
+            />
+          </div>
         )}
 
         {phase === "results" && (
           <div className="w-full max-w-md mx-auto text-center">
+            <RecallModeExplainer />
             <h2 className="text-xl font-semibold text-slate-900 mb-6">
               Rapid Recall - Results
             </h2>
@@ -363,6 +383,25 @@ export default function RapidRecallPage() {
                       ? item.userAnswer === item.correctAnswerRaw
                       : (item.userAnswer === "true" && item.correctAnswer) ||
                         (item.userAnswer === "false" && !item.correctAnswer);
+                    const explanation = (() => {
+                      const snippet = item.passageSnippet;
+                      if (item.correctAnswerRaw === "true") {
+                        if (snippet) {
+                          return `The passage stated that "${snippet}", which matches this statement, so the correct answer is True.`;
+                        }
+                        return "This statement matches what the passage says, so the correct answer is True.";
+                      }
+                      if (item.correctAnswerRaw === "false") {
+                        if (snippet) {
+                          return `The passage stated that "${snippet}". The statement you saw changes the meaning (for example by exaggerating scope, cause, or certainty), so the correct answer is False.`;
+                        }
+                        return "This statement changes or overstates what the passage says, so the correct answer is False.";
+                      }
+                      if (snippet) {
+                        return `The passage only stated that "${snippet}". It doesn't fully support the extra claim in this statement, so the correct answer is Can't Tell.`;
+                      }
+                      return "The passage doesn't give enough information to decide, so the correct answer is Can't Tell.";
+                    })();
                     return (
                       <div
                         key={index}
@@ -410,14 +449,24 @@ export default function RapidRecallPage() {
                             Correct answer: {item.correctAnswerLabel}
                           </p>
                         )}
-                        {item.passageSnippet && (
+                        {explanation && (
                           <div className="mt-2 pt-2 border-t border-slate-200/70">
-                            <p className="text-[11px] font-medium text-slate-500 mb-0.5">
-                              From the passage
+                            <p className="text-[11px] font-semibold text-slate-500 mb-0.5">
+                              Why the answer is {item.correctAnswerLabel}
                             </p>
-                            <p className="text-xs text-slate-700">
-                              {item.passageSnippet}
+                            <p className="text-xs text-slate-700 mb-1.5">
+                              {explanation}
                             </p>
+                            {item.passageSnippet && (
+                              <>
+                                <p className="text-[11px] font-medium text-slate-500 mb-0.5">
+                                  From the passage
+                                </p>
+                                <p className="text-xs text-slate-700">
+                                  {item.passageSnippet}
+                                </p>
+                              </>
+                            )}
                           </div>
                         )}
                       </div>

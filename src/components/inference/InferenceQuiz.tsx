@@ -8,6 +8,8 @@ import type {
   TextSpan,
   InferenceAnswerResult,
 } from "../../types/inference";
+import QuestionFeedbackModal from "../feedback/QuestionFeedbackModal";
+import type { TrainingType } from "../../types/training";
 
 type InferenceQuizProps = {
   passageText: string;
@@ -25,6 +27,8 @@ type InferenceQuizProps = {
   ) => void;
   onProgressChange?: (correct: number, total: number, currentIndex: number) => void;
   onBreakdownChange?: (breakdown: InferenceBreakdownItem[]) => void;
+  trainerType?: TrainingType;
+  passageId?: string;
 };
 
 export default function InferenceQuiz({
@@ -34,6 +38,8 @@ export default function InferenceQuiz({
   onNextQuestion,
   onProgressChange,
   onBreakdownChange,
+  trainerType = "inference_trainer",
+  passageId,
 }: InferenceQuizProps) {
   const passageRef = useRef<HTMLDivElement>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -50,6 +56,7 @@ export default function InferenceQuiz({
     explanation: string;
   } | null>(null);
   const [emptySelectionError, setEmptySelectionError] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const current = questions[currentIndex];
   const answeredCount = answers.size;
@@ -202,9 +209,19 @@ export default function InferenceQuiz({
             </p>
           </div>
 
-          <h3 className="text-slate-800 font-semibold text-lg mb-4">
-            {current.questionText}
-          </h3>
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <h3 className="text-slate-800 font-semibold text-lg">
+              {current.questionText}
+            </h3>
+            <button
+              type="button"
+              onClick={() => setFeedbackOpen(true)}
+              className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-800"
+            >
+              <span aria-hidden>🚩</span>
+              Report question
+            </button>
+          </div>
 
           {!feedback ? (
             <>
@@ -275,6 +292,20 @@ export default function InferenceQuiz({
           )}
         </div>
       </div>
+
+      {questions.length > 0 && (
+        <QuestionFeedbackModal
+          isOpen={feedbackOpen}
+          onClose={() => setFeedbackOpen(false)}
+          context={{
+            trainerType,
+            questionKind: "vr_inference",
+            questionIdentifier: `inference:${passageId ?? "unknown"}:${current.id}`,
+            passageId: passageId ?? undefined,
+            sessionId: null,
+          }}
+        />
+      )}
     </div>
   );
 }

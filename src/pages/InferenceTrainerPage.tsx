@@ -398,6 +398,8 @@ export default function InferenceTrainerPage() {
               onNextQuestion={handleNextQuestion}
               onProgressChange={handleProgressChange}
               onBreakdownChange={handleBreakdownChange}
+              trainerType="inference_trainer"
+              passageId={passage.id}
             />
           </main>
         </>

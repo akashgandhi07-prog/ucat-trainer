@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSyllogismLogic } from "./useSyllogismLogic";
+import QuestionFeedbackModal from "../feedback/QuestionFeedbackModal";
 
 const DRAG_DATA_KEY = "application/x-syllogism-answer";
 
@@ -31,6 +32,7 @@ export default function MacroDrill() {
 
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const answeredCount =
     questions.length > 0
@@ -118,12 +120,23 @@ export default function MacroDrill() {
               then submit.
             </p>
           </div>
-          <div className="text-right flex flex-col items-end gap-0.5">
+          <div className="flex flex-col items-end gap-1 text-right">
             {questions.length > 0 && !sessionFinished && (
               <p className="text-sm font-medium text-slate-600">
                 Answered: {answeredCount} / {questions.length}
               </p>
             )}
+            <button
+              type="button"
+              onClick={() => {
+                if (questions.length === 0) return;
+                setFeedbackOpen(true);
+              }}
+              className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-800"
+            >
+              <span aria-hidden>🚩</span>
+              Report block
+            </button>
             <div>
               <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
                 Time
@@ -360,6 +373,20 @@ export default function MacroDrill() {
               </div>
             )}
           </section>
+
+          {questions.length > 0 && (
+            <QuestionFeedbackModal
+              isOpen={feedbackOpen}
+              onClose={() => setFeedbackOpen(false)}
+              context={{
+                trainerType: "syllogism_macro",
+                questionKind: "dm_syllogism",
+                questionIdentifier: `syllogism_block:${questions[0].macro_block_id}`,
+                passageId: null,
+                sessionId: null,
+              }}
+            />
+          )}
         </div>
       </div>
   );

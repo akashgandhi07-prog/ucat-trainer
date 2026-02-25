@@ -374,7 +374,6 @@ comment on table public.analytics_events is
   'Product analytics events: page views, trainer usage, auth, feature usage.';
 
 
--- ─────────────────────────────────────────────────────────────────────────────
 -- 6) ADMIN STATS AND ANALYTICS (date-range aware)
 -- ─────────────────────────────────────────────────────────────────────────────
 -- get_admin_stats(since_ts, until_ts): null = all time
@@ -724,8 +723,197 @@ comment on function public.get_admin_usage_summary(timestamptz, timestamptz) is
   'Returns usage summary (incl. total time), trainer sessions/questions/time, guest activity, and per-user activity (name, time, WPM, days active). Admin only.';
 
 
+-- get_admin_registrations_overview(limit_rows): all registrations with usage across all time
+create or replace function public.get_admin_registrations_overview(limit_rows int default 5000)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  is_admin boolean;
+  result jsonb;
+begin
+  select (role = 'admin') into is_admin from public.profiles where id = auth.uid();
+  if is_admin is not true then
+    raise exception 'Forbidden: admin only';
+  end if;
+
+  with profiles_base as (
+    select
+      id,
+      created_at,
+      full_name,
+      first_name,
+      last_name,
+      email
+    from public.profiles
+    order by created_at desc nulls last
+    limit coalesce(limit_rows, 5000)
+  ),
+  user_sess as (
+    select
+      s.user_id,
+      count(*) filter (where s.training_type = 'speed_reading') as speed_reading,
+      count(*) filter (where s.training_type = 'rapid_recall') as rapid_recall,
+      count(*) filter (where s.training_type = 'keyword_scanning') as keyword_scanning,
+      count(*) filter (where s.training_type = 'calculator') as calculator,
+      count(*) filter (where s.training_type = 'inference_trainer') as inference_trainer,
+      count(*) filter (where s.training_type = 'mental_maths') as mental_maths,
+      coalesce(sum(s.total), 0) as session_questions,
+      coalesce(sum(s.correct), 0) as session_correct,
+      coalesce(sum(coalesce(s.time_seconds, 0)), 0) as total_session_seconds,
+      (array_agg(s.wpm order by s.created_at desc) filter (where s.training_type = 'speed_reading' and s.wpm is not null))[1] as last_wpm,
+      avg(s.wpm) filter (where s.training_type = 'speed_reading' and s.wpm is not null) as avg_wpm,
+      max(s.created_at) as last_sess
+    from public.sessions s
+    where s.user_id in (select id from profiles_base)
+    group by s.user_id
+  ),
+  user_syll as (
+    select
+      user_id,
+      count(*) filter (where mode = 'micro') as syllogism_micro,
+      count(*) filter (where mode = 'macro') as syllogism_macro,
+      coalesce(sum(total_questions), 0) as syllogism_questions,
+      coalesce(sum((average_time_per_decision * total_questions)::bigint), 0) as syllogism_seconds,
+      max(created_at) as last_syll
+    from public.syllogism_sessions
+    where user_id in (select id from profiles_base)
+    group by user_id
+  ),
+  user_days as (
+    select user_id, count(distinct d)::int as days_active
+    from (
+      select user_id, date(created_at) as d
+      from public.sessions
+      where user_id in (select id from profiles_base)
+      union
+      select user_id, date(created_at) as d
+      from public.syllogism_sessions
+      where user_id in (select id from profiles_base)
+    ) t
+    group by user_id
+  )
+  select coalesce(jsonb_agg(
+    jsonb_build_object(
+      'user_id', p.id,
+      'email', coalesce(trim(p.email), ''),
+      'display_name', coalesce(
+        nullif(trim(p.full_name), ''),
+        nullif(trim(coalesce(p.first_name, '') || ' ' || coalesce(p.last_name, '')), ' ')
+      , ''),
+      'created_at', p.created_at,
+      'speed_reading', coalesce(us.speed_reading, 0),
+      'rapid_recall', coalesce(us.rapid_recall, 0),
+      'keyword_scanning', coalesce(us.keyword_scanning, 0),
+      'calculator', coalesce(us.calculator, 0),
+      'inference_trainer', coalesce(us.inference_trainer, 0),
+      'mental_maths', coalesce(us.mental_maths, 0),
+      'syllogism_micro', coalesce(sy.syllogism_micro, 0),
+      'syllogism_macro', coalesce(sy.syllogism_macro, 0),
+      'total_questions', (coalesce(us.session_questions, 0) + coalesce(sy.syllogism_questions, 0)),
+      'session_correct', coalesce(us.session_correct, 0),
+      'session_questions', coalesce(us.session_questions, 0),
+      'total_time_seconds', (coalesce(us.total_session_seconds, 0) + coalesce(sy.syllogism_seconds, 0)),
+      'days_active', coalesce(ud.days_active, 0),
+      'last_wpm', us.last_wpm,
+      'avg_wpm', us.avg_wpm,
+      'last_active_at', greatest(us.last_sess, sy.last_syll)
+    ) order by p.created_at desc nulls last
+  ), '[]'::jsonb) into result
+  from profiles_base p
+  left join user_sess us on us.user_id = p.id
+  left join user_syll sy on sy.user_id = p.id
+  left join user_days ud on ud.user_id = p.id;
+
+  return result;
+end;
+$$;
+
+comment on function public.get_admin_registrations_overview(int) is
+  'Returns all registrations (profiles) with per-trainer usage and totals across all time. Admin only.';
+
+
 -- ─────────────────────────────────────────────────────────────────────────────
--- 7) VERIFICATION QUERY (run after the above to confirm everything is set up)
+-- 7) QUESTION FEEDBACK (per-question reports for DM & VR)
+-- ─────────────────────────────────────────────────────────────────────────────
+
+create table if not exists public.question_feedback (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users (id) on delete set null,
+  trainer_type text not null,
+  question_kind text not null,
+  question_identifier text not null,
+  issue_type text not null,
+  comment text,
+  passage_id text,
+  session_id uuid,
+  page_url text,
+  created_at timestamptz not null default now()
+);
+
+-- Ensure columns exist (idempotent with older partial schemas)
+alter table public.question_feedback add column if not exists user_id uuid references auth.users (id) on delete set null;
+alter table public.question_feedback add column if not exists trainer_type text;
+alter table public.question_feedback add column if not exists question_kind text;
+alter table public.question_feedback add column if not exists question_identifier text;
+alter table public.question_feedback add column if not exists issue_type text;
+alter table public.question_feedback add column if not exists comment text;
+alter table public.question_feedback add column if not exists passage_id text;
+alter table public.question_feedback add column if not exists session_id uuid;
+alter table public.question_feedback add column if not exists page_url text;
+alter table public.question_feedback add column if not exists created_at timestamptz not null default now();
+
+-- Enumerated issue types: keep in sync with frontend QuestionFeedbackIssueType.
+alter table public.question_feedback drop constraint if exists question_feedback_issue_type_check;
+alter table public.question_feedback add constraint question_feedback_issue_type_check
+  check (issue_type in ('wrong_answer', 'unclear_wording', 'too_hard', 'too_easy', 'typo', 'other'));
+
+-- Length limits to prevent abuse.
+alter table public.question_feedback drop constraint if exists question_feedback_comment_length_check;
+alter table public.question_feedback add constraint question_feedback_comment_length_check
+  check (comment is null or length(comment) <= 1000);
+
+alter table public.question_feedback drop constraint if exists question_feedback_page_url_length_check;
+alter table public.question_feedback add constraint question_feedback_page_url_length_check
+  check (page_url is null or length(page_url) <= 255);
+
+-- Indexes to support admin queries by question and recency.
+create index if not exists question_feedback_question_idx
+  on public.question_feedback (trainer_type, question_kind, question_identifier);
+
+create index if not exists question_feedback_created_at
+  on public.question_feedback (created_at desc);
+
+-- RLS: allow inserts from authenticated users (optionally linked to their user_id),
+-- and anonymous inserts when user_id is null. Only admins can read.
+alter table public.question_feedback enable row level security;
+
+drop policy if exists "Users can insert question feedback" on public.question_feedback;
+create policy "Users can insert question feedback"
+  on public.question_feedback for insert
+  to authenticated
+  with check (user_id is null or user_id = auth.uid());
+
+drop policy if exists "Anyone can insert anonymous question feedback" on public.question_feedback;
+create policy "Anyone can insert anonymous question feedback"
+  on public.question_feedback for insert
+  to anon
+  with check (user_id is null);
+
+drop policy if exists "Admins can view question feedback" on public.question_feedback;
+create policy "Admins can view question feedback"
+  on public.question_feedback for select
+  to authenticated
+  using (exists (select 1 from public.profiles where id = auth.uid() and role = 'admin'));
+
+comment on table public.question_feedback is
+  'Per-question feedback (issue type + optional comment) for Decision Making and Verbal Reasoning trainers.';
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 8) VERIFICATION QUERY (run after the above to confirm everything is set up)
 -- ─────────────────────────────────────────────────────────────────────────────
 -- This select will show you the tables and their columns so you can confirm:
 select
@@ -741,7 +929,7 @@ order by table_name, ordinal_position;
 
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 8) OPTIONAL: Make yourself admin
+-- 9) OPTIONAL: Make yourself admin
 -- Replace the UUID below with your auth user id from Authentication → Users
 -- ─────────────────────────────────────────────────────────────────────────────
 -- update public.profiles set role = 'admin' where id = 'your-auth-user-uuid-here';
