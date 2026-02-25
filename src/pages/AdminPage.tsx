@@ -140,6 +140,7 @@ type FeedbackRow = {
   description: string;
   page_url: string | null;
   created_at: string;
+  archived_at: string | null;
 };
 
 type FeedbackFilter = "all" | "bug" | "suggestion";
@@ -380,6 +381,9 @@ export default function AdminPage() {
   const [usageSummary, setUsageSummary] = useState<UsageSummaryResponse | null>(null);
   const [feedback, setFeedback] = useState<FeedbackRow[]>([]);
   const [feedbackFilter, setFeedbackFilter] = useState<FeedbackFilter>("all");
+  type FeedbackView = "active" | "archived";
+  const [feedbackView, setFeedbackView] = useState<FeedbackView>("active");
+  const [feedbackUpdatingIds, setFeedbackUpdatingIds] = useState<Set<string>>(new Set());
   const [questionFeedback, setQuestionFeedback] = useState<QuestionFeedbackRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -487,14 +491,19 @@ export default function AdminPage() {
 
       const { data: feedbackData, error: feedbackErr } = await supabase
         .from("bug_reports")
-        .select("id, user_id, type, description, page_url, created_at")
+        .select("id, user_id, type, description, page_url, created_at, archived_at")
         .order("created_at", { ascending: false })
         .limit(200);
       if (!mounted) return;
       if (feedbackErr) {
         dashboardLog.warn("Admin feedback fetch failed", { message: feedbackErr.message });
       } else {
-        setFeedback((feedbackData as FeedbackRow[]) ?? []);
+        setFeedback(
+          ((feedbackData as FeedbackRow[]) ?? []).map((row) => ({
+            ...row,
+            archived_at: row.archived_at ?? null,
+          }))
+        );
       }
 
       const { data: qfData, error: qfErr } = await supabase
@@ -626,6 +635,44 @@ export default function AdminPage() {
       </div>
     );
   }
+
+  const isFeedbackUpdating = (id: string): boolean => feedbackUpdatingIds.has(id);
+
+  const handleArchiveToggle = async (id: string, shouldArchive: boolean) => {
+    setFeedbackUpdatingIds((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+    const { error: updateErr } = await supabase
+      .from("bug_reports")
+      .update({
+        archived_at: shouldArchive ? new Date().toISOString() : null,
+      })
+      .eq("id", id);
+    if (updateErr) {
+      dashboardLog.warn("Admin feedback archive toggle failed", {
+        message: updateErr.message,
+        code: updateErr.code,
+      });
+    } else {
+      setFeedback((prev) =>
+        prev.map((row) =>
+          row.id === id
+            ? {
+                ...row,
+                archived_at: shouldArchive ? new Date().toISOString() : null,
+              }
+            : row
+        )
+      );
+    }
+    setFeedbackUpdatingIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  };
 
   if (loading) {
     return (
@@ -1577,16 +1624,48 @@ export default function AdminPage() {
           <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
             <h2 className="text-lg font-semibold text-slate-900">Bugs & feedback</h2>
             <div className="flex flex-wrap items-center gap-2">
+              <div className="flex rounded-lg border border-slate-200 p-0.5 bg-slate-50">
+                {(["active", "archived"] as const).map((view) => (
+                  <button
+                    key={view}
+                    type="button"
+                    onClick={() => setFeedbackView(view)}
+                    className={`min-h-[44px] px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                      feedbackView === view
+                        ? "bg-white text-slate-900 shadow-sm"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    {view === "active" ? "Active" : "Archived"}
+                  </button>
+                ))}
+              </div>
               <button
                 type="button"
-                onClick={() => exportFeedbackCsv(feedback)}
+                onClick={() =>
+                  exportFeedbackCsv(
+                    feedback
+                      .filter((r) =>
+                        feedbackView === "active" ? r.archived_at == null : r.archived_at != null
+                      )
+                      .filter((r) => feedbackFilter === "all" || r.type === feedbackFilter)
+                  )
+                }
                 className="min-h-[44px] px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
               >
                 Export CSV
               </button>
               <button
                 type="button"
-                onClick={() => exportFeedbackJson(feedback)}
+                onClick={() =>
+                  exportFeedbackJson(
+                    feedback
+                      .filter((r) =>
+                        feedbackView === "active" ? r.archived_at == null : r.archived_at != null
+                      )
+                      .filter((r) => feedbackFilter === "all" || r.type === feedbackFilter)
+                  )
+                }
                 className="min-h-[44px] px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
               >
                 Export JSON
@@ -1609,14 +1688,21 @@ export default function AdminPage() {
               </div>
             </div>
           </div>
-          {feedback.length === 0 ? (
-            <p className="text-slate-500">No feedback yet.</p>
-          ) : (
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-              <ul className="divide-y divide-slate-200">
-                {feedback
-                  .filter((r) => feedbackFilter === "all" || r.type === feedbackFilter)
-                  .map((r) => (
+          {(() => {
+            const visibleFeedback = feedback
+              .filter((r) => (feedbackView === "active" ? r.archived_at == null : r.archived_at != null))
+              .filter((r) => feedbackFilter === "all" || r.type === feedbackFilter);
+            if (visibleFeedback.length === 0) {
+              return (
+                <p className="text-slate-500">
+                  {feedbackView === "active" ? "No feedback yet." : "No archived feedback."}
+                </p>
+              );
+            }
+            return (
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <ul className="divide-y divide-slate-200">
+                  {visibleFeedback.map((r) => (
                     <li key={r.id} className="p-4">
                       <div className="flex items-center gap-2 mb-1">
                         <span
@@ -1628,6 +1714,23 @@ export default function AdminPage() {
                         >
                           {r.type === "bug" ? "Bug" : "Suggestion"}
                         </span>
+                        {r.archived_at && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">
+                            Archived
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleArchiveToggle(r.id, !r.archived_at)}
+                          disabled={isFeedbackUpdating(r.id)}
+                          className="ml-auto inline-flex items-center px-2.5 py-1 rounded text-xs font-medium border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                          {isFeedbackUpdating(r.id)
+                            ? "Saving…"
+                            : r.archived_at
+                            ? "Unarchive"
+                            : "Archive"}
+                        </button>
                       </div>
                       <p className="text-sm text-slate-900 whitespace-pre-wrap">{r.description}</p>
                       <p className="text-xs text-slate-500 mt-1">
@@ -1636,9 +1739,10 @@ export default function AdminPage() {
                       </p>
                     </li>
                   ))}
-              </ul>
-            </div>
-          )}
+                </ul>
+              </div>
+            );
+          })()}
         </section>
       </main>
       <Footer />

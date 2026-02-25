@@ -14,10 +14,14 @@ create table if not exists public.bug_reports (
   type text not null default 'bug' check (type in ('bug', 'suggestion')),
   description text not null,
   page_url text,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  archived_at timestamptz
 );
 
 create index if not exists bug_reports_created_at on public.bug_reports (created_at desc);
+
+create index if not exists bug_reports_archived_at_created_at_idx
+  on public.bug_reports (archived_at nulls first, created_at desc);
 
 alter table public.bug_reports enable row level security;
 
@@ -31,6 +35,26 @@ create policy "Admins can view bug reports"
   to authenticated
   using (
     exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+  );
+
+create policy "Admins can update bug reports"
+  on public.bug_reports for update
+  to authenticated
+  using (
+    exists (
+      select 1
+      from public.profiles
+      where id = auth.uid()
+        and role = 'admin'
+    )
+  )
+  with check (
+    exists (
+      select 1
+      from public.profiles
+      where id = auth.uid()
+        and role = 'admin'
+    )
   );
 
 comment on table public.bug_reports is 'User-submitted feedback (bugs and suggestions); admin-only read.';
