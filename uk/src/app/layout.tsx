@@ -27,8 +27,12 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full">{children}</body>
+      {/* suppressHydrationWarning: browser extensions (e.g. Grammarly) inject body attributes before hydrate */}
+      <body className="min-h-full" suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   );
 }
