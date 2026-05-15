@@ -10,6 +10,7 @@ import {
   type QuestionFeedbackKind,
   submitQuestionFeedback,
 } from "../../lib/questionFeedback";
+import { useToast } from "../../contexts/ToastContext";
 
 export type QuestionFeedbackContext = {
   trainerType: QuestionFeedbackTrainerType;
@@ -42,6 +43,7 @@ export default function QuestionFeedbackModal({
   context,
 }: QuestionFeedbackModalProps) {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">(
     "idle"
   );
@@ -125,21 +127,31 @@ export default function QuestionFeedbackModal({
         ? window.location.pathname + window.location.search
         : undefined;
 
-    const result = await submitQuestionFeedback({
-      trainerType: context.trainerType,
-      questionKind: context.questionKind,
-      questionIdentifier: context.questionIdentifier,
-      issueType: values.issueType,
-      comment: values.comment,
-      passageId: context.passageId ?? undefined,
-      sessionId: context.sessionId ?? undefined,
-      pageUrl,
-      userId: user?.id ?? null,
-    });
+    let result: Awaited<ReturnType<typeof submitQuestionFeedback>>;
+    try {
+      result = await submitQuestionFeedback({
+        trainerType: context.trainerType,
+        questionKind: context.questionKind,
+        questionIdentifier: context.questionIdentifier,
+        issueType: values.issueType,
+        comment: values.comment,
+        passageId: context.passageId ?? undefined,
+        sessionId: context.sessionId ?? undefined,
+        pageUrl,
+        userId: user?.id ?? null,
+      });
+    } catch {
+      setStatus("error");
+      const fallback = "Failed to send. Please try again.";
+      setMessage(fallback);
+      showToast(fallback, { variant: "error", duration: 5000 });
+      return;
+    }
 
     if (!result.success) {
       setStatus("error");
       setMessage(result.error);
+      showToast(result.error, { variant: "error", duration: 5000 });
       return;
     }
 
@@ -287,11 +299,9 @@ export default function QuestionFeedbackModal({
             {message && (
               <p
                 id="question-feedback-status"
-                className={`text-sm ${
-                  status === "error"
-                    ? "text-destructive"
-                    : "text-training-success"
-                }`}
+                role="status"
+                aria-live="polite"
+                className={`text-sm ${status === "error" ? "text-red-600" : "text-emerald-700"}`}
               >
                 {message}
               </p>

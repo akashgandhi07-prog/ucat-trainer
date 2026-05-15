@@ -76,6 +76,8 @@ New users are synced to Mailchimp **as soon as they press Register**, via a data
 
    Until both are set to real values (no `REPLACE_WITH` or placeholders), the trigger will do nothing and no request is sent.
 
+   **RLS:** `public.mailchimp_webhook_config` has **RLS enabled** (migration **`025_mailchimp_webhook_config_enable_rls.sql`**). The **anon** API key cannot `SELECT` these rows; keep using the **SQL Editor** (or another privileged session) for the `UPDATE` statements above. Supabase **Advisors** may list INFO “RLS enabled no policy” for this table — that is **intentional** (deny client reads of secrets). See **`docs/UNIFY_BULLET7_ADVISORS.md`**.
+
 ### Get Mailchimp credentials
 
 - **API key**: Mailchimp → Account → Extras → API keys → Create a key

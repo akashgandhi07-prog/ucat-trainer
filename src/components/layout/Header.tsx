@@ -4,6 +4,8 @@ import { useAuth } from "../../hooks/useAuth";
 import { useAuthModal } from "../../contexts/AuthModalContext";
 import { useBugReportModal } from "../../contexts/BugReportContext";
 
+import { PLANNER_ROUTES, plannerAppBase, plannerPath } from "../../lib/plannerUrl";
+
 function MenuIcon({ open }: { open: boolean }) {
   return open ? (
     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
@@ -32,6 +34,10 @@ export default function Header() {
 
   const showSessionRecovery = !loading && !user && sessionLoadFailed;
 
+  const plannerBase = plannerAppBase();
+  const studyPlanUrl = plannerPath(PLANNER_ROUTES.dashboard) ?? plannerBase;
+  const mockScoresUrl = plannerPath(PLANNER_ROUTES.mockScores);
+
   const navLinks = (
     <>
       <Link
@@ -48,6 +54,28 @@ export default function Header() {
       >
         Dashboard
       </Link>
+      {studyPlanUrl ? (
+        <a
+          href={studyPlanUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => setMobileMenuOpen(false)}
+          className="text-sm font-medium text-foreground hover:text-primary transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center py-2 px-2"
+        >
+          Study plan
+        </a>
+      ) : null}
+      {mockScoresUrl ? (
+        <a
+          href={mockScoresUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => setMobileMenuOpen(false)}
+          className="text-sm font-medium text-foreground hover:text-primary transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center py-2 px-2"
+        >
+          Mock scores
+        </a>
+      ) : null}
       <button
         type="button"
         onClick={() => {

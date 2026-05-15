@@ -35,6 +35,8 @@ import { upsertProfile, type Stream } from "../lib/profileApi";
 import type { SessionRow } from "../types/session";
 import type { SyllogismSession } from "../types/syllogisms";
 import SyllogismAnalytics from "../components/dashboard/SyllogismAnalytics";
+import UnifiedProductHub from "../components/dashboard/UnifiedProductHub";
+import { plannerAppBase } from "../lib/plannerUrl";
 
 type ChartPoint = {
   date: string;
@@ -825,6 +827,7 @@ export default function Dashboard() {
 
     return (
       <>
+        {plannerAppBase() ? <UnifiedProductHub /> : null}
         <section className="mb-8">
           <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-6">
             <p className="text-amber-900 font-semibold mb-1">

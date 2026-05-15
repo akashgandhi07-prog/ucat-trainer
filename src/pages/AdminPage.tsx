@@ -351,8 +351,8 @@ function filterAndSortRegistrations(
     });
   }
   out = [...out].sort((a, b) => {
-    let aVal = a[sortKey] as string | number | null | undefined;
-    let bVal = b[sortKey] as string | number | null | undefined;
+    const aVal = a[sortKey] as string | number | null | undefined;
+    const bVal = b[sortKey] as string | number | null | undefined;
     if (aVal == null && bVal == null) return 0;
     if (aVal == null) return sortDir === "asc" ? -1 : 1;
     if (bVal == null) return sortDir === "asc" ? 1 : -1;

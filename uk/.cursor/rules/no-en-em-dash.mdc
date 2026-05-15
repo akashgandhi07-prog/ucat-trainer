@@ -1,0 +1,15 @@
+---
+description: Do not use Unicode en dash or em dash in this repo (use hyphen or punctuation).
+alwaysApply: true
+---
+
+# No en/em dashes
+
+Never type U+2013 (en dash) or U+2014 (em dash) in user-facing strings, comments, migrations, markdown, or code.
+
+Use instead:
+
+- A normal hyphen `-` for ranges (e.g. `300-900`, `Mon-Fri`, `1-4`).
+- A comma, semicolon, period, colon, or rephrasing instead of sentence-level em-dash breaks.
+
+Running `npm run lint` fails if either character appears under `src/`, `supabase/`, `.cursor/rules/`, or root markdown/config files scanned by `scripts/check-no-en-em-dash.mjs`.

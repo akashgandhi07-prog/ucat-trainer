@@ -4,7 +4,7 @@ import { trackPageView } from "../../lib/analytics";
 
 declare global {
   interface Window {
-    dataLayer?: any[];
+    dataLayer?: unknown[];
   }
 }
 

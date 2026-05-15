@@ -8,7 +8,8 @@ export const feedbackSchema = z.object({
   description: z
     .string()
     .min(1, "Please describe your feedback.")
-    .max(DESCRIPTION_MAX, `Description must be ${DESCRIPTION_MAX} characters or fewer.`),
+    .max(DESCRIPTION_MAX, `Description must be ${DESCRIPTION_MAX} characters or fewer.`)
+    .refine((s) => s.trim().length > 0, "Please describe your feedback."),
   pageUrl: z
     .string()
     .max(PAGE_URL_MAX, `Page URL must be ${PAGE_URL_MAX} characters or fewer.`)

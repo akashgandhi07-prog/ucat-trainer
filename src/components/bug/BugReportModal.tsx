@@ -7,6 +7,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { supabaseLog } from "../../lib/logger";
 import { trackEvent } from "../../lib/analytics";
 import { feedbackSchema, type FeedbackFormData } from "../../lib/feedbackSchema";
+import { useToast } from "../../contexts/ToastContext";
 
 export type FeedbackType = "bug" | "suggestion";
 
@@ -22,6 +23,7 @@ const PAGE_URL_MAX = 255;
 
 export default function BugReportModal({ isOpen, onClose }: BugReportModalProps) {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [honeypot, setHoneypot] = useState(""); // Honeypot field for spam prevention
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
@@ -75,7 +77,11 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
               setRateLimitRemaining(Math.ceil((RATE_LIMIT_MS - newElapsed) / 1000));
             }
           }, 1000);
+        } else {
+          setRateLimitRemaining(null);
         }
+      } else {
+        setRateLimitRemaining(null);
       }
     }
 
@@ -124,15 +130,27 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
 
     setStatus("loading");
     setMessage("");
-    const { error } = await supabase.from("bug_reports").insert({
-      user_id: user?.id ?? null,
-      type: data.feedbackType,
-      description: trimmed,
-      page_url: normalizedPageUrl,
-    });
+    let insertError: { message: string; code?: string } | null = null;
+    try {
+      const { error } = await supabase.from("bug_reports").insert({
+        user_id: user?.id ?? null,
+        type: data.feedbackType,
+        description: trimmed,
+        page_url: normalizedPageUrl,
+      });
+      insertError = error;
+    } catch (err) {
+      supabaseLog.error("Feedback insert threw", {
+        message: err instanceof Error ? err.message : String(err),
+      });
+      insertError = { message: "network", code: "exception" };
+    }
 
-    if (error) {
-      supabaseLog.error("Feedback insert failed", { message: error.message, code: error.code });
+    if (insertError) {
+      supabaseLog.error("Feedback insert failed", {
+        message: insertError.message,
+        code: insertError.code,
+      });
       setStatus("error");
       setMessage("Failed to send. Please try again.");
       return;
@@ -195,12 +213,30 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
             </Dialog.Close>
           </div>
 
-        <form onSubmit={rhfHandleSubmit(onSubmit)} className="space-y-4">
-          {/* Honeypot field - hidden from users, catches bots */}
-          <div className="absolute opacity-0 pointer-events-none" aria-hidden="true">
-            <label htmlFor="feedback-website">Website</label>
+        <form
+          onSubmit={rhfHandleSubmit(onSubmit, (fieldErrors) => {
+            const msg =
+              fieldErrors.description?.message ??
+              fieldErrors.pageUrl?.message ??
+              fieldErrors.feedbackType?.message ??
+              "Please fix the highlighted fields.";
+            showToast(msg, {
+              variant: "error",
+              duration: 4500,
+            });
+            document.getElementById("feedback-description")?.scrollIntoView({
+              block: "nearest",
+              behavior: "smooth",
+            });
+          })}
+          className="space-y-4"
+        >
+          {/* Honeypot — avoid labels like "Website" that password managers autofill */}
+          <div className="pointer-events-none absolute left-[-9999px] top-0 opacity-0" aria-hidden="true">
+            <label htmlFor="feedback-internal-ref">Internal reference</label>
             <input
-              id="feedback-website"
+              id="feedback-internal-ref"
+              name="internal_ref"
               type="text"
               value={honeypot}
               onChange={(e) => setHoneypot(e.target.value)}
@@ -271,7 +307,9 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
           </div>
           {message && (
             <p
-              className={`text-sm ${status === "error" ? "text-destructive" : "text-training-success"}`}
+              role="status"
+              aria-live="polite"
+              className={`text-sm ${status === "error" ? "text-red-600" : "text-emerald-700"}`}
             >
               {message}
             </p>

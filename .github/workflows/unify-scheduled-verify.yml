@@ -1,0 +1,43 @@
+# Bullet 9: weekly + manual + integration-branch pushes (same gate as PR CI).
+
+name: Unify scheduled verify
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1"
+  push:
+    branches:
+      - main
+      - skills-plan-unify
+    paths:
+      - "supabase/migrations/**"
+      - "src/**"
+      - "scripts/**"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig*.json"
+      - "vite.config.*"
+      - "eslint.config.*"
+      - "uk/**"
+      - ".github/workflows/trainer-unify-guard.yml"
+      - ".github/workflows/unify-scheduled-verify.yml"
+
+jobs:
+  unify-full:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: |
+            package-lock.json
+            uk/package-lock.json
+
+      - name: Install root + full unify verify (trainer + uk)
+        run: |
+          npm ci
+          npm run unify:bullet2-verify-ci

@@ -77,7 +77,14 @@ export async function submitQuestionFeedback(
   payload: QuestionFeedbackSubmitPayload
 ): Promise<{ success: true } | { success: false; error: string }> {
   const { userId, ...rest } = payload;
-  const parsed = questionFeedbackSchema.safeParse(rest);
+  const normalizedRest = {
+    ...rest,
+    sessionId:
+      rest.sessionId != null && String(rest.sessionId).trim() !== ""
+        ? rest.sessionId
+        : undefined,
+  };
+  const parsed = questionFeedbackSchema.safeParse(normalizedRest);
   if (!parsed.success) {
     const firstError = parsed.error.issues[0]?.message ?? "Invalid feedback.";
     return { success: false, error: firstError };

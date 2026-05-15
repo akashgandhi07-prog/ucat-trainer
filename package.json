@@ -6,9 +6,26 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
+    "lint": "npx eslint .",
     "preview": "vite preview",
-    "seed:syllogisms": "tsx scripts/seedSyllogisms.ts"
+    "seed:syllogisms": "tsx scripts/seedSyllogisms.ts",
+    "unify:bullet1-audit": "node scripts/unify-bullet1-audit.mjs",
+    "unify:check-migrations": "node scripts/check-migrations-trainer-safe.mjs",
+    "unify:trainer-smoke": "npm run lint && npm run build",
+    "unify:planner-typecheck": "cd uk && node ./node_modules/typescript/lib/tsc.js --noEmit",
+    "unify:planner-build": "cd uk && npm run build",
+    "unify:planner-lint": "cd uk && npm run lint",
+    "unify:bullet2-verify": "npm run unify:bullet2-verify-ci",
+    "unify:planner-install-and-verify": "node scripts/uk-planner-install-verify.mjs",
+    "unify:bullet2-verify-ci": "npm run unify:bullet1-guard && npm run unify:planner-install-and-verify",
+    "unify:bullet8-verify": "npm run unify:bullet2-verify-ci",
+    "unify:checklist-automated": "npm run unify:bullet2-verify-ci",
+    "unify:manual-bullets": "node scripts/unify-manual-bullets-reminder.mjs",
+    "unify:merge-preflight": "npm run unify:bullet1-audit && npm run unify:check-migrations && npm run unify:submit-sql",
+    "unify:submit-sql": "node scripts/concat-migrations.mjs",
+    "unify:release-gate-automated": "npm run unify:bullet2-verify-ci",
+    "unify:bullet5-verify": "npm run unify:bullet1-guard",
+    "unify:bullet1-guard": "npm run unify:check-migrations && npm run unify:trainer-smoke"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
