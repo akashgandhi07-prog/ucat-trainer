@@ -176,6 +176,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           });
         }
 
+        try {
+          const { migrateGuestPlannerToCloud } = await import(
+            "../planner/lib/migrate-guest-planner"
+          );
+          const plannerMerge = await migrateGuestPlannerToCloud(session.user.id);
+          if (plannerMerge.migrated && mounted) {
+            showToast("Your study plan was saved to your account.", { variant: "success" });
+          }
+        } catch (plannerErr) {
+          authLog.error("Guest planner merge failed", plannerErr);
+          if (mounted) {
+            showToast(
+              "Couldn't save your guest study plan to the cloud. It's still on this device.",
+              { variant: "error" },
+            );
+          }
+        }
+
         const meta = session.user.user_metadata as Record<string, unknown> | null;
         const fullName =
           (meta?.full_name as string) || (meta?.name as string) || null;

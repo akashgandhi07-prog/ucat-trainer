@@ -11,8 +11,19 @@ export function safeHttpPlannerUrl(raw: unknown): string | null {
   }
 }
 
+/**
+ * When false, dashboard copy avoids "one account across apps" (optional separate sign-in per app).
+ * Planner links still show when {@link plannerAppBase} resolves.
+ */
+export const UNIFIED_LOGIN_MESSAGING_ENABLED = false;
+
+/** Native study planner + mock tracker run inside the Vite app (no iframe). */
+export function isPlannerIntegrated(): boolean {
+  return true;
+}
+
 export function plannerAppBase(): string | null {
-  return safeHttpPlannerUrl(import.meta.env.VITE_PLANNER_URL);
+  return null;
 }
 
 /** Absolute URL to a path on the deployed Next planner (leading slash on path). */
@@ -28,4 +39,6 @@ export const PLANNER_ROUTES = {
   plan: "/dashboard/plan",
   mockScores: "/dashboard/scores",
   onboarding: "/onboarding",
+  /** Guest-friendly entry: build a plan without signing in first */
+  studyPlanEntry: "/onboarding",
 } as const;

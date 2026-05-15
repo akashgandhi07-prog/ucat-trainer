@@ -3,7 +3,6 @@ import { useLocation, Link, Navigate } from "react-router-dom";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import { useAuth } from "../hooks/useAuth";
-import { useAuthModal } from "../contexts/AuthModalContext";
 import type { Passage } from "../data/passages";
 import { PASSAGES } from "../data/passages";
 import type { SessionInsertPayload } from "../types/session";
@@ -93,7 +92,6 @@ export default function KeywordScanningPage() {
   const hasAutoSavedRef = useRef(false);
   const mountedRef = useRef(true);
   const { user } = useAuth();
-  const { openAuthModal } = useAuthModal();
 
   useEffect(() => {
     mountedRef.current = true;
@@ -184,7 +182,6 @@ export default function KeywordScanningPage() {
           time_seconds: timeSeconds,
           difficulty,
         });
-        openAuthModal();
         return;
       }
       setSaveError(null);
@@ -236,7 +233,7 @@ export default function KeywordScanningPage() {
         setStartTime(Date.now());
       }
     },
-    [user, foundCount, targets.length, startTime, openAuthModal, difficulty]
+    [user, foundCount, targets.length, startTime, difficulty]
   );
 
   useEffect(() => {

@@ -19,7 +19,7 @@ on:
       - "tsconfig*.json"
       - "vite.config.*"
       - "eslint.config.*"
-      - "uk/**"
+      - "src/planner/**"
       - ".github/workflows/trainer-unify-guard.yml"
       - ".github/workflows/unify-scheduled-verify.yml"
 
@@ -33,11 +33,9 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
-          cache-dependency-path: |
-            package-lock.json
-            uk/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - name: Install root + full unify verify (trainer + uk)
+      - name: Install root + full unify verify (unified trainer)
         run: |
           npm ci
           npm run unify:bullet2-verify-ci

@@ -6,7 +6,6 @@ import InferenceSessionHeader from "../components/inference/InferenceSessionHead
 import InferenceQuiz from "../components/inference/InferenceQuiz";
 import InferenceResultsView from "../components/inference/InferenceResultsView";
 import { useAuth } from "../hooks/useAuth";
-import { useAuthModal } from "../contexts/AuthModalContext";
 import type { Passage } from "../data/passages";
 import { PASSAGES } from "../data/passages";
 import { getInferenceQuestionsForPassage, PASSAGE_IDS_WITH_INFERENCE } from "../data/inferenceQuestions";
@@ -85,7 +84,6 @@ export default function InferenceTrainerPage() {
   const mountedRef = useRef(true);
   const startTimeRef = useRef<number>(Date.now());
   const { user } = useAuth();
-  const { openAuthModal } = useAuthModal();
 
   const questions: InferenceQuestion[] =
     passage != null
@@ -193,7 +191,6 @@ export default function InferenceTrainerPage() {
           total: totalToSave,
           time_seconds: elapsedSeconds,
         });
-        openAuthModal();
         return;
       }
       setSaveError(null);
@@ -261,7 +258,6 @@ export default function InferenceTrainerPage() {
       passage?.id,
       difficulty,
       elapsedSeconds,
-      openAuthModal,
     ]
   );
 

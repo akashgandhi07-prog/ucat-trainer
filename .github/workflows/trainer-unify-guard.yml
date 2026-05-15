@@ -1,5 +1,5 @@
 # Bullet 1 + 5: trainer migration scan, lint, and production build.
-# Bullets 2 + 8: planner verifies after clean `uk/` npm ci (matches CI; alias unify:bullet2-verify-ci).
+# Bullets 2 + 8: unified Vite app build (planner embedded in trainer).
 # Bullet 9: same gate runs weekly via unify-scheduled-verify.yml.
 
 name: Trainer and planner unify guard
@@ -15,7 +15,7 @@ on:
       - "tsconfig*.json"
       - "vite.config.*"
       - "eslint.config.*"
-      - "uk/**"
+      - "src/planner/**"
       - ".github/workflows/trainer-unify-guard.yml"
       - ".github/workflows/unify-scheduled-verify.yml"
   push:
@@ -40,5 +40,5 @@ jobs:
       - name: Install root (Vite trainer)
         run: npm ci
 
-      - name: Full unify gate (bullet 1 + planner install + lint + Next build)
+      - name: Full unify gate (bullet 1 + trainer build)
         run: npm run unify:bullet2-verify-ci

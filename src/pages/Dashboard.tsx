@@ -36,7 +36,7 @@ import type { SessionRow } from "../types/session";
 import type { SyllogismSession } from "../types/syllogisms";
 import SyllogismAnalytics from "../components/dashboard/SyllogismAnalytics";
 import UnifiedProductHub from "../components/dashboard/UnifiedProductHub";
-import { plannerAppBase } from "../lib/plannerUrl";
+import { isPlannerIntegrated } from "../lib/plannerUrl";
 
 type ChartPoint = {
   date: string;
@@ -802,12 +802,16 @@ export default function Dashboard() {
               Sign in to see your full dashboard.
             </p>
             <p className="text-slate-600 text-sm mb-4">
-              You can train without an account, but creating one lets you save your history and track your WPM over time.
-              {plannerAppBase()
-                ? " The same free login unlocks your personalised study plan and mock score tracking. No subscription."
-                : null}
+              You can train without an account. Sign in only if you want your history saved across devices.
             </p>
             <div className="flex flex-wrap justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => openAuthModal("register")}
+                className="min-h-[44px] px-5 py-2.5 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
+              >
+                Create free account
+              </button>
               <button
                 type="button"
                 onClick={() => openAuthModal("login")}
@@ -823,7 +827,7 @@ export default function Dashboard() {
 
     return (
       <>
-        {plannerAppBase() ? <UnifiedProductHub /> : null}
+        {isPlannerIntegrated() ? <UnifiedProductHub /> : null}
         <section className="mb-8">
           <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-6">
             <p className="text-amber-900 font-semibold mb-1">
@@ -924,6 +928,7 @@ export default function Dashboard() {
 
     return (
       <>
+        {isPlannerIntegrated() ? <UnifiedProductHub /> : null}
         <section className="mb-8">
           <div className="bg-white rounded-xl border-2 border-slate-300 shadow-sm overflow-hidden">
             <div className="bg-slate-100 border-b border-slate-300 px-4 py-2">

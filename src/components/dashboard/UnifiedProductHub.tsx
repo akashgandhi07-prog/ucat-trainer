@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { BookOpen, CalendarDays, LineChart } from "lucide-react";
 import { Link } from "react-router-dom";
-import { PLANNER_ROUTES, plannerPath } from "../../lib/plannerUrl";
+import { UNIFIED_LOGIN_MESSAGING_ENABLED, isPlannerIntegrated } from "../../lib/plannerUrl";
 
 function HubCard({
   title,
@@ -48,18 +48,17 @@ function HubCard({
 }
 
 export default function UnifiedProductHub() {
-  const planUrl = plannerPath(PLANNER_ROUTES.plan);
-  const mockUrl = plannerPath(PLANNER_ROUTES.mockScores);
-
-  if (!planUrl && !mockUrl) return null;
+  if (!isPlannerIntegrated()) return null;
 
   return (
     <section className="mb-8" aria-labelledby="unified-hub-heading">
       <h2 id="unified-hub-heading" className="text-lg font-semibold text-foreground mb-1">
-        Your free UCAT workspace
+        Planning &amp; progress
       </h2>
       <p className="text-sm text-muted-foreground mb-4">
-        One free account: skills drills, a generated study plan, and mock score tracking. No subscription required.
+        {UNIFIED_LOGIN_MESSAGING_ENABLED
+          ? "One free account: skills drills, a generated study plan, and mock score tracking. No subscription required."
+          : "Free study plan and mock score tracking. Sign in on each tool when you want to save progress."}
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <HubCard
@@ -68,24 +67,18 @@ export default function UnifiedProductHub() {
           href="/"
           icon={<BookOpen className="w-6 h-6" aria-hidden />}
         />
-        {planUrl ? (
-          <HubCard
-            title="Free study plan"
-            description="Personalised timetable and daily revision slots at no cost."
-            href={planUrl}
-            external
-            icon={<CalendarDays className="w-6 h-6" aria-hidden />}
-          />
-        ) : null}
-        {mockUrl ? (
-          <HubCard
-            title="Free mock tracking"
-            description="Log Medify, official, and other mock results. Free to use."
-            href={mockUrl}
-            external
-            icon={<LineChart className="w-6 h-6" aria-hidden />}
-          />
-        ) : null}
+        <HubCard
+          title="Free study plan"
+          description="Personalised timetable and daily revision slots at no cost."
+          href="/study-plan"
+          icon={<CalendarDays className="w-6 h-6" aria-hidden />}
+        />
+        <HubCard
+          title="Free mock tracking"
+          description="Log Medify, official, and other mock results. Free to use."
+          href="/mock-scores"
+          icon={<LineChart className="w-6 h-6" aria-hidden />}
+        />
       </div>
     </section>
   );

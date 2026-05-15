@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useBugReportModal } from "../../contexts/BugReportContext";
+import { useAppShell } from "../../contexts/AppShellContext";
 import { PACKAGE_LINKS } from "../../lib/tutoringUpsell";
 import TutoringUpsell from "./TutoringUpsell";
 
@@ -7,6 +8,8 @@ const externalLinkProps = { target: "_blank" as const, rel: "noopener noreferrer
 
 export default function Footer() {
   const { openBugReport } = useBugReportModal();
+  const inAppShell = useAppShell();
+  if (inAppShell) return null;
   return (
     <footer className="border-t border-slate-200 bg-white/60 py-6 mt-auto">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">

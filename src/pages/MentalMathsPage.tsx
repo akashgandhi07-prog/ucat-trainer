@@ -9,7 +9,6 @@ import { SKILL_TEACHING } from "../data/teaching";
 import { trackEvent, setActiveTrainer, clearActiveTrainer } from "../lib/analytics";
 import { TRAINING_TYPE_LABELS } from "../types/training";
 import { useAuth } from "../hooks/useAuth";
-import { useAuthModal } from "../contexts/AuthModalContext";
 import { saveMentalMathsSession } from "../utils/analyticsStorage";
 import { appendGuestSession } from "../lib/guestSessions";
 import type { MentalMathsSummaryStats } from "../hooks/useMentalMathsLogic";
@@ -22,7 +21,6 @@ const teaching = SKILL_TEACHING.mental_maths;
 
 export default function MentalMathsPage() {
   const { user } = useAuth();
-  const { openAuthModal } = useAuthModal();
 
   useEffect(() => {
     trackEvent("trainer_opened", {
@@ -58,10 +56,9 @@ export default function MentalMathsPage() {
           total: stats.total,
           time_seconds: Math.round((stats.avgTimeMs * stats.total) / 1000) || 1,
         });
-        openAuthModal();
       }
     },
-    [user, openAuthModal]
+    [user]
   );
 
   return (

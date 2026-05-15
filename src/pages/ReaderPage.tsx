@@ -8,7 +8,6 @@ import DistortionQuiz from "../components/quiz/DistortionQuiz";
 import ResultsView from "../components/quiz/ResultsView";
 import type { QuestionBreakdownItem } from "../components/quiz/DistortionQuiz";
 import { useAuth } from "../hooks/useAuth";
-import { useAuthModal } from "../contexts/AuthModalContext";
 import type { Passage } from "../data/passages";
 import SEOHead from "../components/seo/SEOHead";
 import TrainerFaqSection from "../components/seo/TrainerFaqSection";
@@ -71,7 +70,6 @@ export default function ReaderPage() {
   const readingStartTimeRef = useRef<number | null>(null);
   const mountedRef = useRef(true);
   const { user } = useAuth();
-  const { openAuthModal } = useAuthModal();
 
   useEffect(() => {
     mountedRef.current = true;
@@ -156,7 +154,6 @@ export default function ReaderPage() {
           ...(rating != null && { wpm_rating: rating }),
           ...(readingTimeSeconds != null && readingTimeSeconds > 0 && { time_seconds: readingTimeSeconds }),
         });
-        openAuthModal();
         return;
       }
       setSaveError(null);
@@ -204,7 +201,7 @@ export default function ReaderPage() {
         if (mountedRef.current) setSaveInProgress(false);
       }
     },
-    [user, wpm, quizCorrect, quizTotal, passage?.id, difficulty, openAuthModal, readingTimeSeconds]
+    [user, wpm, quizCorrect, quizTotal, passage?.id, difficulty, readingTimeSeconds]
   );
 
   const handleRestart = useCallback(() => {

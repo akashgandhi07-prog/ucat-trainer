@@ -6,7 +6,6 @@ import DistortionQuiz from "../components/quiz/DistortionQuiz";
 import ReReadPassageModal from "../components/quiz/ReReadPassageModal";
 import type { QuestionBreakdownItem } from "../components/quiz/DistortionQuiz";
 import { useAuth } from "../hooks/useAuth";
-import { useAuthModal } from "../contexts/AuthModalContext";
 import type { Passage } from "../data/passages";
 import type { SessionInsertPayload } from "../types/session";
 import { appendGuestSession } from "../lib/guestSessions";
@@ -70,7 +69,6 @@ export default function RapidRecallPage() {
   const hasAutoSavedRef = useRef(false);
   const mountedRef = useRef(true);
   const { user } = useAuth();
-  const { openAuthModal } = useAuthModal();
 
   useEffect(() => {
     mountedRef.current = true;
@@ -144,7 +142,6 @@ export default function RapidRecallPage() {
           total: quizTotal,
           time_seconds: timeSeconds,
         });
-        openAuthModal();
         return;
       }
       setSaveError(null);
@@ -191,7 +188,7 @@ export default function RapidRecallPage() {
         if (mountedRef.current) setSaving(false);
       }
     },
-    [user, quizCorrect, quizTotal, timeLimitSeconds, overtimeSeconds, readingSeconds, difficulty, openAuthModal]
+    [user, quizCorrect, quizTotal, timeLimitSeconds, overtimeSeconds, readingSeconds, difficulty]
   );
 
   useEffect(() => {

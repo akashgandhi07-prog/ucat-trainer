@@ -1,5 +1,7 @@
-import { useNavigate } from "react-router-dom";
-import { BookOpen, Calculator, Scale } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { BookOpen, Calculator, CalendarDays, LineChart, Scale } from "lucide-react";
+import { isPlannerIntegrated } from "../lib/plannerUrl";
+import { useAppShell } from "../contexts/AppShellContext";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import TutoringUpsell from "../components/layout/TutoringUpsell";
@@ -10,6 +12,8 @@ import { getSiteBaseUrl } from "../lib/siteUrl";
 
 export default function HomePage() {
     const navigate = useNavigate();
+    const plannerOn = isPlannerIntegrated();
+    const inAppShell = useAppShell();
     const base = getSiteBaseUrl();
     const canonicalUrl = base ? `${base}/` : undefined;
     const ogImageUrl = base ? `${base}/og-trainer.png` : undefined;
@@ -18,7 +22,7 @@ export default function HomePage() {
         "Free UCAT Skills Trainer interface for Verbal Reasoning, Decision Making, and Quantitative Reasoning practice";
 
     return (
-        <div className="flex flex-col min-h-screen bg-background font-sans">
+        <div className={`flex flex-col bg-background font-sans ${inAppShell ? "flex-1 min-h-0 overflow-y-auto" : "min-h-screen"}`}>
             <SEOHead
                 title="Free UCAT Skills Trainer"
                 description="Free UCAT practice tools for Verbal Reasoning, Decision Making, and Quantitative Reasoning. Master speed reading, syllogisms, mental math, and calculator usage."
@@ -39,10 +43,13 @@ export default function HomePage() {
                                 Master the UCAT.
                             </h1>
                             <p className="text-base sm:text-xl text-muted-foreground max-w-2xl mx-auto">
-                                Select a section to begin your training.
+                                Skills drills open straight away. Sign in only when you want progress saved.
                             </p>
                         </div>
 
+                        <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                            Skills trainers
+                        </p>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-5 md:gap-8 max-w-4xl mx-auto">
                             {/* Verbal Reasoning Card */}
                             <button
@@ -107,6 +114,50 @@ export default function HomePage() {
                                 <div className="absolute inset-0 border-2 border-transparent group-hover:border-primary/10 rounded-xl sm:rounded-2xl pointer-events-none transition-colors" />
                             </button>
                         </div>
+
+                        {plannerOn ? (
+                            <div className="space-y-4 max-w-4xl mx-auto w-full pt-2">
+                                <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                                    Planning &amp; progress
+                                </p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-5 md:gap-8">
+                                    <Link
+                                        to="/study-plan"
+                                        className="group relative flex flex-col items-center p-3 sm:p-5 md:p-8 bg-card border border-border rounded-xl sm:rounded-2xl shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-300 text-center"
+                                    >
+                                        <div className="p-2.5 sm:p-3 md:p-4 rounded-full bg-violet-50 text-violet-600 group-hover:bg-violet-100 group-hover:scale-110 transition-transform duration-300 shrink-0">
+                                            <CalendarDays className="w-7 h-7 sm:w-9 sm:h-9 md:w-10 md:h-10" aria-hidden />
+                                        </div>
+                                        <h2 className="mt-1.5 sm:mt-3 md:mt-4 text-base sm:text-xl md:text-2xl font-bold text-foreground group-hover:text-primary transition-colors">
+                                            Study plan
+                                        </h2>
+                                        <p className="mt-0.5 sm:mt-1 md:mt-2 text-muted-foreground leading-snug text-xs sm:text-sm md:text-base">
+                                            Personalised timetable and daily revision slots. Free to use on this device.
+                                        </p>
+                                        <span className="mt-1.5 sm:mt-2 md:mt-4 text-xs sm:text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                                            Open study planner &rarr;
+                                        </span>
+                                    </Link>
+                                    <Link
+                                        to="/mock-scores"
+                                        className="group relative flex flex-col items-center p-3 sm:p-5 md:p-8 bg-card border border-border rounded-xl sm:rounded-2xl shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-300 text-center"
+                                    >
+                                        <div className="p-2.5 sm:p-3 md:p-4 rounded-full bg-rose-50 text-rose-600 group-hover:bg-rose-100 group-hover:scale-110 transition-transform duration-300 shrink-0">
+                                            <LineChart className="w-7 h-7 sm:w-9 sm:h-9 md:w-10 md:h-10" aria-hidden />
+                                        </div>
+                                        <h2 className="mt-1.5 sm:mt-3 md:mt-4 text-base sm:text-xl md:text-2xl font-bold text-foreground group-hover:text-primary transition-colors">
+                                            Mock scores
+                                        </h2>
+                                        <p className="mt-0.5 sm:mt-1 md:mt-2 text-muted-foreground leading-snug text-xs sm:text-sm md:text-base">
+                                            Log Medify, official, and other mock results. Free to use on this device.
+                                        </p>
+                                        <span className="mt-1.5 sm:mt-2 md:mt-4 text-xs sm:text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                                            Open mock tracker &rarr;
+                                        </span>
+                                    </Link>
+                                </div>
+                            </div>
+                        ) : null}
                         <TutoringUpsell variant="inline" />
                     </div>
                 </div>
