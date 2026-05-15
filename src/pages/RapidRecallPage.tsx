@@ -65,6 +65,7 @@ export default function RapidRecallPage() {
   const [questionBreakdown, setQuestionBreakdown] = useState<QuestionBreakdownItem[]>([]);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [readingSeconds, setReadingSeconds] = useState<number | null>(null);
   const [passageModalOpen, setPassageModalOpen] = useState(false);
   const hasAutoSavedRef = useRef(false);
   const mountedRef = useRef(true);
@@ -132,7 +133,8 @@ export default function RapidRecallPage() {
 
   const handleSaveProgress = useCallback(
     async (opts?: { skipRestart?: boolean }) => {
-      const timeSeconds = timeLimitSeconds + overtimeSeconds;
+      const timeSeconds =
+        readingSeconds != null ? readingSeconds : timeLimitSeconds + overtimeSeconds;
       if (!user) {
         appendGuestSession({
           training_type: "rapid_recall",
@@ -189,7 +191,7 @@ export default function RapidRecallPage() {
         if (mountedRef.current) setSaving(false);
       }
     },
-    [user, quizCorrect, quizTotal, timeLimitSeconds, overtimeSeconds, difficulty, openAuthModal]
+    [user, quizCorrect, quizTotal, timeLimitSeconds, overtimeSeconds, readingSeconds, difficulty, openAuthModal]
   );
 
   useEffect(() => {
@@ -204,9 +206,11 @@ export default function RapidRecallPage() {
         wpm: null,
         correct: quizCorrect,
         total: quizTotal,
+        time_seconds:
+          readingSeconds != null ? readingSeconds : timeLimitSeconds + overtimeSeconds,
       });
     }
-  }, [phase, handleSaveProgress, user, quizCorrect, quizTotal, difficulty]);
+  }, [phase, handleSaveProgress, user, quizCorrect, quizTotal, difficulty, readingSeconds, timeLimitSeconds, overtimeSeconds]);
 
   if (!passage) {
     return <Navigate to="/?mode=rapid_recall" replace />;
@@ -214,12 +218,21 @@ export default function RapidRecallPage() {
 
   const passageText = passage.text;
 
+  const computeReadingSeconds = () => {
+    const baseUsed = timeLimitSeconds - secondsLeft;
+    const extra = overtimeMode ? overtimeSeconds : 0;
+    const total = Math.max(1, baseUsed + extra);
+    setReadingSeconds(total);
+  };
+
   const handleFinishReading = () => {
+    computeReadingSeconds();
     setPhase("questions");
   };
 
   const handleMoreTimeNo = () => {
     setShowMoreTimeModal(false);
+    computeReadingSeconds();
     setPhase("questions");
   };
 
@@ -354,15 +367,15 @@ export default function RapidRecallPage() {
               />
               {(() => {
                 const wordCount = passageText.trim().split(/\s+/).filter(Boolean).length;
-                const effectiveWpm = timeLimitSeconds > 0
-                  ? Math.round((wordCount / timeLimitSeconds) * 60)
-                  : 0;
+                const effectiveSeconds = readingSeconds != null ? readingSeconds : timeLimitSeconds;
+                const effectiveWpm =
+                  effectiveSeconds > 0 ? Math.round((wordCount / effectiveSeconds) * 60) : 0;
                 const nextTimeSuggestion = Math.max(30, timeLimitSeconds - 10);
                 const canPushPace = nextTimeSuggestion < timeLimitSeconds;
                 return (
                   <>
                     <p className="text-slate-700 text-sm mt-3 pt-3 border-t border-slate-200">
-                      You had {timeLimitSeconds}s to read ~{wordCount} words ≈ {effectiveWpm} WPM.
+                      You spent {effectiveSeconds}s to read ~{wordCount} words ≈ {effectiveWpm} WPM.
                       {canPushPace && ` Next time try ${nextTimeSuggestion}s to push your pace.`}
                     </p>
                   </>
@@ -498,6 +511,9 @@ export default function RapidRecallPage() {
                         hasAutoSavedRef.current = false;
                         setTimeLimitSeconds(nextTimeSuggestion);
                         setSecondsLeft(nextTimeSuggestion);
+                        setOvertimeMode(false);
+                        setOvertimeSeconds(0);
+                        setReadingSeconds(null);
                         setPhase("reading");
                         setPassage((current) => pickNewRandomPassage(current?.id, difficulty));
                       }}
@@ -511,6 +527,9 @@ export default function RapidRecallPage() {
                     onClick={() => {
                       hasAutoSavedRef.current = false;
                       setSecondsLeft(timeLimitSeconds);
+                        setOvertimeMode(false);
+                        setOvertimeSeconds(0);
+                        setReadingSeconds(null);
                       setPhase("reading");
                       setPassage((current) => pickNewRandomPassage(current?.id, difficulty));
                     }}

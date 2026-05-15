@@ -98,6 +98,8 @@ Every synced contact is also tagged **skillstrainer** (the tag is created automa
 
 Ensure your Mailchimp audience has merge fields for **Entry Year** (MERGE8), **Sign Up Source** (MERGE9), **Year** (MERGE18), and **Uni Subject** (MERGE19) if you use them. Default `FNAME` and `LNAME` are always sent.
 
+**Year (MERGE18) and Uni Subject (MERGE19) are dropdowns in Mailchimp.** The API only accepts values that match your audience choices **exactly** (including punctuation and spacing). The Edge Function maps signup `entry_year` (e.g. `2026`) to the full Year label and sends `stream` as one of Medicine, Dentistry, Veterinary Medicine, or Other. If those fields stay empty, common causes are: the signup webhook ran before user metadata was available (redeploy the updated `add-mailchimp-subscriber` function), merge tags in Mailchimp don’t match `MERGE18`/`MERGE19`, or the audience’s dropdown choices were edited so they no longer match the strings above.
+
 ---
 
 ## 2. Password Reset Emails via Mailchimp
@@ -139,3 +141,4 @@ Mailchimp Transactional is separate from Marketing. It’s used for transactiona
 - **Password reset not sending**: Confirm SMTP settings and that the sender domain is verified in Mandrill.
 - **Edge Function 500**: Check that `MAILCHIMP_API_KEY` and `MAILCHIMP_LIST_ID` are set in Supabase secrets.
 - **New signups not in Mailchimp**: If using server-side sync, ensure `MAILCHIMP_WEBHOOK_SECRET` is set in Edge Function secrets and that `mailchimp_webhook_config` has the correct `edge_function_url` and `webhook_secret` (same value). The trigger only runs when both are set to non-placeholder values.
+- **Year or Uni Subject empty on the contact**: Redeploy `add-mailchimp-subscriber` after pulling the latest function (it reads `stream` and `entry_year` from `raw_user_meta_data` reliably, including camelCase and numeric values). In Supabase → Edge Functions → `add-mailchimp-subscriber` → Logs, look for `Mailchimp webhook: missing stream or entry_year` (means metadata was empty when the webhook ran). If Mailchimp returns 400 on create/update, open the response body: dropdown merge fields reject values that don’t match the audience field choices exactly.

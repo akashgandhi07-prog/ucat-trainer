@@ -25,13 +25,78 @@ interface SubscriberPayload {
   firstName?: string;
   lastName?: string;
   stream?: string;
-  entryYear?: string;
+  entryYear?: string | number;
 }
 
 /** auth.users row shape from DB webhook (record) */
 interface AuthUserRecord {
   email?: string;
-  raw_user_meta_data?: Record<string, unknown>;
+  raw_user_meta_data?: unknown;
+}
+
+/** Mailchimp "Year" dropdown (MERGE18) — values must match the audience exactly. */
+const MAILCHIMP_YEAR_DROPDOWN: Record<string, string> = {
+  "2026": "2026 Entry (Starting University September 2026)",
+  "2027": "2027 Entry (Starting University September 2027)",
+  "2028": "2028 Entry (Starting University September 2028)",
+  "2029": "2029 Entry (Starting University September 2029)",
+};
+
+/** Mailchimp "Uni Subject" dropdown (MERGE19) — must match audience choices. */
+const MAILCHIMP_UNI_SUBJECTS = new Set(["Medicine", "Dentistry", "Veterinary Medicine", "Other"]);
+
+/**
+ * auth.users.raw_user_meta_data can arrive as an object or (rarely) a JSON string.
+ * Supabase may also store signup `options.data` keys as snake_case only, but we
+ * accept camelCase fallbacks. Numbers are coerced to string for dropdown matching.
+ */
+function coerceUserMeta(raw: unknown): Record<string, unknown> {
+  if (raw == null) return {};
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
+    } catch {
+      return {};
+    }
+    return {};
+  }
+  if (typeof raw === "object" && !Array.isArray(raw)) return raw as Record<string, unknown>;
+  return {};
+}
+
+function metaString(meta: Record<string, unknown>, ...keys: string[]): string | undefined {
+  for (const k of keys) {
+    const v = meta[k];
+    if (typeof v === "string") {
+      const t = v.trim();
+      if (t) return t;
+    }
+    if (typeof v === "number" && Number.isFinite(v)) return String(v);
+  }
+  return undefined;
+}
+
+function normalizeUniSubjectForMailchimp(raw: string | undefined): string | undefined {
+  if (!raw) return undefined;
+  const t = raw.trim();
+  if (MAILCHIMP_UNI_SUBJECTS.has(t)) return t;
+  if (t === "Undecided") return "Other";
+  return "Other";
+}
+
+function yearDropdownValue(entryYearRaw: string): string {
+  const digits = entryYearRaw.replace(/\D/g, "");
+  if (digits.length >= 4) {
+    const y = digits.slice(0, 4);
+    const label = MAILCHIMP_YEAR_DROPDOWN[y];
+    if (label) return label;
+  }
+  const trimmed = entryYearRaw.trim();
+  if (MAILCHIMP_YEAR_DROPDOWN[trimmed]) return MAILCHIMP_YEAR_DROPDOWN[trimmed]!;
+  return "Other";
 }
 
 // Minimal MD5 for Mailchimp subscriber_hash (lowercase email -> hex)
@@ -111,14 +176,16 @@ function buildMergeFields(body: SubscriberPayload): Record<string, string> {
     typeof body.lastName === "string" ? body.lastName.trim() : "",
     LAST_NAME_MAX
   );
-  const stream = cap(
-    typeof body.stream === "string" ? body.stream.trim() : "",
-    STREAM_MAX
-  );
-  const entryYear = cap(
-    typeof body.entryYear === "string" ? body.entryYear.trim() : "",
-    ENTRY_YEAR_MAX
-  );
+  const streamRaw = typeof body.stream === "string" ? body.stream.trim() : "";
+  const streamNorm = normalizeUniSubjectForMailchimp(streamRaw);
+  const stream = cap(streamNorm ?? "", STREAM_MAX);
+  const entryYearRaw =
+    typeof body.entryYear === "number" && Number.isFinite(body.entryYear)
+      ? String(Math.trunc(body.entryYear))
+      : typeof body.entryYear === "string"
+        ? body.entryYear.trim()
+        : "";
+  const entryYear = cap(entryYearRaw, ENTRY_YEAR_MAX);
 
   const merge: Record<string, string> = {};
   if (firstName) merge.FNAME = firstName;
@@ -126,12 +193,7 @@ function buildMergeFields(body: SubscriberPayload): Record<string, string> {
   merge.MERGE9 = "skills trainer"; // Sign Up Source
   if (entryYear) {
     merge.MERGE8 = entryYear; // Entry Year (text)
-    const y = entryYear.replace(/\D/g, "");
-    if (["2026", "2027", "2028", "2029"].includes(y)) {
-      merge.MERGE18 = `${y} Entry (Starting University September ${y})`; // Year dropdown
-    } else {
-      merge.MERGE18 = "Other";
-    }
+    merge.MERGE18 = yearDropdownValue(entryYear); // Year dropdown — exact Mailchimp choice
   }
   if (stream) merge.MERGE19 = stream; // Uni Subject
 
@@ -141,13 +203,22 @@ function buildMergeFields(body: SubscriberPayload): Record<string, string> {
 function payloadFromAuthRecord(record: AuthUserRecord): SubscriberPayload | null {
   const email = typeof record?.email === "string" ? record.email.trim().toLowerCase() : "";
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null;
-  const meta = record?.raw_user_meta_data && typeof record.raw_user_meta_data === "object" ? record.raw_user_meta_data : {};
+  const meta = coerceUserMeta(record?.raw_user_meta_data);
+  const stream = metaString(meta, "stream");
+  const entryYear = metaString(meta, "entry_year", "entryYear");
+  if (!stream || !entryYear) {
+    console.warn("Mailchimp webhook: missing stream or entry_year in user metadata", {
+      keys: Object.keys(meta),
+      hasStream: !!stream,
+      hasEntryYear: !!entryYear,
+    });
+  }
   return {
     email,
-    firstName: typeof meta.first_name === "string" ? meta.first_name : undefined,
-    lastName: typeof meta.last_name === "string" ? meta.last_name : undefined,
-    stream: typeof meta.stream === "string" ? meta.stream : undefined,
-    entryYear: typeof meta.entry_year === "string" ? meta.entry_year : undefined,
+    firstName: metaString(meta, "first_name", "firstName"),
+    lastName: metaString(meta, "last_name", "lastName"),
+    stream,
+    entryYear,
   };
 }
 
