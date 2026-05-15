@@ -62,7 +62,7 @@ export default function Header() {
           onClick={() => setMobileMenuOpen(false)}
           className="text-sm font-medium text-foreground hover:text-primary transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center py-2 px-2"
         >
-          Study plan
+          Free study plan
         </a>
       ) : null}
       {mockScoresUrl ? (
@@ -73,7 +73,7 @@ export default function Header() {
           onClick={() => setMobileMenuOpen(false)}
           className="text-sm font-medium text-foreground hover:text-primary transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center py-2 px-2"
         >
-          Mock scores
+          Free mock tracking
         </a>
       ) : null}
       <button
@@ -171,9 +171,12 @@ export default function Header() {
           </button>
           <Link
             to="/"
-            className="text-lg sm:text-2xl font-bold text-foreground shrink-0 hover:text-primary transition-colors flex items-center"
+            className="text-lg sm:text-2xl font-bold text-foreground shrink-0 hover:text-primary transition-colors flex items-center gap-2"
           >
             TheUKCATPeople
+            <span className="hidden sm:inline text-[10px] font-semibold uppercase tracking-wide text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+              Free
+            </span>
           </Link>
         </div>
         <nav className="hidden sm:flex items-center gap-2 sm:gap-4">{navLinks}</nav>

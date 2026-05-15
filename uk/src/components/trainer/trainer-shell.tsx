@@ -29,7 +29,7 @@ export function TrainerShell({ pathWithQuery }: TrainerShellProps) {
           </Link>
           <span className="text-slate-300 hidden sm:inline">|</span>
           <span className="text-xs text-slate-500 uppercase tracking-wide hidden sm:inline">
-            Skills drills
+            Free skills drills
           </span>
         </div>
         <div className="flex items-center gap-2 shrink-0">

@@ -43,6 +43,7 @@ export function NavSidebar({ user, planSlug }: NavSidebarProps) {
           </div>
           <span className="font-bold text-slate-900 tracking-tight text-sm">TheUKCATPeople</span>
         </Link>
+        <p className="text-[10px] font-medium text-emerald-700 mt-1.5">Free · no subscription</p>
       </div>
 
       {/* Nav items */}

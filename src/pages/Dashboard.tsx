@@ -804,7 +804,7 @@ export default function Dashboard() {
             <p className="text-slate-600 text-sm mb-4">
               You can train without an account, but creating one lets you save your history and track your WPM over time.
               {plannerAppBase()
-                ? " The same login unlocks your generated study plan and mock score tracking."
+                ? " The same free login unlocks your personalised study plan and mock score tracking. No subscription."
                 : null}
             </p>
             <div className="flex flex-wrap justify-center gap-3">

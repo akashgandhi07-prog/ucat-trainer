@@ -30,27 +30,30 @@ export default async function HomePage() {
             <div className="w-3 h-3 rounded-full bg-amber-500" />
             <div className="w-3 h-3 rounded-full bg-purple-500" />
           </div>
-          <span className="font-bold text-slate-900 tracking-tight text-lg">UCAT Planner</span>
+          <span className="font-bold text-slate-900 tracking-tight text-lg">TheUKCATPeople</span>
         </div>
         <Link
           href="/auth/login"
           className="rounded-lg bg-blue-600 text-white px-4 py-2 text-sm font-medium hover:bg-blue-700 transition-colors"
         >
-          Get started
+          Start free
         </Link>
       </nav>
 
       {/* Hero */}
       <main className="max-w-5xl mx-auto px-6 py-16 md:py-24">
         <div className="max-w-3xl">
+          <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1.5 text-sm text-emerald-800 font-medium mb-3">
+            100% free · No subscription
+          </div>
           <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 border border-blue-200 px-3 py-1.5 text-sm text-blue-700 font-medium mb-6">
             Built for UK medical school applicants
           </div>
           <h1 className="text-5xl md:text-6xl font-bold text-slate-900 leading-tight tracking-tight text-balance mb-6">
-            Your personalised<br />UCAT revision plan
+            Your free personalised<br />UCAT revision plan
           </h1>
           <p className="text-xl text-slate-600 leading-relaxed mb-10 max-w-xl">
-            Adaptive, phase-based timetables that adjust to your mock scores, schedule, and confidence, built with your tutor.
+            Free adaptive timetables that adjust to your mock scores, schedule, and confidence. Same free account as the skills trainers.
           </p>
           <div className="flex gap-4 flex-wrap">
             <Link
@@ -103,6 +106,10 @@ export default async function HomePage() {
             ))}
           </div>
         </div>
+
+        <p className="mt-12 text-center text-sm text-slate-500 max-w-2xl mx-auto">
+          Skills trainers, your study plan, and mock score tracking are free. Optional paid tutoring is separate and never required to use these tools.
+        </p>
       </main>
     </div>
   )

@@ -53,9 +53,9 @@ export default function LoginClient({ invite: inviteProp }: { invite?: string })
               <div className="w-3 h-3 rounded-full bg-amber-500" />
               <div className="w-3 h-3 rounded-full bg-purple-500" />
             </div>
-            UCAT Planner
+            TheUKCATPeople
           </div>
-          <p className="text-sm text-slate-500">Personalised revision for the UCAT</p>
+          <p className="text-sm text-slate-500">Free study plan and mock tracking for the UCAT</p>
         </div>
 
         <Card>
@@ -127,7 +127,7 @@ export default function LoginClient({ invite: inviteProp }: { invite?: string })
                 </Button>
 
                 <p className="text-center text-xs text-slate-400">
-                  No password required. We&apos;ll email you a secure link.
+                  Free to use. No password required. We&apos;ll email you a secure link.
                 </p>
               </form>
             )}

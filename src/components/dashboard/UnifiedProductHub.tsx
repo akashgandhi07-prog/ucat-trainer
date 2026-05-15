@@ -56,22 +56,22 @@ export default function UnifiedProductHub() {
   return (
     <section className="mb-8" aria-labelledby="unified-hub-heading">
       <h2 id="unified-hub-heading" className="text-lg font-semibold text-foreground mb-1">
-        Your UCAT workspace
+        Your free UCAT workspace
       </h2>
       <p className="text-sm text-muted-foreground mb-4">
-        One account: skills drills here, study plan and mock scores in your planner.
+        One free account: skills drills, a generated study plan, and mock score tracking. No subscription required.
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <HubCard
-          title="Skills trainers"
-          description="Speed reading, syllogisms, mental maths, and more."
+          title="Free skills trainers"
+          description="Speed reading, syllogisms, mental maths, and more. Always free."
           href="/"
           icon={<BookOpen className="w-6 h-6" aria-hidden />}
         />
         {planUrl ? (
           <HubCard
-            title="My study plan"
-            description="Generated timetable and daily revision slots."
+            title="Free study plan"
+            description="Personalised timetable and daily revision slots at no cost."
             href={planUrl}
             external
             icon={<CalendarDays className="w-6 h-6" aria-hidden />}
@@ -79,8 +79,8 @@ export default function UnifiedProductHub() {
         ) : null}
         {mockUrl ? (
           <HubCard
-            title="Mock scores"
-            description="Log Medify, official, and other mock results over time."
+            title="Free mock tracking"
+            description="Log Medify, official, and other mock results. Free to use."
             href={mockUrl}
             external
             icon={<LineChart className="w-6 h-6" aria-hidden />}

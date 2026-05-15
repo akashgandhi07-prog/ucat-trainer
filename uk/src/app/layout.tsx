@@ -13,8 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TheUKCATPeople - Personalised Revision Timetables",
-  description: "Personalised UCAT revision plans for UK medical school applicants.",
+  title: "TheUKCATPeople - Free UCAT Study Plan & Mock Tracking",
+  description:
+    "Free personalised UCAT revision plans, mock score tracking, and skills trainers for UK medical school applicants. No subscription required.",
 };
 
 export default function RootLayout({
