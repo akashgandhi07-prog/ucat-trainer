@@ -108,7 +108,7 @@ function SessionLogBody({
               {label}
             </p>
             <p className="text-sm text-slate-500 mt-0.5">
-              Planned {planned}m · adjust if you did more or less
+              Plan: {planned} min · you can log a different amount below
             </p>
           </div>
           <button
@@ -146,35 +146,71 @@ function SessionLogBody({
               Done
             </button>
           </div>
-          <p className="text-xs text-slate-500">
-            &ldquo;Done&rdquo; includes partial work; set minutes to match how long you actually spent.
-          </p>
+          {!markDone && (
+            <p className="text-xs text-slate-500">
+              Tap <span className="font-medium text-slate-600">Done</span> if you did any of this session, even part of it.
+              You will then enter how many minutes you really spent.
+            </p>
+          )}
 
           {markDone && (
-            <div className="space-y-3">
+            <div
+              className="rounded-xl border border-slate-200 bg-slate-50/80 p-4 space-y-4"
+              role="region"
+              aria-labelledby="actual-time-heading"
+            >
+              <div className="space-y-1">
+                <p id="actual-time-heading" className="text-sm font-semibold text-slate-900">
+                  Actual study time
+                </p>
+                <p id="session-minutes-help" className="text-xs text-slate-600 leading-relaxed">
+                  Set this to match real life, not the plan. Planned session length was{' '}
+                  <span className="font-semibold text-slate-800">{planned} min</span>. Less still counts as progress.
+                  Use <span className="font-medium">0</span> if you barely started.
+                </p>
+              </div>
+
               <Input
-                label="Minutes actually spent"
+                id="session-log-minutes"
+                label="Minutes studied"
                 type="number"
                 min={0}
                 step={5}
                 value={minutesStr}
                 onChange={e => setMinutesStr(e.target.value)}
-                hint="Less than planned still counts as progress. Use 0 if you barely started."
+                className="h-11 text-base"
+                aria-describedby="session-minutes-help"
               />
-              <div className="flex flex-wrap gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={() => setMinutes(planned)}>
-                  Planned ({planned}m)
-                </Button>
-                <Button type="button" variant="outline" size="sm" onClick={() => setMinutes(planned / 2)}>
-                  Half (~{Math.round(planned / 2)}m)
-                </Button>
-                <Button type="button" variant="outline" size="sm" onClick={() => setMinutes(Number(minutesStr || 0) - 15)}>
-                  −15
-                </Button>
-                <Button type="button" variant="outline" size="sm" onClick={() => setMinutes(Number(minutesStr || 0) + 15)}>
-                  +15
-                </Button>
-              </div>
+
+              <fieldset className="space-y-2 border-0 p-0 m-0 min-w-0" aria-labelledby="quick-fill-label">
+                <p id="quick-fill-label" className="text-xs font-semibold text-slate-700">
+                  Quick fill · taps update the minutes box above
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={() => setMinutes(planned)}>
+                    Same as plan ({planned} min)
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => setMinutes(planned / 2)}>
+                    Half of plan (~{Math.round(planned / 2)} min)
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setMinutes(Number(minutesStr || 0) - 15)}
+                  >
+                    −15 min
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setMinutes(Number(minutesStr || 0) + 15)}
+                  >
+                    +15 min
+                  </Button>
+                </div>
+              </fieldset>
               <div className="rounded-xl border border-slate-100 bg-slate-50/90 px-3 py-3 space-y-2">
                 <p className="text-xs font-semibold text-slate-600">Effort check (one tap)</p>
                 <p className="text-[11px] text-slate-500 leading-snug">

@@ -2,7 +2,11 @@
 
 import { useRouter } from '@/lib/app-navigation'
 import { useMemo, useState } from 'react'
-import { DBSession, DBPlanDay } from '@/types'
+import { Link } from 'react-router-dom'
+import { toast } from 'sonner'
+import { DBSession, DBPlanDay, DBPlan } from '@/types'
+import type { ExportPlanPdfInput } from '../../../lib/export-plan-pdf'
+import { RebuildAheadModal } from '@/components/plan/plan-calendar'
 import { SessionPill } from '@/components/ui/badge'
 import { ProgressRing } from '@/components/ui/progress-ring'
 import { Card, CardContent } from '@/components/ui/card'
@@ -30,6 +34,12 @@ interface TodayViewProps {
   insights?: string[]
   /** Persist completions to localStorage instead of Supabase */
   guestMode?: boolean
+  /** Full plan row (signed-in); required for rebuild modal */
+  plan?: DBPlan | null
+  /** Snapshot for PDF export (full calendar rows) */
+  plannerPdf?: ExportPlanPdfInput | null
+  /** Optional averages for rebuild modal hour hints */
+  hoursSuggestion?: { weekday: number | null; weekend: number | null } | null
 }
 
 export function TodayView({
@@ -42,6 +52,9 @@ export function TodayView({
   todayDate,
   insights,
   guestMode = false,
+  plan = null,
+  plannerPdf = null,
+  hoursSuggestion = null,
 }: TodayViewProps) {
   const router = useRouter()
   const [localSessions, setLocalSessions] = useState(sessions)
@@ -51,6 +64,8 @@ export function TodayView({
   const [busySaving, setBusySaving] = useState(false)
   const [busyError, setBusyError] = useState('')
   const [sheetSession, setSheetSession] = useState<SessionWithCompletion | null>(null)
+  const [showRebuild, setShowRebuild] = useState(false)
+  const [pdfBusy, setPdfBusy] = useState(false)
 
   const sessionsSyncKey = useMemo(
     () =>
@@ -187,6 +202,76 @@ export function TodayView({
     }
   }
 
+  async function handleDownloadPlannerPdf() {
+    if (!plannerPdf) return
+    setPdfBusy(true)
+    try {
+      const { exportPlanToPdf } = await import('../../../lib/export-plan-pdf')
+      exportPlanToPdf(plannerPdf)
+      toast.success('PDF downloaded')
+    } catch (e) {
+      console.error(e)
+      toast.error(e instanceof Error ? e.message : 'Could not create PDF. Try another browser if this persists.')
+    } finally {
+      setPdfBusy(false)
+    }
+  }
+
+  function PlannerToolbarLinks() {
+    return (
+      <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 flex flex-wrap gap-2 items-center shadow-sm">
+        <Link
+          to="/study-plan/plan"
+          className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        >
+          Calendar · edit days and hours
+        </Link>
+        {plannerPdf ? (
+          <button
+            type="button"
+            onClick={() => void handleDownloadPlannerPdf()}
+            disabled={pdfBusy}
+            className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          >
+            {pdfBusy ? 'Preparing PDF…' : 'Download PDF'}
+          </button>
+        ) : null}
+        {!guestMode && plan ? (
+          <>
+            <button
+              type="button"
+              onClick={() => setShowRebuild(true)}
+              className="inline-flex items-center rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+            >
+              Rebuild plan ahead
+            </button>
+            <Link
+              to="/study-plan/plan?rebuild=1"
+              className="text-xs text-slate-500 underline underline-offset-2 hover:text-slate-700"
+            >
+              Open rebuild wizard on calendar
+            </Link>
+          </>
+        ) : guestMode ? (
+          <p className="text-xs text-slate-500">
+            Sign in to rebuild your timetable or edit future weeks from the calendar.
+          </p>
+        ) : null}
+      </div>
+    )
+  }
+
+  const rebuildModal =
+    showRebuild && plan ? (
+      <RebuildAheadModal
+        plan={plan}
+        todayDate={todayDate}
+        examDate={examDate}
+        hoursSuggestion={hoursSuggestion}
+        onClose={() => setShowRebuild(false)}
+      />
+    ) : null
+
   const sheetTarget = sheetSession
     ? {
         id: sheetSession.id,
@@ -200,8 +285,10 @@ export function TodayView({
 
   if (isRest) {
     return (
-      <div className="p-6 md:p-10 max-w-2xl mx-auto">
-        <div className="text-center space-y-4 py-16">
+      <>
+        <div className="p-6 md:p-10 max-w-2xl mx-auto space-y-6">
+          <PlannerToolbarLinks />
+          <div className="text-center space-y-4 py-16">
           <div className="text-6xl">🛋️</div>
           <h1 className="text-2xl font-bold text-slate-900">Rest day</h1>
           <p className="text-slate-500 text-lg">
@@ -213,12 +300,22 @@ export function TodayView({
           <div className="inline-flex items-center gap-2 rounded-full bg-amber-50 border border-amber-200 px-4 py-2 text-sm text-amber-700 font-medium">
             🔥 {streak} day streak
           </div>
+          </div>
         </div>
-      </div>
+        {rebuildModal}
+        <SessionLogSheet
+          session={sheetTarget}
+          onClose={() => setSheetSession(null)}
+          onSave={payload =>
+            sheetSession ? persistSession(sheetSession.id, payload) : Promise.resolve({ ok: false, error: 'No session' })
+          }
+        />
+      </>
     )
   }
 
   return (
+    <>
     <div className="p-6 md:p-10 max-w-3xl mx-auto space-y-8">
       {insights && insights.length > 0 && (
         <div className="rounded-xl border border-amber-200 bg-amber-50/85 px-4 py-3 text-sm text-amber-950 space-y-1.5">
@@ -230,6 +327,7 @@ export function TodayView({
           </ul>
         </div>
       )}
+      <PlannerToolbarLinks />
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -333,14 +431,16 @@ export function TodayView({
         </div>
       )}
 
-      <SessionLogSheet
-        session={sheetTarget}
-        onClose={() => setSheetSession(null)}
-        onSave={payload =>
-          sheetSession ? persistSession(sheetSession.id, payload) : Promise.resolve({ ok: false, error: 'No session' })
-        }
-      />
     </div>
+    {rebuildModal}
+    <SessionLogSheet
+      session={sheetTarget}
+      onClose={() => setSheetSession(null)}
+      onSave={payload =>
+        sheetSession ? persistSession(sheetSession.id, payload) : Promise.resolve({ ok: false, error: 'No session' })
+      }
+    />
+    </>
   )
 }
 

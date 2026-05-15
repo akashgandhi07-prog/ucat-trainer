@@ -1,4 +1,4 @@
-# Bug Audit — Ranked by Severity
+# Bug Audit - Ranked by Severity
 
 Findings from a static and flow-based review of the codebase. Ranked from **critical** to **least critical**.
 
@@ -48,7 +48,7 @@ Findings from a static and flow-based review of the codebase. Ranked from **crit
 ### 4. `parseInt` without radix
 
 **Where:**  
-- `src/utils/analyticsStorage.ts` — `parseInt(session.timeTaken)`  
+- `src/utils/analyticsStorage.ts` - `parseInt(session.timeTaken)`  
 - `src/components/bug/BugReportModal.tsx` uses `parseInt(..., 10)` correctly.
 
 **What:** `parseInt(string)` without a second argument can behave unexpectedly for leading-zero or hex strings. Using radix `10` is safer and clearer.
@@ -93,7 +93,7 @@ Findings from a static and flow-based review of the codebase. Ranked from **crit
 
 | Severity  | Count | Action |
 |----------|-------|--------|
-| Critical | 0     | — |
+| Critical | 0     | - |
 | High     | 2     | Fix auth unmount and loading fallback |
 | Medium   | 2     | Guard division, use parseInt radix |
 | Low      | 3     | Optional UX and documentation |

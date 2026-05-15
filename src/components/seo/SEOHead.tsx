@@ -1,4 +1,12 @@
 import { Helmet } from "react-helmet-async";
+import {
+  SEO_CREATOR_PERSON_ID_FRAGMENT,
+  SEO_CREATOR_SCHEMA,
+  SEO_DEFAULT_ORGANIZATION_SAME_AS,
+  SEO_DEFAULT_TWITTER_SITE,
+  SEO_EDUCATIONAL_USE,
+  SEO_LEARNING_RESOURCE_TYPE,
+} from "../../lib/seoDefaults";
 
 /** Single breadcrumb: name and absolute URL */
 export type BreadcrumbItem = { name: string; url: string };
@@ -27,19 +35,55 @@ interface SEOHeadProps {
 
 const SITE_NAME = "TheUKCATPeople";
 
-/** Organization schema – referenced by WebSite and SoftwareApplication */
-function buildOrganizationSchema(siteBaseUrl: string, sameAs?: string[]) {
+function creatorPersonId(siteBaseUrl: string) {
+  return `${siteBaseUrl}/#${SEO_CREATOR_PERSON_ID_FRAGMENT}`;
+}
+
+/** Person schema: trainer content author (schema-only; not rendered in UI) */
+function buildPersonSchema(siteBaseUrl: string) {
+  const id = creatorPersonId(siteBaseUrl);
+  const orgId = `${siteBaseUrl}/#organization`;
+  return {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "@id": id,
+    name: SEO_CREATOR_SCHEMA.name,
+    honorificPrefix: SEO_CREATOR_SCHEMA.honorificPrefix,
+    givenName: SEO_CREATOR_SCHEMA.givenName,
+    familyName: SEO_CREATOR_SCHEMA.familyName,
+    jobTitle: SEO_CREATOR_SCHEMA.jobTitle,
+    description: SEO_CREATOR_SCHEMA.description,
+    knowsAbout: [...SEO_CREATOR_SCHEMA.knowsAbout],
+    worksFor: { "@id": orgId },
+  };
+}
+
+/** Organization schema - referenced by WebSite and SoftwareApplication */
+function buildOrganizationSchema(siteBaseUrl: string, sameAs: string[]) {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
     "@id": `${siteBaseUrl}/#organization`,
     name: SITE_NAME,
     url: "https://www.theukcatpeople.co.uk",
-    ...(sameAs && sameAs.length > 0 ? { sameAs } : null),
+    sameAs,
+    founder: { "@id": creatorPersonId(siteBaseUrl) },
+    address: {
+      "@type": "PostalAddress",
+      addressCountry: "GB",
+    },
+    areaServed: {
+      "@type": "Country",
+      name: "United Kingdom",
+    },
+    logo: {
+      "@type": "ImageObject",
+      url: `${siteBaseUrl}/favicon.svg`,
+    },
   };
 }
 
-/** WebSite schema – helps search engines understand site identity and scope */
+/** WebSite schema - helps search engines understand site identity and scope */
 function buildWebSiteSchema(siteBaseUrl: string, description: string) {
   return {
     "@context": "https://schema.org",
@@ -49,11 +93,18 @@ function buildWebSiteSchema(siteBaseUrl: string, description: string) {
     url: siteBaseUrl,
     description,
     publisher: { "@id": `${siteBaseUrl}/#organization` },
+    copyrightHolder: { "@id": `${siteBaseUrl}/#organization` },
     inLanguage: "en-GB",
+    about: {
+      "@type": "Thing",
+      name: "UCAT (University Clinical Aptitude Test)",
+      description:
+        "UK university admissions test for medicine, dentistry and related courses",
+    },
   };
 }
 
-/** SoftwareApplication + LearningResource – main product schema for each page */
+/** SoftwareApplication + LearningResource - main product schema for each page */
 function buildApplicationSchema(
   options: {
     title: string;
@@ -73,6 +124,11 @@ function buildApplicationSchema(
     aggregateRating,
   } = options;
 
+  const creatorId =
+    siteBaseUrl != null && siteBaseUrl.length > 0
+      ? creatorPersonId(siteBaseUrl)
+      : undefined;
+
   const app: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": ["SoftwareApplication", "LearningResource"],
@@ -81,6 +137,11 @@ function buildApplicationSchema(
     applicationCategory: "EducationalApplication",
     operatingSystem: "Web Browser",
     inLanguage: "en-GB",
+    availableLanguage: "en-GB",
+    areaServed: {
+      "@type": "Country",
+      name: "United Kingdom",
+    },
     offers: {
       "@type": "Offer",
       price: "0",
@@ -91,7 +152,15 @@ function buildApplicationSchema(
       "@type": "EducationalAudience",
       educationalRole: "student",
     },
+    isAccessibleForFree: true,
+    learningResourceType: SEO_LEARNING_RESOURCE_TYPE,
+    educationalUse: SEO_EDUCATIONAL_USE,
   };
+
+  if (creatorId) {
+    app.author = { "@id": creatorId };
+    app.creator = { "@id": creatorId };
+  }
 
   if (canonicalUrl) app.url = canonicalUrl;
   if (imageUrl) app.image = imageUrl;
@@ -107,7 +176,7 @@ function buildApplicationSchema(
   return app;
 }
 
-/** BreadcrumbList schema – can enable breadcrumb display in SERPs */
+/** BreadcrumbList schema - can enable breadcrumb display in SERPs */
 function buildBreadcrumbSchema(breadcrumbs: BreadcrumbItem[]) {
   return {
     "@context": "https://schema.org",
@@ -142,10 +211,16 @@ export default function SEOHead({
     ? new URL(canonicalUrl).origin
     : undefined;
 
+  const mergedSameAs = Array.from(
+    new Set([...SEO_DEFAULT_ORGANIZATION_SAME_AS, ...(organizationSameAs ?? [])]),
+  );
+  const effectiveTwitterSite = twitterSite ?? SEO_DEFAULT_TWITTER_SITE;
+
   const scripts: object[] = [];
 
   if (siteBaseUrl && !noindex) {
-    scripts.push(buildOrganizationSchema(siteBaseUrl, organizationSameAs));
+    scripts.push(buildPersonSchema(siteBaseUrl));
+    scripts.push(buildOrganizationSchema(siteBaseUrl, mergedSameAs));
     scripts.push(buildWebSiteSchema(siteBaseUrl, description));
   }
 
@@ -166,11 +241,30 @@ export default function SEOHead({
   }
 
   return (
-    <Helmet>
+    <Helmet htmlAttributes={{ lang: "en-GB" }}>
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
+      <meta httpEquiv="content-language" content="en-GB" />
+      {!noindex && (
+        <>
+          <meta name="geo.region" content="GB" />
+          <meta name="geo.placename" content="United Kingdom" />
+        </>
+      )}
       {noindex && <meta name="robots" content="noindex, nofollow" />}
+      {!noindex && (
+        <meta
+          name="robots"
+          content="index, follow, max-image-preview:large, max-snippet:-1"
+        />
+      )}
       {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
+      {canonicalUrl && !noindex && (
+        <>
+          <link rel="alternate" hrefLang="en-gb" href={canonicalUrl} />
+          <link rel="alternate" hrefLang="x-default" href={canonicalUrl} />
+        </>
+      )}
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />
       <meta property="og:type" content="website" />
@@ -188,7 +282,9 @@ export default function SEOHead({
       <meta name="twitter:card" content={imageUrl ? "summary_large_image" : "summary"} />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
-      {twitterSite && <meta name="twitter:site" content={twitterSite} />}
+      {!noindex && (
+        <meta name="twitter:site" content={effectiveTwitterSite} />
+      )}
       {twitterCreator && <meta name="twitter:creator" content={twitterCreator} />}
       {imageUrl && <meta name="twitter:image" content={imageUrl} />}
       {imageUrl && imageAlt && <meta name="twitter:image:alt" content={imageAlt} />}

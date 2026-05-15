@@ -16,9 +16,11 @@ import { pickNewRandomPassage } from "../lib/passages";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 import SEOHead from "../components/seo/SEOHead";
 import TrainerFaqSection from "../components/seo/TrainerFaqSection";
+import UcatGuidesPanel from "../components/layout/UcatGuidesPanel";
 import BreadcrumbNav from "../components/layout/BreadcrumbNav";
 import { trainerFaqs } from "../data/trainerFaqs";
 import { trackEvent, setActiveTrainer, clearActiveTrainer } from "../lib/analytics";
+import { PostDrillUpsell } from "../components/layout/ProductUpsell";
 
 type Phase = "scanning" | "results";
 
@@ -279,7 +281,7 @@ export default function KeywordScanningPage() {
       <div className="flex flex-col min-h-screen">
         <SEOHead
           title="UCAT Keyword Scanning Trainer"
-          description="Find target words in dense passages. Free keyword scanning practice for UCAT Verbal Reasoning from TheUKCATPeople."
+          description="Find target words in dense passages. Free keyword scanning practice for UCAT Verbal Reasoning, built for UK applicants."
           canonicalUrl={canonicalUrl}
           breadcrumbs={breadcrumbs}
         />
@@ -344,6 +346,11 @@ export default function KeywordScanningPage() {
             >
               Try another passage
             </button>
+            <PostDrillUpsell
+              accuracy={
+                targets.length > 0 ? Math.round((foundCount / targets.length) * 100) : undefined
+              }
+            />
             <div className="mt-4">
               <Link
                 to="/"
@@ -367,7 +374,7 @@ export default function KeywordScanningPage() {
     <div className="flex flex-col min-h-screen bg-slate-50/50">
       <SEOHead
         title="UCAT Keyword Scanning Trainer"
-        description="Find target words in dense passages. Free keyword scanning practice for UCAT Verbal Reasoning from TheUKCATPeople."
+        description="Find target words in dense passages. Free keyword scanning practice for UCAT Verbal Reasoning, built for UK applicants."
         canonicalUrl={canonicalUrl}
         breadcrumbs={breadcrumbs}
       />
@@ -456,6 +463,7 @@ export default function KeywordScanningPage() {
           </div>
         </div>
       </main>
+      <UcatGuidesPanel context="trainer" trainingType="keyword_scanning" />
       <TrainerFaqSection
         id="keyword-scanning-faq"
         title="Common questions about the UCAT keyword scanning trainer"

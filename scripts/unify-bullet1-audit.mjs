@@ -24,13 +24,13 @@ console.log('\nRemotes:\n' + (rv.stdout || '').trim())
 console.log('\nFetching origin (prune)…')
 const fetch = git(['fetch', '--prune', 'origin'], true)
 if (fetch.status !== 0) {
-  console.warn('\nWARN: `git fetch origin` failed — branch list below may be stale.\n')
+  console.warn('\nWARN: `git fetch origin` failed - branch list below may be stale.\n')
 }
 
 const unify = git(['branch', '-a', '--list', '*skills-plan-unify*'])
 const u = (unify.stdout || '').trim()
 console.log('\nBranches matching *skills-plan-unify*:')
-console.log(u || '(none — create or fetch per docs/UNIFY_BULLET1_GIT.md)')
+console.log(u || '(none - create or fetch per docs/UNIFY_BULLET1_GIT.md)')
 
 function remoteUrl(name) {
   const r = git(['remote', 'get-url', name])
@@ -65,12 +65,12 @@ if (up) {
   if (looksSkillsTrainer(up)) {
     console.log('OK: upstream points at canonical skills-trainer (typical fork workflow).\n')
   } else {
-    console.warn('NOTE: upstream does not look like TheUKCATPeople/skills-trainer — confirm before merge.\n')
+    console.warn('NOTE: upstream does not look like TheUKCATPeople/skills-trainer - confirm before merge.\n')
   }
   console.log('Fetching upstream (prune)…')
   const upFetch = git(['fetch', '--prune', 'upstream'], true)
   if (upFetch.status !== 0) {
-    console.warn('WARN: `git fetch upstream` failed — compare with upstream may be stale.\n')
+    console.warn('WARN: `git fetch upstream` failed - compare with upstream may be stale.\n')
   }
   if (refExists('refs/remotes/upstream/skills-plan-unify')) {
     console.log('OK: refs/remotes/upstream/skills-plan-unify exists.\n')
@@ -78,7 +78,7 @@ if (up) {
     console.log('NOTE: upstream/skills-plan-unify not found yet (create on GitHub or fetch after it exists).\n')
   }
 } else {
-  console.log('\n(No `upstream` remote — optional; add per docs/UNIFY_BULLET1_GIT.md if `origin` is a fork.)\n')
+  console.log('\n(No `upstream` remote - optional; add per docs/UNIFY_BULLET1_GIT.md if `origin` is a fork.)\n')
 }
 
 if (refExists('refs/remotes/origin/skills-plan-unify')) {

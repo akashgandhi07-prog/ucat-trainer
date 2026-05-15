@@ -53,7 +53,7 @@ export default function UnifiedProductHub() {
   return (
     <section className="mb-8" aria-labelledby="unified-hub-heading">
       <h2 id="unified-hub-heading" className="text-lg font-semibold text-foreground mb-1">
-        Planning &amp; progress
+        Planning & progress
       </h2>
       <p className="text-sm text-muted-foreground mb-4">
         {UNIFIED_LOGIN_MESSAGING_ENABLED

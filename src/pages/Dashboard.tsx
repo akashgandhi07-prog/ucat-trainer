@@ -27,7 +27,12 @@ import { PASSAGES } from "../data/passages";
 import SEOHead from "../components/seo/SEOHead";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
-import TutoringUpsell from "../components/layout/TutoringUpsell";
+import ProductUpsell, { DashboardUpsellStack } from "../components/layout/ProductUpsell";
+import {
+  getUpsellProfileContext,
+  hasActiveCourseUpsells,
+  shouldShowDashboardTutoringUpsell,
+} from "../lib/productUpsell";
 import { getGuestSessions } from "../lib/guestSessions";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 import { trackEvent } from "../lib/analytics";
@@ -37,6 +42,9 @@ import type { SyllogismSession } from "../types/syllogisms";
 import SyllogismAnalytics from "../components/dashboard/SyllogismAnalytics";
 import UnifiedProductHub from "../components/dashboard/UnifiedProductHub";
 import { isPlannerIntegrated } from "../lib/plannerUrl";
+import { useAppShell } from "../contexts/AppShellContext";
+import { APP_CONTENT_X, appContentWidthClass } from "../lib/appContentLayout";
+import { cn } from "../lib/cn";
 
 type ChartPoint = {
   date: string;
@@ -114,6 +122,7 @@ function getStoredTargetWpm(): number | null {
 }
 
 export default function Dashboard() {
+  const inAppShell = useAppShell();
   const {
     user,
     profile,
@@ -138,7 +147,7 @@ export default function Dashboard() {
   const [guestSummary, setGuestSummary] = useState<GuestDashboardSummary | null>(null);
   const [syllogismSessions, setSyllogismSessions] = useState<SyllogismSession[]>([]);
 
-  // UCAT exam date (April–September only). Synced from profile when it loads.
+  // UCAT exam date (April-September only). Synced from profile when it loads.
   const now = new Date();
   const currentYear = now.getFullYear();
   const defaultUcatYear = currentYear + (now.getMonth() >= 3 ? 1 : 0); // next exam window
@@ -636,7 +645,7 @@ export default function Dashboard() {
         created_at: s.created_at,
         label: TRAINING_TYPE_LABELS[type],
         timeDisplay:
-          s.time_seconds != null && s.time_seconds > 0 ? `${s.time_seconds}s` : "–",
+          s.time_seconds != null && s.time_seconds > 0 ? `${s.time_seconds}s` : "-",
         scoreDisplay: formatSessionScore(s),
       };
     });
@@ -644,7 +653,7 @@ export default function Dashboard() {
       id: `syllogism-${s.id}`,
       created_at: s.created_at,
       label: s.mode === "macro" ? "Decision Making (Macro)" : "Decision Making (Micro)",
-      timeDisplay: s.average_time_per_decision > 0 ? `${Math.round(s.average_time_per_decision * s.total_questions)}s` : "–",
+      timeDisplay: s.average_time_per_decision > 0 ? `${Math.round(s.average_time_per_decision * s.total_questions)}s` : "-",
       scoreDisplay: s.mode === "macro" ? `${s.score} pts` : `${s.score} / ${s.total_questions} correct`,
     }));
     const merged = [...fromSessions, ...fromSyllogism].sort(
@@ -927,7 +936,8 @@ export default function Dashboard() {
     }
 
     return (
-      <>
+      <div className="flex flex-col lg:flex-row lg:items-start gap-8 lg:gap-10">
+        <div className="min-w-0 flex-1 space-y-8">
         {isPlannerIntegrated() ? <UnifiedProductHub /> : null}
         <section className="mb-8">
           <div className="bg-white rounded-xl border-2 border-slate-300 shadow-sm overflow-hidden">
@@ -1007,7 +1017,7 @@ export default function Dashboard() {
                 <div className="border-t border-slate-200 pt-3 mt-3">
                   <div className="flex flex-wrap items-center gap-2 mb-2">
                     <span className="text-slate-500">UCAT exam date:</span>
-                    <span className="text-xs text-slate-400">(April–September only)</span>
+                    <span className="text-xs text-slate-400">(April-September only)</span>
                   </div>
                   {profile?.ucat_exam_date && !ucatEditing ? (
                     <div className="flex flex-wrap items-center gap-3 flex-1">
@@ -1417,7 +1427,7 @@ export default function Dashboard() {
                     </div>
                     <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                       <p className="text-sm font-medium text-slate-500">Last session</p>
-                      <p className="text-lg font-bold text-slate-900">{inferenceLastSession ?? "–"}</p>
+                      <p className="text-lg font-bold text-slate-900">{inferenceLastSession ?? "-"}</p>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-3 text-sm text-slate-600 mb-4">
@@ -1553,7 +1563,7 @@ export default function Dashboard() {
                     <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                       <p className="text-sm font-medium text-slate-500">Avg time per question</p>
                       <p className="text-3xl font-bold text-slate-900">
-                        {mentalMathsAvgTimeMs != null ? `${(mentalMathsAvgTimeMs / 1000).toFixed(1)}s` : "–"}
+                        {mentalMathsAvgTimeMs != null ? `${(mentalMathsAvgTimeMs / 1000).toFixed(1)}s` : "-"}
                       </p>
                     </div>
                     <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
@@ -1565,7 +1575,7 @@ export default function Dashboard() {
                       <p className="text-2xl font-bold text-slate-900">
                         {mentalMathsSessions.length > 0 && mentalMathsSessions[mentalMathsSessions.length - 1]?.difficulty
                           ? String(mentalMathsSessions[mentalMathsSessions.length - 1].difficulty).replace("stage_", "Stage ")
-                          : "–"}
+                          : "-"}
                       </p>
                     </div>
                   </div>
@@ -1666,7 +1676,19 @@ export default function Dashboard() {
             )}
           </>
         )}
-      </>
+        </div>
+        <aside
+          className="shrink-0 w-full lg:w-[min(22rem,100%)] xl:w-96 lg:sticky lg:top-6 lg:self-start space-y-4"
+          aria-label="Optional courses and tutoring"
+        >
+          <DashboardUpsellStack
+            rail
+            stream={profile?.stream ?? null}
+            firstName={getUpsellProfileContext(user, profile).firstName}
+            showTutoring={shouldShowDashboardTutoringUpsell(sessions)}
+          />
+        </aside>
+      </div>
     );
   };
 
@@ -1699,18 +1721,33 @@ export default function Dashboard() {
     : undefined;
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50">
+    <div
+      className={cn(
+        "flex flex-col bg-slate-50",
+        inAppShell ? "flex-1 min-h-0" : "min-h-screen",
+      )}
+    >
       <SEOHead
         title="UCAT Verbal Reasoning Dashboard & Analytics"
         description="Track your reading speed (WPM) and accuracy for the UCAT medical entrance exam. Free trainer for UK medical students."
         canonicalUrl={dashboardCanonical}
         breadcrumbs={breadcrumbs}
+        noindex
       />
       <a href="#main-content" className={skipLinkClass}>
         Skip to main content
       </a>
       <Header />
-      <main id="main-content" className="flex-1 max-w-4xl mx-auto px-4 py-8" tabIndex={-1}>
+      <main
+        id="main-content"
+        className={cn(
+          "flex-1 py-8",
+          inAppShell
+            ? cn(APP_CONTENT_X, appContentWidthClass({ inAppShell }))
+            : "max-w-4xl mx-auto px-4",
+        )}
+        tabIndex={-1}
+      >
         <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">
@@ -1748,9 +1785,11 @@ export default function Dashboard() {
         </div>
 
         {user ? renderAuthenticatedDashboard() : renderGuestDashboard()}
-        <div className="mt-10">
-          <TutoringUpsell variant="banner" />
-        </div>
+        {!user && hasActiveCourseUpsells() ? (
+          <div className="mt-8">
+            <ProductUpsell variant="hero" offer="course" placement="dashboard_hero" dismissible />
+          </div>
+        ) : null}
       </main>
       <Footer />
     </div>

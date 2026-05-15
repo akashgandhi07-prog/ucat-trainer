@@ -3,6 +3,7 @@ import { generateFullPlan, planToDBRows, type PlanInputs } from '../embedded/lib
 import { PLAN_TIMETABLE_TABLE } from '../embedded/lib/planner-db-tables'
 import { generateSlug, parseDate, toISODate } from '../embedded/lib/utils'
 import { supabase } from '../../lib/supabase'
+import { invalidateActivePlanCache } from './load-planner-data'
 
 export type CreatePlanFromOnboardingInput = {
   state: OnboardingState
@@ -98,4 +99,6 @@ export async function createPlanFromOnboarding({
   if (tutorId) {
     await supabase.from('plan_members').insert({ plan_id: plan.id, user_id: tutorId, role: 'tutor' })
   }
+
+  invalidateActivePlanCache(user.id)
 }

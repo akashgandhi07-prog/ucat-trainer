@@ -6,9 +6,70 @@ import { trackEvent } from "../lib/analytics";
 import { getProfile, upsertProfile } from "../lib/profileApi";
 import { getGuestSessions, clearGuestSessions } from "../lib/guestSessions";
 import { useToast } from "../contexts/ToastContext";
+import { syncSignupToMailchimp } from "../lib/mailchimpSync";
 import type { AuthState } from "../types/session";
+import type { User } from "@supabase/supabase-js";
 
 const GET_SESSION_RETRIES = 2;
+
+const MAILCHIMP_JWT_OK_PREFIX = "mailchimp_jwt_ok_";
+
+function mailchimpJwtOkKey(userId: string): string {
+  return `${MAILCHIMP_JWT_OK_PREFIX}${userId}`;
+}
+
+function metaScalarFromUser(meta: Record<string, unknown> | null | undefined, keys: string[]): string | undefined {
+  if (!meta) return undefined;
+  for (const k of keys) {
+    const v = meta[k];
+    if (typeof v === "string") {
+      const t = v.trim();
+      if (t) return t;
+    }
+    if (typeof v === "number" && Number.isFinite(v)) return String(v);
+  }
+  return undefined;
+}
+
+/**
+ * JWT backup to Mailchimp: run once per tab after a successful POST (sessionStorage)
+ * so we do not hammer the Edge Function on every navigation.
+ * Supabase often delivers INITIAL_SESSION without a subsequent SIGNED_IN on full page loads
+ * (e.g. returning from confirm email).
+ */
+async function tryMailchimpJwtBackup(sessionUser: User, caller: string): Promise<void> {
+  const meta = sessionUser.user_metadata as Record<string, unknown> | null;
+  const stream = metaScalarFromUser(meta, ["stream"]);
+  const entryYear = metaScalarFromUser(meta, ["entry_year", "entryYear"]) ?? null;
+  const firstName = metaScalarFromUser(meta, ["first_name", "firstName"]) ?? null;
+  const lastName = metaScalarFromUser(meta, ["last_name", "lastName"]) ?? null;
+  if (!stream || !entryYear || !sessionUser.email) return;
+  try {
+    if (typeof sessionStorage !== "undefined" && sessionStorage.getItem(mailchimpJwtOkKey(sessionUser.id))) {
+      return;
+    }
+  } catch {
+    /* ignore quota / SSR */
+  }
+  const ok = await syncSignupToMailchimp(
+    {
+      email: sessionUser.email,
+      firstName: firstName ?? "",
+      lastName: lastName ?? "",
+      stream,
+      entryYear,
+    },
+    caller,
+  );
+  if (ok) {
+    try {
+      sessionStorage.setItem(mailchimpJwtOkKey(sessionUser.id), "1");
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
 const GET_SESSION_BASE_MS = 600;
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -25,9 +86,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   /* eslint-disable-next-line react-hooks/refs -- intentional: keep ref in sync with user for listener closure */
   userRef.current = user;
 
-  // Skip setState after unmount (e.g. when fetchProfile is called from auth listener and user navigates away)
+  // Skip setState after AuthProvider truly unmounts. Reset on each mount so React Strict Mode
+  // (cleanup then remount) does not leave this stuck false forever in development.
   const mountedRef = useRef(true);
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
       mountedRef.current = false;
     };
@@ -100,7 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   /* ── mount: listener only (fix #7 - no double-load) ────────── */
   useEffect(() => {
-    let mounted = true;
+    let authListenerActive = true;
     let initialLoadDone = false;
 
     const {
@@ -112,45 +175,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         userId: session?.user?.id,
       });
 
-      if (!mounted) return;
       const u = session?.user ?? null;
       setSessionLoadFailed(false);
 
       // INITIAL_SESSION is the first event - use it instead of manual loadSession
       if (event === "INITIAL_SESSION") {
         setUser(u);
-        if (u) {
+        initialLoadDone = true;
+        // Always clear auth loading here. Never gate on authListenerActive: React Strict Mode
+        // can tear the listener down before this runs, which would strand the app on loading.
+        setLoading(false);
+
+        if (!u) {
+          setProfile(null);
+          return;
+        }
+
+        void (async () => {
           let p = await getProfile(u.id);
+          if (!mountedRef.current) return;
           if (!p) {
             authLog.info("No profile row, creating minimal profile", { userId: u.id });
             await upsertProfile(u.id, null, null);
+            if (!mountedRef.current) return;
             p = await getProfile(u.id);
           }
-          // Backfill stream from sign-up metadata if profile has none (e.g. legacy account)
           const meta = u.user_metadata as Record<string, unknown> | null;
           const metaStream = (meta?.stream as string | undefined) ?? undefined;
           const validStreams = ["Medicine", "Dentistry", "Veterinary Medicine", "Other", "Undecided"];
           if (p && !p.stream && metaStream && validStreams.includes(metaStream)) {
             authLog.info("Backfilling stream from user_metadata", { userId: u.id, stream: metaStream });
             await upsertProfile(u.id, p.full_name ?? null, metaStream);
-            if (mounted) p = (await getProfile(u.id)) ?? p;
+            if (!mountedRef.current) return;
+            p = (await getProfile(u.id)) ?? p;
           }
-          if (mounted) setProfile(p);
-        } else {
-          setProfile(null);
-        }
-        initialLoadDone = true;
-        if (mounted) setLoading(false);
+          if (!mountedRef.current) return;
+          setProfile(p);
+          void tryMailchimpJwtBackup(u, "auth_initial_session");
+        })();
         return;
       }
 
       // If INITIAL_SESSION hasn't fired yet, skip other events to avoid races
       if (!initialLoadDone) return;
 
+      if (!authListenerActive) return;
+
       if (event === "SIGNED_IN" && session?.user) {
         trackEvent("sign_in");
         const guestSessions = getGuestSessions();
-        if (guestSessions.length > 0 && mounted) {
+        if (guestSessions.length > 0 && authListenerActive) {
           const rows = guestSessions.map((g) => ({
             user_id: session.user.id,
             training_type: g.training_type,
@@ -181,12 +255,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             "../planner/lib/migrate-guest-planner"
           );
           const plannerMerge = await migrateGuestPlannerToCloud(session.user.id);
-          if (plannerMerge.migrated && mounted) {
+          if (plannerMerge.migrated && authListenerActive) {
             showToast("Your study plan was saved to your account.", { variant: "success" });
           }
         } catch (plannerErr) {
           authLog.error("Guest planner merge failed", plannerErr);
-          if (mounted) {
+          if (authListenerActive) {
             showToast(
               "Couldn't save your guest study plan to the cloud. It's still on this device.",
               { variant: "error" },
@@ -197,10 +271,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const meta = session.user.user_metadata as Record<string, unknown> | null;
         const fullName =
           (meta?.full_name as string) || (meta?.name as string) || null;
-        const stream = (meta?.stream as string | undefined) ?? undefined;
-        const firstName = (meta?.first_name as string | undefined) ?? null;
-        const lastName = (meta?.last_name as string | undefined) ?? null;
-        const entryYear = (meta?.entry_year as string | undefined) ?? null;
+        const stream = metaScalarFromUser(meta, ["stream"]);
+        const firstName = metaScalarFromUser(meta, ["first_name", "firstName"]) ?? null;
+        const lastName = metaScalarFromUser(meta, ["last_name", "lastName"]) ?? null;
+        const entryYear = metaScalarFromUser(meta, ["entry_year", "entryYear"]) ?? null;
         const emailMarketingOptIn =
           (meta?.email_marketing_opt_in as boolean | undefined) ?? null;
 
@@ -210,22 +284,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           entryYear,
           emailMarketingOptIn,
         });
-        if (mounted) await fetchProfile(session.user.id);
+        await tryMailchimpJwtBackup(session.user, "auth_context_signed_in");
+        if (authListenerActive) await fetchProfile(session.user.id);
       } else if (event === "SIGNED_OUT") {
+        const exitingId = userRef.current?.id;
+        if (exitingId && typeof sessionStorage !== "undefined") {
+          try {
+            sessionStorage.removeItem(mailchimpJwtOkKey(exitingId));
+          } catch {
+            /* ignore */
+          }
+        }
         trackEvent("sign_out");
         authLog.info("User signed out", { prevUserId: userRef.current?.id });
-        if (mounted) setProfile(null);
+        if (authListenerActive) setProfile(null);
       } else if (u) {
-        if (mounted) await fetchProfile(u.id);
+        if (authListenerActive) await fetchProfile(u.id);
       } else {
-        if (mounted) setProfile(null);
+        if (authListenerActive) setProfile(null);
       }
 
-      if (mounted) setUser(u);
+      if (authListenerActive) setUser(u);
     });
 
     return () => {
-      mounted = false;
+      authListenerActive = false;
       subscription.unsubscribe();
     };
   }, [fetchProfile, showToast]);

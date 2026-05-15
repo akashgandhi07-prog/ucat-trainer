@@ -23,7 +23,7 @@ export type ComparisonResult = "correct" | "partial" | "incorrect";
 /**
  * Compare user selection against correct spans.
  * Returns "correct" if overlap >= 70% or user contains correct;
- * "partial" if overlap 50–70%;
+ * "partial" if overlap 50-70%;
  * "incorrect" otherwise.
  */
 export function compareSelection(

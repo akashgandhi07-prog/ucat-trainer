@@ -1,0 +1,380 @@
+import { useEffect, useState, type ReactNode } from "react";
+import { NavLink } from "react-router-dom";
+import {
+  BookOpen,
+  Calculator,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Flame,
+  GraduationCap,
+  Home,
+  LayoutDashboard,
+  Library,
+  LineChart,
+  Scale,
+} from "lucide-react";
+import { useAuth } from "../../hooks/useAuth";
+import { supabase } from "../../lib/supabase";
+import { getStreakAndLastPracticed } from "../../lib/streakUtils";
+import { cn } from "../../lib/cn";
+import { ProductUpsellSidebar } from "./ProductUpsell";
+
+const SIDEBAR_COLLAPSED_KEY = "ucat-sidebar-collapsed";
+
+export function readSidebarCollapsedPreference(): boolean {
+  try {
+    return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function writeSidebarCollapsedPreference(collapsed: boolean): void {
+  try {
+    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, collapsed ? "1" : "0");
+  } catch {
+    /* ignore */
+  }
+}
+
+type AppSidebarProps = {
+  collapsed: boolean;
+  onToggleCollapsed: () => void;
+  plannerOn: boolean;
+  tutorNavVisible: boolean;
+  onNavigate?: () => void;
+  /** Mobile drawer: always show labels and full width */
+  forceExpanded?: boolean;
+};
+
+function navClass({ isActive }: { isActive: boolean }, iconOnly: boolean) {
+  return cn(
+    "group flex items-center rounded-xl text-sm font-medium transition-colors w-full",
+    iconOnly ? "justify-center px-2 py-2.5" : "gap-2.5 px-3 py-2",
+    isActive
+      ? "bg-white/15 text-white shadow-sm"
+      : "text-sky-200/80 hover:bg-white/10 hover:text-white",
+  );
+}
+
+function NavIcon({ children, active }: { children: ReactNode; active: boolean }) {
+  return (
+    <span
+      className={cn(
+        "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors",
+        active ? "bg-sky-400/90 text-white" : "bg-white/10 text-sky-100 group-hover:bg-white/15",
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+function SectionDivider() {
+  return <div className="my-2 border-t border-white/10" role="presentation" />;
+}
+
+function StreakText({ streak }: { streak: number }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-lg font-bold leading-tight">
+        {streak}{" "}
+        <span className="text-sm font-medium text-sky-200/90">day{streak === 1 ? "" : "s"}</span>
+      </p>
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-sky-300/80">Active streak</p>
+    </div>
+  );
+}
+
+function StreakCard({ streak, iconOnly }: { streak: number; iconOnly: boolean }) {
+  if (iconOnly) {
+    return (
+      <div className="mx-2 mb-2 flex flex-col items-center gap-1 rounded-2xl bg-white/10 px-2 py-2.5">
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-sm">
+          <Flame className="h-4 w-4" aria-hidden />
+        </span>
+        <span className="text-sm font-bold leading-none">{streak}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-3 mb-2 flex items-center gap-3 rounded-xl bg-white/10 px-3 py-2.5">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-sm">
+        <Flame className="h-5 w-5" aria-hidden />
+      </span>
+      <StreakText streak={streak} />
+    </div>
+  );
+}
+
+export default function AppSidebar({
+  collapsed,
+  onToggleCollapsed,
+  plannerOn,
+  tutorNavVisible,
+  onNavigate,
+  forceExpanded = false,
+}: AppSidebarProps) {
+  const iconOnly = !forceExpanded && collapsed;
+  const { user, profile } = useAuth();
+  const [streak, setStreak] = useState(0);
+
+  useEffect(() => {
+    if (!user) {
+      setStreak(0);
+      return;
+    }
+    let cancelled = false;
+    void supabase
+      .from("sessions")
+      .select("created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: true })
+      .then(({ data }) => {
+        if (cancelled) return;
+        const rows = (data ?? []) as { created_at: string }[];
+        setStreak(getStreakAndLastPracticed(rows).streak);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  const showStreak = Boolean(user && streak > 0);
+
+  return (
+    <aside
+      className={cn(
+        "relative flex h-full min-h-0 flex-col border-r-2 border-sky-400/50",
+        "bg-gradient-to-b from-[hsl(215_48%_14%)] to-[hsl(215_52%_11%)] text-white",
+        "transition-[width] duration-200 ease-out",
+        forceExpanded ? "w-[min(280px,85vw)]" : collapsed ? "w-[4.75rem]" : "w-[min(280px,20vw)] min-w-[240px] max-w-[280px]",
+      )}
+    >
+      <div
+        className={cn(
+          "relative shrink-0 border-b border-white/10",
+          iconOnly ? "px-2 py-3" : "px-4 py-4",
+        )}
+      >
+        <NavLink
+          to="/"
+          className={cn(
+            "flex min-w-0 items-center font-bold text-white hover:text-sky-100 transition-colors",
+            iconOnly ? "justify-center" : "gap-2 pr-10",
+          )}
+          onClick={onNavigate}
+          title="TheUKCATPeople"
+        >
+          {iconOnly ? (
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-sm font-bold tracking-tight">
+              UK
+            </span>
+          ) : (
+            <>
+              <span className="text-base tracking-tight truncate">TheUKCATPeople</span>
+              <span className="shrink-0 text-[10px] font-semibold uppercase text-sky-300 bg-sky-400/20 px-1.5 py-0.5 rounded">
+                Free
+              </span>
+            </>
+          )}
+        </NavLink>
+
+        {!forceExpanded ? (
+          <button
+            type="button"
+            onClick={onToggleCollapsed}
+            className={cn(
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
+              "bg-sky-400/25 text-white hover:bg-sky-400/40 transition-colors",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(215_48%_14%)]",
+              iconOnly ? "mx-auto mt-2" : "absolute right-3 top-4",
+            )}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {collapsed ? (
+              <ChevronRight className="h-4 w-4" aria-hidden />
+            ) : (
+              <ChevronLeft className="h-4 w-4" aria-hidden />
+            )}
+          </button>
+        ) : null}
+      </div>
+
+      {showStreak ? <StreakCard streak={streak} iconOnly={iconOnly} /> : null}
+
+      <nav
+        className={cn(
+          "flex-1 min-h-0 overflow-y-auto space-y-0.5",
+          iconOnly ? "px-2 py-3" : "px-3 py-3",
+        )}
+        aria-label="Main"
+      >
+        <NavLink to="/" end className={(p) => navClass(p, iconOnly)} title="Home" onClick={onNavigate}>
+          {({ isActive }) => (
+            <>
+              <NavIcon active={isActive}>
+                <Home className="h-4 w-4" aria-hidden />
+              </NavIcon>
+              {!iconOnly ? <span>Home</span> : null}
+            </>
+          )}
+        </NavLink>
+        <NavLink
+          to="/dashboard"
+          className={(p) => navClass(p, iconOnly)}
+          title="My progress"
+          onClick={onNavigate}
+        >
+          {({ isActive }) => (
+            <>
+              <NavIcon active={isActive}>
+                <LayoutDashboard className="h-4 w-4" aria-hidden />
+              </NavIcon>
+              {!iconOnly ? <span>My progress</span> : null}
+            </>
+          )}
+        </NavLink>
+
+        {!iconOnly ? (
+          <p className="px-3 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sky-300/70">
+            Skills trainers
+          </p>
+        ) : (
+          <SectionDivider />
+        )}
+        <NavLink
+          to="/ucat-verbal-reasoning-practice"
+          className={(p) => navClass(p, iconOnly)}
+          title="Verbal Reasoning"
+          onClick={onNavigate}
+        >
+          {({ isActive }) => (
+            <>
+              <NavIcon active={isActive}>
+                <BookOpen className="h-4 w-4" aria-hidden />
+              </NavIcon>
+              {!iconOnly ? <span>Verbal Reasoning</span> : null}
+            </>
+          )}
+        </NavLink>
+        <NavLink
+          to="/ucat-decision-making-practice"
+          className={(p) => navClass(p, iconOnly)}
+          title="Decision Making"
+          onClick={onNavigate}
+        >
+          {({ isActive }) => (
+            <>
+              <NavIcon active={isActive}>
+                <Scale className="h-4 w-4" aria-hidden />
+              </NavIcon>
+              {!iconOnly ? <span>Decision Making</span> : null}
+            </>
+          )}
+        </NavLink>
+        <NavLink
+          to="/ucat-quantitative-reasoning-practice"
+          className={(p) => navClass(p, iconOnly)}
+          title="Quantitative Reasoning"
+          onClick={onNavigate}
+        >
+          {({ isActive }) => (
+            <>
+              <NavIcon active={isActive}>
+                <Calculator className="h-4 w-4" aria-hidden />
+              </NavIcon>
+              {!iconOnly ? <span>Quantitative Reasoning</span> : null}
+            </>
+          )}
+        </NavLink>
+
+        {plannerOn ? (
+          <>
+            {!iconOnly ? (
+              <p className="px-3 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sky-300/70">
+                Planning
+              </p>
+            ) : (
+              <SectionDivider />
+            )}
+            <NavLink
+              to="/study-plan"
+              className={(p) => navClass(p, iconOnly)}
+              title="Study plan"
+              onClick={onNavigate}
+            >
+              {({ isActive }) => (
+                <>
+                  <NavIcon active={isActive}>
+                    <CalendarDays className="h-4 w-4" aria-hidden />
+                  </NavIcon>
+                  {!iconOnly ? <span>Study plan</span> : null}
+                </>
+              )}
+            </NavLink>
+            <NavLink
+              to="/mock-scores"
+              className={(p) => navClass(p, iconOnly)}
+              title="Mock scores"
+              onClick={onNavigate}
+            >
+              {({ isActive }) => (
+                <>
+                  <NavIcon active={isActive}>
+                    <LineChart className="h-4 w-4" aria-hidden />
+                  </NavIcon>
+                  {!iconOnly ? <span>Mock scores</span> : null}
+                </>
+              )}
+            </NavLink>
+            {tutorNavVisible ? (
+              <NavLink
+                to="/tutor"
+                className={(p) => navClass(p, iconOnly)}
+                title="Tutor dashboard"
+                onClick={onNavigate}
+              >
+                {({ isActive }) => (
+                  <>
+                    <NavIcon active={isActive}>
+                      <GraduationCap className="h-4 w-4" aria-hidden />
+                    </NavIcon>
+                    {!iconOnly ? <span>Tutor dashboard</span> : null}
+                  </>
+                )}
+              </NavLink>
+            ) : null}
+          </>
+        ) : null}
+
+        {!iconOnly ? (
+          <p className="px-3 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sky-300/70">
+            Resources
+          </p>
+        ) : (
+          <SectionDivider />
+        )}
+        <NavLink
+          to="/study-guides"
+          className={(p) => navClass(p, iconOnly)}
+          title="Study guides"
+          onClick={onNavigate}
+        >
+          {({ isActive }) => (
+            <>
+              <NavIcon active={isActive}>
+                <Library className="h-4 w-4" aria-hidden />
+              </NavIcon>
+              {!iconOnly ? <span>Study guides</span> : null}
+            </>
+          )}
+        </NavLink>
+      </nav>
+      <ProductUpsellSidebar stream={profile?.stream ?? null} iconOnly={iconOnly} />
+    </aside>
+  );
+}

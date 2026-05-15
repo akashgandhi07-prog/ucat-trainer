@@ -37,7 +37,7 @@ export function plannerPath(path: string): string | null {
 export const PLANNER_ROUTES = {
   dashboard: "/dashboard",
   plan: "/dashboard/plan",
-  mockScores: "/dashboard/scores",
+  mockScores: "/mock-scores",
   onboarding: "/onboarding",
   /** Guest-friendly entry: build a plan without signing in first */
   studyPlanEntry: "/onboarding",

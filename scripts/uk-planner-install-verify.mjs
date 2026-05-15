@@ -13,6 +13,6 @@ function run(cmd, args) {
   if (r.status !== 0) process.exit(r.status ?? 1)
 }
 
-console.log('uk-planner-install-verify: unified app — running trainer unify:bullet1-guard')
+console.log('uk-planner-install-verify: unified app - running trainer unify:bullet1-guard')
 run('npm', ['run', 'unify:bullet1-guard'])
 console.log('uk-planner-install-verify: OK')

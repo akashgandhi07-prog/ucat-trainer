@@ -9,6 +9,7 @@ import {
   planDayForDate,
   sessionsWithGuestCompletions,
 } from '@/lib/guest-plan-helpers'
+import type { ExportPlanPdfInput } from '../../../lib/export-plan-pdf'
 import { toISODate } from '@/lib/utils'
 
 export function GuestTodayPage() {
@@ -18,6 +19,13 @@ export function GuestTodayPage() {
   const view = useMemo(() => {
     if (!bundle) return null
     const todaySessions = bundle.sessions.filter((s) => s.day_date === today)
+    const allSessionsWithCompletion = sessionsWithGuestCompletions(bundle, bundle.sessions)
+    const plannerPdf: ExportPlanPdfInput = {
+      plan: bundle.plan,
+      planDays: bundle.planDays,
+      sessions: allSessionsWithCompletion,
+      todayDate: today,
+    }
     const weekStart = new Date()
     weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1)
     weekStart.setHours(0, 0, 0, 0)
@@ -34,6 +42,8 @@ export function GuestTodayPage() {
         toISODate(weekStart),
         toISODate(weekEnd),
       ),
+      plan: bundle.plan,
+      plannerPdf,
     }
   }, [bundle, today])
 
@@ -49,6 +59,8 @@ export function GuestTodayPage() {
       streak={view.streak}
       weeklyCompletion={view.weeklyCompletion}
       todayDate={today}
+      plan={view.plan}
+      plannerPdf={view.plannerPdf}
     />
   )
 }

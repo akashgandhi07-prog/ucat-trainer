@@ -7,6 +7,7 @@ import SEOHead from "../components/seo/SEOHead";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 import { ArrowLeft } from "lucide-react";
 import { trackEvent } from "../lib/analytics";
+import UcatGuidesPanel from "../components/layout/UcatGuidesPanel";
 
 export default function SyllogismMicroPage() {
   useEffect(() => {
@@ -29,8 +30,8 @@ export default function SyllogismMicroPage() {
   return (
     <div className="flex flex-col min-h-screen bg-slate-50">
       <SEOHead
-        title="Syllogism Micro Drill | UCAT Decision Making"
-        description="Rapid syllogism drill: one premise, one conclusion. Build pattern recognition for UCAT Decision Making."
+        title="UCAT syllogism micro drill (Decision Making)"
+        description="Fast syllogism practice for UCAT Decision Making: one premise, one conclusion. Build pattern recognition for the UK UCAT."
         canonicalUrl={canonicalUrl}
         breadcrumbs={breadcrumbs}
       />
@@ -48,6 +49,13 @@ export default function SyllogismMicroPage() {
           </div>
         </div>
         <MicroDrill />
+        <div className="max-w-3xl mx-auto px-4 pb-6">
+          <UcatGuidesPanel
+            context="decisionHub"
+            className="mt-0"
+            contentMaxWidthClass="max-w-3xl mx-auto w-full"
+          />
+        </div>
       </div>
       <Footer />
     </div>

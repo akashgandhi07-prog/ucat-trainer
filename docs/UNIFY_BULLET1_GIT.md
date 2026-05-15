@@ -1,6 +1,6 @@
 # Unify plan bullet 1 (Git): integration branch hygiene
 
-Supports **checklist item 1** in **`docs/SKILLS_PLAN_UNIFY_PLAYBOOK.md`**: all work that should ship in the **`skills-plan-unify` → `main`** cutover is **reachable on the integration branch** you merge—not only on laptops or fork branches.
+Supports **checklist item 1** in **`docs/SKILLS_PLAN_UNIFY_PLAYBOOK.md`**: all work that should ship in the **`skills-plan-unify` → `main`** cutover is **reachable on the integration branch** you merge-not only on laptops or fork branches.
 
 ## Intended remote
 

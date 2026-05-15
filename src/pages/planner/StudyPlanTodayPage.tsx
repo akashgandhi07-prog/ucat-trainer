@@ -8,16 +8,7 @@ import { useCloudPlannerRefresh } from '../../planner/hooks/useCloudPlannerRefre
 import PlannerPageLayout from '../../planner/PlannerPageLayout'
 import PlannerLoading from '../../planner/components/PlannerLoading'
 
-type TodayPayload = {
-  sessions: Array<Record<string, unknown>>
-  planDay: Record<string, unknown> | null
-  planId: string
-  examDate: string
-  streak: number
-  weeklyCompletion: number
-  todayDate: string
-  insights?: string[]
-}
+type TodayPayload = Record<string, unknown>
 
 function CloudTodayView() {
   const { user } = useAuth()
@@ -29,7 +20,8 @@ function CloudTodayView() {
     if (!user) return
     let cancelled = false
     setPayload(null)
-    void import('../../planner/lib/load-planner-data').then(async ({ fetchActivePlan, loadTodayDashboard }) => {
+    void import('../../planner/lib/load-planner-data').then(
+      async ({ fetchActivePlan, loadTodayDashboard, loadPlanCalendar }) => {
       const plan = await fetchActivePlan(user.id)
       if (cancelled) return
       if (!plan) {
@@ -37,9 +29,24 @@ function CloudTodayView() {
         return
       }
       setMissingPlan(false)
-      const data = await loadTodayDashboard(user.id, plan)
-      if (!cancelled) setPayload(data as unknown as TodayPayload)
-    }).catch(() => {
+      const [dash, cal] = await Promise.all([
+        loadTodayDashboard(user.id, plan),
+        loadPlanCalendar(user.id, plan),
+      ])
+      if (cancelled) return
+      setPayload({
+        ...(dash as object),
+        plan,
+        plannerPdf: {
+          plan: cal.plan,
+          planDays: cal.planDays,
+          sessions: cal.sessions,
+          todayDate: cal.todayDate,
+        },
+        hoursSuggestion: cal.hoursSuggestion ?? null,
+      })
+    },
+    ).catch(() => {
       if (!cancelled) setMissingPlan(true)
     })
     return () => {
@@ -52,7 +59,7 @@ function CloudTodayView() {
 
   return (
     <TodayView
-      key={payload.sessions.map((s) => `${String(s.id)}:${String(s.completed)}`).join('|')}
+      key={`${String(payload.todayDate)}-${Array.isArray(payload.sessions) ? (payload.sessions as { id: string; completed?: unknown }[]).map((s) => `${s.id}:${String(s.completed)}`).join('|') : ''}`}
       {...(payload as object)}
     />
   )

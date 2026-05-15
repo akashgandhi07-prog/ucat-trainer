@@ -62,7 +62,7 @@ New users are synced to Mailchimp **as soon as they press Register**, via a data
 2. Set the webhook config in the database so the trigger can call your Edge Function. In the Supabase Dashboard → **SQL Editor**, run (replace the placeholders):
 
    - **edge_function_url**: Your project’s Edge Function URL. Find **YOUR_PROJECT_REF** in the Supabase dashboard URL, e.g. `https://supabase.com/dashboard/project/abcdefghijklmnop` → the ref is `abcdefghijklmnop`.
-   - **webhook_secret**: **The exact same string** you created with `openssl rand -hex 32` and set as `MAILCHIMP_WEBHOOK_SECRET` in the previous step. Not a new random string — the same one.
+   - **webhook_secret**: **The exact same string** you created with `openssl rand -hex 32` and set as `MAILCHIMP_WEBHOOK_SECRET` in the previous step. Not a new random string - the same one.
 
    ```sql
    UPDATE public.mailchimp_webhook_config
@@ -76,7 +76,7 @@ New users are synced to Mailchimp **as soon as they press Register**, via a data
 
    Until both are set to real values (no `REPLACE_WITH` or placeholders), the trigger will do nothing and no request is sent.
 
-   **RLS:** `public.mailchimp_webhook_config` has **RLS enabled** (migration **`025_mailchimp_webhook_config_enable_rls.sql`**). The **anon** API key cannot `SELECT` these rows; keep using the **SQL Editor** (or another privileged session) for the `UPDATE` statements above. Supabase **Advisors** may list INFO “RLS enabled no policy” for this table — that is **intentional** (deny client reads of secrets). See **`docs/UNIFY_BULLET7_ADVISORS.md`**.
+   **RLS:** `public.mailchimp_webhook_config` has **RLS enabled** (migration **`025_mailchimp_webhook_config_enable_rls.sql`**). The **anon** API key cannot `SELECT` these rows; keep using the **SQL Editor** (or another privileged session) for the `UPDATE` statements above. Supabase **Advisors** may list INFO “RLS enabled no policy” for this table - that is **intentional** (deny client reads of secrets). See **`docs/UNIFY_BULLET7_ADVISORS.md`**.
 
 ### Get Mailchimp credentials
 
@@ -94,7 +94,9 @@ The Edge Function sends these merge fields for every new signup (and updates the
 | Entry Year        | `MERGE8`  | e.g. `2026` |
 | Sign Up Source    | `MERGE9`  | Always `skills trainer` |
 | Year (dropdown)   | `MERGE18` | e.g. `2026 Entry (Starting University September 2026)` or `Other` |
-| Uni Subject       | `MERGE19` | Medicine, Dentistry, Veterinary Medicine, or Other |
+| Uni Subject (Subject) | `MERGE19` or auto-detected | Medicine, Dentistry, Veterinary Medicine, or Other - must match Mailchimp dropdown **exactly** |
+
+Optional secret **`MAILCHIMP_MERGE_UNI_SUBJECT`**: set to your audience field’s merge tag (e.g. `MERGE19`) if auto-detection picks the wrong field. The function loads your audience merge fields and matches the field named **Uni Subject** or **Subject**.
 
 Every synced contact is also tagged **skillstrainer** (the tag is created automatically in Mailchimp when first used). You can segment or automate on this tag.
 
@@ -144,3 +146,4 @@ Mailchimp Transactional is separate from Marketing. It’s used for transactiona
 - **Edge Function 500**: Check that `MAILCHIMP_API_KEY` and `MAILCHIMP_LIST_ID` are set in Supabase secrets.
 - **New signups not in Mailchimp**: If using server-side sync, ensure `MAILCHIMP_WEBHOOK_SECRET` is set in Edge Function secrets and that `mailchimp_webhook_config` has the correct `edge_function_url` and `webhook_secret` (same value). The trigger only runs when both are set to non-placeholder values.
 - **Year or Uni Subject empty on the contact**: Redeploy `add-mailchimp-subscriber` after pulling the latest function (it reads `stream` and `entry_year` from `raw_user_meta_data` reliably, including camelCase and numeric values). In Supabase → Edge Functions → `add-mailchimp-subscriber` → Logs, look for `Mailchimp webhook: missing stream or entry_year` (means metadata was empty when the webhook ran). If Mailchimp returns 400 on create/update, open the response body: dropdown merge fields reject values that don’t match the audience field choices exactly.
+- **Subject wrong or blank**: In Mailchimp → Audience → Settings → Audience fields, open **Subject** / **Uni Subject** and confirm dropdown choices include **Medicine**, **Dentistry**, **Veterinary Medicine** (or **Veterinary** - the function maps aliases), and **Other**. Note the merge tag (often `MERGE19`). Older contacts signed up before the webhook was configured are not backfilled automatically.

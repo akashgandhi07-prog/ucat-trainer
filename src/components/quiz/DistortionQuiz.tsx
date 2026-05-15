@@ -92,7 +92,7 @@ function distortQualifierToAbsolute(s: string): DistortionResult {
   };
 }
 
-// 2. Negation flip – remove or add "not"
+// 2. Negation flip - remove or add "not"
 function distortNegation(s: string): DistortionResult {
   if (/\b(not|never|no longer|cannot|can't)\b/i.test(s)) {
     const result = s
@@ -313,7 +313,7 @@ function buildQuestions(passageText: string, count: number): Question[] {
     }
   }
 
-  // Build TRUE questions (paraphrased – NOT verbatim)
+  // Build TRUE questions (paraphrased - NOT verbatim)
   for (let i = 0; i < shuffledSentences.length && questions.filter(q => q.correctAnswer === "true").length < numTrue; i++) {
     if (usedIndices.has(i)) continue;
     const sentence = shuffledSentences[i];

@@ -21,6 +21,8 @@ export type DBPlanLite = {
 
 export function fetchActivePlan(studentId: string): Promise<DBPlanLite | null>
 
+export function invalidateActivePlanCache(studentId?: string): void
+
 export function loadTodayDashboard(
   studentId: string,
   plan: DBPlanLite,

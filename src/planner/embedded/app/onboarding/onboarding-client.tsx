@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { BookOpen, Timer } from 'lucide-react'
 import { useRouter } from '@/lib/app-navigation'
 import { OnboardingState, DateRange, CurrentSituation, SchoolYear } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
@@ -12,8 +13,29 @@ import { parseDate, toISODate, weeksUntil, DAY_NAMES_FULL } from '@/lib/utils'
 import { buildGuestPlannerFromOnboarding } from '@/lib/build-guest-plan'
 import { getGuestPlanner, saveGuestPlanner } from '@/lib/guest-planner-store'
 import { createPlanFromOnboarding } from '@/lib/create-plan-from-onboarding'
+import { cn } from '../../../../lib/cn'
+import { APP_CONTENT_X } from '../../../../lib/appContentLayout'
+import { PlannerOnboardingAside } from '../../../../components/layout/ProductUpsell'
+import { useAuth } from '../../../../hooks/useAuth'
+import { getUpsellProfileContext } from '../../../../lib/productUpsell'
 
 const TOTAL_STEPS = 7
+
+export type OnboardingProfilePrefill = {
+  fullName?: string | null
+  examDate?: string | null
+}
+
+const choiceCardClass = (selected: boolean) =>
+  cn(
+    'rounded-xl border-2 p-4 sm:p-5 text-left transition-all',
+    selected
+      ? 'border-primary bg-training-active-muted'
+      : 'border-border bg-card hover:border-muted-foreground/40',
+  )
+
+const fieldInputClass =
+  'h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring'
 
 const INITIAL_STATE: OnboardingState = {
   hasPriorExperience: null,
@@ -31,7 +53,13 @@ const INITIAL_STATE: OnboardingState = {
   ucatSen: false,
 }
 
-export default function OnboardingClient({ initialInviteToken }: { initialInviteToken?: string }) {
+export default function OnboardingClient({
+  initialInviteToken,
+  profilePrefill,
+}: {
+  initialInviteToken?: string
+  profilePrefill?: OnboardingProfilePrefill
+}) {
   const router = useRouter()
   const inviteToken = initialInviteToken
 
@@ -39,6 +67,18 @@ export default function OnboardingClient({ initialInviteToken }: { initialInvite
   const [state, setState] = useState<OnboardingState>(INITIAL_STATE)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  useEffect(() => {
+    if (!profilePrefill) return
+    const name = profilePrefill.fullName?.trim()
+    const exam = profilePrefill.examDate?.trim()
+    if (!name && !exam) return
+
+    setState((s) => ({
+      ...s,
+      fullName: s.fullName || name || '',
+      examDate: s.examDate || exam || null,
+    }))
+  }, [profilePrefill?.fullName, profilePrefill?.examDate])
 
   // Redirect to dashboard if already has an active plan
   useEffect(() => {
@@ -99,39 +139,43 @@ export default function OnboardingClient({ initialInviteToken }: { initialInvite
   }
 
   const examDateWarning = state.examDate && weeksUntil(parseDate(state.examDate)) < 3
-
+  const { user, profile } = useAuth()
+  const { firstName, stream } = getUpsellProfileContext(user, profile)
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-start justify-center px-4 py-12">
-      <div className="w-full max-w-2xl space-y-6">
-        {/* Header */}
-        <div className="text-center">
-          <div className="inline-flex items-center gap-2 text-2xl font-bold tracking-tight text-slate-900 mb-1">
-            <div className="flex gap-1">
-              <div className="w-3 h-3 rounded-full bg-blue-500" />
-              <div className="w-3 h-3 rounded-full bg-green-500" />
-              <div className="w-3 h-3 rounded-full bg-amber-500" />
-              <div className="w-3 h-3 rounded-full bg-purple-500" />
-            </div>
-            TheUKCATPeople
-          </div>
-          <p className="text-sm text-slate-500">Let's build your personalised revision plan</p>
+    <div className="flex flex-1 min-h-0 flex-col lg:flex-row lg:items-stretch">
+      <div className="flex-1 min-w-0 overflow-y-auto py-6 sm:py-8 lg:py-10">
+        <div className={cn(APP_CONTENT_X, 'mx-auto w-full max-w-xl lg:max-w-2xl')}>
+          <div className="space-y-6 min-w-0">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+            Build your study plan
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Answer a few questions and we&apos;ll generate a personalised UCAT revision schedule.
+          </p>
         </div>
 
-        {/* Progress bar */}
-        <div className="flex gap-1.5">
+        <div
+          className="flex gap-1.5"
+          role="progressbar"
+          aria-valuenow={step}
+          aria-valuemin={1}
+          aria-valuemax={TOTAL_STEPS}
+        >
           {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
             <div
               key={i}
-              className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
-                i + 1 <= step ? 'bg-blue-500' : 'bg-slate-200'
-              }`}
+              className={cn(
+                'h-1.5 flex-1 rounded-full transition-all duration-300',
+                i + 1 <= step ? 'bg-primary' : 'bg-muted',
+              )}
             />
           ))}
         </div>
 
         <Card>
           <CardHeader>
-            <div className="text-xs font-medium text-blue-600 uppercase tracking-wide mb-1">
+            <div className="text-xs font-medium text-primary uppercase tracking-wide mb-1">
               Step {step} of {TOTAL_STEPS}
             </div>
             <CardTitle className="text-xl">{STEP_TITLES[step - 1]}</CardTitle>
@@ -166,7 +210,23 @@ export default function OnboardingClient({ initialInviteToken }: { initialInvite
             </div>
           </CardFooter>
         </Card>
+          </div>
+        </div>
       </div>
+
+      <PlannerOnboardingAside
+        panel
+        className="hidden lg:flex lg:w-[17.5rem] xl:w-72 shrink-0"
+        stream={stream}
+        firstName={firstName}
+      />
+
+      <PlannerOnboardingAside
+        panel
+        className="lg:hidden border-t border-border bg-muted/20"
+        stream={stream}
+        firstName={firstName}
+      />
     </div>
   )
 }
@@ -174,31 +234,55 @@ export default function OnboardingClient({ initialInviteToken }: { initialInvite
 // ─── Step 1: UCAT experience ──────────────────────────────────────────────────
 
 function Step1({ state, onUpdate }: StepProps) {
+  const choices = [
+    {
+      val: false as const,
+      Icon: BookOpen,
+      title: 'No',
+      sub: "I'm starting fresh with untimed foundations",
+    },
+    {
+      val: true as const,
+      Icon: Timer,
+      title: 'Yes',
+      sub: "I've done some timed UCAT practice",
+    },
+  ] as const
+
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        {([false, true] as const).map((val) => (
-          <button
-            key={String(val)}
-            type="button"
-            onClick={() => onUpdate({ hasPriorExperience: val })}
-            className={`rounded-xl border-2 p-5 text-left transition-all ${
-              state.hasPriorExperience === val
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-slate-200 hover:border-slate-300'
-            }`}
-          >
-            <div className="text-2xl mb-2">{val ? '✅' : '🌱'}</div>
-            <div className="font-semibold text-slate-900">{val ? 'Yes' : 'No'}</div>
-            <div className="text-sm text-slate-500 mt-1">
-              {val
-                ? "I've done some timed UCAT practice"
-                : "I'm starting fresh with untimed foundations"}
-            </div>
-          </button>
-        ))}
+      <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
+        {choices.map(({ val, Icon, title, sub }) => {
+          const selected = state.hasPriorExperience === val
+          return (
+            <button
+              key={String(val)}
+              type="button"
+              onClick={() => onUpdate({ hasPriorExperience: val })}
+              className={cn(
+                'rounded-xl border-2 p-4 text-left transition-all sm:p-5',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                selected
+                  ? 'border-primary bg-training-active-muted shadow-sm'
+                  : 'border-border bg-card hover:border-muted-foreground/50 hover:bg-muted/40',
+              )}
+            >
+              <div
+                className={cn(
+                  'mb-3 flex h-10 w-10 items-center justify-center rounded-lg',
+                  selected ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground',
+                )}
+                aria-hidden
+              >
+                <Icon className="h-5 w-5" strokeWidth={2} />
+              </div>
+              <div className="font-semibold tracking-tight text-foreground">{title}</div>
+              <div className="mt-1 text-sm leading-snug text-muted-foreground">{sub}</div>
+            </button>
+          )
+        })}
       </div>
-      <p className="text-xs text-slate-400">
+      <p className="text-xs leading-relaxed text-muted-foreground">
         This determines whether your first week uses timed or untimed practice.
       </p>
     </div>
@@ -223,21 +307,17 @@ const SCHOOL_YEARS: { value: SchoolYear; label: string }[] = [
 function Step2({ state, onUpdate }: StepProps) {
   return (
     <div className="space-y-6">
-      <div>
-        <label className="text-sm font-semibold text-slate-700 mb-2 block">Your name</label>
-        <input
-          type="text"
-          placeholder="First name (or full name)"
-          value={state.fullName}
-          onChange={e => onUpdate({ fullName: e.target.value })}
-          className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          autoFocus
-        />
-        <p className="text-xs text-slate-400 mt-1">So we can personalise your plan.</p>
-      </div>
+      <Input
+        label="Your name"
+        placeholder="First name (or full name)"
+        value={state.fullName}
+        onChange={(e) => onUpdate({ fullName: e.target.value })}
+        hint="So we can personalise your plan."
+        autoFocus
+      />
 
       <div>
-        <label className="text-sm font-semibold text-slate-700 mb-3 block">What's your current situation?</label>
+        <label className="text-sm font-semibold text-foreground mb-3 block">What's your current situation?</label>
         <div className="grid grid-cols-2 gap-3">
           {SITUATIONS.map(({ value, label, sub }) => (
             <button
@@ -252,14 +332,10 @@ function Step2({ state, onUpdate }: StepProps) {
                 weekendHours: value === 'gap_year' || value === 'graduated_free' ? 4 : 4,
                 holidayPeriods: value === 'school' ? state.holidayPeriods : [],
               })}
-              className={`rounded-xl border-2 p-4 text-left transition-all ${
-                state.currentSituation === value
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-slate-200 hover:border-slate-300'
-              }`}
+              className={choiceCardClass(state.currentSituation === value)}
             >
-              <div className="font-semibold text-slate-900 text-sm">{label}</div>
-              <div className="text-xs text-slate-500 mt-0.5">{sub}</div>
+              <div className="font-semibold text-foreground text-sm">{label}</div>
+              <div className="text-xs text-muted-foreground mt-0.5">{sub}</div>
             </button>
           ))}
         </div>
@@ -267,7 +343,7 @@ function Step2({ state, onUpdate }: StepProps) {
 
       {state.currentSituation === 'school' && (
         <div>
-          <label className="text-sm font-semibold text-slate-700 mb-3 block">Which year are you in?</label>
+          <label className="text-sm font-semibold text-foreground mb-3 block">Which year are you in?</label>
           <div className="flex gap-3">
             {SCHOOL_YEARS.map(({ value, label }) => (
               <button
@@ -276,8 +352,8 @@ function Step2({ state, onUpdate }: StepProps) {
                 onClick={() => onUpdate({ schoolYear: value })}
                 className={`flex-1 rounded-lg border-2 py-2.5 px-3 text-sm text-left transition-all ${
                   state.schoolYear === value
-                    ? 'border-blue-500 bg-blue-50 text-blue-700 font-semibold'
-                    : 'border-slate-200 text-slate-600 hover:border-slate-300'
+                    ? 'border-primary bg-training-active-muted text-primary font-semibold'
+                    : 'border-border text-muted-foreground hover:border-muted-foreground/40'
                 }`}
               >
                 {label}
@@ -304,27 +380,27 @@ function Step3({ state, onUpdate, warning }: StepProps & { warning: boolean }) {
         onChange={e => onUpdate({ examDate: e.target.value || null })}
       />
       <div>
-        <label className="text-sm font-medium text-slate-700 mb-1.5 block">
-          Exam time <span className="text-slate-400 font-normal">(optional)</span>
+        <label className="text-sm font-medium text-foreground mb-1.5 block">
+          Exam time <span className="text-muted-foreground font-normal">(optional)</span>
         </label>
         <input
           type="time"
           value={state.examTime ?? ''}
           onChange={e => onUpdate({ examTime: e.target.value || null })}
-          className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         />
-        <p className="text-xs text-slate-400 mt-1">No sessions will be scheduled on exam day.</p>
+        <p className="text-xs text-muted-foreground mt-1">No sessions will be scheduled on exam day.</p>
       </div>
-      <label className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 cursor-pointer">
+      <label className="flex items-start gap-3 rounded-xl border border-border bg-muted p-4 cursor-pointer">
         <input
           type="checkbox"
           checked={state.ucatSen}
           onChange={e => onUpdate({ ucatSen: e.target.checked })}
-          className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+          className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-ring"
         />
         <span>
-          <span className="font-medium text-slate-900">I am taking UCATSEN (extra time)</span>
-          <span className="block text-sm text-slate-600 mt-1">
+          <span className="font-medium text-foreground">I am taking UCATSEN (extra time)</span>
+          <span className="block text-sm text-muted-foreground mt-1">
             Full mocks in your plan will be scheduled as 2h 30m to match your test conditions. Mock reflection blocks stay at about 2 hours.
           </span>
         </span>
@@ -354,7 +430,7 @@ function Step4({ state, onUpdate }: StepProps) {
   ]
   return (
     <div className="space-y-6">
-      <p className="text-sm text-slate-600">
+      <p className="text-sm text-muted-foreground">
         Rate how confident you feel in each section. Lower confidence = more sessions allocated.
       </p>
       {sections.map(({ key, label }) => (
@@ -381,7 +457,7 @@ function Step5({ state, onUpdate }: StepProps) {
   if (sit === 'gap_year' || sit === 'graduated_free') {
     return (
       <div className="space-y-4">
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-muted-foreground">
           Since you have a flexible schedule, all days are treated equally. What's the maximum you could study on a really good day?
         </p>
         <HourPicker
@@ -390,7 +466,7 @@ function Step5({ state, onUpdate }: StepProps) {
           color="blue"
           onChange={h => onUpdate({ schoolDayHours: h, weekendHours: h })}
         />
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-muted-foreground">
           We'll start at about half this and ramp up each week. Pick an ambitious max.
         </p>
       </div>
@@ -401,7 +477,7 @@ function Step5({ state, onUpdate }: StepProps) {
     return (
       <div className="space-y-6">
         <div>
-          <label className="text-sm font-semibold text-slate-700 mb-3 block">
+          <label className="text-sm font-semibold text-foreground mb-3 block">
             On a really good work day, what's the maximum you could study?
           </label>
           <HourPicker
@@ -412,7 +488,7 @@ function Step5({ state, onUpdate }: StepProps) {
           />
         </div>
         <div>
-          <label className="text-sm font-semibold text-slate-700 mb-3 block">
+          <label className="text-sm font-semibold text-foreground mb-3 block">
             On a really good day off or weekend, what's the maximum you could study?
           </label>
           <HourPicker
@@ -422,7 +498,7 @@ function Step5({ state, onUpdate }: StepProps) {
             onChange={h => onUpdate({ weekendHours: h })}
           />
         </div>
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-muted-foreground">
           We'll ramp up from about half these numbers, so pick what a genuinely good day looks like.
         </p>
       </div>
@@ -450,7 +526,7 @@ function SchoolHoursStep({ state, onUpdate }: StepProps) {
   return (
     <div className="space-y-6">
       <div>
-        <label className="text-sm font-semibold text-slate-700 mb-3 block">
+        <label className="text-sm font-semibold text-foreground mb-3 block">
           On a really good school day (Mon-Fri during term), what's the maximum you could study?
         </label>
         <HourPicker
@@ -462,7 +538,7 @@ function SchoolHoursStep({ state, onUpdate }: StepProps) {
       </div>
 
       <div>
-        <label className="text-sm font-semibold text-slate-700 mb-3 block">
+        <label className="text-sm font-semibold text-foreground mb-3 block">
           On a really good weekend day or during holidays, what's the maximum you could study?
         </label>
         <HourPicker
@@ -471,37 +547,37 @@ function SchoolHoursStep({ state, onUpdate }: StepProps) {
           color="green"
           onChange={h => onUpdate({ weekendHours: h })}
         />
-        <p className="text-xs text-slate-400 mt-2">
+        <p className="text-xs text-muted-foreground mt-2">
           We'll start at about half this and ramp up each week. Pick something ambitious.
         </p>
       </div>
 
       <div>
-        <label className="text-sm font-semibold text-slate-700 mb-2 block">
-          When are your school holidays? <span className="font-normal text-slate-400">(optional)</span>
+        <label className="text-sm font-semibold text-foreground mb-2 block">
+          When are your school holidays? <span className="font-normal text-muted-foreground">(optional)</span>
         </label>
-        <p className="text-xs text-slate-500 mb-3">
+        <p className="text-xs text-muted-foreground mb-3">
           We'll apply the higher daily hours during these periods automatically.
         </p>
-        <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-3">
+        <div className="rounded-lg border border-border bg-muted p-4 space-y-3">
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="text-xs text-slate-500 mb-1 block">Start</label>
+              <label className="text-xs text-muted-foreground mb-1 block">Start</label>
               <input type="date" value={rangeStart} min={today} max={state.examDate ?? undefined}
                 onChange={e => setRangeStart(e.target.value)}
-                className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
             <div>
-              <label className="text-xs text-slate-500 mb-1 block">End</label>
+              <label className="text-xs text-muted-foreground mb-1 block">End</label>
               <input type="date" value={rangeEnd} min={rangeStart || today} max={state.examDate ?? undefined}
                 onChange={e => setRangeEnd(e.target.value)}
-                className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
           </div>
           <div className="flex gap-2">
             <input type="text" placeholder="Label (e.g. Summer holidays)" value={rangeLabel}
               onChange={e => setRangeLabel(e.target.value)}
-              className="flex-1 h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="flex-1 h-9 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
             <Button onClick={addHoliday} disabled={!rangeStart || !rangeEnd || rangeEnd < rangeStart} variant="outline">Add</Button>
           </div>
         </div>
@@ -536,7 +612,7 @@ function Step6({ state, onUpdate }: StepProps) {
 
   return (
     <div className="space-y-5">
-      <p className="text-sm text-slate-600">
+      <p className="text-sm text-muted-foreground">
         Select any days that should <strong>always</strong> be rest days. Sessions will never be scheduled on them. Completely optional.
       </p>
       <div className="grid grid-cols-7 gap-2">
@@ -547,15 +623,15 @@ function Step6({ state, onUpdate }: StepProps) {
             onClick={() => toggle(i)}
             className={`rounded-lg border-2 py-3 text-center transition-all ${
               state.restDays.includes(i)
-                ? 'border-slate-500 bg-slate-100 text-slate-800 font-semibold'
-                : 'border-slate-200 text-slate-500 hover:border-slate-300'
+                ? 'border-primary bg-muted text-foreground font-semibold'
+                : 'border-border text-muted-foreground hover:border-muted-foreground/40'
             }`}
           >
             <div className="text-xs font-medium">{name.slice(0, 3)}</div>
           </button>
         ))}
       </div>
-      <p className="text-xs text-slate-400">
+      <p className="text-xs text-muted-foreground">
         {state.restDays.length === 0
           ? 'No rest days selected: sessions may be scheduled any day.'
           : `${state.restDays.length} day${state.restDays.length > 1 ? 's' : ''} always kept free.`}
@@ -580,28 +656,28 @@ function Step7({ state, onUpdate }: StepProps) {
 
   return (
     <div className="space-y-5">
-      <p className="text-sm text-slate-600">
+      <p className="text-sm text-muted-foreground">
         Any periods where you're completely unavailable: trips, exams, commitments? These will be blocked out. You can also adjust this from your plan later.
       </p>
-      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-3">
+      <div className="rounded-lg border border-border bg-muted p-4 space-y-3">
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="text-xs text-slate-500 mb-1 block">Start</label>
+            <label className="text-xs text-muted-foreground mb-1 block">Start</label>
             <input type="date" value={rangeStart} min={today} max={state.examDate ?? undefined}
               onChange={e => setRangeStart(e.target.value)}
-              className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
           </div>
           <div>
-            <label className="text-xs text-slate-500 mb-1 block">End</label>
+            <label className="text-xs text-muted-foreground mb-1 block">End</label>
             <input type="date" value={rangeEnd} min={rangeStart || today} max={state.examDate ?? undefined}
               onChange={e => setRangeEnd(e.target.value)}
-              className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
           </div>
         </div>
         <div className="flex gap-2">
           <input type="text" placeholder="Label (e.g. Family holiday)" value={rangeLabel}
             onChange={e => setRangeLabel(e.target.value)}
-            className="flex-1 h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            className="flex-1 h-9 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
           <Button onClick={addPeriod} disabled={!rangeStart || !rangeEnd || rangeEnd < rangeStart} variant="outline">Add</Button>
         </div>
       </div>
@@ -619,7 +695,7 @@ function Step7({ state, onUpdate }: StepProps) {
           ))}
         </div>
       ) : (
-        <p className="text-center text-sm text-slate-400 py-4">
+        <p className="text-center text-sm text-muted-foreground py-4">
           No blocked periods: you can skip this and adjust from your plan later.
         </p>
       )}
@@ -636,7 +712,7 @@ function HourPicker({ options, value, color, onChange }: {
   onChange: (h: number) => void
 }) {
   const active = color === 'blue'
-    ? 'border-blue-500 bg-blue-50 text-blue-700'
+    ? 'border-primary bg-training-active-muted text-primary'
     : 'border-green-500 bg-green-50 text-green-700'
   return (
     <div className="flex items-center gap-2 flex-wrap">
@@ -646,7 +722,7 @@ function HourPicker({ options, value, color, onChange }: {
           type="button"
           onClick={() => onChange(h)}
           className={`flex-1 min-w-[3rem] rounded-lg border-2 py-2.5 text-sm font-semibold transition-all ${
-            value === h ? active : 'border-slate-200 text-slate-600 hover:border-slate-300'
+            value === h ? active : 'border-border text-muted-foreground hover:border-muted-foreground/40'
           }`}
         >
           {h}h

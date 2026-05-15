@@ -1,11 +1,10 @@
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import BreadcrumbNav from "./BreadcrumbNav";
-import TutoringUpsell from "./TutoringUpsell";
 import type { BreadcrumbItem } from "../seo/SEOHead";
 import { useAppShell } from "../../contexts/AppShellContext";
 import { cn } from "../../lib/cn";
-import { APP_CONTENT_WIDTH, APP_CONTENT_WIDTH_NARROW, APP_CONTENT_X } from "../../lib/appContentLayout";
+import { APP_CONTENT_X, appContentWidthClass } from "../../lib/appContentLayout";
 
 export type SkillsSectionAccent = "blue" | "amber" | "emerald" | "primary";
 
@@ -22,10 +21,8 @@ type SkillsSectionLayoutProps = {
   icon: LucideIcon;
   accent?: SkillsSectionAccent;
   breadcrumbs?: BreadcrumbItem[];
-  showTutoringUpsell?: boolean;
   headerExtra?: ReactNode;
   children: ReactNode;
-  /** Wider content area (e.g. VR hub with 4 skill cards). */
   wide?: boolean;
 };
 
@@ -35,7 +32,6 @@ export default function SkillsSectionLayout({
   icon: Icon,
   accent = "primary",
   breadcrumbs,
-  showTutoringUpsell = true,
   headerExtra,
   children,
   wide = false,
@@ -50,7 +46,7 @@ export default function SkillsSectionLayout({
       )}
     >
       <div className={cn("flex-1 py-6 sm:py-8", APP_CONTENT_X)}>
-        <div className={wide ? APP_CONTENT_WIDTH : APP_CONTENT_WIDTH_NARROW}>
+        <div className={appContentWidthClass({ inAppShell, wide })}>
           <BreadcrumbNav items={breadcrumbs} />
 
           <header className="flex items-start gap-3 sm:gap-4 mb-6 sm:mb-8 pb-6 sm:pb-8 border-b border-border">
@@ -66,15 +62,15 @@ export default function SkillsSectionLayout({
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
                 {title}
               </h1>
-              <p className="mt-1.5 text-sm sm:text-base text-muted-foreground leading-relaxed max-w-2xl">
+              {headerExtra ? <div className="mt-2 space-y-1">{headerExtra}</div> : null}
+              <p
+                className={cn(
+                  "text-sm sm:text-base text-muted-foreground leading-relaxed max-w-2xl",
+                  headerExtra ? "mt-2" : "mt-1.5",
+                )}
+              >
                 {description}
               </p>
-              {headerExtra ? <div className="mt-3">{headerExtra}</div> : null}
-              {showTutoringUpsell ? (
-                <div className="mt-4">
-                  <TutoringUpsell variant="hub" />
-                </div>
-              ) : null}
             </div>
           </header>
 
@@ -85,7 +81,6 @@ export default function SkillsSectionLayout({
   );
 }
 
-/** Section heading used below the hub header (trainer groups). */
 export function SkillsSectionBlock({
   title,
   description,
@@ -96,11 +91,11 @@ export function SkillsSectionBlock({
   children: ReactNode;
 }) {
   return (
-    <section className="space-y-4">
-      <div>
-        <h2 className="text-lg sm:text-xl font-semibold text-foreground">{title}</h2>
+    <section className="space-y-4 text-left">
+      <div className="text-left">
+        <h2 className="text-lg sm:text-xl font-semibold text-foreground text-left">{title}</h2>
         {description ? (
-          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+          <p className="mt-1 text-sm text-muted-foreground text-left">{description}</p>
         ) : null}
       </div>
       {children}

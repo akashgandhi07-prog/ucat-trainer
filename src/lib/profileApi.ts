@@ -16,7 +16,7 @@ export type Profile = {
   role?: string | null;
   entry_year?: string | null;
   email_marketing_opt_in?: boolean;
-  /** UCAT exam date (April–September only). ISO date string YYYY-MM-DD. */
+  /** UCAT exam date (April-September only). ISO date string YYYY-MM-DD. */
   ucat_exam_date?: string | null;
 };
 

@@ -32,10 +32,21 @@ Events are stored in Supabase `analytics_events` table. Admin-only read; anon an
 
 | Event               | When                     | Properties        |
 |--------------------|--------------------------|-------------------|
-| `shortcuts_opened` | Calculator shortcuts     | —                 |
+| `shortcuts_opened` | Calculator shortcuts     | -                 |
 | `auth_modal_opened`| Auth modal shown         | trigger (login/register/forgot) |
-| `bug_report_opened`| Feedback modal opened    | —                 |
-| `dashboard_viewed` | Dashboard loaded         | —                 |
+| `bug_report_opened`| Feedback modal opened    | -                 |
+| `dashboard_viewed` | Dashboard loaded         | -                 |
+
+### Upsells (paid offers)
+
+| Event               | When                         | Properties                                      |
+|--------------------|------------------------------|-------------------------------------------------|
+| `upsell_impression`| Upsell block enters viewport | offer, placement, course_id (nullable)          |
+| `upsell_click`     | User clicks upsell CTA link  | offer, placement, stream, course_id (nullable)  |
+
+`offer` is one of: `course`, `tutoring`, `package`.  
+`course_id` is `june-2026` or `july-2026` when `offer=course`, else omitted/null.  
+`placement` examples: `dashboard_hero`, `sidebar`, `post_drill`, `hub_strip`, `planner_banner`, `landing_hero`, `footer`.
 
 ## Integration Points
 
@@ -56,6 +67,7 @@ Events are stored in Supabase `analytics_events` table. Admin-only read; anon an
 | ShortcutsModal     | shortcuts_opened                                          |
 | BugReportModal     | bug_report_opened                                         |
 | Dashboard          | dashboard_viewed                                          |
+| ProductUpsell      | upsell_impression, upsell_click                           |
 
 ## Abandonment
 

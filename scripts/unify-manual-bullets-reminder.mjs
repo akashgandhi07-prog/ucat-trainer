@@ -11,12 +11,12 @@ const rows = [
   ['6', 'Ops: Auth URLs, redirects, rollback owners', 'docs/UNIFY_BULLET6_OPS_CUTOVER.md', 'Supabase Auth + hosting DNS'],
 ]
 
-console.log('=== Unify: manual / org-only checklist (bullets 1, 3–6) ===\n')
+console.log('=== Unify: manual / org-only checklist (bullets 1, 3-6) ===\n')
 console.log('These cannot be closed from CI alone. Evidence pack: docs/UNIFY_RELEASE_GATE_STATUS.md\n')
 for (const [n, title, doc, hint] of rows) {
   console.log(`  ${n}. ${title}`)
   console.log(`     Runbook: ${doc}`)
   console.log(`     Hint:    ${hint}\n`)
 }
-console.log('Automated gate (bullets 2, 7–9 + compile): npm run unify:bullet2-verify-ci')
+console.log('Automated gate (bullets 2, 7-9 + compile): npm run unify:bullet2-verify-ci')
 console.log('Fast SQL + git audit:                  npm run unify:merge-preflight\n')

@@ -422,7 +422,7 @@ $$;
 comment on function public.get_admin_stats(timestamptz, timestamptz) is
   'Returns aggregate stats for admin dashboard, optionally filtered by date range. Admin only.';
 
--- 2) get_analytics_summary(since_ts, until_ts) — admin-only aggregated analytics
+-- 2) get_analytics_summary(since_ts, until_ts) - admin-only aggregated analytics
 create or replace function public.get_analytics_summary(since_ts timestamptz default null, until_ts timestamptz default null)
 returns jsonb
 language plpgsql
@@ -2396,7 +2396,7 @@ comment on table public.plan_sessions is
 alter table public.mailchimp_webhook_config enable row level security;
 
 comment on table public.mailchimp_webhook_config is
-  'Config for Mailchimp signup webhook: edge_function_url and webhook_secret. RLS on; no policies for API roles — reads only from trigger (definer/owner).';
+  'Config for Mailchimp signup webhook: edge_function_url and webhook_secret. RLS on; no policies for API roles - reads only from trigger (definer/owner).';
 
 
 -- ========== 026_revoke_anon_execute_admin_and_internal_rpcs.sql ==========
@@ -2916,4 +2916,73 @@ create policy "extra_study: delete" on public.extra_study_logs
         )
     )
   );
+
+
+-- ========== 032_plans_select_rls_student_or_tutor.sql ==========
+-- Restrict plans SELECT to the owning student or an explicitly linked tutor (plan_members).
+
+drop policy if exists "plans: public read" on public.plans;
+drop policy if exists "plans: student or tutor select" on public.plans;
+
+create policy "plans: student or tutor select" on public.plans
+  for select using (
+    student_id = (select auth.uid())
+    or exists (
+      select 1 from public.plan_members pm
+      where pm.plan_id = plans.id
+        and pm.user_id = (select auth.uid())
+        and pm.role = 'tutor'
+    )
+  );
+
+comment on policy "plans: student or tutor select" on public.plans is
+  'Student sees own plans; tutors see plans where they have plan_members.role = tutor.';
+
+
+-- ========== 033_mailchimp_trigger_warn_when_unconfigured.sql ==========
+-- Surface misconfiguration in Postgres logs instead of failing silently.
+
+create or replace function public.trigger_mailchimp_on_signup()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  edge_url text;
+  secret text;
+  req_body jsonb;
+  request_id bigint;
+begin
+  select value into edge_url from public.mailchimp_webhook_config where key = 'edge_function_url';
+  select value into secret from public.mailchimp_webhook_config where key = 'webhook_secret';
+
+  if edge_url is null or trim(edge_url) = '' or edge_url like '%REPLACE_WITH%' then
+    raise warning 'Mailchimp signup sync skipped: edge_function_url not configured (table public.mailchimp_webhook_config)';
+    return new;
+  end if;
+  if secret is null or trim(secret) = '' or secret like '%REPLACE_WITH%' then
+    raise warning 'Mailchimp signup sync skipped: webhook_secret not configured (table public.mailchimp_webhook_config)';
+    return new;
+  end if;
+
+  req_body := jsonb_build_object(
+    'secret', secret,
+    'record', jsonb_build_object(
+      'email', new.email,
+      'raw_user_meta_data', coalesce(new.raw_user_meta_data, '{}'::jsonb)
+    )
+  );
+
+  request_id := net.http_post(
+    url := edge_url,
+    body := req_body,
+    params := '{}'::jsonb,
+    headers := '{"Content-Type": "application/json"}'::jsonb,
+    timeout_milliseconds := 10000
+  );
+
+  return new;
+end;
+$$;
 

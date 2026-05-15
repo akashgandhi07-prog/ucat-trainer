@@ -1,5 +1,5 @@
 -- =============================================================================
--- UCAT Trainer — Complete Supabase Schema
+-- UCAT Trainer - Complete Supabase Schema
 -- =============================================================================
 -- Paste this ENTIRE file into Supabase Dashboard → SQL Editor → New query → Run.
 -- Safe to run multiple times: uses IF NOT EXISTS / DROP IF EXISTS everywhere.
@@ -30,7 +30,7 @@ alter table public.profiles add column if not exists email_marketing_opt_in bool
 alter table public.profiles add column if not exists email_marketing_opt_in_at timestamptz;
 alter table public.profiles add column if not exists ucat_exam_date date;
 
--- UCAT exam window: April–September only (exam runs each year in this window)
+-- UCAT exam window: April-September only (exam runs each year in this window)
 alter table public.profiles drop constraint if exists profiles_ucat_exam_date_month_check;
 alter table public.profiles add constraint profiles_ucat_exam_date_month_check
   check (ucat_exam_date is null or extract(month from ucat_exam_date) in (4, 5, 6, 7, 8, 9));
@@ -106,7 +106,7 @@ alter table public.sessions add column if not exists time_seconds integer;
 -- Back-fill training_type for any rows that pre-date the column
 update public.sessions set training_type = 'speed_reading' where training_type is null;
 
--- Constraints (drop + re-add for idempotency — only AFTER columns exist)
+-- Constraints (drop + re-add for idempotency - only AFTER columns exist)
 alter table public.sessions drop constraint if exists sessions_training_type_check;
 alter table public.sessions add constraint sessions_training_type_check
   check (training_type in ('speed_reading', 'rapid_recall', 'keyword_scanning', 'calculator', 'inference_trainer', 'mental_maths'));

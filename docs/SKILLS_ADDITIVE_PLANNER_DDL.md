@@ -10,9 +10,9 @@ This doc supports **additive-schema-live**: land planner tables and RLS on the *
 
 ## Preflight
 
-1. **Branch or staging first** – Use Supabase [database branching](https://supabase.com/docs/guides/platform/branches) or a staging project; merge only after smoke tests.
-2. **Backup** – Snapshot or point-in-time recovery aware before large DDL batches.
-3. **Inventory** – In SQL: `\dt public.*` (or Table Editor) so you know current trainer tables.
+1. **Branch or staging first** - Use Supabase [database branching](https://supabase.com/docs/guides/platform/branches) or a staging project; merge only after smoke tests.
+2. **Backup** - Snapshot or point-in-time recovery aware before large DDL batches.
+3. **Inventory** - In SQL: `\dt public.*` (or Table Editor) so you know current trainer tables.
 
 ## Canonical migration to apply
 
@@ -28,7 +28,7 @@ The intended **all-in-one** additive definition for the unified planner shape in
 | **`supabase/migrations/029_fk_covering_indexes.sql`** | **Performance (0001):** FK covering indexes per Supabase advisor. |
 | **`supabase/migrations/030_rls_auth_subquery_performance.sql`** | **Performance (0003):** `(select auth.uid())` / `(select auth.role())` in listed trainer tables’ RLS policies. |
 | **`supabase/migrations/031_tutor_linked_writes_rls.sql`** | **Planner API alignment:** linked tutors (`plan_members.role = tutor`) may read/write student-keyed planner-linked rows where appropriate (see file for tables/policies). |
-| **`docs/SUBMIT_UNIFY_INCREMENTAL_AFTER_BULLETS.sql`** | **After checklist green:** single paste-ready file = **`025`–`031`** concatenated (SQL Editor / DBA on envs that already have **`024`** or equivalent planner DDL). |
+| **`docs/SUBMIT_UNIFY_INCREMENTAL_AFTER_BULLETS.sql`** | **After checklist green:** single paste-ready file = **`025`-`031`** concatenated (SQL Editor / DBA on envs that already have **`024`** or equivalent planner DDL). |
 
 **Do not** apply **`024_planner_combined_execute.sql`** in addition to the unified file for the same environment unless you have verified they are intentionally split (they overlap heavily and can duplicate objects or fight over the same trigger).
 
@@ -36,8 +36,8 @@ Other files named **`024_*.sql`** in this folder (`024_exec_policies.sql`, `024_
 
 ## Generated submit bundles
 
-- **`npm run unify:submit-sql`** — runs **`scripts/concat-migrations.mjs`** and writes **`supabase/SUBMIT_ALL_MIGRATIONS_IN_ORDER.sql`** (all non-underscore `supabase/migrations/*.sql`, sorted). For **existing** projects with migration history, treat this as **review / greenfield** only.
-- **`docs/SUBMIT_UNIFY_INCREMENTAL_AFTER_BULLETS.sql`** — **`025`–`031`** for envs that already ran **`024`** (or equivalent planner batches). Regenerate by concatenating those files if you change them.
+- **`npm run unify:submit-sql`** - runs **`scripts/concat-migrations.mjs`** and writes **`supabase/SUBMIT_ALL_MIGRATIONS_IN_ORDER.sql`** (all non-underscore `supabase/migrations/*.sql`, sorted). For **existing** projects with migration history, treat this as **review / greenfield** only.
+- **`docs/SUBMIT_UNIFY_INCREMENTAL_AFTER_BULLETS.sql`** - **`025`-`031`** for envs that already ran **`024`** (or equivalent planner batches). Regenerate by concatenating those files if you change them.
 
 ## Auth trigger caveat
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { InferenceBreakdownItem } from "../../types/inference";
+import { PostDrillUpsell } from "../layout/ProductUpsell";
 
 type InferenceResultsViewProps = {
   correct: number;
@@ -200,6 +201,7 @@ export default function InferenceResultsView({
       >
         Try another passage
       </button>
+      <PostDrillUpsell accuracy={accuracy} />
       <div className="mt-6">
         <a
           href="/"

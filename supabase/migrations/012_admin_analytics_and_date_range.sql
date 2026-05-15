@@ -44,7 +44,7 @@ $$;
 comment on function public.get_admin_stats(timestamptz, timestamptz) is
   'Returns aggregate stats for admin dashboard, optionally filtered by date range. Admin only.';
 
--- 2) get_analytics_summary(since_ts, until_ts) — admin-only aggregated analytics
+-- 2) get_analytics_summary(since_ts, until_ts) - admin-only aggregated analytics
 create or replace function public.get_analytics_summary(since_ts timestamptz default null, until_ts timestamptz default null)
 returns jsonb
 language plpgsql

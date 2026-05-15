@@ -1,6 +1,7 @@
 import { useEffect, useCallback, useState } from "react";
 import { useSyllogismLogic } from "./useSyllogismLogic";
 import QuestionFeedbackModal from "../feedback/QuestionFeedbackModal";
+import { PostDrillUpsell } from "../layout/ProductUpsell";
 
 const MICRO_BATCH_SIZE = 10;
 
@@ -13,12 +14,12 @@ function scrollTrainerToTop() {
 function getFeedbackLabel(isCorrect: boolean, actuallyFollows: boolean): string {
   if (isCorrect) {
     return actuallyFollows
-      ? "Correct – the conclusion does follow."
-      : "Correct – the conclusion does not follow.";
+      ? "Correct - the conclusion does follow."
+      : "Correct - the conclusion does not follow.";
   }
   return actuallyFollows
-    ? "Incorrect – the conclusion does follow."
-    : "Incorrect – the conclusion does not follow.";
+    ? "Incorrect - the conclusion does follow."
+    : "Incorrect - the conclusion does not follow.";
 }
 
 export default function MicroDrill() {
@@ -274,6 +275,15 @@ export default function MicroDrill() {
                     Start another micro drill
                   </button>
                 </div>
+                <PostDrillUpsell
+                  accuracy={
+                    lastSummary.total_questions > 0
+                      ? Math.round(
+                          (lastSummary.correct / lastSummary.total_questions) * 100,
+                        )
+                      : undefined
+                  }
+                />
               </div>
             )}
           </div>

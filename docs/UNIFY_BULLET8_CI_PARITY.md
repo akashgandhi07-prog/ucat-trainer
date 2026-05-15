@@ -1,6 +1,6 @@
-# Unify bullets 8–9: CI parity and scheduled verify
+# Unify bullets 8-9: CI parity and scheduled verify
 
-Supports **checklist items 8–9** in **`docs/SKILLS_PLAN_UNIFY_PLAYBOOK.md`**.
+Supports **checklist items 8-9** in **`docs/SKILLS_PLAN_UNIFY_PLAYBOOK.md`**.
 
 **`scripts/uk-planner-install-verify.mjs`:** **`nukeNodeModulesDir()`** (rename-then-delete on Unix) plus **`rm -rf`/`rmSync`** fallbacks, **`npm ci`** several times with a **fresh temp npm cache** each time, **`sync` + short sleep** on Unix, **`clean()`** every attempt, **`repairDarwinSwcIfNeeded`** after postinstall, **`installOk`** (includes **`require.resolve`** for **`next/*`** + **`@supabase/ssr`**) + **`toolchainSmokeOk`** + **`eslintProjectBootOk`** (lint **`eslint.config.mjs`** so flat-config transitive deps are present), and on the **final** attempt falls back to **`npm install`** (still driven by **`uk/package-lock.json`**) when macOS **`ENOTEMPTY`** / tar races make **`npm ci`** unreliable locally. GitHub Actions Linux runners usually stay on **`npm ci`** only.
 

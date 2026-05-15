@@ -131,6 +131,12 @@ const generateUCATStyleQuestion = (difficulty: Difficulty): { text: string; answ
 };
 
 const getExpectedKeystrokes = (text: string): string[] => {
+    // Multiplication-before-addition on paper does not match left-to-right calculator entry.
+    // Suggested linear keys would not reach the stored answer, so skip key-by-key hints here.
+    if (/^\(\d+\s*×\s*\d+\)\s*\+\s*\(\d+\s*×\s*\d+\)$/.test(text.trim())) {
+        return [];
+    }
+
     // Percentage: "X% of Y" → enter as decimal 0.XX × Y (e.g. 15% of 60 → 0.15 * 60)
     const pctMatch = text.match(/^(\d+)%\s*of\s*(\d+)$/);
     if (pctMatch) {

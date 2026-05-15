@@ -169,7 +169,7 @@ export default function QuestionFeedbackModal({
     });
 
     setStatus("success");
-    setMessage("Thanks – we’ve logged this question for review.");
+    setMessage("Thanks - we’ve logged this question for review.");
     reset({ issueType: values.issueType, comment: "" });
 
     window.setTimeout(() => {

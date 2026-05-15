@@ -180,7 +180,7 @@ function pickNounQuadFromSamePool(): {
   };
 }
 
-/** Build one macro block: three-sentence chain (A–B categorical, B–C relative, C–D majority) and five conclusions. */
+/** Build one macro block: three-sentence chain (A-B categorical, B-C relative, C-D majority) and five conclusions. */
 function buildMacroChainBlock(
   _blockId: string // reserved for future block id
 ): Omit<SyllogismQuestion, "id" | "macro_block_id">[] {
@@ -487,9 +487,9 @@ export function generateMicroBatch(count: number): SyllogismQuestion[] {
 
 /**
  * Generates blocks of five questions sharing the same stimulus_text and macro_block_id.
- * Each block uses a four-noun chain: sentence 1 A–B (categorical), sentence 2 B–C (relative),
- * sentence 3 C–D (majority). Five conclusions test valid A–B, valid B–C, false A–C overlap,
- * valid C–D, and an invalid global reverse trap. Returns a flat array.
+ * Each block uses a four-noun chain: sentence 1 A-B (categorical), sentence 2 B-C (relative),
+ * sentence 3 C-D (majority). Five conclusions test valid A-B, valid B-C, false A-C overlap,
+ * valid C-D, and an invalid global reverse trap. Returns a flat array.
  */
 export function generateMacroBatch(blockCount: number): SyllogismQuestion[] {
   const out: SyllogismQuestion[] = [];

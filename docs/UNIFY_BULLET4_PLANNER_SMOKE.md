@@ -31,7 +31,7 @@ Run on **staging** first, with production-like env (`NEXT_PUBLIC_*`, `SUPABASE_S
 | `sessions/complete`, `extra-study`, `reflections`, `plans/regenerate`, `plans/rebalance`, `plans/update-exam`, `mock-scores` POST | **`requireStudentOrTutorPlan`** (plan owner or **`plan_members`** tutor; rows keyed by **`plans.student_id`**) |
 | `plans/mock-target` PATCH, `days/update` POST | **`requireStudentOrTutorPlan`** (owner or **`plan_members`** tutor) |
 | `plans/create` POST | New plan is owned by **`auth` user**; optional **`inviteToken`** via RPC (see route) |
-| `tutor/invite` POST | **`planner_role === tutor`**; no arbitrary **`planId`** in body—links by student email / existing plan |
+| `tutor/invite` POST | **`planner_role === tutor`**; no arbitrary **`planId`** in body-links by student email / existing plan |
 | `tutor/invite-link` POST | **`planner_role === tutor`**; generic invite token (no **`planId`**) |
 
 ### Server UI (not under `api/`)

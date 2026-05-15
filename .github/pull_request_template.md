@@ -1,6 +1,6 @@
 ## Summary
 
-<!-- What this PR changes and why (1–3 sentences). -->
+<!-- What this PR changes and why (1-3 sentences). -->
 
 ## Unify / cutover checklist (tick when applicable)
 
@@ -22,6 +22,6 @@ Use for **`skills-plan-unify` → `main`** or any PR that ships planner + traine
 
 ```bash
 npm run unify:merge-preflight   # git audit + migration guard + SUBMIT_ALL SQL (no uk reinstall)
-npm run unify:manual-bullets    # prints org-only bullets 1 + 3–6 (stdout)
+npm run unify:manual-bullets    # prints org-only bullets 1 + 3-6 (stdout)
 npm run unify:bullet2-verify-ci # full gate (includes trainer + clean uk install + next build)
 ```

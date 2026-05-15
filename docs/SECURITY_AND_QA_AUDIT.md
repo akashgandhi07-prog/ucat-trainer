@@ -28,7 +28,7 @@
 
 Replace the `!user` block in `Dashboard.tsx` so unauthenticated users are redirected instead of seeing a message.
 
-**Current (lines 205–214):**
+**Current (lines 205-214):**
 
 ```tsx
   if (!user) {

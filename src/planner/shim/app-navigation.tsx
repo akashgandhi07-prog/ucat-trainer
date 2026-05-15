@@ -6,7 +6,7 @@ import {
 } from 'react-router-dom'
 
 const PATH_MAP: Record<string, string> = {
-  '/dashboard': '/study-plan/today',
+  '/dashboard': '/study-plan/plan',
   '/dashboard/plan': '/study-plan/plan',
   '/dashboard/scores': '/mock-scores',
   '/dashboard/reflect': '/study-plan/reflect',
@@ -22,10 +22,10 @@ export function mapPlannerPath(path: string): string {
   const query = path.includes('?') ? path.slice(path.indexOf('?')) : ''
   const mapped = PATH_MAP[base] ?? base
   if (mapped === '/study-plan' && query.includes('next=/dashboard')) {
-    return '/study-plan/today'
+    return '/study-plan/plan'
   }
   if (mapped.startsWith('/study-plan') || mapped === '/mock-scores') {
-    return mapped + query.replace('next=/dashboard', 'next=/study-plan/today')
+    return mapped + query.replace('next=/dashboard', 'next=/study-plan/plan')
   }
   return mapped + query
 }

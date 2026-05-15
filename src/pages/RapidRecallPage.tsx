@@ -18,8 +18,10 @@ import { pickNewRandomPassage } from "../lib/passages";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 import SEOHead from "../components/seo/SEOHead";
 import TrainerFaqSection from "../components/seo/TrainerFaqSection";
+import UcatGuidesPanel from "../components/layout/UcatGuidesPanel";
 import { trainerFaqs } from "../data/trainerFaqs";
 import { trackEvent, setActiveTrainer, clearActiveTrainer } from "../lib/analytics";
+import { PostDrillUpsell } from "../components/layout/ProductUpsell";
 
 type Phase = "reading" | "questions" | "results";
 
@@ -256,8 +258,8 @@ export default function RapidRecallPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <SEOHead
-        title="UCAT Rapid Recall Practice"
-        description="Test comprehension under time pressure with true/false statements. Free UCAT Verbal Reasoning training from TheUKCATPeople."
+        title="UCAT Rapid Recall Trainer (UK)"
+        description="True or false statements under time pressure. Free Rapid Recall practice for UCAT Verbal Reasoning for UK medical and dental applicants."
         canonicalUrl={canonicalUrl}
         breadcrumbs={breadcrumbs}
       />
@@ -318,7 +320,7 @@ export default function RapidRecallPage() {
                 onClick={handleFinishReading}
                 className="min-h-[44px] px-4 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg shadow-sm transition-colors"
               >
-                Finish &amp; start questions
+                Finish & start questions
               </button>
             </div>
           </div>
@@ -541,6 +543,11 @@ export default function RapidRecallPage() {
                 </div>
               );
             })()}
+            <PostDrillUpsell
+              accuracy={
+                quizTotal > 0 ? Math.round((quizCorrect / quizTotal) * 100) : undefined
+              }
+            />
             <div className="mt-4">
               <Link to="/" className="min-h-[44px] inline-flex items-center justify-center py-2 text-sm text-slate-500 hover:text-blue-600">
                 Back to Home
@@ -549,6 +556,7 @@ export default function RapidRecallPage() {
           </div>
         )}
       </main>
+      <UcatGuidesPanel context="trainer" trainingType="rapid_recall" />
       <TrainerFaqSection
         id="rapid-recall-faq"
         title="Common questions about the UCAT Rapid Recall trainer"

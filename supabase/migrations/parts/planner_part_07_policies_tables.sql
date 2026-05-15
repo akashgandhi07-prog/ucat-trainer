@@ -1,6 +1,16 @@
 -- Policies (explicit subqueries avoid recursion patterns)
 drop policy if exists "plans: public read" on public.plans;
-create policy "plans: public read" on public.plans for select using (true);
+drop policy if exists "plans: student or tutor select" on public.plans;
+create policy "plans: student or tutor select" on public.plans
+  for select using (
+    student_id = (select auth.uid())
+    or exists (
+      select 1 from public.plan_members pm
+      where pm.plan_id = plans.id
+        and pm.user_id = (select auth.uid())
+        and pm.role = 'tutor'
+    )
+  );
 
 drop policy if exists "plans: student insert" on public.plans;
 create policy "plans: student insert" on public.plans

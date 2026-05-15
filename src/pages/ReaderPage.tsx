@@ -11,6 +11,7 @@ import { useAuth } from "../hooks/useAuth";
 import type { Passage } from "../data/passages";
 import SEOHead from "../components/seo/SEOHead";
 import TrainerFaqSection from "../components/seo/TrainerFaqSection";
+import UcatGuidesPanel from "../components/layout/UcatGuidesPanel";
 import type { SessionInsertPayload } from "../types/session";
 import { appendGuestSession } from "../lib/guestSessions";
 import { supabase } from "../lib/supabase";
@@ -269,8 +270,8 @@ export default function ReaderPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <SEOHead
-        title="Free UCAT Speed Reading Trainer"
-        description="Practice dense academic texts with speed reading and scanning tools to improve your UCAT Verbal Reasoning scores."
+        title="UCAT speed reading trainer (UK)"
+        description="Practice dense academic passages with speed reading and scanning tools. Free Verbal Reasoning skills training for the UCAT in the UK."
         canonicalUrl={readerCanonical}
         imageUrl={ogImageUrl}
         imageAlt={ogImageAlt}
@@ -331,6 +332,7 @@ export default function ReaderPage() {
         )}
         </div>
       </main>
+      <UcatGuidesPanel context="trainer" trainingType="speed_reading" />
       <TrainerFaqSection
         id="speed-reading-faq"
         title="Common questions about the UCAT speed reading trainer"

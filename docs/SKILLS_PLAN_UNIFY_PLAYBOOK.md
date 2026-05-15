@@ -18,9 +18,9 @@ Operational guide: **[`docs/SKILLS_ADDITIVE_PLANNER_DDL.md`](SKILLS_ADDITIVE_PLA
 
 Bullet **vite-trainer-guardrail** is satisfied in this codebase by **automation + docs**, not by changing product UX:
 
-- **`npm run unify:bullet1-guard`** – migration safety scan + trainer lint/build (see **`docs/UNIFY_BULLET1_TRAINER_GUARD.md`**).
-- **Git (checklist item 1)** – branch and merge hygiene: **`docs/UNIFY_BULLET1_GIT.md`**.
-- **GitHub Actions** – **`.github/workflows/trainer-unify-guard.yml`** runs **`npm run unify:bullet2-verify-ci`** on relevant PRs and on pushes to **`main`** / **`skills-plan-unify`** (clean **`uk/`** install). See **`docs/UNIFY_BULLET8_CI_PARITY.md`** for bullets **8–9**.
+- **`npm run unify:bullet1-guard`** - migration safety scan + trainer lint/build (see **`docs/UNIFY_BULLET1_TRAINER_GUARD.md`**).
+- **Git (checklist item 1)** - branch and merge hygiene: **`docs/UNIFY_BULLET1_GIT.md`**.
+- **GitHub Actions** - **`.github/workflows/trainer-unify-guard.yml`** runs **`npm run unify:bullet2-verify-ci`** on relevant PRs and on pushes to **`main`** / **`skills-plan-unify`** (clean **`uk/`** install). See **`docs/UNIFY_BULLET8_CI_PARITY.md`** for bullets **8-9**.
 - **Next cutover** remains a **manual checklist** gate in this document until parity is green.
 
 ## Canonical layout
@@ -85,7 +85,7 @@ Use this as a release gate; adjust rows if your rollout adds feature flags.
 8. **CI reproducibility:** Hosted CI must run a **clean `uk/` install** via **`node scripts/uk-planner-install-verify.mjs`** (invoked by **`npm run unify:planner-install-and-verify`**) so CI matches a fresh clone. From repo root use **`npm run unify:bullet2-verify-ci`** (runs **`unify:bullet1-guard`** then that installer: **`uk`** **`npm ci`** with retries, lint, **`next build`** for TypeScript + bundle, **`postbuild`** cleanup of CI-only **`tsconfig` includes** when Next injects them). For a **quick** Git audit + migration guard + **`supabase/SUBMIT_ALL_MIGRATIONS_IN_ORDER.sql`** refresh without reinstalling **`uk/`**, use **`npm run unify:merge-preflight`**. **`.github/workflows/trainer-unify-guard.yml`** runs **`unify:bullet2-verify-ci`** after root **`npm ci`** (on **path-filtered pull requests** and on **every push** to **`main`** / **`skills-plan-unify`**). Aliases: **`npm run unify:bullet2-verify`**, **`npm run unify:bullet8-verify`**.
 9. **Scheduled / extra CI:** **`unify-scheduled-verify.yml`** runs **`workflow_dispatch`**, weekly cron (Mondays 06:00 UTC), and **path-filtered** **`push`** to **`main`** / **`skills-plan-unify`** (same path list as PR CI). **`trainer-unify-guard.yml`** runs the **same** **`npm run unify:bullet2-verify-ci`** on **path-filtered PRs** and on **every push** to **`main`** / **`skills-plan-unify`** (no path filter on push), so the full gate still runs even when the scheduled workflow’s push filter does not match.
 
-**Bullets 8–9 (one place):** [`docs/UNIFY_BULLET8_CI_PARITY.md`](UNIFY_BULLET8_CI_PARITY.md).
+**Bullets 8-9 (one place):** [`docs/UNIFY_BULLET8_CI_PARITY.md`](UNIFY_BULLET8_CI_PARITY.md).
 
 When these are green, open the **`skills-plan-unify` → `main`** PR with a short description of scope, migrations, and any env vars required in production. Prefer the repo **pull request template** checklist (see **`.github/pull_request_template.md`**).
 

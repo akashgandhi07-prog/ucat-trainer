@@ -162,6 +162,31 @@ function roundPlannerHours(h: number): number {
 }
 
 /**
+ * Target timed mock sessions (each full or mini mock counts once) per week, stepped down
+ * further from the exam. Short overall plans cap the target so weeks stay achievable.
+ */
+export function weeklyMockTarget(weeksRemaining: number, totalWeeks: number): number {
+  if (weeksRemaining <= 0) return 0
+  let ideal: number
+  if (weeksRemaining <= 3) {
+    ideal = 4
+  } else if (weeksRemaining <= 7) {
+    ideal = 3
+  } else if (weeksRemaining <= 12) {
+    ideal = 2
+  } else {
+    ideal = totalWeeks >= 18 ? 1 : 2
+  }
+  if (totalWeeks <= 6) {
+    ideal = Math.min(ideal, 3)
+  }
+  if (totalWeeks <= 4) {
+    ideal = Math.min(ideal, 2)
+  }
+  return Math.max(1, ideal)
+}
+
+/**
  * Returns study hours for a given date.
  *  - Term weekdays (Mon-Fri, not in holiday_periods): school-day target scaled by ramp
  *    (50% in week 1 of the plan through full intensity by the end, for long plans).
@@ -182,23 +207,28 @@ export function hoursForDate(
   const ds = toISODate(date)
   if (ds === toISODate(examDate)) return 0
 
+  const daysUntilExam = calendarDaysBetween(date, examDate)
+
   const dow = date.getDay()
   const isWeekend = dow === 0 || dow === 6
-  const isHoliday = holidayPeriods.some(h => ds >= h.start && ds <= h.end)
+  const isHoliday = holidayPeriods.some((h) => ds >= h.start && ds <= h.end)
   const isHighCapacity = isWeekend || isHoliday
+
+  /**
+   * Final three weeks (21-day window before the exam, excluding exam day): ramp every day
+   * toward the learner's outline (capped at 6h). Fixes term weekdays sitting at baseline
+   * school hours (e.g. 2h) on the day before the exam.
+   */
+  if (daysUntilExam >= 1 && daysUntilExam <= 21) {
+    const low = Math.max(2, schoolDayMax)
+    const high = Math.min(6, Math.max(weekendMax, schoolDayMax))
+    const t = (21 - daysUntilExam) / 20
+    return roundPlannerHours(low + t * (high - low))
+  }
 
   if (!isHighCapacity) {
     const ramped = schoolDayMax * rampFactor(weekNumber, totalWeeks)
     return roundPlannerHours(ramped)
-  }
-
-  const daysUntilExam = calendarDaysBetween(date, examDate)
-
-  if (daysUntilExam <= 14) {
-    if (daysUntilExam <= 0) return 0
-    // Linear from 4h at T-14 to 6h on the day before the exam.
-    const h = 4 + (2 * (14 - daysUntilExam)) / 13
-    return roundPlannerHours(h)
   }
 
   const finalPhaseStart = addDays(examDate, -14)
@@ -206,8 +236,8 @@ export function hoursForDate(
   const prePhaseCeiling = Math.max(3, Math.min(weekendMax, 4))
   const dayNumFromStart = calendarDaysBetween(planStart, date)
   const denom = Math.max(1, calendarDaysBetween(planStart, lastPrePhaseDay))
-  const t = Math.min(1, Math.max(0, dayNumFromStart / denom))
-  const h = 3 + t * (prePhaseCeiling - 3)
+  const progress = Math.min(1, Math.max(0, dayNumFromStart / denom))
+  const h = 3 + progress * (prePhaseCeiling - 3)
   return roundPlannerHours(h)
 }
 
@@ -300,20 +330,29 @@ export function planDaySessions(
   availableMinutes: number,
   phase: Phase,
   weights: SectionWeight,
-  weekDayMockCount: number,
-  isFinalWeek: boolean,
+  weekMockCount: number,
+  weeklyMockCap: number,
+  _isFinalWeek: boolean,
   _dayOfWeek: number,
   isExamDay: boolean,
   tracker: SectionTracker,
   currentDayIndex: number,
   confidence: { vr: number; dm: number; qr: number; sjt: number },
   ucatSen: boolean,
+  /** Calendar days until the exam (1 = day before). */
+  daysUntilExamCal: number,
+  /** Whole-weeks until exam from this week's Monday (same basis as {@link getPhase}). */
+  weeksRemainingForWeek: number,
 ): { sessions: SessionType[] } {
   if (isExamDay) return { sessions: [] }
 
   const sessions: SessionType[] = []
   let remaining = availableMinutes
   const fullMock = fullMockMinutes(ucatSen)
+  const dow = _dayOfWeek
+  /** Weekends, final three weeks, or whenever the weekly mock target is 3+ (needs weekdays too). */
+  const preferMockDay =
+    dow === 0 || dow === 6 || daysUntilExamCal <= 21 || weeklyMockCap >= 3
 
   if (phase === 'final_week') {
     const fullMockBlock = fullMock + REFLECTION_AFTER_MOCK_MIN
@@ -331,7 +370,7 @@ export function planDaySessions(
 
   if (phase === 'full_mock') {
     const fullMockBlock = fullMock + REFLECTION_AFTER_MOCK_MIN
-    if (weekDayMockCount < 4 && remaining >= fullMockBlock) {
+    if (weekMockCount < weeklyMockCap && remaining >= fullMockBlock) {
       sessions.push('full_mock')
       remaining -= fullMock
       sessions.push('reflection')
@@ -345,7 +384,7 @@ export function planDaySessions(
 
   if (phase === 'mini_mock') {
     const miniBlock = SESSION_DURATIONS.mini_mock + REFLECTION_AFTER_MOCK_MIN
-    if (weekDayMockCount < 3 && remaining >= miniBlock) {
+    if (weekMockCount < weeklyMockCap && remaining >= miniBlock) {
       sessions.push('mini_mock')
       remaining -= SESSION_DURATIONS.mini_mock
       sessions.push('reflection')
@@ -355,6 +394,35 @@ export function planDaySessions(
       return { sessions }
     }
     return planPracticeSessions(remaining, weights, true, tracker, currentDayIndex, confidence)
+  }
+
+  const miniBlock = SESSION_DURATIONS.mini_mock + REFLECTION_AFTER_MOCK_MIN
+  const fullMockBlockEarly = fullMock + REFLECTION_AFTER_MOCK_MIN
+  const wantFull =
+    weeksRemainingForWeek <= 5 ||
+    (phase === 'timed' && weeksRemainingForWeek <= 8 && daysUntilExamCal <= 21)
+  if (
+    (phase === 'foundations' || phase === 'timed') &&
+    weekMockCount < weeklyMockCap &&
+    preferMockDay &&
+    remaining >= miniBlock
+  ) {
+    if (wantFull && remaining >= fullMockBlockEarly) {
+      sessions.push('full_mock')
+      remaining -= fullMock
+      sessions.push('reflection')
+      remaining -= REFLECTION_AFTER_MOCK_MIN
+      const weak = weakestPracticeSection(weights)
+      if (remaining >= SESSION_DURATIONS[weak]) sessions.push(weak)
+      return { sessions }
+    }
+    sessions.push('mini_mock')
+    remaining -= SESSION_DURATIONS.mini_mock
+    sessions.push('reflection')
+    remaining -= REFLECTION_AFTER_MOCK_MIN
+    const weak = weakestPracticeSection(weights)
+    if (remaining >= SESSION_DURATIONS[weak]) sessions.push(weak)
+    return { sessions }
   }
 
   return planPracticeSessions(remaining, weights, phase === 'timed', tracker, currentDayIndex, confidence)
@@ -482,6 +550,8 @@ export function generateFullPlan(inputs: PlanInputs): GeneratedPlan {
 
     const rationaleCtx: PlannerRationaleContext = { ...baseRationaleCtx, phase }
 
+    const weeklyMockCap = weeklyMockTarget(weeksRemaining, totalWeeks)
+
     for (let i = 0; i < 7; i++) {
       const date = addDays(weekStart, i)
       if (date > examDate) break
@@ -493,6 +563,7 @@ export function generateFullPlan(inputs: PlanInputs): GeneratedPlan {
       const isRest = isRestDay || isBusy
       const isExamDay = dateStr === examDateStr
       const isFinalWeek = weeksUntil(examDate, date) <= 1
+      const daysUntilExamCal = calendarDaysBetween(date, examDate)
 
       const hours = hoursForDate(
         date,
@@ -509,9 +580,20 @@ export function generateFullPlan(inputs: PlanInputs): GeneratedPlan {
       let sessionTypes: SessionType[] = []
       if (!isRest && availableMinutes >= 30) {
         const plan = planDaySessions(
-          availableMinutes, phase, weights, weekMockCount,
-          isFinalWeek, dow, isExamDay, tracker, globalDayIndex, confidence,
+          availableMinutes,
+          phase,
+          weights,
+          weekMockCount,
+          weeklyMockCap,
+          isFinalWeek,
+          dow,
+          isExamDay,
+          tracker,
+          globalDayIndex,
+          confidence,
           ucatSen,
+          daysUntilExamCal,
+          weeksRemaining,
         )
         sessionTypes = plan.sessions
         if (sessionTypes.includes('full_mock') || sessionTypes.includes('mini_mock')) weekMockCount++

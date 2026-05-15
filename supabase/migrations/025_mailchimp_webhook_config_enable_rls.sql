@@ -5,4 +5,4 @@
 alter table public.mailchimp_webhook_config enable row level security;
 
 comment on table public.mailchimp_webhook_config is
-  'Config for Mailchimp signup webhook: edge_function_url and webhook_secret. RLS on; no policies for API roles — reads only from trigger (definer/owner).';
+  'Config for Mailchimp signup webhook: edge_function_url and webhook_secret. RLS on; no policies for API roles - reads only from trigger (definer/owner).';

@@ -14,6 +14,7 @@ import { appendGuestSession } from "../lib/guestSessions";
 import type { MentalMathsSummaryStats } from "../hooks/useMentalMathsLogic";
 import SEOHead from "../components/seo/SEOHead";
 import TrainerFaqSection from "../components/seo/TrainerFaqSection";
+import UcatGuidesPanel from "../components/layout/UcatGuidesPanel";
 import { trainerFaqs } from "../data/trainerFaqs";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 
@@ -64,8 +65,8 @@ export default function MentalMathsPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background font-sans">
       <SEOHead
-        title="UCAT Mental Maths Trainer"
-        description="Build speed and accuracy in mental arithmetic for UCAT Quantitative Reasoning. Timed stages with progress tracking."
+        title="UCAT Mental Maths Trainer (UK)"
+        description="Build mental arithmetic speed for UCAT Quantitative Reasoning. Timed stages and progress tracking for UK medicine and dentistry applicants."
         canonicalUrl={canonicalUrl}
         imageUrl={ogImageUrl}
         imageAlt={ogImageAlt}
@@ -102,6 +103,7 @@ export default function MentalMathsPage() {
           </div>
         </div>
       </main>
+      <UcatGuidesPanel context="trainer" trainingType="mental_maths" />
       <TrainerFaqSection
         id="mental-maths-faq"
         title="UCAT mental maths trainer FAQs"

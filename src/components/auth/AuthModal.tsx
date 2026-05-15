@@ -183,6 +183,8 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
 
     authLog.info("Account created", { email: trimmedEmail, userId: signUpData?.user?.id });
     trackEvent("sign_up");
+    /* Mailchimp: avoid duplicate JWT calls — AuthContext runs sync on SIGNED_IN; DB webhook fires on signup. */
+
     setStatus("success");
     setMessage(
       signUpData?.user?.confirmed_at

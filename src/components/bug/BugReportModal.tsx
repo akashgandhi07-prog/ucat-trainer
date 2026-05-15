@@ -231,7 +231,7 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
           })}
           className="space-y-4"
         >
-          {/* Honeypot — avoid labels like "Website" that password managers autofill */}
+          {/* Honeypot - avoid labels like "Website" that password managers autofill */}
           <div className="pointer-events-none absolute left-[-9999px] top-0 opacity-0" aria-hidden="true">
             <label htmlFor="feedback-internal-ref">Internal reference</label>
             <input

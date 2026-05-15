@@ -44,7 +44,7 @@ export default function JoinInvitePage() {
       const { fetchActivePlan } = await import('../../planner/lib/load-planner-data')
       const plan = await fetchActivePlan(user.id)
       if (!cancelled) {
-        setRedirectTo(plan ? '/study-plan/today' : `/study-plan?invite=${encodeURIComponent(token)}`)
+        setRedirectTo(plan ? '/study-plan/plan' : `/study-plan?invite=${encodeURIComponent(token)}`)
       }
     })()
     return () => {

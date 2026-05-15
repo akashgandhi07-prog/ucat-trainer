@@ -32,7 +32,7 @@ export default function SyllogismAnalytics({ sessions }: Props) {
   if (sessions.length === 0) {
     return (
       <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-        <h3 className="text-lg font-semibold text-slate-900 mb-2">Decision Making – Syllogisms</h3>
+        <h3 className="text-lg font-semibold text-slate-900 mb-2">Decision Making - Syllogisms</h3>
         <p className="text-slate-600 text-sm">
           No syllogism sessions yet. Complete a few micro or macro drills to see your accuracy and speed here.
         </p>
@@ -99,7 +99,7 @@ export default function SyllogismAnalytics({ sessions }: Props) {
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-      <h3 className="text-lg font-semibold text-slate-900 mb-4">Decision Making – Syllogisms</h3>
+      <h3 className="text-lg font-semibold text-slate-900 mb-4">Decision Making - Syllogisms</h3>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <div className="bg-slate-50 rounded-lg p-4">
@@ -118,7 +118,7 @@ export default function SyllogismAnalytics({ sessions }: Props) {
           </p>
           {isSlow && (
             <p className="text-sm text-amber-600 mt-1">
-              Decisions are taking too long – aim for under 10 seconds per judgement.
+              Decisions are taking too long - aim for under 10 seconds per judgement.
             </p>
           )}
         </div>

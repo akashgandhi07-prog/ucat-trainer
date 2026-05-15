@@ -28,6 +28,8 @@ import { DrillSummary } from '../components/calculator/DrillSummary';
 import { trackEvent, setActiveTrainer, clearActiveTrainer } from '../lib/analytics';
 import SEOHead from '../components/seo/SEOHead';
 import { getSiteBaseUrl } from '../lib/siteUrl';
+import UcatGuidesPanel from '../components/layout/UcatGuidesPanel';
+import { getGuidesForTrainingType, mergeGuides, UCAT_GUIDES } from '../data/ucatGuides';
 
 const MOBILE_NOTICE_KEY = 'calculator-mobile-notice-dismissed';
 
@@ -185,8 +187,8 @@ const CalculatorPage = () => {
     return (
         <div className="min-h-screen bg-slate-100 flex flex-col" onClick={() => setIsFocused(true)}>
             <SEOHead
-                title="UCAT Calculator Trainer"
-                description="Practice the on-screen calculator for UCAT Quantitative Reasoning. Sprint, Finger Twister, Memory Marathon and staged drills with Pearson-style lag."
+                title="UCAT on-screen calculator practice (UK)"
+                description="Train the official-style on-screen calculator for UCAT Quantitative Reasoning. Sprint, Finger Twister and Memory Marathon drills with Pearson-style lag. Free for UK applicants."
                 canonicalUrl={canonicalUrl}
                 breadcrumbs={breadcrumbs}
             />
@@ -384,6 +386,14 @@ const CalculatorPage = () => {
                         </div>
                         <AnalyticsDashboard data={chartData} />
                         <KeyHeatmap />
+                        <UcatGuidesPanel
+                            embedded
+                            compact
+                            context="trainer"
+                            trainingType="calculator"
+                            className="mt-6 px-0"
+                            guides={mergeGuides([UCAT_GUIDES.qrComplete], getGuidesForTrainingType('calculator'))}
+                        />
                     </div>
                 </div>
 

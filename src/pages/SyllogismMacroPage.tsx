@@ -6,6 +6,7 @@ import BreadcrumbNav from "../components/layout/BreadcrumbNav";
 import MacroDrill from "../components/syllogisms/MacroDrill";
 import SEOHead from "../components/seo/SEOHead";
 import TrainerFaqSection from "../components/seo/TrainerFaqSection";
+import UcatGuidesPanel from "../components/layout/UcatGuidesPanel";
 import { trainerFaqs } from "../data/trainerFaqs";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 import { ArrowLeft } from "lucide-react";
@@ -35,8 +36,8 @@ export default function SyllogismMacroPage() {
   return (
     <div className="flex flex-col min-h-screen bg-slate-50">
       <SEOHead
-        title="Syllogism Macro Drill | UCAT Decision Making"
-        description="UCAT-style syllogism drill: full stimulus with five conclusions. Sticky passage and Yes/No judgements."
+        title="UCAT syllogism macro drill (Decision Making)"
+        description="Full-passage syllogism practice for UCAT Decision Making: five conclusions, sticky stimulus, Yes/No judgements. UK UCAT style."
         canonicalUrl={canonicalUrl}
         imageUrl={ogImageUrl}
         imageAlt={ogImageAlt}
@@ -58,6 +59,7 @@ export default function SyllogismMacroPage() {
         </div>
         <MacroDrill />
       </div>
+      <UcatGuidesPanel context="decisionHub" contentMaxWidthClass="max-w-6xl mx-auto w-full" />
       <TrainerFaqSection
         id="syllogism-macro-faq"
         title="UCAT syllogism macro drill FAQs"

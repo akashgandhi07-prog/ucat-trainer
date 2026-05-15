@@ -5,6 +5,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url))
+
 const plannerEmbedded = path.resolve(rootDir, 'src/planner/embedded')
 const plannerShim = path.resolve(rootDir, 'src/planner/shim')
 const plannerLib = path.resolve(rootDir, 'src/planner/lib')
@@ -26,6 +27,7 @@ export default defineConfig(({ mode }) => {
           'create-plan-from-onboarding.ts',
         ),
         '@/lib/planner-client': path.resolve(plannerLib, 'planner-client.ts'),
+        '@/lib/export-plan-pdf': path.resolve(plannerLib, 'export-plan-pdf.ts'),
         '@/components/guest/guest-sign-in-cta': path.resolve(
           plannerShim,
           'guest-sign-in-cta.tsx',

@@ -30,13 +30,13 @@ export const trainerFaqs: TrainerFaqMap = {
       id: "how-should-i-use-site",
       question: "How should I use this UCAT practice site alongside my main question bank?",
       answer:
-        "Use your main UCAT question bank for full mock exams and timed section practice, then come here to target the underlying skills you keep losing marks on. For example, if Verbal Reasoning timing is a problem, spend 10–15 minutes a day on the speed reading, rapid recall and keyword scanning trainers, then apply those techniques back in full UCAT-style questions.",
+        "Use your main UCAT question bank for full mock exams and timed section practice, then come here to target the underlying skills you keep losing marks on. For example, if Verbal Reasoning timing is a problem, spend 10-15 minutes a day on the speed reading, rapid recall and keyword scanning trainers, then apply those techniques back in full UCAT-style questions.",
     },
     {
       id: "how-often-practise",
       question: "How often should I practise with these UCAT trainers?",
       answer:
-        "Most students see the best gains when they practise little and often rather than cramming. Aim for short, focused sessions of 15–30 minutes at least 4–5 days per week in the month or two before your UCAT test date, increasing the intensity in the final few weeks.",
+        "Most students see the best gains when they practise little and often rather than cramming. Aim for short, focused sessions of 15-30 minutes at least 4-5 days per week in the month or two before your UCAT test date, increasing the intensity in the final few weeks.",
     },
     {
       id: "which-sections-covered",
@@ -84,7 +84,7 @@ export const trainerFaqs: TrainerFaqMap = {
       id: "how-fits-with-official",
       question: "How should I use this alongside the official UCAT practice materials?",
       answer:
-        "Use the official UCAT practice materials to familiarise yourself with the exact format of the exam and to benchmark your scores. Between those mocks, use this trainer to isolate one or two weak skills—for example, inference questions or calculator speed—and drill them repeatedly until they feel natural.",
+        "Use the official UCAT practice materials to familiarise yourself with the exact format of the exam and to benchmark your scores. Between those mocks, use this trainer to isolate one or two weak skills-for example, inference questions or calculator speed-and drill them repeatedly until they feel natural.",
     },
   ],
   verbalHub: [
@@ -92,19 +92,19 @@ export const trainerFaqs: TrainerFaqMap = {
       id: "vr-what-is",
       question: "What is UCAT Verbal Reasoning and what does it test?",
       answer:
-        "UCAT Verbal Reasoning (VR) is the first scored subtest of the UCAT exam. It assesses your ability to read, critically analyse and interpret written information quickly and accurately—skills that are essential for healthcare professionals who must process complex clinical notes, research papers and patient records under time pressure. You are presented with 11 passages of roughly 200–400 words each and must answer 44 questions in 22 minutes, giving you about 30 seconds per question.",
+        "UCAT Verbal Reasoning (VR) is the first scored subtest of the UCAT exam. It assesses your ability to read, critically analyse and interpret written information quickly and accurately-skills that are essential for healthcare professionals who must process complex clinical notes, research papers and patient records under time pressure. You are presented with 11 passages of roughly 200-400 words each and must answer 44 questions in 22 minutes, giving you about 30 seconds per question.",
     },
     {
       id: "vr-question-types",
       question: "What are the question types in UCAT Verbal Reasoning?",
       answer:
-        "There are two main UCAT Verbal Reasoning formats. First, True / False / Can’t Tell questions, where you decide whether a statement is supported, contradicted or cannot be confirmed from the passage alone. Second, multiple-choice comprehension questions, where you select the best answer to an incomplete statement or question about the passage. The key rule is that 'Can’t Tell' is used when the passage neither proves nor disproves the statement—not simply when you personally are unsure from real-world knowledge.",
+        "There are two main UCAT Verbal Reasoning formats. First, True / False / Can’t Tell questions, where you decide whether a statement is supported, contradicted or cannot be confirmed from the passage alone. Second, multiple-choice comprehension questions, where you select the best answer to an incomplete statement or question about the passage. The key rule is that 'Can’t Tell' is used when the passage neither proves nor disproves the statement-not simply when you personally are unsure from real-world knowledge.",
     },
     {
       id: "vr-average-score",
       question: "What is a good UCAT Verbal Reasoning score?",
       answer:
-        "Verbal Reasoning consistently has the lowest average score of all UCAT subtests. Recent UK data place the average VR score at around 600–610. A solid Verbal Reasoning score is anything above 650, and a highly competitive score for top medical schools is typically 700+. Because the average is relatively low, even modest improvements in VR can significantly boost your overall UCAT percentile.",
+        "Verbal Reasoning consistently has the lowest average score of all UCAT subtests. Recent UK data place the average VR score at around 600-610. A solid Verbal Reasoning score is anything above 650, and a highly competitive score for top medical schools is typically 700+. Because the average is relatively low, even modest improvements in VR can significantly boost your overall UCAT percentile.",
     },
     {
       id: "what-is-verbal-hub",
@@ -116,7 +116,7 @@ export const trainerFaqs: TrainerFaqMap = {
       id: "how-much-time-verbal",
       question: "How much time should I spend on Verbal Reasoning practice each week?",
       answer:
-        "Verbal Reasoning is often the lowest-scoring section for UCAT candidates, so it deserves regular attention. Many successful applicants dedicate at least 30–45 minutes per day in the final month, alternating between full verbal question sets and short targeted drills from the hub.",
+        "Verbal Reasoning is often the lowest-scoring section for UCAT candidates, so it deserves regular attention. Many successful applicants dedicate at least 30-45 minutes per day in the final month, alternating between full verbal question sets and short targeted drills from the hub.",
     },
     {
       id: "which-trainer-first",
@@ -134,7 +134,7 @@ export const trainerFaqs: TrainerFaqMap = {
       id: "vr-timing",
       question: "How can I manage the strict timing in UCAT Verbal Reasoning?",
       answer:
-        "Aim for roughly 30 seconds per question, accepting that some sets will be quicker and others slower. The skills in this hub—especially speed reading and keyword scanning—are designed to cut down the time you spend on unimportant parts of the passage so that you can invest more attention in truly tricky questions.",
+        "Aim for roughly 30 seconds per question, accepting that some sets will be quicker and others slower. The skills in this hub-especially speed reading and keyword scanning-are designed to cut down the time you spend on unimportant parts of the passage so that you can invest more attention in truly tricky questions.",
     },
     {
       id: "common-vr-mistakes",
@@ -178,7 +178,7 @@ export const trainerFaqs: TrainerFaqMap = {
       id: "target-wpm",
       question: "What words per minute (WPM) should I aim for in UCAT Verbal Reasoning?",
       answer:
-        "Most successful candidates can comfortably read UCAT-style text at around 300–450 words per minute while still understanding the main ideas. You do not need extreme speed reading figures; instead you want a sustainable pace that leaves you with time to interpret questions and options accurately.",
+        "Most successful candidates can comfortably read UCAT-style text at around 300-450 words per minute while still understanding the main ideas. You do not need extreme speed reading figures; instead you want a sustainable pace that leaves you with time to interpret questions and options accurately.",
     },
     {
       id: "how-often-speed-reading",
@@ -220,7 +220,7 @@ export const trainerFaqs: TrainerFaqMap = {
       id: "other-exams",
       question: "Will speed reading practice help with other exams or medical school?",
       answer:
-        "Yes. The same skills that help you process UCAT passages—reading dense information quickly, identifying main arguments, and spotting supporting evidence—are valuable for medical school interviews, situational judgement scenarios, university reading lists and even clinical guidelines later on.",
+        "Yes. The same skills that help you process UCAT passages-reading dense information quickly, identifying main arguments, and spotting supporting evidence-are valuable for medical school interviews, situational judgement scenarios, university reading lists and even clinical guidelines later on.",
     },
     {
       id: "avoid-bad-habits",
@@ -332,7 +332,7 @@ export const trainerFaqs: TrainerFaqMap = {
       id: "common-scanning-mistakes",
       question: "What common mistakes should I avoid when using keyword scanning?",
       answer:
-        "Typical errors include picking keywords that are too generic, failing to read enough surrounding context once the keyword is found, and assuming that a similar-looking word must relate to the question. The trainer encourages you to slow down at the crucial moment—once you have located the right line—so you still answer accurately.",
+        "Typical errors include picking keywords that are too generic, failing to read enough surrounding context once the keyword is found, and assuming that a similar-looking word must relate to the question. The trainer encourages you to slow down at the crucial moment-once you have located the right line-so you still answer accurately.",
     },
     {
       id: "fits-with-other-trainers",
@@ -420,7 +420,7 @@ export const trainerFaqs: TrainerFaqMap = {
       id: "qr-what-is",
       question: "What is UCAT Quantitative Reasoning and what level of maths is required?",
       answer:
-        "UCAT Quantitative Reasoning (QR) is the third scored subtest of the UCAT exam. It assesses your ability to work with numbers in context by interpreting tables, charts, graphs and worded scenarios—not advanced pure mathematics. The required level is solid GCSE maths: percentages, ratios, proportions, basic algebra, averages, unit conversions, and simple area and volume. You have 26 minutes to answer 36 questions, with access to an on-screen calculator, so the challenge is using straightforward maths efficiently under time pressure rather than knowing complex formulas.",
+        "UCAT Quantitative Reasoning (QR) is the third scored subtest of the UCAT exam. It assesses your ability to work with numbers in context by interpreting tables, charts, graphs and worded scenarios-not advanced pure mathematics. The required level is solid GCSE maths: percentages, ratios, proportions, basic algebra, averages, unit conversions, and simple area and volume. You have 26 minutes to answer 36 questions, with access to an on-screen calculator, so the challenge is using straightforward maths efficiently under time pressure rather than knowing complex formulas.",
     },
     {
       id: "what-is-quant-hub",
@@ -448,7 +448,7 @@ export const trainerFaqs: TrainerFaqMap = {
     },
     {
       id: "improve-weak-maths",
-      question: "What if my GCSE maths is rusty—can I still do well in QR?",
+      question: "What if my GCSE maths is rusty-can I still do well in QR?",
       answer:
         "Yes, but you will need to be systematic. Use the mental maths trainer to refresh core arithmetic, fractions, ratios and percentages, then move on to mixed Quantitative Reasoning practice where you apply those basics under time pressure. The hub helps you close gaps without needing a full A level in maths.",
     },
@@ -480,7 +480,7 @@ export const trainerFaqs: TrainerFaqMap = {
       id: "qr-improvement-timeline",
       question: "How long does it usually take to improve at Quantitative Reasoning?",
       answer:
-        "With consistent, focused practice, many students see noticeable improvements in QR scores over four to six weeks. The key is to combine targeted skill work—like mental maths—with regular full-question practice so that you learn to apply those skills under realistic timing.",
+        "With consistent, focused practice, many students see noticeable improvements in QR scores over four to six weeks. The key is to combine targeted skill work-like mental maths-with regular full-question practice so that you learn to apply those skills under realistic timing.",
     },
   ],
   mentalMaths: [
@@ -550,7 +550,7 @@ export const trainerFaqs: TrainerFaqMap = {
       id: "dm-what-is",
       question: "What is UCAT Decision Making and what does it test?",
       answer:
-        "UCAT Decision Making (DM) is the second scored subtest of the UCAT. It assesses your ability to apply logic, evaluate evidence and make sound decisions under time pressure—directly reflecting the skills required of doctors who must make clinical judgements with incomplete or complex information. You answer 35 questions in 37 minutes across six formats: syllogisms, logic puzzles, recognising assumptions, interpreting information (data and text), Venn diagrams and probabilistic reasoning.",
+        "UCAT Decision Making (DM) is the second scored subtest of the UCAT. It assesses your ability to apply logic, evaluate evidence and make sound decisions under time pressure-directly reflecting the skills required of doctors who must make clinical judgements with incomplete or complex information. You answer 35 questions in 37 minutes across six formats: syllogisms, logic puzzles, recognising assumptions, interpreting information (data and text), Venn diagrams and probabilistic reasoning.",
     },
     {
       id: "what-is-decision-hub",
@@ -648,7 +648,7 @@ export const trainerFaqs: TrainerFaqMap = {
       id: "handling-time-pressure-macro",
       question: "How can I handle the time pressure on long syllogism questions?",
       answer:
-        "Have a clear, practised routine—for example, skim the premises, sketch a diagram, then test each conclusion systematically. If you are still stuck after a minute, make your best judgement on the remaining statements, flag the question and move on rather than letting one item derail your timing.",
+        "Have a clear, practised routine-for example, skim the premises, sketch a diagram, then test each conclusion systematically. If you are still stuck after a minute, make your best judgement on the remaining statements, flag the question and move on rather than letting one item derail your timing.",
     },
     {
       id: "marking-scheme",

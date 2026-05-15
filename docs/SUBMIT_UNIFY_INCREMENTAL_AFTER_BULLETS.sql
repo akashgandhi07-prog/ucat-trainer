@@ -1,6 +1,6 @@
--- Run ONLY after playbook checklist (bullets 1–9) is green on the target environment.
+-- Run ONLY after playbook checklist (bullets 1-9) is green on the target environment.
 -- If planner DDL is not yet present, apply supabase/migrations/024_planner_unified_plan_sessions.sql first (or your reviewed planner batch), then this bundle.
--- Source: repo files 025–031 concatenated 2026-05-15.
+-- Source: repo files 025-031 concatenated 2026-05-15.
 
 -- ========== 025_mailchimp_webhook_config_enable_rls.sql ==========
 -- Bullet 7 / advisor: public.mailchimp_webhook_config had RLS disabled (secrets readable via anon key).
@@ -10,7 +10,7 @@
 alter table public.mailchimp_webhook_config enable row level security;
 
 comment on table public.mailchimp_webhook_config is
-  'Config for Mailchimp signup webhook: edge_function_url and webhook_secret. RLS on; no policies for API roles — reads only from trigger (definer/owner).';
+  'Config for Mailchimp signup webhook: edge_function_url and webhook_secret. RLS on; no policies for API roles - reads only from trigger (definer/owner).';
 
 -- ========== 026_revoke_anon_execute_admin_and_internal_rpcs.sql ==========
 -- Advisor 0028: anon could EXECUTE SECURITY DEFINER RPCs exposed via PostgREST.

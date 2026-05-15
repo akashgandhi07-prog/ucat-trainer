@@ -19,6 +19,7 @@ import CalculatorPage from "./pages/CalculatorPage";
 import MentalMathsPage from "./pages/MentalMathsPage";
 import QuantitativeReasoningPage from "./pages/QuantitativeReasoningPage";
 import DecisionMakingPage from "./pages/DecisionMakingPage";
+import StudyGuidesPage from "./pages/StudyGuidesPage";
 import SyllogismMicroPage from "./pages/SyllogismMicroPage";
 import SyllogismMacroPage from "./pages/SyllogismMacroPage";
 import StudyPlanPage from "./pages/planner/StudyPlanPage";
@@ -32,6 +33,7 @@ import TutorInvitePage from "./pages/tutor/TutorInvitePage";
 import TutorStudentPage from "./pages/tutor/TutorStudentPage";
 import JoinInvitePage from "./pages/tutor/JoinInvitePage";
 import { PageViewTracker } from "./components/analytics/PageViewTracker";
+import { WindowScrollToTop } from "./components/layout/ScrollRestoration";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 
@@ -50,6 +52,7 @@ function App() {
             <AuthModalProvider>
               <BugReportProvider>
                 <PageViewTracker />
+                <WindowScrollToTop />
                 <Routes>
                   <Route element={<AppShell />}>
                     <Route path="/" element={<LandingPage />} />
@@ -60,6 +63,7 @@ function App() {
                     <Route path="/ucat-keyword-scanning-trainer" element={<KeywordScanningPage />} />
                     <Route path="/ucat-inference-trainer" element={<InferenceTrainerPage />} />
                     <Route path="/ucat-decision-making-practice" element={<DecisionMakingPage />} />
+                    <Route path="/study-guides" element={<StudyGuidesPage />} />
                     <Route path="/ucat-mental-maths-trainer" element={<MentalMathsPage />} />
                     <Route path="/ucat-syllogism-practice-macro-drills" element={<SyllogismMacroPage />} />
 
@@ -91,6 +95,7 @@ function App() {
                     <Route path="/study-plan/plan" element={<StudyPlanPlanPage />} />
                     <Route path="/study-plan/reflect" element={<StudyPlanReflectPage />} />
                     <Route path="/mock-scores" element={<MockScoresPage />} />
+                    <Route path="/dashboard/scores" element={<Navigate to="/mock-scores" replace />} />
 
                     <Route path="/tutor" element={<TutorLayout />}>
                       <Route index element={<TutorOverviewPage />} />

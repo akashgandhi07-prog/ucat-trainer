@@ -5,7 +5,7 @@ This document closes **checklist item 6** in **`docs/SKILLS_PLAN_UNIFY_PLAYBOOK.
 ## Intent
 
 1. Users and magic links always land on the **deployed** origins you intend (no stale domains).
-2. **Staging** mirrors **production** in *shape*: same variables present, same Supabase project policy (unified vs dual-env—see env doc), so a green staging deploy predicts prod behaviour.
+2. **Staging** mirrors **production** in *shape*: same variables present, same Supabase project policy (unified vs dual-env-see env doc), so a green staging deploy predicts prod behaviour.
 3. Supabase **Site URL** and **Redirect URLs** include every trainer and planner origin that participates in password reset, OTP, or invite flows.
 4. If a cutover goes wrong, the team can **roll back** in ordered steps (feature flag → deploy → DNS / merge).
 
@@ -18,9 +18,9 @@ Use **`docs/SKILLS_PLAN_UNIFY_ENV.md`** as the source of variable names.
 | Check | Trainer (hosting env) | Planner (`uk/` hosting env) |
 | --- | --- | --- |
 | Supabase URL + anon key | `VITE_SUPABASE_*` → intended project | `NEXT_PUBLIC_SUPABASE_*` **match** if unified |
-| Planner link (optional) | `VITE_PLANNER_URL` → **HTTPS** origin of deployed `uk` app | — |
+| Planner link (optional) | `VITE_PLANNER_URL` → **HTTPS** origin of deployed `uk` app | - |
 | App origin for links | `VITE_SITE_URL` set if you rely on canonical URLs / analytics | `NEXT_PUBLIC_APP_URL` → **HTTPS** origin of planner (no trailing slash convention: trim in app, but be consistent) |
-| Tutor invites | — | `SUPABASE_SERVICE_ROLE_KEY` present **only** on server |
+| Tutor invites | - | `SUPABASE_SERVICE_ROLE_KEY` present **only** on server |
 
 **Preview deployments:** Each preview origin used for login or email links must be added to Supabase **Redirect URLs** (see below), or OTP and callbacks will fail with redirect errors.
 
@@ -34,7 +34,7 @@ In the Supabase dashboard: **Authentication → URL configuration**.
 
 ### Site URL
 
-- Set to the **primary** user-facing origin for the **main** product surface you consider canonical (often trainer root **or** planner root—pick one story for “default” email templates).
+- Set to the **primary** user-facing origin for the **main** product surface you consider canonical (often trainer root **or** planner root-pick one story for “default” email templates).
 - Changing Site URL affects default links in some templates; prefer being explicit in app code (`redirectTo`, `NEXT_PUBLIC_APP_URL`) over relying on defaults.
 
 ### Redirect URLs (add all that apply)
@@ -73,8 +73,8 @@ Plan these at the CDN or host (Vercel, Netlify, Cloudflare, etc.):
 
 Choose the shallowest fix first:
 
-1. **Navigation only:** Unset or blank **`VITE_PLANNER_URL`** in trainer production env and redeploy trainer—the **Study plan** header link disappears; trainer and drill DB usage are unchanged.
-2. **Planner broken, trainer OK:** Revert or roll back the **`uk`** deployment to the last good deployment; keep Supabase migrations only if the database is compatible (schema rollback is a separate, dangerous step—usually avoid).
+1. **Navigation only:** Unset or blank **`VITE_PLANNER_URL`** in trainer production env and redeploy trainer-the **Study plan** header link disappears; trainer and drill DB usage are unchanged.
+2. **Planner broken, trainer OK:** Revert or roll back the **`uk`** deployment to the last good deployment; keep Supabase migrations only if the database is compatible (schema rollback is a separate, dangerous step-usually avoid).
 3. **Bad merge / release:** Revert the **`skills-plan-unify` → `main`** merge commit (or redeploy previous Git SHA) for the affected apps.
 4. **DNS / domain cutover:** Repoint DNS to the previous origin or put a maintenance page up; update Supabase redirect allowlist if origins change again.
 

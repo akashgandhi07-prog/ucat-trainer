@@ -7,6 +7,7 @@ import type {
   DBWeeklyReflection,
 } from '../embedded/types'
 import { PLAN_TIMETABLE_TABLE } from '../embedded/lib/planner-db-tables'
+import { suggestHoursFromRecentSessions } from '../embedded/lib/utils'
 import { toISODate } from './date-utils'
 import { supabase } from '../../lib/supabase'
 
@@ -16,7 +17,29 @@ export type SessionWithCompletion = DBSession & {
   perceived_effort?: number | null
 }
 
-export async function fetchActivePlan(studentId: string): Promise<DBPlan | null> {
+/** Short-lived cache: avoids duplicate `/study-plan` → `/study-plan/plan` fetches and parallel page loads. */
+const ACTIVE_PLAN_TTL_MS = 45_000
+const activePlanCache = new Map<string, { plan: DBPlan | null; expiresAt: number }>()
+const activePlanInFlight = new Map<string, Promise<DBPlan | null>>()
+let plannerRefreshListenerAttached = false
+
+function attachPlannerRefreshCacheClear(): void {
+  if (plannerRefreshListenerAttached || typeof window === 'undefined') return
+  plannerRefreshListenerAttached = true
+  window.addEventListener('planner-refresh', () => {
+    activePlanCache.clear()
+  })
+}
+
+attachPlannerRefreshCacheClear()
+
+/** Clear cached active plan (e.g. after creating or migrating a plan). Omit studentId to clear all. */
+export function invalidateActivePlanCache(studentId?: string): void {
+  if (studentId) activePlanCache.delete(studentId)
+  else activePlanCache.clear()
+}
+
+async function fetchActivePlanUncached(studentId: string): Promise<DBPlan | null> {
   const { data, error } = await supabase
     .from('plans')
     .select('*')
@@ -27,6 +50,27 @@ export async function fetchActivePlan(studentId: string): Promise<DBPlan | null>
     .maybeSingle()
   if (error) throw new Error(error.message)
   return data as DBPlan | null
+}
+
+export async function fetchActivePlan(studentId: string): Promise<DBPlan | null> {
+  const now = Date.now()
+  const cached = activePlanCache.get(studentId)
+  if (cached && cached.expiresAt > now) {
+    return cached.plan
+  }
+  let pending = activePlanInFlight.get(studentId)
+  if (!pending) {
+    pending = fetchActivePlanUncached(studentId)
+      .then((plan) => {
+        activePlanCache.set(studentId, { plan, expiresAt: Date.now() + ACTIVE_PLAN_TTL_MS })
+        return plan
+      })
+      .finally(() => {
+        activePlanInFlight.delete(studentId)
+      })
+    activePlanInFlight.set(studentId, pending)
+  }
+  return pending
 }
 
 export async function loadTodayDashboard(
@@ -44,30 +88,97 @@ export async function loadTodayDashboard(
 }> {
   const today = toISODate(new Date())
 
-  const { data: sessions, error: sessErr } = await supabase
-    .from(PLAN_TIMETABLE_TABLE)
-    .select('*')
-    .eq('plan_id', plan.id)
-    .eq('day_date', today)
-    .order('position')
+  const weekStart = new Date()
+  weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1)
+  weekStart.setHours(0, 0, 0, 0)
+  const weekEnd = new Date(weekStart)
+  weekEnd.setDate(weekEnd.getDate() + 6)
+
+  const horizonStart = new Date()
+  horizonStart.setDate(horizonStart.getDate() - 30)
+  horizonStart.setHours(0, 0, 0, 0)
+  const horizonStartIso = toISODate(horizonStart)
+
+  const [
+    sessionsRes,
+    planDayRes,
+    weekSessionsRes,
+    horizonSessionsRes,
+    recentCompletionsRes,
+  ] = await Promise.all([
+    supabase
+      .from(PLAN_TIMETABLE_TABLE)
+      .select('*')
+      .eq('plan_id', plan.id)
+      .eq('day_date', today)
+      .order('position'),
+    supabase
+      .from('plan_days')
+      .select('*')
+      .eq('plan_id', plan.id)
+      .eq('day_date', today)
+      .maybeSingle(),
+    supabase
+      .from(PLAN_TIMETABLE_TABLE)
+      .select('id')
+      .eq('plan_id', plan.id)
+      .gte('day_date', toISODate(weekStart))
+      .lte('day_date', toISODate(weekEnd))
+      .not('session_type', 'eq', 'rest'),
+    supabase
+      .from(PLAN_TIMETABLE_TABLE)
+      .select('id, day_date, duration_minutes, session_type')
+      .eq('plan_id', plan.id)
+      .gte('day_date', horizonStartIso),
+    supabase
+      .from('session_completions')
+      .select(`${PLAN_TIMETABLE_TABLE}!inner(day_date)`)
+      .eq('student_id', studentId)
+      .order('completed_at', { ascending: false })
+      .limit(200),
+  ])
+
+  const { data: sessions, error: sessErr } = sessionsRes
   if (sessErr) throw new Error(sessErr.message)
 
-  const { data: planDay } = await supabase
-    .from('plan_days')
-    .select('*')
-    .eq('plan_id', plan.id)
-    .eq('day_date', today)
-    .maybeSingle()
+  const { data: planDay } = planDayRes
+  const { data: weekSessions } = weekSessionsRes
+  const { data: horizonSessions } = horizonSessionsRes
+  const { data: recentCompletions } = recentCompletionsRes
 
   const sessionIds = (sessions ?? []).map((s) => s.id)
-  const { data: completions } =
+  const weekSessionIds = (weekSessions ?? []).map((s) => s.id)
+  const horizonIds = (horizonSessions ?? []).map((s) => s.id)
+
+  const [todayCompletionsRes, weekCompletionsRes, horizonCompletionsRes] = await Promise.all([
     sessionIds.length > 0
-      ? await supabase
+      ? supabase
           .from('session_completions')
           .select('session_id, minutes_completed, perceived_effort')
           .eq('student_id', studentId)
           .in('session_id', sessionIds)
-      : { data: [] }
+      : Promise.resolve({ data: [] as { session_id: string; minutes_completed: number; perceived_effort: number | null }[] }),
+    weekSessionIds.length > 0
+      ? supabase
+          .from('session_completions')
+          .select('id')
+          .eq('student_id', studentId)
+          .in('session_id', weekSessionIds)
+      : Promise.resolve({ data: [] as { id: string }[] }),
+    horizonIds.length > 0
+      ? supabase
+          .from('session_completions')
+          .select('session_id, minutes_completed, perceived_effort')
+          .eq('student_id', studentId)
+          .in('session_id', horizonIds)
+      : Promise.resolve({
+          data: [] as { session_id: string; minutes_completed: number; perceived_effort: number | null }[],
+        }),
+  ])
+
+  const completions = todayCompletionsRes.data
+  const weekCompletions = weekCompletionsRes.data
+  const horizonCompletions = horizonCompletionsRes.data
 
   const completionsBySession = new Map(
     (completions ?? []).map((c) => [
@@ -79,40 +190,9 @@ export async function loadTodayDashboard(
     ]),
   )
 
-  const weekStart = new Date()
-  weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1)
-  weekStart.setHours(0, 0, 0, 0)
-  const weekEnd = new Date(weekStart)
-  weekEnd.setDate(weekEnd.getDate() + 6)
-
-  const { data: weekSessions } = await supabase
-    .from(PLAN_TIMETABLE_TABLE)
-    .select('id')
-    .eq('plan_id', plan.id)
-    .gte('day_date', toISODate(weekStart))
-    .lte('day_date', toISODate(weekEnd))
-    .not('session_type', 'eq', 'rest')
-
-  const weekSessionIds = (weekSessions ?? []).map((s) => s.id)
-  const { data: weekCompletions } =
-    weekSessionIds.length > 0
-      ? await supabase
-          .from('session_completions')
-          .select('id')
-          .eq('student_id', studentId)
-          .in('session_id', weekSessionIds)
-      : { data: [] }
-
   const weeklyCompletion = weekSessions?.length
     ? Math.round(((weekCompletions?.length ?? 0) / weekSessions.length) * 100)
     : 0
-
-  const { data: recentCompletions } = await supabase
-    .from('session_completions')
-    .select(`${PLAN_TIMETABLE_TABLE}!inner(day_date)`)
-    .eq('student_id', studentId)
-    .order('completed_at', { ascending: false })
-    .limit(200)
 
   const datesWithActivity = new Set<string>()
   for (const row of (recentCompletions ?? []) as Record<string, { day_date?: string }>[]) {
@@ -136,27 +216,7 @@ export async function loadTodayDashboard(
   }
 
   const insights: string[] = []
-  const horizonStart = new Date()
-  horizonStart.setDate(horizonStart.getDate() - 30)
-  horizonStart.setHours(0, 0, 0, 0)
-
-  const { data: horizonSessions } = await supabase
-    .from(PLAN_TIMETABLE_TABLE)
-    .select('id, day_date, duration_minutes, session_type')
-    .eq('plan_id', plan.id)
-    .gte('day_date', toISODate(horizonStart))
-
-  const horizonIds = (horizonSessions ?? []).map((s) => s.id)
   const sessById = new Map((horizonSessions ?? []).map((s) => [s.id, s]))
-
-  const { data: horizonCompletions } =
-    horizonIds.length > 0
-      ? await supabase
-          .from('session_completions')
-          .select('session_id, minutes_completed, perceived_effort')
-          .eq('student_id', studentId)
-          .in('session_id', horizonIds)
-      : { data: [] }
 
   const planDatesWithWork = new Set<string>()
   for (const c of horizonCompletions ?? []) {
@@ -225,20 +285,17 @@ export async function loadTodayDashboard(
 }
 
 export async function loadPlanCalendar(studentId: string, plan: DBPlan) {
-  const { data: planDays, error: daysErr } = await supabase
-    .from('plan_days')
-    .select('*')
-    .eq('plan_id', plan.id)
-    .order('day_date')
-  if (daysErr) throw new Error(daysErr.message)
+  const [planDaysRes, sessionsRes, extraStudyLogsRes] = await Promise.all([
+    supabase.from('plan_days').select('*').eq('plan_id', plan.id).order('day_date'),
+    supabase.from(PLAN_TIMETABLE_TABLE).select('*').eq('plan_id', plan.id).order('day_date').order('position'),
+    supabase.from('extra_study_logs').select('*').eq('plan_id', plan.id).eq('student_id', studentId),
+  ])
 
-  const { data: sessions, error: sessErr } = await supabase
-    .from(PLAN_TIMETABLE_TABLE)
-    .select('*')
-    .eq('plan_id', plan.id)
-    .order('day_date')
-    .order('position')
+  const { data: planDays, error: daysErr } = planDaysRes
+  if (daysErr) throw new Error(daysErr.message)
+  const { data: sessions, error: sessErr } = sessionsRes
   if (sessErr) throw new Error(sessErr.message)
+  const { data: extraStudyLogs } = extraStudyLogsRes
 
   const sessionIds = (sessions ?? []).map((s) => s.id)
   const { data: completions } =
@@ -249,12 +306,6 @@ export async function loadPlanCalendar(studentId: string, plan: DBPlan) {
           .eq('student_id', studentId)
           .in('session_id', sessionIds)
       : { data: [] }
-
-  const { data: extraStudyLogs } = await supabase
-    .from('extra_study_logs')
-    .select('*')
-    .eq('plan_id', plan.id)
-    .eq('student_id', studentId)
 
   const completionsBySession = new Map(
     (completions ?? []).map((c) => [
@@ -280,6 +331,19 @@ export async function loadPlanCalendar(studentId: string, plan: DBPlan) {
     }) as SessionWithCompletion[],
     extraStudyLogs: extraStudyLogs ?? [],
     todayDate: toISODate(new Date()),
+    hoursSuggestion: suggestHoursFromRecentSessions(
+      (sessions ?? []).map((s) => {
+        const c = completionsBySession.get(s.id)
+        return {
+          day_date: s.day_date,
+          session_type: s.session_type,
+          duration_minutes: s.duration_minutes,
+          completed: completionsBySession.has(s.id),
+          completed_minutes: c?.minutes ?? null,
+        }
+      }),
+      toISODate(new Date()),
+    ),
   }
 }
 
@@ -300,18 +364,16 @@ export async function loadMockScores(plan: DBPlan) {
 }
 
 export async function loadReflect(planId: string) {
-  const { data: reflections, error: refErr } = await supabase
-    .from('weekly_reflections')
-    .select('*')
-    .eq('plan_id', planId)
-    .order('week_number')
+  const [{ data: reflections, error: refErr }, { data: planWeeks, error: weekErr }] =
+    await Promise.all([
+      supabase.from('weekly_reflections').select('*').eq('plan_id', planId).order('week_number'),
+      supabase
+        .from('plan_weeks')
+        .select('week_number, week_start, is_locked')
+        .eq('plan_id', planId)
+        .order('week_number'),
+    ])
   if (refErr) throw new Error(refErr.message)
-
-  const { data: planWeeks, error: weekErr } = await supabase
-    .from('plan_weeks')
-    .select('week_number, week_start, is_locked')
-    .eq('plan_id', planId)
-    .order('week_number')
   if (weekErr) throw new Error(weekErr.message)
 
   return {

@@ -2,10 +2,13 @@
 
 import { MockScoresView } from '@/components/plan/mock-scores-view'
 import { getGuestPlanner } from '@/lib/guest-planner-store'
+import MockScoresBrowseView from '../../../components/MockScoresBrowseView'
 
 export function GuestScoresPage() {
   const bundle = getGuestPlanner()
-  if (!bundle) return null
+  if (!bundle) {
+    return <MockScoresBrowseView />
+  }
 
   return (
     <MockScoresView

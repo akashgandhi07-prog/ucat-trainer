@@ -15,6 +15,17 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@/types": ["./src/planner/embedded/types/index.ts"],
+      "@/lib/app-navigation": ["./src/planner/shim/app-navigation.tsx"],
+      "@/lib/app-link": ["./src/planner/shim/app-link.tsx"],
+      "@/lib/supabase/client": ["./src/planner/shim/supabase-client.ts"],
+      "@/lib/create-plan-from-onboarding": ["./src/planner/lib/create-plan-from-onboarding.ts"],
+      "@/lib/planner-client": ["./src/planner/lib/planner-client.ts"],
+      "@/lib/export-plan-pdf": ["./src/planner/lib/export-plan-pdf.ts"],
+      "@/components/guest/guest-sign-in-cta": ["./src/planner/shim/guest-sign-in-cta.tsx"]
+    },
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
@@ -33,6 +44,7 @@
     "src/planner/lib/load-planner-data.ts",
     "src/planner/lib/planner-client.ts",
     "src/planner/lib/planner-db-ops.ts",
-    "src/planner/lib/planner-guard.ts"
+    "src/planner/lib/planner-guard.ts",
+    "src/planner/lib/export-plan-pdf.ts"
   ]
 }

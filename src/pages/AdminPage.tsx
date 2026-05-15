@@ -185,7 +185,7 @@ function getDateRangeParams(range: AdminDateRange): { since_ts: string | null; u
 }
 
 function formatTimeSeconds(seconds: number | undefined | null): string {
-  if (seconds == null || seconds <= 0) return "—";
+  if (seconds == null || seconds <= 0) return "-";
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   if (h > 0) return `${h}h ${m}m`;
@@ -888,9 +888,9 @@ export default function AdminPage() {
                         sessions.length ? `Sessions: ${sessions.join("; ")}` : null,
                         row.total_questions > 0 ? `${row.total_questions} questions answered` : null,
                       ].filter(Boolean);
-                      const activityText = activityParts.join(" · ") || "—";
-                      const dateStr = row.created_at ? new Date(row.created_at).toLocaleDateString(undefined, { dateStyle: "medium" }) : "—";
-                      return [dateStr, row.full_name || "—", row.email || "—", activityText].map(escape).join(",");
+                      const activityText = activityParts.join(" · ") || "-";
+                      const dateStr = row.created_at ? new Date(row.created_at).toLocaleDateString(undefined, { dateStyle: "medium" }) : "-";
+                      return [dateStr, row.full_name || "-", row.email || "-", activityText].map(escape).join(",");
                     });
                     downloadText("new-users-by-date.csv", [headers.join(","), ...rows].join("\n"), "text/csv;charset=utf-8");
                   }}
@@ -941,17 +941,17 @@ export default function AdminPage() {
                         sessions.length ? `Sessions: ${sessions.join("; ")}` : null,
                         row.total_questions > 0 ? `${row.total_questions} questions answered` : null,
                       ].filter(Boolean);
-                      const activityText = activityParts.length ? activityParts.join(" · ") : "—";
+                      const activityText = activityParts.length ? activityParts.join(" · ") : "-";
                       return (
                         <tr key={row.user_id} className="border-b border-slate-100 hover:bg-slate-50">
                           <td className="px-4 py-2 text-slate-600 whitespace-nowrap">
-                            {row.created_at ? new Date(row.created_at).toLocaleDateString(undefined, { dateStyle: "medium" }) : "—"}
+                            {row.created_at ? new Date(row.created_at).toLocaleDateString(undefined, { dateStyle: "medium" }) : "-"}
                           </td>
                           <td className="px-4 py-2 text-slate-900 font-medium">
-                            {row.full_name || "—"}
+                            {row.full_name || "-"}
                           </td>
                           <td className="px-4 py-2 text-slate-700 truncate max-w-[200px]" title={row.email || ""}>
-                            {row.email || "—"}
+                            {row.email || "-"}
                           </td>
                           <td className="px-4 py-2 text-slate-600 text-xs max-w-[400px]">
                             {activityText}
@@ -1073,14 +1073,14 @@ export default function AdminPage() {
                             if (key === "display_name") {
                               return (
                                 <td key={key} className="px-2 py-2 text-slate-900 font-medium">
-                                  {r.display_name || "—"}
+                                  {r.display_name || "-"}
                                 </td>
                               );
                             }
                             if (key === "email") {
                               return (
                                 <td key={key} className="px-2 py-2 text-slate-700">
-                                  {r.email || "—"}
+                                  {r.email || "-"}
                                 </td>
                               );
                             }
@@ -1089,14 +1089,14 @@ export default function AdminPage() {
                                 <td key={key} className="px-2 py-2 text-slate-600 text-xs whitespace-nowrap">
                                   {r.created_at
                                     ? new Date(r.created_at).toLocaleDateString(undefined, { dateStyle: "medium" })
-                                    : "—"}
+                                    : "-"}
                                 </td>
                               );
                             }
                             if (key === "last_active_at") {
                               return (
                                 <td key={key} className="px-2 py-2 text-slate-600 text-xs whitespace-nowrap">
-                                  {r.last_active_at ? new Date(r.last_active_at).toLocaleString() : "—"}
+                                  {r.last_active_at ? new Date(r.last_active_at).toLocaleString() : "-"}
                                 </td>
                               );
                             }
@@ -1110,7 +1110,7 @@ export default function AdminPage() {
                             if (key === "days_active") {
                               return (
                                 <td key={key} className="px-2 py-2 text-right">
-                                  {r.days_active ?? "—"}
+                                  {r.days_active ?? "-"}
                                 </td>
                               );
                             }
@@ -1118,7 +1118,7 @@ export default function AdminPage() {
                             const num = typeof val === "number" ? val : null;
                             return (
                               <td key={key} className="px-2 py-2 text-right">
-                                {num != null ? num : "—"}
+                                {num != null ? num : "-"}
                               </td>
                             );
                           })}
@@ -1163,7 +1163,7 @@ export default function AdminPage() {
                           <td className="px-4 py-2 text-right text-slate-700">
                             {usageSummary.trainer_questions?.[key] != null
                               ? Number(usageSummary.trainer_questions[key]).toLocaleString()
-                              : "—"}
+                              : "-"}
                           </td>
                           <td className="px-4 py-2 text-right text-slate-600">
                             {formatTimeSeconds(usageSummary.trainer_time_seconds?.[key])}
@@ -1284,21 +1284,21 @@ export default function AdminPage() {
                     {filterAndSortUsers(usageSummary.users, userSortKey, userSortDir, userFilterMinQuestions, userFilterEmail).map((u) => (
                       <tr key={u.user_id} className="border-b border-slate-100 hover:bg-slate-50">
                         {USER_TABLE_COLUMNS.map(({ key }) => {
-                          if (key === "display_name") return <td key={key} className="px-2 py-2 text-slate-900 font-medium">{u.display_name || "—"}</td>;
-                          if (key === "email") return <td key={key} className="px-2 py-2 text-slate-700">{u.email || "—"}</td>;
-                          if (key === "last_active_at") return <td key={key} className="px-2 py-2 text-slate-600 text-xs">{u.last_active_at ? new Date(u.last_active_at).toLocaleString() : "—"}</td>;
+                          if (key === "display_name") return <td key={key} className="px-2 py-2 text-slate-900 font-medium">{u.display_name || "-"}</td>;
+                          if (key === "email") return <td key={key} className="px-2 py-2 text-slate-700">{u.email || "-"}</td>;
+                          if (key === "last_active_at") return <td key={key} className="px-2 py-2 text-slate-600 text-xs">{u.last_active_at ? new Date(u.last_active_at).toLocaleString() : "-"}</td>;
                           if (key === "accuracy") {
                             const total = u.session_questions ?? 0;
                             const correct = u.session_correct ?? 0;
-                            const pct = total > 0 ? ((correct / total) * 100).toFixed(1) : "—";
+                            const pct = total > 0 ? ((correct / total) * 100).toFixed(1) : "-";
                             return <td key={key} className="px-2 py-2 text-right">{pct}</td>;
                           }
                           if (key === "total_time_seconds") return <td key={key} className="px-2 py-2 text-right text-slate-700">{formatTimeSeconds(u.total_time_seconds)}</td>;
-                          if (key === "days_active") return <td key={key} className="px-2 py-2 text-right">{u.days_active ?? "—"}</td>;
-                          if (key === "last_wpm") return <td key={key} className="px-2 py-2 text-right">{u.last_wpm != null ? u.last_wpm : "—"}</td>;
+                          if (key === "days_active") return <td key={key} className="px-2 py-2 text-right">{u.days_active ?? "-"}</td>;
+                          if (key === "last_wpm") return <td key={key} className="px-2 py-2 text-right">{u.last_wpm != null ? u.last_wpm : "-"}</td>;
                           const val = u[key];
                           const num = typeof val === "number" ? val : null;
-                          return <td key={key} className="px-2 py-2 text-right">{num != null ? num : "—"}</td>;
+                          return <td key={key} className="px-2 py-2 text-right">{num != null ? num : "-"}</td>;
                         })}
                       </tr>
                     ))}
@@ -1460,7 +1460,7 @@ export default function AdminPage() {
                       .map(([type, counts]) => {
                         const started = counts.trainer_started ?? 0;
                         const completed = counts.trainer_completed ?? 0;
-                        const pct = started > 0 ? ((completed / started) * 100).toFixed(1) : "—";
+                        const pct = started > 0 ? ((completed / started) * 100).toFixed(1) : "-";
                         return `${type.replace(/_/g, " ")}: ${pct}%`;
                       })
                       .join(" · ")}
@@ -1587,25 +1587,25 @@ export default function AdminPage() {
                             {row.question_identifier}
                           </td>
                           <td className="px-3 py-2 text-slate-700 text-xs">
-                            {row.passage_id ?? "—"}
+                            {row.passage_id ?? "-"}
                           </td>
                           <td className="px-3 py-2 text-right font-semibold text-slate-900">
                             {row.total}
                           </td>
                           <td className="px-3 py-2 text-right text-slate-800">
-                            {row.issues.wrong_answer || "—"}
+                            {row.issues.wrong_answer || "-"}
                           </td>
                           <td className="px-3 py-2 text-right text-slate-800">
-                            {row.issues.unclear_wording || "—"}
+                            {row.issues.unclear_wording || "-"}
                           </td>
                           <td className="px-3 py-2 text-right text-slate-800">
-                            {row.issues.too_hard || "—"}
+                            {row.issues.too_hard || "-"}
                           </td>
                           <td className="px-3 py-2 text-right text-slate-800">
-                            {row.issues.too_easy || "—"}
+                            {row.issues.too_easy || "-"}
                           </td>
                           <td className="px-3 py-2 text-right text-slate-800">
-                            {row.issues.typo || "—"}
+                            {row.issues.typo || "-"}
                           </td>
                           <td className="px-3 py-2 text-right text-slate-700 whitespace-nowrap">
                             {new Date(row.last_created_at).toLocaleString()}

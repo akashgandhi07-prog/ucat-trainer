@@ -56,7 +56,7 @@ export default function HubTrainerCard({
       type="button"
       onClick={onClick}
       className={cn(
-        "group flex flex-col items-stretch p-5 sm:p-6 text-left rounded-xl border border-border bg-card shadow-sm",
+        "group flex flex-col items-stretch text-left p-5 sm:p-6 rounded-xl border border-border bg-card shadow-sm",
         "hover:shadow-md transition-all duration-200",
         styles.hoverBorder,
       )}
@@ -76,13 +76,13 @@ export default function HubTrainerCard({
       </div>
       <h3
         className={cn(
-          "font-semibold text-foreground transition-colors text-base sm:text-lg",
+          "font-semibold text-foreground transition-colors text-base sm:text-lg text-left",
           styles.hoverTitle,
         )}
       >
         {title}
       </h3>
-      <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{description}</p>
+      <p className="mt-1 text-sm text-muted-foreground leading-relaxed text-left">{description}</p>
     </button>
   );
 }

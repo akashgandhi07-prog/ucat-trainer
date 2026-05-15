@@ -1,5 +1,5 @@
 import { supabase } from '../../lib/supabase'
-import { fetchActivePlan } from './load-planner-data'
+import { fetchActivePlan, invalidateActivePlanCache } from './load-planner-data'
 import {
   clearGuestPlanner,
   generateSlug,
@@ -134,6 +134,7 @@ export async function migrateGuestPlannerToCloud(studentId: string): Promise<{
   })
 
   clearGuestPlanner()
+  invalidateActivePlanCache(studentId)
   return { migrated: true }
 }
 

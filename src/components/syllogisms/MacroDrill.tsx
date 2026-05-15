@@ -152,7 +152,7 @@ export default function MacroDrill() {
           <p className="mb-3 text-base text-red-600">{error}</p>
         )}
 
-        {/* Stem (stimulus) ABOVE – read first, then conclusions and Yes/No below */}
+        {/* Stem (stimulus) ABOVE - read first, then conclusions and Yes/No below */}
         <section className="mb-3">
           <div className="rounded-xl border-2 border-slate-200 bg-white p-3 shadow-sm">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 mb-1">
@@ -216,7 +216,7 @@ export default function MacroDrill() {
                       }
                     >
                       <div className="grid grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-[minmax(0,1fr)_6rem] items-center gap-3">
-                        {/* Conclusion text – no extra box, just number + text */}
+                        {/* Conclusion text - no extra box, just number + text */}
                         <p className="text-base text-slate-900 leading-snug py-0.5">
                           <span className="font-semibold text-slate-600">{index + 1}.</span> {q.conclusion_text}
                         </p>
@@ -336,7 +336,7 @@ export default function MacroDrill() {
               </div>
             </div>
 
-            {/* Yes/No palette – drag these into the answer boxes (realistic UCAT style) */}
+            {/* Yes/No palette - drag these into the answer boxes (realistic UCAT style) */}
             {questions.length > 0 && (
               <div
                 className={

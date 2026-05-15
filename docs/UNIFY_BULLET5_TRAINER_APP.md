@@ -56,7 +56,7 @@ Trainer must **not** require planner tables for core drills. If anything fails o
 
 ## Related docs
 
-- [`UNIFY_RELEASE_GATE_STATUS.md`](UNIFY_RELEASE_GATE_STATUS.md) (evidence pack for checklist items 1–6)
+- [`UNIFY_RELEASE_GATE_STATUS.md`](UNIFY_RELEASE_GATE_STATUS.md) (evidence pack for checklist items 1-6)
 - [`SKILLS_PLAN_UNIFY_PLAYBOOK.md`](SKILLS_PLAN_UNIFY_PLAYBOOK.md) (full merge checklist)
 - [`UNIFY_BULLET1_TRAINER_GUARD.md`](UNIFY_BULLET1_TRAINER_GUARD.md) (migration + compile guard)
 - [`UNIFY_BULLET6_OPS_CUTOVER.md`](UNIFY_BULLET6_OPS_CUTOVER.md) (bullet 6: hosting, auth URLs, rollback)

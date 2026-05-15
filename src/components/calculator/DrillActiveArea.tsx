@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { Timer, ArrowRight, RotateCcw } from 'lucide-react';
+import { cn } from '../../lib/cn';
 
 interface DrillActiveAreaProps {
     drillName: string;
@@ -29,6 +30,7 @@ export const DrillActiveArea = ({
     onNextQuestion
 }: DrillActiveAreaProps) => {
     const scrollRef = useRef<HTMLDivElement>(null);
+    const showManualNext = Boolean(manualAdvance && onNextQuestion);
 
     const progress = useMemo(() => {
         if (expectedKeystrokes && expectedKeystrokes.length > 0) {
@@ -135,6 +137,7 @@ export const DrillActiveArea = ({
             <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center">
                 {onReset && (
                     <button
+                        type="button"
                         onClick={onReset}
                         className="flex items-center gap-2 text-sm text-slate-500 hover:text-red-500 transition-colors px-3 py-1.5 rounded-md hover:bg-slate-100"
                     >
@@ -143,32 +146,32 @@ export const DrillActiveArea = ({
                     </button>
                 )}
                 <button
+                    type="button"
                     onClick={onSkip}
                     className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-700 px-4 py-2 hover:bg-slate-100 rounded-lg transition-colors"
                 >
                     Skip
                 </button>
-                {manualAdvance && onNextQuestion && (
+                {showManualNext && onNextQuestion && (
                     <button
+                        type="button"
                         onClick={onNextQuestion}
-                        className="ml-auto flex items-center gap-2 text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 px-6 py-2 rounded-lg transition-colors shadow-sm hover:shadow group"
+                        className="ml-auto flex min-h-[44px] items-center gap-2 rounded-lg bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 hover:shadow group"
                     >
                         Next Question
-                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </button>
-                )}
-                {!manualAdvance && (
-                    <button
-                        onClick={onSkip} // Fallback if no manual advance but using this UI
-                        className="ml-auto flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors hidden"
-                    >
-                        Skip
+                        <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" aria-hidden />
                     </button>
                 )}
                 {onFinish && (
                     <button
+                        type="button"
                         onClick={onFinish}
-                        className="ml-2 flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-800 px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                        className={cn(
+                            'inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                            showManualNext
+                                ? 'ml-2 border border-primary/40 bg-background text-primary shadow-sm hover:bg-primary/10'
+                                : 'ml-auto bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow',
+                        )}
                     >
                         Finish
                     </button>

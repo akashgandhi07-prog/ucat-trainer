@@ -1,0 +1,38 @@
+---
+description: UK English copy, no em/en dashes, clear UI/UX
+alwaysApply: true
+---
+
+# UK copy and UI standards
+
+## Language
+
+- Use **UK English** spelling and conventions (e.g. organise, colour, centre, practise as verb / practice as noun).
+- Prefer plain, direct sentences. Write for students under time pressure.
+
+## Punctuation: no em dash or en dash
+
+**Never** use em dashes (`—`, U+2014) or en dashes (`–`, U+2013) in user-facing copy, comments meant for UI, or marketing strings.
+
+| Instead of | Use |
+|------------|-----|
+| `Topic — detail` | Comma, colon, full stop, or middle dot (`·`) |
+| `09:00–16:00` | `09:00 to 16:00` |
+| `£179 — live day` | `£179 live day` or `one live day (£179)` |
+| `Name — title` | `Name, title` or `Name · title` |
+
+Hyphens (`-`) are fine for compound adjectives (e.g. `1-day course`, `brand-new`).
+
+## UI and UX
+
+- One idea per line in headings and CTAs; avoid stacking clauses.
+- Use existing spacing, typography, and colour tokens from the design system.
+- CTAs: verb-first, specific (`Book a tutor`, not `Learn more` alone).
+- Upsells and sidebars: short eyebrow, clear headline, one trust line, one primary action.
+- Prefer `·` as a light separator in compact UI (dates, meta lines), not long dashes.
+
+## Before shipping copy
+
+1. Search changed files for `—` and `–` and replace.
+2. Read aloud: if a pause needs a dash, use a comma or full stop instead.
+3. Keep tone consistent with The UKCAT People: expert, supportive, not salesy.

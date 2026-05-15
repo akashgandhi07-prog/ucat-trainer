@@ -19,8 +19,8 @@ npm run unify:bullet1-guard
 
 This runs, in order:
 
-1. **`npm run unify:check-migrations`** – fails `supabase/migrations` that look like they **drop / truncate / strip columns from** core trainer tables (see script header).
-2. **`npm run unify:trainer-smoke`** – `eslint` + production **`tsc -b`** + **`vite build`** for the trainer shell.
+1. **`npm run unify:check-migrations`** - fails `supabase/migrations` that look like they **drop / truncate / strip columns from** core trainer tables (see script header).
+2. **`npm run unify:trainer-smoke`** - `eslint` + production **`tsc -b`** + **`vite build`** for the trainer shell.
 
 Optional: typecheck only the nested planner:
 
@@ -37,7 +37,7 @@ The npm scripts are a **CI surrogate**, not a full E2E suite. They catch compile
 
 ## CI
 
-Workflow **`.github/workflows/trainer-unify-guard.yml`** runs **`npm run unify:bullet2-verify-ci`** (trainer **`unify:bullet1-guard`** plus clean **`uk/`** `npm ci`, lint, `tsc`, and `next build`). See **`docs/UNIFY_BULLET8_CI_PARITY.md`** for how this maps to checklist items **8–9**.
+Workflow **`.github/workflows/trainer-unify-guard.yml`** runs **`npm run unify:bullet2-verify-ci`** (trainer **`unify:bullet1-guard`** plus clean **`uk/`** `npm ci`, lint, `tsc`, and `next build`). See **`docs/UNIFY_BULLET8_CI_PARITY.md`** for how this maps to checklist items **8-9**.
 
 ## Parity / Next gate (manual)
 
@@ -47,7 +47,7 @@ Do **not** delete or rewrite trainer routes into Next until **`docs/SKILLS_PLAN_
 
 - [`SKILLS_PLAN_UNIFY_PLAYBOOK.md`](SKILLS_PLAN_UNIFY_PLAYBOOK.md)
 - [`UNIFY_BULLET1_GIT.md`](UNIFY_BULLET1_GIT.md) (checklist item 1: branch hygiene)
-- [`UNIFY_BULLET8_CI_PARITY.md`](UNIFY_BULLET8_CI_PARITY.md) (checklist items 8–9: CI + schedule)
+- [`UNIFY_BULLET8_CI_PARITY.md`](UNIFY_BULLET8_CI_PARITY.md) (checklist items 8-9: CI + schedule)
 - [`UNIFY_BULLET5_TRAINER_APP.md`](UNIFY_BULLET5_TRAINER_APP.md) (bullet 5: trainer merge readiness + manual smoke)
 - [`UNIFY_BULLET6_OPS_CUTOVER.md`](UNIFY_BULLET6_OPS_CUTOVER.md) (bullet 6: ops, redirects, rollback)
 - [`UNIFY_BULLET7_ADVISORS.md`](UNIFY_BULLET7_ADVISORS.md) (bullet 7: Supabase advisors triage)

@@ -30,7 +30,7 @@ function intBetween(min: number, max: number): number {
   return min + Math.floor(Math.random() * (max - min + 1));
 }
 
-/** Stage 1: A × B, A and B from 2–15, exclude 10 */
+/** Stage 1: A × B, A and B from 2-15, exclude 10 */
 export function generateTimesTable(): ExactQuestion {
   const pool = [2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 15];
   const A = pick(pool);
@@ -56,7 +56,7 @@ export function generateFractionToPercent(): ExactQuestion {
   }
 }
 
-/** Stage 1: N × N, N from 2–20 */
+/** Stage 1: N × N, N from 2-20 */
 export function generateSquare(): ExactQuestion {
   const N = intBetween(2, 20);
   const answer = roundToTwo(N * N);
@@ -71,14 +71,14 @@ export function generatePercentageHack(): ExactQuestion {
   return { kind: "exact", prompt: `${P}% of ${N}`, answer };
 }
 
-/** Two-digit non-multiple-of-10: 11–99 excluding 20,30,...,90 */
+/** Two-digit non-multiple-of-10: 11-99 excluding 20,30,...,90 */
 function twoDigitNonTen(): number {
   const tens = [1, 2, 3, 4, 5, 6, 7, 8, 9];
   const ones = [1, 2, 3, 4, 5, 6, 7, 8, 9];
   return pick(tens) * 10 + pick(ones);
 }
 
-/** Stage 2: two-digit (excl multiples of 10) × single digit 3–9 */
+/** Stage 2: two-digit (excl multiples of 10) × single digit 3-9 */
 export function generateChunkedMultiplication(): ExactQuestion {
   const A = twoDigitNonTen();
   const B = intBetween(3, 9);
@@ -170,7 +170,7 @@ const STAGE_2_GENERATORS: (() => ExactQuestion)[] = [
   generateChunkedMultiplication,
 ];
 
-/** Returns one question for the given stage (0–3). */
+/** Returns one question for the given stage (0-3). */
 export function getQuestionForStage(stageIndex: number): QuestionPayload {
   switch (stageIndex) {
     case 0:
@@ -193,4 +193,88 @@ export function isExactAnswerCorrect(userValue: number, expected: number): boole
   if (Math.abs(u - e) < 0.01) return true;
   // Exact match for values that don't round cleanly to 2 dp (e.g. 0.125 stored as 0.13)
   return Math.abs(userValue - expected) < 0.002;
+}
+
+const FRAC_STR_TO_DECIMAL: Record<string, number> = {
+  "1/4": 0.25,
+  "1/2": 0.5,
+  "1/5": 0.2,
+  "1/10": 0.1,
+  "3/4": 0.75,
+};
+
+/**
+ * Dev / CI helper: recomputes the expected answer from the prompt and compares it to what the generator stored.
+ * Throws if anything is wrong (including MCQ index not matching the recomputed target).
+ */
+export function assertMentalMathsQuestionConsistent(q: QuestionPayload): void {
+  const err = mentalMathsQuestionInconsistencyMessage(q);
+  if (err) throw new Error(err);
+}
+
+export function mentalMathsQuestionInconsistencyMessage(q: QuestionPayload): string | null {
+  if (q.kind === "exact") {
+    const mul = q.prompt.match(/^(\d+) × (\d+)$/);
+    if (mul) {
+      const a = parseInt(mul[1], 10);
+      const b = parseInt(mul[2], 10);
+      const expected = roundToTwo(a * b);
+      return q.answer === expected ? null : `times/square: expected ${expected}, got ${q.answer} (${q.prompt})`;
+    }
+
+    const fracToPct = q.prompt.match(/^(1\/4|1\/2|1\/5|1\/10|3\/4) = \?%$/);
+    if (fracToPct) {
+      const d = FRAC_STR_TO_DECIMAL[fracToPct[1]];
+      const expected = roundToTwo(d * 100);
+      return q.answer === expected ? null : `fraction→%: expected ${expected}, got ${q.answer} (${q.prompt})`;
+    }
+
+    const pctToDec = q.prompt.match(/^(\d+)% as a decimal\?$/);
+    if (pctToDec) {
+      const pct = parseInt(pctToDec[1], 10);
+      const expected = roundToTwo(pct / 100);
+      return q.answer === expected ? null : `%→decimal: expected ${expected}, got ${q.answer} (${q.prompt})`;
+    }
+
+    const pctOf = q.prompt.match(/^(\d+)% of (\d+)$/);
+    if (pctOf) {
+      const p = parseInt(pctOf[1], 10);
+      const n = parseInt(pctOf[2], 10);
+      const expected = roundToTwo((p / 100) * n);
+      return q.answer === expected ? null : `% of: expected ${expected}, got ${q.answer} (${q.prompt})`;
+    }
+
+    return `exact prompt not recognised: ${q.prompt}`;
+  }
+
+  const uniq = new Set(q.options.map((x) => roundToTwo(x)));
+  if (uniq.size !== q.options.length) {
+    return `mcq duplicate options after roundToTwo: ${q.prompt}`;
+  }
+
+  const est = q.prompt.match(/^Estimate: (\d+) × (\d+)$/);
+  if (est) {
+    const a = parseInt(est[1], 10);
+    const b = parseInt(est[2], 10);
+    const roundedA = Math.round(a / 100) * 100;
+    const roundedB = Math.round(b / 10) * 10;
+    const target = roundToTwo(roundedA * roundedB);
+    const chosen = q.options[q.correctIndex];
+    return chosen === target ? null : `rounding mcq: target ${target}, index ${q.correctIndex} has ${chosen} (${q.prompt})`;
+  }
+
+  const wordPopPct =
+    q.prompt.match(/^In a survey of ([\d,]+) people, (\d+)%/) ||
+    q.prompt.match(/^A town has ([\d,]+) residents\. (\d+)%/) ||
+    q.prompt.match(/^Out of ([\d,]+) patients, (\d+)%/);
+  if (wordPopPct) {
+    const popRaw = parseInt(wordPopPct[1].replace(/,/g, ""), 10);
+    const pct = parseInt(wordPopPct[2], 10);
+    const roundPop = Math.round(popRaw / 1000) * 1000;
+    const target = roundToTwo((pct / 100) * roundPop);
+    const chosen = q.options[q.correctIndex];
+    return chosen === target ? null : `word mcq: target ${target}, index ${q.correctIndex} has ${chosen} (${q.prompt})`;
+  }
+
+  return `mcq prompt not recognised: ${q.prompt.slice(0, 80)}...`;
 }

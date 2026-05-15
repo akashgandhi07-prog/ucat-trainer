@@ -4,78 +4,76 @@
     <loc>https://ucat.theukcatpeople.co.uk/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-    <lastmod>2026-02-19</lastmod>
+    <lastmod>2026-05-15</lastmod>
   </url>
   <url>
     <loc>https://ucat.theukcatpeople.co.uk/ucat-verbal-reasoning-practice</loc>
     <changefreq>weekly</changefreq>
     <priority>0.95</priority>
-    <lastmod>2026-02-19</lastmod>
+    <lastmod>2026-05-15</lastmod>
   </url>
   <url>
     <loc>https://ucat.theukcatpeople.co.uk/ucat-verbal-reasoning-speed-reading-trainer</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
-    <lastmod>2026-02-19</lastmod>
+    <lastmod>2026-05-15</lastmod>
   </url>
   <url>
     <loc>https://ucat.theukcatpeople.co.uk/ucat-rapid-recall-trainer</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
-    <lastmod>2026-02-19</lastmod>
+    <lastmod>2026-05-15</lastmod>
   </url>
   <url>
     <loc>https://ucat.theukcatpeople.co.uk/ucat-keyword-scanning-trainer</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
-    <lastmod>2026-02-19</lastmod>
+    <lastmod>2026-05-15</lastmod>
   </url>
   <url>
     <loc>https://ucat.theukcatpeople.co.uk/ucat-inference-trainer</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
-    <lastmod>2026-02-19</lastmod>
+    <lastmod>2026-05-15</lastmod>
   </url>
   <url>
     <loc>https://ucat.theukcatpeople.co.uk/ucat-decision-making-practice</loc>
     <changefreq>weekly</changefreq>
     <priority>0.95</priority>
-    <lastmod>2026-02-19</lastmod>
+    <lastmod>2026-05-15</lastmod>
   </url>
   <url>
     <loc>https://ucat.theukcatpeople.co.uk/train/syllogism/micro</loc>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
-    <lastmod>2026-02-19</lastmod>
+    <lastmod>2026-05-15</lastmod>
   </url>
   <url>
     <loc>https://ucat.theukcatpeople.co.uk/ucat-syllogism-practice-macro-drills</loc>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
-    <lastmod>2026-02-19</lastmod>
+    <lastmod>2026-05-15</lastmod>
   </url>
   <url>
     <loc>https://ucat.theukcatpeople.co.uk/ucat-quantitative-reasoning-practice</loc>
     <changefreq>weekly</changefreq>
     <priority>0.95</priority>
-    <lastmod>2026-02-19</lastmod>
+    <lastmod>2026-05-15</lastmod>
   </url>
   <url>
     <loc>https://ucat.theukcatpeople.co.uk/train/calculator</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
-    <lastmod>2026-02-19</lastmod>
+    <lastmod>2026-05-15</lastmod>
   </url>
   <url>
     <loc>https://ucat.theukcatpeople.co.uk/ucat-mental-maths-trainer</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
-    <lastmod>2026-02-19</lastmod>
+    <lastmod>2026-05-15</lastmod>
   </url>
-  <url>
-    <loc>https://ucat.theukcatpeople.co.uk/dashboard</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <lastmod>2026-02-19</lastmod>
+    <priority>0.88</priority>
+    <lastmod>2026-05-15</lastmod>
   </url>
 </urlset>

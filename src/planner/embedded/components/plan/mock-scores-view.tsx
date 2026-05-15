@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { DBMockScore, MockSource } from '@/types'
 import { buildMockEncouragement } from '@/lib/mock-encouragement'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,11 +13,17 @@ import { addMockScore, updateMockTargets } from '@/lib/planner-client'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts'
+import { UCAT_APPLICATION_LINKS } from '../../../../data/ucatGuides'
+import { useAppShell } from '../../../../contexts/AppShellContext'
+import { appContentWidthClass } from '../../../../lib/appContentLayout'
+import { cn } from '../../../../lib/cn'
 
 interface MockScoresViewProps {
   planId: string
   mockScores: DBMockScore[]
   readOnly?: boolean
+  /** Browse-only (no plan): softer empty-state copy */
+  browseOnly?: boolean
   /** Goal VR+DM+QR combined total out of 2700. */
   initialTargetTotal?: number | null
   /** Goal SJT band (1 = strongest in-app convention). */
@@ -89,10 +95,13 @@ export function MockScoresView({
   planId,
   mockScores: initialScores,
   readOnly,
+  browseOnly = false,
   initialTargetTotal = null,
   initialTargetSjtBand = null,
   guestMode = false,
 }: MockScoresViewProps) {
+  const inAppShell = useAppShell()
+  const formSectionRef = useRef<HTMLDivElement>(null)
   const propsFingerprint = useMemo(
     () =>
       `${planId}|${initialTargetTotal ?? ''}|${initialTargetSjtBand ?? ''}|${initialScores.map(s => s.id).join(',')}`,
@@ -115,6 +124,18 @@ export function MockScoresView({
   const [targetSavedNotice, setTargetSavedNotice] = useState<string | null>(null)
 
   const [showForm, setShowForm] = useState(false)
+
+  function toggleLogForm() {
+    setShowForm((open) => {
+      const next = !open
+      if (next) {
+        requestAnimationFrame(() => {
+          formSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        })
+      }
+      return next
+    })
+  }
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<Tab>('full')
@@ -270,7 +291,8 @@ export function MockScoresView({
     return computeMockTabStats(list)
   }, [scores, activeTab])
 
-  if (propsFingerprint !== appliedFingerprint) {
+  useEffect(() => {
+    if (propsFingerprint === appliedFingerprint) return
     setAppliedFingerprint(propsFingerprint)
     setScores(initialScores)
     const t = initialTargetTotal ?? null
@@ -279,21 +301,32 @@ export function MockScoresView({
     setTargetSjtSaved(b)
     setTotalInput(t != null ? String(t) : '')
     setSjtInput(b != null ? String(b) : '')
-  }
+  }, [
+    propsFingerprint,
+    appliedFingerprint,
+    initialScores,
+    initialTargetTotal,
+    initialTargetSjtBand,
+  ])
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-6 md:py-10 w-full max-w-4xl space-y-8">
+    <div
+      className={cn(
+        "px-4 sm:px-6 lg:px-8 py-6 md:py-10 space-y-8",
+        appContentWidthClass({ inAppShell }),
+      )}
+    >
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Mock Scores</h1>
-          <p className="text-slate-500 mt-1">Track your progress across full and mini mocks</p>
-          <p className="text-sm text-slate-500 mt-2 max-w-xl">
+          <h1 className="text-3xl font-bold text-foreground">Mock Scores</h1>
+          <p className="text-muted-foreground mt-1">Track your progress across full and mini mocks</p>
+          <p className="text-sm text-muted-foreground mt-2 max-w-xl">
             If you only have raw marks, use the{' '}
             <a
-              href="https://www.theukcatpeople.co.uk/application-guide/ucat/ucat-score-calculator"
+              href={UCAT_APPLICATION_LINKS.scoreCalculator.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 font-medium hover:underline"
+              className="text-primary font-medium hover:underline"
             >
               UCAT score calculator
             </a>
@@ -301,11 +334,139 @@ export function MockScoresView({
           </p>
         </div>
         {!readOnly && (
-          <Button onClick={() => setShowForm(v => !v)} variant={showForm ? 'secondary' : 'primary'}>
+          <Button type="button" onClick={toggleLogForm} variant={showForm ? 'secondary' : 'primary'}>
             {showForm ? 'Cancel' : '+ Log scores'}
           </Button>
         )}
       </div>
+
+      {showForm && !readOnly ? (
+        <div ref={formSectionRef} className="scroll-mt-24">
+          <Card>
+            <CardHeader>
+              <CardTitle>Log mock scores</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 mb-1.5 block">Date</label>
+                    <input
+                      type="date"
+                      value={form.mockDate}
+                      max={toISODate(new Date())}
+                      onChange={e => setForm(f => ({ ...f, mockDate: e.target.value }))}
+                      className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 mb-1.5 block">Mock type</label>
+                    <select
+                      value={form.mockType}
+                      onChange={e => setForm(f => ({ ...f, mockType: e.target.value as Tab }))}
+                      className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="full">Full mock</option>
+                      <option value="mini">Mini mock</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 mb-1.5 block">Source</label>
+                    <select
+                      value={form.mockSource}
+                      onChange={e => setForm(f => ({ ...f, mockSource: e.target.value as MockSource | '' }))}
+                      className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">- Select source -</option>
+                      {MOCK_SOURCES.map(s => (
+                        <option key={s.value} value={s.value}>{s.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <Input
+                    label="VR (300-900)"
+                    type="number" min={300} max={900} step={10}
+                    placeholder="e.g. 650"
+                    value={form.vr}
+                    onChange={e => setForm(f => ({ ...f, vr: e.target.value }))}
+                  />
+                  <Input
+                    label="DM (300-900)"
+                    type="number" min={300} max={900} step={10}
+                    placeholder="e.g. 650"
+                    value={form.dm}
+                    onChange={e => setForm(f => ({ ...f, dm: e.target.value }))}
+                  />
+                  <Input
+                    label="QR (300-900)"
+                    type="number" min={300} max={900} step={10}
+                    placeholder="e.g. 650"
+                    value={form.qr}
+                    onChange={e => setForm(f => ({ ...f, qr: e.target.value }))}
+                  />
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 mb-1.5 block">SJT Band</label>
+                    <select
+                      value={form.sjt}
+                      onChange={e => setForm(f => ({ ...f, sjt: e.target.value }))}
+                      className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">- Band -</option>
+                      <option value="1">Band 1 (best)</option>
+                      <option value="2">Band 2</option>
+                      <option value="3">Band 3</option>
+                      <option value="4">Band 4</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-slate-700 mb-2">Where did you leak marks?</p>
+                  <p className="text-xs text-slate-500 mb-2">
+                    Tick every area that felt weakest; future blocks get nudged that way alongside section scores.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {MOCK_WEAKNESS_OPTIONS.map(opt => {
+                      const on = form.weaknessTags.includes(opt.id)
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => toggleWeakness(opt.id)}
+                          className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-all ${
+                            on
+                              ? 'border-blue-500 bg-blue-50 text-blue-800'
+                              : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {form.mockType === 'mini' && (
+                  <p className="text-xs text-slate-400">
+                    For a mini mock, only fill in the sections you practiced.
+                  </p>
+                )}
+                {error && (
+                  <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                    {error}
+                  </p>
+                )}
+
+                <Button type="submit" loading={loading}>Save scores</Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      ) : null}
 
       {/* Goals + encouragement */}
       <div className="space-y-4">
@@ -342,7 +503,11 @@ export function MockScoresView({
                     )}
                   </>
                 ) : (
-                  <span className="text-slate-500">No goals stored for this student yet.</span>
+                  <span className="text-slate-500">
+                    {browseOnly
+                      ? 'Set a study plan to save mock goals and scores.'
+                      : 'No goals stored for this student yet.'}
+                  </span>
                 )}
               </p>
             ) : (
@@ -420,135 +585,6 @@ export function MockScoresView({
           </Card>
         )}
       </div>
-
-      {/* Score entry form */}
-      {showForm && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Log mock scores</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Date + Type + Source */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-slate-700 mb-1.5 block">Date</label>
-                  <input
-                    type="date"
-                    value={form.mockDate}
-                    max={toISODate(new Date())}
-                    onChange={e => setForm(f => ({ ...f, mockDate: e.target.value }))}
-                    className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700 mb-1.5 block">Mock type</label>
-                  <select
-                    value={form.mockType}
-                    onChange={e => setForm(f => ({ ...f, mockType: e.target.value as Tab }))}
-                    className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="full">Full mock</option>
-                    <option value="mini">Mini mock</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700 mb-1.5 block">Source</label>
-                  <select
-                    value={form.mockSource}
-                    onChange={e => setForm(f => ({ ...f, mockSource: e.target.value as MockSource | '' }))}
-                    className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">- Select source -</option>
-                    {MOCK_SOURCES.map(s => (
-                      <option key={s.value} value={s.value}>{s.label}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Section scores */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <Input
-                  label="VR (300-900)"
-                  type="number" min={300} max={900} step={10}
-                  placeholder="e.g. 650"
-                  value={form.vr}
-                  onChange={e => setForm(f => ({ ...f, vr: e.target.value }))}
-                />
-                <Input
-                  label="DM (300-900)"
-                  type="number" min={300} max={900} step={10}
-                  placeholder="e.g. 650"
-                  value={form.dm}
-                  onChange={e => setForm(f => ({ ...f, dm: e.target.value }))}
-                />
-                <Input
-                  label="QR (300-900)"
-                  type="number" min={300} max={900} step={10}
-                  placeholder="e.g. 650"
-                  value={form.qr}
-                  onChange={e => setForm(f => ({ ...f, qr: e.target.value }))}
-                />
-                <div>
-                  <label className="text-sm font-medium text-slate-700 mb-1.5 block">SJT Band</label>
-                  <select
-                    value={form.sjt}
-                    onChange={e => setForm(f => ({ ...f, sjt: e.target.value }))}
-                    className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">- Band -</option>
-                    <option value="1">Band 1 (best)</option>
-                    <option value="2">Band 2</option>
-                    <option value="3">Band 3</option>
-                    <option value="4">Band 4</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-sm font-medium text-slate-700 mb-2">Where did you leak marks?</p>
-                <p className="text-xs text-slate-500 mb-2">
-                  Tick every area that felt weakest; future blocks get nudged that way alongside section scores.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {MOCK_WEAKNESS_OPTIONS.map(opt => {
-                    const on = form.weaknessTags.includes(opt.id)
-                    return (
-                      <button
-                        key={opt.id}
-                        type="button"
-                        onClick={() => toggleWeakness(opt.id)}
-                        className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-all ${
-                          on
-                            ? 'border-blue-500 bg-blue-50 text-blue-800'
-                            : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
-                        }`}
-                      >
-                        {opt.label}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {form.mockType === 'mini' && (
-                <p className="text-xs text-slate-400">
-                  For a mini mock, only fill in the sections you practiced.
-                </p>
-              )}
-              {error && (
-                <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-                  {error}
-                </p>
-              )}
-
-              <Button type="submit" loading={loading}>Save scores</Button>
-            </form>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Tabs */}
       <div className="flex gap-2">
@@ -800,7 +836,12 @@ export function MockScoresView({
         <div className="text-center py-16 text-slate-400">
           <div className="text-4xl mb-3">📊</div>
           <p>No {activeTab === 'full' ? 'full' : 'mini'} mock scores logged yet.</p>
-          {!readOnly && <p className="text-sm mt-1">After completing a mock, log your scores above.</p>}
+          {!readOnly && (
+            <p className="text-sm mt-1">After completing a mock, log your scores above.</p>
+          )}
+          {readOnly && browseOnly && (
+            <p className="text-sm mt-1 text-slate-500">Create a study plan to start logging.</p>
+          )}
         </div>
       )}
     </div>

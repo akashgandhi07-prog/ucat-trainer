@@ -2,7 +2,14 @@
 
 declare module '@/app/onboarding/onboarding-client' {
   import type { ComponentType } from 'react'
-  const OnboardingClient: ComponentType<{ initialInviteToken?: string }>
+  export type OnboardingProfilePrefill = {
+    fullName?: string | null
+    examDate?: string | null
+  }
+  const OnboardingClient: ComponentType<{
+    initialInviteToken?: string
+    profilePrefill?: OnboardingProfilePrefill
+  }>
   export default OnboardingClient
 }
 
@@ -14,6 +21,7 @@ declare module '@/components/today/today-view' {
 declare module '@/components/plan/plan-calendar' {
   import type { ComponentType } from 'react'
   export const PlanCalendar: ComponentType<Record<string, unknown>>
+  export const RebuildAheadModal: ComponentType<Record<string, unknown>>
 }
 
 declare module '@/components/plan/mock-scores-view' {
@@ -111,15 +119,6 @@ declare module '@/components/plan/plan-view' {
 declare module '@/components/tutor/tutor-note-form' {
   import type { ComponentType } from 'react'
   export const TutorNoteForm: ComponentType<{ planWeeks: unknown[]; planId: string }>
-}
-
-declare module '@/types' {
-  export type DBWeeklyReflection = {
-    id: string
-    week_number: number
-    difficulty_rating: number
-    reflection_text: string
-  }
 }
 
 declare module '@/components/ui/button' {

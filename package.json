@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "npx eslint .",
-    "preview": "vite preview",
+    "verify:qr-maths": "tsx scripts/verify-qr-question-maths.ts",
     "seed:syllogisms": "tsx scripts/seedSyllogisms.ts",
     "unify:bullet1-audit": "node scripts/unify-bullet1-audit.mjs",
     "unify:check-migrations": "node scripts/check-migrations-trainer-safe.mjs",
@@ -33,7 +33,7 @@
     "@supabase/supabase-js": "^2.95.3",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
-    "tailwind-merge": "^3.5.0",
+    "jspdf": "^4.2.1",
     "lucide-react": "^0.574.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
@@ -43,6 +43,7 @@
     "react-router-dom": "^7.13.0",
     "recharts": "^3.7.0",
     "sonner": "^2.0.7",
+    "tailwind-merge": "^3.5.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {

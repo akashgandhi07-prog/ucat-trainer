@@ -30,6 +30,7 @@ import SEOHead from "../components/seo/SEOHead";
 import TrainerFaqSection from "../components/seo/TrainerFaqSection";
 import { trainerFaqs } from "../data/trainerFaqs";
 import { trackEvent } from "../lib/analytics";
+import UcatGuidesPanel from "../components/layout/UcatGuidesPanel";
 
 const WPM_MIN = 200;
 const WPM_MAX = 900;
@@ -527,8 +528,8 @@ export default function VerbalReasoningPage() {
   return (
     <>
       <SEOHead
-        title="UCAT Verbal Reasoning Trainer"
-        description="Free speed reading, rapid recall and keyword scanning practice for the UCAT. Built by TheUKCATPeople for UK medical and dental applicants."
+        title="UCAT Verbal Reasoning skills (UK)"
+        description="Free Verbal Reasoning skills practice for the UCAT in the UK: speed reading, rapid recall, keyword scanning and inference. Built by TheUKCATPeople."
         canonicalUrl={canonicalUrl}
         imageUrl={ogImageUrl}
         imageAlt={ogImageAlt}
@@ -550,7 +551,7 @@ export default function VerbalReasoningPage() {
         >
           <div className="space-y-8 sm:space-y-10">
           <SkillsSectionBlock title="Pick a skill to train">
-            <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4 text-left">
             {SKILLS.map(({ type, icon, summary, benefit }) => {
               const isActive = mode === type;
               return (
@@ -571,16 +572,16 @@ export default function VerbalReasoningPage() {
                       {icon}
                     </span>
                     <span
-                      className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-widest leading-tight ${isActive ? "text-primary" : "text-muted-foreground"
+                      className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-widest leading-tight text-left ${isActive ? "text-primary" : "text-muted-foreground"
                         }`}
                     >
                       {benefit}
                     </span>
                   </div>
-                  <p className="text-sm sm:text-base font-semibold text-foreground">
+                  <p className="text-sm sm:text-base font-semibold text-foreground text-left">
                     {TRAINING_TYPE_LABELS[type]}
                   </p>
-                  <p className="mt-1 sm:mt-1.5 text-xs sm:text-sm leading-relaxed text-muted-foreground">
+                  <p className="mt-1 sm:mt-1.5 text-xs sm:text-sm leading-relaxed text-muted-foreground text-left">
                     {summary}
                   </p>
                   {isActive && (
@@ -952,7 +953,7 @@ export default function VerbalReasoningPage() {
                 {
                   stat: "10,000+",
                   label: "Students Helped",
-                  desc: "Over 13 years supporting medical &amp; dental applicants.",
+                  desc: "Over 13 years supporting medical & dental applicants.",
                 },
                 {
                   stat: "Evidence",
@@ -982,6 +983,7 @@ export default function VerbalReasoningPage() {
           </div>
         </section>
           </div>
+        <UcatGuidesPanel embedded context="verbalHub" />
         <TrainerFaqSection
           embedded
           id="verbal-faq"

@@ -26,3 +26,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+.vercel
+
+# Local tool deploy payloads (duplicate sources; not for the repo)
+.cursor-deploy-stringified.json
+.mcp-deploy-args.object.json
+.mcp-full-deploy-args.json
+
+# Supabase CLI local cache
+supabase/.temp/

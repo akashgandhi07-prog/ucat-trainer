@@ -8,6 +8,7 @@ import SEOHead from "../components/seo/SEOHead";
 import TrainerFaqSection from "../components/seo/TrainerFaqSection";
 import { trainerFaqs } from "../data/trainerFaqs";
 import { getSiteBaseUrl } from "../lib/siteUrl";
+import UcatGuidesPanel from "../components/layout/UcatGuidesPanel";
 
 export default function QuantitativeReasoningPage() {
   const navigate = useNavigate();
@@ -26,8 +27,8 @@ export default function QuantitativeReasoningPage() {
   return (
     <>
       <SEOHead
-        title="Quantitative Reasoning | UCAT Trainer"
-        description="Calculator and mental maths practice for UCAT Quantitative Reasoning. Master the on-screen calculator and build speed without it."
+        title="Quantitative Reasoning UCAT practice (UK)"
+        description="Free calculator and mental maths practice for UCAT Quantitative Reasoning in the UK. Train the on-screen calculator and build mental speed with TheUKCATPeople."
         canonicalUrl={canonicalUrl}
         imageUrl={ogImageUrl}
         imageAlt={ogImageAlt}
@@ -42,7 +43,7 @@ export default function QuantitativeReasoningPage() {
         breadcrumbs={breadcrumbs}
       >
         <SkillsSectionBlock title="Trainers">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl">
             <HubTrainerCard
               title="Calculator Trainer"
               description="Master the on-screen calculator and keypad under time pressure."
@@ -59,6 +60,7 @@ export default function QuantitativeReasoningPage() {
             />
           </div>
         </SkillsSectionBlock>
+        <UcatGuidesPanel embedded context="quantHub" />
         <TrainerFaqSection
           embedded
           id="quant-faq"

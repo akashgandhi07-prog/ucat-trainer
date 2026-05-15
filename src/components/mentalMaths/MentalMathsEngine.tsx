@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useMentalMathsLogic } from "../../hooks/useMentalMathsLogic";
 import type { MentalMathsSummaryStats } from "../../hooks/useMentalMathsLogic";
 import { MENTAL_MATHS_STAGES } from "./mentalMathsStages";
+import { PostDrillUpsell } from "../layout/ProductUpsell";
 
 const SUBMIT_LOCK_MS = 300;
 
@@ -268,6 +269,7 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
             Back to menu
           </button>
         </div>
+        <PostDrillUpsell accuracy={s.accuracyPct} />
       </div>
     );
   }

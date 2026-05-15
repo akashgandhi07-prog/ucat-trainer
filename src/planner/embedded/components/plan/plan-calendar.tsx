@@ -1,6 +1,8 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams, useNavigate, useLocation } from 'react-router-dom'
+import { toast } from 'sonner'
 import { useRouter } from '@/lib/app-navigation'
 import { DBPlan, DBPlanDay, DBSession, DBExtraStudyLog, SessionType } from '@/types'
 import {
@@ -135,7 +137,7 @@ function DayDetailModal({
   const date = parseDate(dateStr)
   const isExamDay = dateStr === examDate
   const isPastOrToday = dateStr <= todayDate
-  const isFuture = dateStr > todayDate
+  const isFutureDay = dateStr > todayDate
   const isRest = override ? override.isRest : (dayRecord?.is_rest ?? false)
   const activeSessions = sessions.filter(s => s.session_type !== 'rest')
 
@@ -174,6 +176,16 @@ function DayDetailModal({
     qr: extraStudyBySection.qr ?? 0,
     sjt: extraStudyBySection.sjt ?? 0,
   }))
+  /** Shown when the user taps a session on a future calendar day so it is obvious why logging is blocked. */
+  const [futureSessionsNotice, setFutureSessionsNotice] = useState('')
+  useEffect(() => {
+    setFutureSessionsNotice('')
+  }, [dateStr])
+  useEffect(() => {
+    if (!futureSessionsNotice) return
+    const tid = window.setTimeout(() => setFutureSessionsNotice(''), 5200)
+    return () => window.clearTimeout(tid)
+  }, [futureSessionsNotice])
 
   async function handleSave() {
     setSaving(true)
@@ -372,6 +384,14 @@ function DayDetailModal({
                     <span>{(totalMinutes / 60).toFixed(1)}h planned</span>
                   </p>
                 </div>
+                {futureSessionsNotice ? (
+                  <div
+                    role="status"
+                    className="mb-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950"
+                  >
+                    {futureSessionsNotice}
+                  </div>
+                ) : null}
                 {activeSessions.map(s => {
                   const completion = completions.get(s.id) ?? { completed: false, minutes: null }
                   const done = completion.completed
@@ -379,18 +399,29 @@ function DayDetailModal({
                   const fullHit = !!done && loggedM !== null && loggedM >= s.duration_minutes
                   const isPartial =
                     !!done && loggedM !== null && loggedM > 0 && loggedM < s.duration_minutes
-                  const canTick = isPastOrToday && !readOnly
+                  const canInteractWithSessionRow = !readOnly
                   const doneZero = !!done && loggedM === 0
 
                   return (
                     <button
                       key={s.id}
                       type="button"
-                      disabled={!canTick}
-                      onClick={() => canTick && setSessionSheet(s)}
+                      disabled={readOnly}
+                      onClick={() => {
+                        if (readOnly) return
+                        if (isFutureDay) {
+                          setFutureSessionsNotice(
+                            'That day is still in the future. You can tap today or any past day on the calendar to log what you completed.',
+                          )
+                          return
+                        }
+                        setSessionSheet(s)
+                      }}
                       className={[
                         'w-full flex flex-col gap-1 rounded-xl px-3 py-2.5 text-left transition-all border',
-                        canTick ? 'cursor-pointer active:scale-[0.98]' : 'cursor-default',
+                        canInteractWithSessionRow
+                          ? 'cursor-pointer active:scale-[0.98]'
+                          : 'cursor-not-allowed opacity-80',
                         !done
                           ? `${TYPE_PILL[s.session_type] ?? 'bg-slate-100 text-slate-700'} border-transparent`
                           : isPartial || doneZero
@@ -447,6 +478,11 @@ function DayDetailModal({
                     Tap a session to log actual time (full block, partial, or not done).
                   </p>
                 )}
+                {isFutureDay && !readOnly && (
+                  <p className="text-xs text-slate-400 text-center pt-1">
+                    Future days are view only until that date. Tap a session to see a reminder.
+                  </p>
+                )}
               </div>
             ) : (
               <p className="text-center text-sm text-slate-400 py-6">No sessions scheduled.</p>
@@ -501,7 +537,7 @@ function DayDetailModal({
             </div>
           )}
 
-          {isFuture && !isExamDay && !readOnly && (
+          {isFutureDay && !isExamDay && !readOnly && (
             <div className="border-t border-slate-100 px-5 py-4 space-y-3">
               <div>
                 <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Adjust future focus</p>
@@ -610,7 +646,7 @@ function DayDetailModal({
 
           {/* Edit availability */}
           {!readOnly && !isExamDay && (
-            <div className={`border-t border-slate-100 px-5 py-4 space-y-3 bg-slate-50 ${isFuture ? '' : ''}`}>
+            <div className="border-t border-slate-100 px-5 py-4 space-y-3 bg-slate-50">
               {!editMode ? (
                 <button
                   onClick={() => { setEditMode(true); setAvailabilityError('') }}
@@ -707,7 +743,7 @@ function DayDetailModal({
 
 // ─── Rebuild-from-here modal (toolbar) ────────────────────────────────────────
 
-function RebuildAheadModal({
+export function RebuildAheadModal({
   plan,
   todayDate,
   examDate,
@@ -1063,6 +1099,9 @@ const DOW_HEADERS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 export function PlanCalendar({ plan, planDays, sessions, extraStudyLogs, readOnly, todayDate }: PlanCalendarProps) {
   const today = parseDate(todayDate)
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const location = useLocation()
 
   const [currentMonth, setCurrentMonth] = useState(() => {
     // Start at the month containing today
@@ -1070,6 +1109,18 @@ export function PlanCalendar({ plan, planDays, sessions, extraStudyLogs, readOnl
   })
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [showRebuildAhead, setShowRebuildAhead] = useState(false)
+  const [pdfExporting, setPdfExporting] = useState(false)
+
+  useEffect(() => {
+    if (readOnly) return
+    const open = searchParams.get('rebuild')
+    if (open !== '1' && open !== 'true') return
+    setShowRebuildAhead(true)
+    const next = new URLSearchParams(searchParams)
+    next.delete('rebuild')
+    const qs = next.toString()
+    navigate(qs ? `${location.pathname}?${qs}` : location.pathname, { replace: true })
+  }, [readOnly, searchParams, navigate, location.pathname])
 
   // Local overrides (availability changes applied by the user this session)
   const [dayOverrides, setDayOverrides] = useState<Map<string, DayOverride>>(new Map())
@@ -1099,6 +1150,21 @@ export function PlanCalendar({ plan, planDays, sessions, extraStudyLogs, readOnl
 
   const examDate = plan.exam_date
   const planStart = todayDate  // plan effectively starts at today
+
+  async function handleDownloadPdf() {
+    if (pdfExporting) return
+    setPdfExporting(true)
+    try {
+      const { exportPlanToPdf } = await import('@/lib/export-plan-pdf')
+      exportPlanToPdf({ plan, planDays, sessions, todayDate })
+      toast.success('PDF downloaded')
+    } catch (e) {
+      console.error(e)
+      toast.error(e instanceof Error ? e.message : 'Could not create PDF. Try again or use another browser.')
+    } finally {
+      setPdfExporting(false)
+    }
+  }
 
   function handleAvailabilityUpdate(
     startDate: string,
@@ -1162,6 +1228,17 @@ export function PlanCalendar({ plan, planDays, sessions, extraStudyLogs, readOnl
               <span className="ml-2 text-slate-400">at {(plan as any).exam_time}</span>
             )}
           </p>
+          {readOnly ? (
+            <p className="mt-2 text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 max-w-xl">
+              Guest plan on this device only. Sign in to rebuild your timetable, edit future days and sync across devices. You can still download a PDF below.
+            </p>
+          ) : (
+            <p className="mt-2 text-xs text-slate-500 max-w-xl">
+              Tap any day to change availability or hours, log extra practice or rebuild from that week. Use{' '}
+              <strong>Rebuild plan ahead</strong>
+              {' '}for a full refresh from a date you choose.
+            </p>
+          )}
         </div>
         <div className="flex flex-wrap gap-2 shrink-0 justify-end">
           {!readOnly && (
@@ -1173,6 +1250,14 @@ export function PlanCalendar({ plan, planDays, sessions, extraStudyLogs, readOnl
               Rebuild plan ahead
             </button>
           )}
+          <button
+            type="button"
+            onClick={handleDownloadPdf}
+            disabled={pdfExporting}
+            className="text-xs bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-slate-600 hover:bg-slate-50 font-medium disabled:opacity-50"
+          >
+            {pdfExporting ? 'Generating…' : 'Download PDF'}
+          </button>
           <button
             type="button"
             onClick={() => setCurrentMonth(new Date(today.getFullYear(), today.getMonth(), 1))}

@@ -8,6 +8,7 @@ import SEOHead from "../components/seo/SEOHead";
 import TrainerFaqSection from "../components/seo/TrainerFaqSection";
 import { trainerFaqs } from "../data/trainerFaqs";
 import { getSiteBaseUrl } from "../lib/siteUrl";
+import UcatGuidesPanel from "../components/layout/UcatGuidesPanel";
 
 export default function DecisionMakingPage() {
   const navigate = useNavigate();
@@ -26,8 +27,8 @@ export default function DecisionMakingPage() {
   return (
     <>
       <SEOHead
-        title="UCAT Decision Making | TheUKCATPeople"
-        description="Practice UCAT Decision Making with syllogism drills. Build pattern recognition with micro drills and full stimulus practice with macro drills."
+        title="UCAT Decision Making skills practice"
+        description="Free UCAT Decision Making drills for UK applicants: syllogism micro and macro practice from TheUKCATPeople. Build speed and accuracy for the test."
         canonicalUrl={canonicalUrl}
         imageUrl={ogImageUrl}
         imageAlt={ogImageAlt}
@@ -45,7 +46,7 @@ export default function DecisionMakingPage() {
           title="Syllogisms Trainer"
           description="Decide whether conclusions follow from given premises. Use micro drills for speed and pattern recognition, or macro drills for full UCAT-style stimulus with five conclusions."
         >
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl">
             <HubTrainerCard
               title="Micro Drill"
               description="One premise, one conclusion. Build instant pattern recognition with keyboard shortcuts."
@@ -62,6 +63,7 @@ export default function DecisionMakingPage() {
             />
           </div>
         </SkillsSectionBlock>
+        <UcatGuidesPanel embedded context="decisionHub" />
         <TrainerFaqSection
           embedded
           id="decision-making-faq"

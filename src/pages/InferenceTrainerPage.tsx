@@ -20,6 +20,7 @@ import type { TrainingDifficulty } from "../types/training";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 import SEOHead from "../components/seo/SEOHead";
 import TrainerFaqSection from "../components/seo/TrainerFaqSection";
+import UcatGuidesPanel from "../components/layout/UcatGuidesPanel";
 import BreadcrumbNav from "../components/layout/BreadcrumbNav";
 import { trainerFaqs } from "../data/trainerFaqs";
 import { trackEvent, setActiveTrainer, clearActiveTrainer } from "../lib/analytics";
@@ -350,8 +351,8 @@ export default function InferenceTrainerPage() {
   return (
     <div className="flex flex-col min-h-screen bg-slate-50/50">
       <SEOHead
-        title="UCAT Inference Trainer"
-        description="Practice identifying evidence that supports inferences in UCAT Verbal Reasoning. Select the relevant text from passages."
+        title="UCAT Inference Trainer (UK)"
+        description="Practice selecting evidence for inferences in UCAT Verbal Reasoning. Free inference trainer for UK applicants from TheUKCATPeople."
         canonicalUrl={canonicalUrl}
         breadcrumbs={breadcrumbs}
       />
@@ -417,6 +418,7 @@ export default function InferenceTrainerPage() {
         </main>
       )}
 
+      <UcatGuidesPanel context="trainer" trainingType="inference_trainer" />
       <TrainerFaqSection
         id="inference-faq"
         title="Common questions about the UCAT inference trainer"
