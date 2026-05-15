@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { formatDate, parseDate, scoreColor, toISODate } from '@/lib/utils'
 import { MOCK_WEAKNESS_OPTIONS } from '@/lib/mock-weaknesses'
-import { addGuestMockScore, updateGuestMockTargets } from '@/lib/guest-planner-store'
+import { addGuestMockScore, getGuestPlanner, updateGuestMockTargets } from '@/lib/guest-planner-store'
 import { addMockScore, updateMockTargets } from '@/lib/planner-client'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -112,6 +112,7 @@ export function MockScoresView({
   )
   const [targetSaving, setTargetSaving] = useState(false)
   const [targetError, setTargetError] = useState<string | null>(null)
+  const [targetSavedNotice, setTargetSavedNotice] = useState<string | null>(null)
 
   const [showForm, setShowForm] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -142,6 +143,7 @@ export function MockScoresView({
 
   async function handleSaveTargets() {
     setTargetError(null)
+    setTargetSavedNotice(null)
     const trimmedTotal = totalInput.trim()
     const trimmedSjt = sjtInput.trim()
     let mockTargetTotal: number | null = null
@@ -166,13 +168,19 @@ export function MockScoresView({
     setTargetSaving(true)
     try {
       if (guestMode) {
+        if (!getGuestPlanner()) {
+          setTargetError('No study plan on this device. Create a plan from Study Plan first.')
+          return
+        }
         updateGuestMockTargets(mockTargetTotal, mockTargetSjtBand)
         setTargetTotalSaved(mockTargetTotal)
         setTargetSjtSaved(mockTargetSjtBand)
+        setTargetSavedNotice('Goals saved on this device. Sign in to sync across devices.')
       } else {
         await updateMockTargets({ planId, mockTargetTotal, mockTargetSjtBand })
         setTargetTotalSaved(mockTargetTotal)
         setTargetSjtSaved(mockTargetSjtBand)
+        setTargetSavedNotice('Goals saved.')
       }
     } catch (e) {
       setTargetError(e instanceof Error ? e.message : 'Could not save goals')
@@ -274,7 +282,7 @@ export function MockScoresView({
   }
 
   return (
-    <div className="p-6 md:p-10 max-w-4xl mx-auto space-y-8">
+    <div className="px-4 sm:px-6 lg:px-8 py-6 md:py-10 w-full max-w-4xl space-y-8">
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Mock Scores</h1>
@@ -339,6 +347,12 @@ export function MockScoresView({
               </p>
             ) : (
               <>
+                {guestMode && (
+                  <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                    You&apos;re browsing as a guest. Goals save in this browser only - sign in for cloud backup
+                    across devices.
+                  </p>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
                     label="Target VR + DM + QR total (optional)"
@@ -348,7 +362,10 @@ export function MockScoresView({
                     step={10}
                     placeholder="e.g. 2040 · out of 2700"
                     value={totalInput}
-                    onChange={e => setTotalInput(e.target.value)}
+                    onChange={e => {
+                      setTotalInput(e.target.value)
+                      setTargetSavedNotice(null)
+                    }}
                   />
                   <div>
                     <label className="text-sm font-medium text-slate-700 mb-1.5 block">
@@ -356,7 +373,10 @@ export function MockScoresView({
                     </label>
                     <select
                       value={sjtInput}
-                      onChange={e => setSjtInput(e.target.value)}
+                      onChange={e => {
+                        setSjtInput(e.target.value)
+                        setTargetSavedNotice(null)
+                      }}
                       className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">- Not set -</option>
@@ -370,6 +390,11 @@ export function MockScoresView({
                 {targetError && (
                   <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
                     {targetError}
+                  </p>
+                )}
+                {targetSavedNotice && (
+                  <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                    {targetSavedNotice}
                   </p>
                 )}
                 <Button type="button" variant="secondary" loading={targetSaving} onClick={handleSaveTargets}>

@@ -1,12 +1,16 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { getAppTopBarTitle } from "../../lib/appPageTitles";
+import { APP_CONTENT_X } from "../../lib/appContentLayout";
 import { useAuth } from "../../hooks/useAuth";
 import { useAuthModal } from "../../contexts/AuthModalContext";
 import { useBugReportModal } from "../../contexts/BugReportContext";
 
 export default function AppTopBar({ className = "" }: { className?: string }) {
   const [signingOut, setSigningOut] = useState(false);
+  const { pathname } = useLocation();
   const navigate = useNavigate();
+  const pageTitle = getAppTopBarTitle(pathname);
   const { user, profile, isAdmin, loading, sessionLoadFailed, retryGetSession, signOut } = useAuth();
   const { openAuthModal } = useAuthModal();
   const { openBugReport } = useBugReportModal();
@@ -22,7 +26,7 @@ export default function AppTopBar({ className = "" }: { className?: string }) {
 
   return (
     <header
-      className={`h-14 shrink-0 border-b border-border bg-background/95 backdrop-blur-sm flex items-center justify-between gap-3 px-4 z-10 ${className}`}
+      className={`h-14 shrink-0 border-b border-border bg-background flex items-center justify-between gap-3 ${APP_CONTENT_X} z-10 ${className}`}
     >
       {showSessionRecovery ? (
         <div className="flex items-center gap-2 text-xs text-amber-900">
@@ -32,8 +36,8 @@ export default function AppTopBar({ className = "" }: { className?: string }) {
           </button>
         </div>
       ) : (
-        <p className="text-xs text-muted-foreground hidden sm:block">
-          Free UCAT prep · skills, study plan, and mock tracking
+        <p className="text-sm font-semibold text-foreground truncate">
+          {pageTitle}
         </p>
       )}
       <div className="flex items-center gap-2 ml-auto flex-wrap justify-end">

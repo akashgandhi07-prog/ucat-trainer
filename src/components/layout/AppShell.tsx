@@ -64,7 +64,7 @@ export default function AppShell() {
   }
 
   const sidebar = (
-    <aside className="flex flex-col h-full min-h-0 border-r border-border bg-card">
+    <aside className="flex flex-col h-full min-h-0 border-r border-border bg-background">
       <div className="px-4 py-4 border-b border-border shrink-0">
         <NavLink to="/" className="flex items-center gap-2 font-bold text-foreground hover:text-primary">
           <span className="text-base tracking-tight">TheUKCATPeople</span>
@@ -127,11 +127,9 @@ export default function AppShell() {
   return (
     <AppShellProvider>
       <div className="flex flex-col h-dvh min-h-0 overflow-hidden bg-background">
-        <div
-          ref={chromeRef}
-          className="sticky top-0 z-50 shrink-0 bg-background border-b border-border shadow-sm"
-        >
-          <div className="lg:hidden flex items-center gap-2 px-3 py-2">
+        {/* Mobile: full-width chrome */}
+        <div className="lg:hidden shrink-0 border-b border-border bg-background">
+          <div className="flex items-center gap-2 px-3 py-2">
             <button
               type="button"
               className="px-2 py-1 text-sm font-medium rounded-lg border border-border"
@@ -143,19 +141,19 @@ export default function AppShell() {
             </button>
             <span className="font-semibold text-sm">TheUKCATPeople</span>
           </div>
-          <AppTopBar className="border-b-0" />
+          <AppTopBar className="border-b-0 shadow-none" />
         </div>
 
-        <div className="flex flex-1 min-h-0 relative">
+        <div className="flex flex-1 min-h-0 bg-background">
+          {/* Sidebar */}
           <div
             id="app-sidebar"
             className={cn(
-              "shrink-0",
-              "lg:fixed lg:left-0 lg:bottom-0 lg:z-30 lg:flex lg:w-[min(280px,20vw)] lg:min-w-[220px] lg:max-w-[280px]",
-              "lg:top-[var(--app-chrome-height,3.5rem)]",
+              "shrink-0 bg-background",
+              "lg:flex lg:w-[min(280px,20vw)] lg:min-w-[220px] lg:max-w-[280px]",
               mobileOpen
                 ? "fixed inset-y-0 left-0 z-40 flex w-[min(280px,85vw)] shadow-xl"
-                : "hidden lg:flex",
+                : "hidden",
             )}
           >
             {sidebar}
@@ -168,14 +166,19 @@ export default function AppShell() {
               onClick={() => setMobileOpen(false)}
             />
           ) : null}
-          <main
-            className={cn(
-              "flex-1 min-w-0 min-h-0 flex flex-col overflow-y-auto",
-              "lg:ml-[min(280px,20vw)]",
-            )}
-          >
-            <Outlet />
-          </main>
+
+          {/* Main column: top bar (desktop) + scrollable content */}
+          <div className="flex flex-1 flex-col min-w-0 min-h-0 bg-background">
+            <div
+              ref={chromeRef}
+              className="hidden lg:block shrink-0 border-b border-border bg-background"
+            >
+              <AppTopBar className="border-b-0 shadow-none" />
+            </div>
+            <main className="flex-1 min-h-0 min-w-0 overflow-y-auto bg-background">
+              <Outlet />
+            </main>
+          </div>
         </div>
       </div>
     </AppShellProvider>

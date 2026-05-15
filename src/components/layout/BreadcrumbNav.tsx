@@ -20,26 +20,26 @@ export default function BreadcrumbNav({ items }: BreadcrumbNavProps) {
   return (
     <nav
       aria-label="Breadcrumb"
-      className="mb-3 sm:mb-4 text-xs sm:text-sm text-slate-500"
+      className="mb-4 sm:mb-5 text-xs sm:text-sm text-muted-foreground"
     >
-      <ol className="flex flex-wrap items-center gap-1 sm:gap-1.5">
+      <ol className="flex flex-wrap items-center gap-1.5 sm:gap-2">
         {items.map((item, index) => {
           const isLast = index === items.length - 1;
           const path = toPath(item.url);
 
           return (
-            <li key={item.url} className="flex items-center gap-1">
+            <li key={item.url} className="flex items-center gap-1.5">
               {index > 0 && (
-                <span aria-hidden="true" className="text-slate-300">
+                <span aria-hidden="true" className="text-border">
                   /
                 </span>
               )}
               {isLast ? (
-                <span className="font-medium text-slate-700">{item.name}</span>
+                <span className="font-medium text-foreground">{item.name}</span>
               ) : (
                 <Link
                   to={path}
-                  className="hover:text-blue-600 transition-colors"
+                  className="hover:text-primary transition-colors"
                 >
                   {item.name}
                 </Link>

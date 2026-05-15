@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { cn } from '../lib/cn'
+import { APP_CONTENT_X } from '../lib/appContentLayout'
 
 const items = [
   { to: '/study-plan/today', label: 'Today' },
@@ -20,7 +21,10 @@ function linkClass({ isActive }: { isActive: boolean }) {
 export default function PlannerSubNav() {
   return (
     <nav
-      className="sticky top-0 z-20 flex flex-wrap gap-1 px-4 sm:px-6 pt-3 pb-2 border-b border-border bg-card/95 backdrop-blur-sm shrink-0"
+      className={cn(
+        'sticky top-0 z-20 flex flex-wrap gap-1 pt-3 pb-2 border-b border-border bg-background shrink-0',
+        APP_CONTENT_X,
+      )}
       aria-label="Study plan sections"
     >
       {items.map(({ to, label }) => (

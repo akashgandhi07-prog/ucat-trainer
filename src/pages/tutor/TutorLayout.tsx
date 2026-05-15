@@ -63,7 +63,7 @@ export default function TutorLayout() {
   return (
     <div className="flex min-h-0 flex-1 w-full">
       <TutorSidebar tutor={tutorProfile} students={students} />
-      <main className="flex-1 min-w-0 overflow-y-auto bg-slate-50">
+      <main className="flex-1 min-w-0 overflow-y-auto bg-background">
         <Outlet />
       </main>
     </div>

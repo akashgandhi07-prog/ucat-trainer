@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
-import TutoringUpsell from "../components/layout/TutoringUpsell";
+import SkillsSectionLayout, { SkillsSectionBlock } from "../components/layout/SkillsSectionLayout";
 import { PASSAGES } from "../data/passages";
 import type { Passage } from "../data/passages";
 import { getTipForMode } from "../data/tips";
@@ -15,7 +15,7 @@ import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../lib/supabase";
 import { supabaseLog } from "../lib/logger";
 import { getWpmComparisonCopy, getWpmTier, getWpmTierLabel } from "../lib/wpmBenchmark";
-import { Zap, Brain, Search, Eye, ChevronRight, Target } from "lucide-react";
+import { Zap, Brain, Search, Eye, ChevronRight, Target, BookOpen } from "lucide-react";
 import {
   GUIDED_CHUNK_DEFAULT,
   GUIDED_CHUNK_MAX,
@@ -503,8 +503,29 @@ export default function VerbalReasoningPage() {
         ]
       : undefined;
 
+  const hubHeaderExtra = (
+    <>
+      {displayName ? (
+        <p className="text-sm font-medium text-muted-foreground">Welcome back, {displayName}.</p>
+      ) : null}
+      {user && streakFetched && (streak > 0 || lastPracticedLabel != null) ? (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs sm:text-sm text-muted-foreground">
+          {streak > 0 ? (
+            <span className="font-medium text-training-success">{streak}-day streak</span>
+          ) : null}
+          {lastPracticedLabel != null ? (
+            <span>Last practiced {lastPracticedLabel.toLowerCase()}</span>
+          ) : null}
+        </div>
+      ) : null}
+      {user && streakFetched && streak === 0 && lastPracticedLabel == null ? (
+        <p className="text-xs sm:text-sm text-muted-foreground">Start a session to begin your streak.</p>
+      ) : null}
+    </>
+  );
+
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <>
       <SEOHead
         title="UCAT Verbal Reasoning Trainer"
         description="Free speed reading, rapid recall and keyword scanning practice for the UCAT. Built by TheUKCATPeople for UK medical and dental applicants."
@@ -517,48 +538,19 @@ export default function VerbalReasoningPage() {
         Skip to main content
       </a>
       <Header />
-      <main id="main-content" className="flex-1 pb-24 sm:pb-0" tabIndex={-1}>
-        {/* Hero */}
-        <header className="border-b border-border bg-card">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10 md:py-14 text-center">
-            {displayName && (
-              <p className="text-sm font-medium text-muted-foreground mb-2 sm:mb-3">
-                Welcome back, {displayName}.
-              </p>
-            )}
-            {user && streakFetched && (streak > 0 || lastPracticedLabel != null) && (
-              <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 mb-3 sm:mb-4 text-xs sm:text-sm text-muted-foreground">
-                {streak > 0 && (
-                  <span className="font-medium text-training-success">{streak}-day streak</span>
-                )}
-                {lastPracticedLabel != null && (
-                  <span>Last practiced {lastPracticedLabel.toLowerCase()}</span>
-                )}
-              </div>
-            )}
-            {user && streakFetched && streak === 0 && lastPracticedLabel == null && (
-              <p className="text-xs sm:text-sm text-muted-foreground text-center mb-3 sm:mb-4">
-                Start a session to begin your streak.
-              </p>
-            )}
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-foreground">
-              Master UCAT Verbal Reasoning.
-            </h1>
-            <p className="mt-3 sm:mt-4 text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Free, evidence-based training to boost reading speed, recall, and accuracy - designed for UK medical &amp; dental applicants.
-            </p>
-            <div className="mt-4">
-              <TutoringUpsell variant="hub" />
-            </div>
-          </div>
-        </header>
-
-        {/* Skill selector */}
-        <section className="max-w-5xl mx-auto px-4 sm:px-6 pt-5 sm:pt-8 md:pt-10 pb-4 sm:pb-6">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-[0.2em] text-center mb-3 sm:mb-6">
-            Pick a skill to train
-          </p>
-          <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div id="main-content" className="pb-24 sm:pb-0" tabIndex={-1}>
+        <SkillsSectionLayout
+          wide
+          title="Verbal Reasoning"
+          description="Free, evidence-based training to boost reading speed, recall, and accuracy - designed for UK medical and dental applicants."
+          icon={BookOpen}
+          accent="blue"
+          breadcrumbs={breadcrumbs}
+          headerExtra={hubHeaderExtra}
+        >
+          <div className="space-y-8 sm:space-y-10">
+          <SkillsSectionBlock title="Pick a skill to train">
+            <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {SKILLS.map(({ type, icon, summary, benefit }) => {
               const isActive = mode === type;
               return (
@@ -566,7 +558,7 @@ export default function VerbalReasoningPage() {
                   key={type}
                   type="button"
                   onClick={() => setMode(type)}
-                  className={`group relative flex flex-col rounded-lg sm:rounded-xl border p-3 sm:p-4 md:p-5 text-left transition-all duration-200 ${isActive
+                  className={`group relative flex flex-col overflow-hidden rounded-lg sm:rounded-xl border p-3 sm:p-4 md:p-5 text-left transition-all duration-200 ${isActive
                       ? "border-primary bg-training-active-muted shadow-md ring-1 ring-primary/20"
                       : "border-border bg-card shadow-sm hover:border-primary/40 hover:shadow-md"
                     }`}
@@ -592,16 +584,16 @@ export default function VerbalReasoningPage() {
                     {summary}
                   </p>
                   {isActive && (
-                    <span className="absolute -bottom-px left-3 right-3 sm:left-4 sm:right-4 md:left-6 md:right-6 h-0.5 rounded-full bg-primary" />
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" aria-hidden />
                   )}
                 </button>
               );
             })}
           </div>
-        </section>
+          </SkillsSectionBlock>
 
         {/* Settings panel */}
-        <section className="max-w-5xl mx-auto px-4 sm:px-6 pb-12">
+        <section className="pb-12">
           <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
             <div className="h-1 bg-gradient-to-r from-primary via-primary/70 to-primary/40" />
             <div className="p-5 sm:p-6">
@@ -948,7 +940,7 @@ export default function VerbalReasoningPage() {
 
         {/* Social proof */}
         <section className="border-t border-border bg-card">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
+          <div className="py-10">
             <h2 className="text-xs font-bold tracking-[0.2em] text-primary uppercase text-center">
               Built for Students, by Professionals
             </h2>
@@ -989,13 +981,16 @@ export default function VerbalReasoningPage() {
             </div>
           </div>
         </section>
+          </div>
         <TrainerFaqSection
+          embedded
           id="verbal-faq"
           title="Common questions about UCAT Verbal Reasoning practice"
           intro="Answers to common questions about how to use the Verbal Reasoning hub, and how speed reading, rapid recall, keyword scanning and inference practice fit together for the UCAT."
           faqs={trainerFaqs.verbalHub}
         />
-      </main>
+        </SkillsSectionLayout>
+      </div>
 
       {/* Sticky mobile CTA */}
       <div className="sm:hidden fixed bottom-0 inset-x-0 z-50 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-3 shadow-lg">
@@ -1017,6 +1012,6 @@ export default function VerbalReasoningPage() {
         </button>
       </div>
       <Footer />
-    </div>
+    </>
   );
 }

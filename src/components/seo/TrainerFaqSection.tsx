@@ -1,5 +1,7 @@
 import { useState, useMemo } from "react";
 import type { TrainerFaqItem } from "../../data/trainerFaqs";
+import { APP_CONTENT_WIDTH_NARROW, APP_CONTENT_X } from "../../lib/appContentLayout";
+import { cn } from "../../lib/cn";
 
 type TrainerFaqSectionProps = {
   title?: string;
@@ -13,6 +15,8 @@ type TrainerFaqSectionProps = {
    * while keeping content in the DOM for SEO.
    */
   collapseIntoSingleAccordion?: boolean;
+  /** When true, parent already provides horizontal padding (e.g. SkillsSectionLayout). */
+  embedded?: boolean;
 };
 
 /** Build schema.org FAQPage JSON-LD from the same faqs array used for the accordion (stays in sync when you edit trainerFaqs.ts). */
@@ -37,6 +41,7 @@ export default function TrainerFaqSection({
   faqs,
   id,
   collapseIntoSingleAccordion = false,
+  embedded = false,
 }: TrainerFaqSectionProps) {
   const [openId, setOpenId] = useState<string | null>(faqs[0]?.id ?? null);
   const faqSchema = useMemo(() => buildFaqPageSchema(faqs), [faqs]);
@@ -95,13 +100,16 @@ export default function TrainerFaqSection({
     <section
       id={id}
       aria-labelledby={id ? `${id}-heading` : undefined}
-      className="mt-12 sm:mt-16 border-t border-slate-200 pt-8 sm:pt-10"
+      className={cn(
+        "mt-12 sm:mt-16 border-t border-slate-200 pt-8 sm:pt-10",
+        !embedded && APP_CONTENT_X,
+      )}
     >
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
-      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+      <div className={embedded ? "w-full" : APP_CONTENT_WIDTH_NARROW}>
         {!collapseIntoSingleAccordion && (
           <>
             {title && (
