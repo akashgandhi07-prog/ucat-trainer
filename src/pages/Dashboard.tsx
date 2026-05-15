@@ -803,15 +803,11 @@ export default function Dashboard() {
             </p>
             <p className="text-slate-600 text-sm mb-4">
               You can train without an account, but creating one lets you save your history and track your WPM over time.
+              {plannerAppBase()
+                ? " The same login unlocks your generated study plan and mock score tracking."
+                : null}
             </p>
             <div className="flex flex-wrap justify-center gap-3">
-              <button
-                type="button"
-                onClick={() => openAuthModal("register")}
-                className="min-h-[44px] px-5 py-2.5 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
-              >
-                Create free account
-              </button>
               <button
                 type="button"
                 onClick={() => openAuthModal("login")}

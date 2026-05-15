@@ -42,6 +42,7 @@ If you **must** split (for example planner on a branch DB while trainer stays on
 
 ## Related docs
 
+- [`DEPLOY_UNIFY_QUICKSTART.md`](DEPLOY_UNIFY_QUICKSTART.md) copy-paste deploy checklist (two Vercel projects, redirect URLs, smoke test).
 - [`SKILLS_PLAN_UNIFY_PLAYBOOK.md`](SKILLS_PLAN_UNIFY_PLAYBOOK.md) for branch and release flow.
 - [`UNIFY_BULLET5_TRAINER_APP.md`](UNIFY_BULLET5_TRAINER_APP.md) for trainer smoke and env expectations before **`skills-plan-unify` → `main`**.
 - [`UNIFY_BULLET6_OPS_CUTOVER.md`](UNIFY_BULLET6_OPS_CUTOVER.md) for redirects, Supabase redirect allowlists, parity, and rollback before **`skills-plan-unify` → `main`**.
