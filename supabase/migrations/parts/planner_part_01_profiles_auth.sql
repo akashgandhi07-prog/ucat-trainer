@@ -1,4 +1,7 @@
 alter table public.profiles
+  add column if not exists email text;
+
+alter table public.profiles
   add column if not exists planner_role text
     check (planner_role is null or planner_role in ('student', 'tutor'));
 
@@ -12,7 +15,7 @@ declare
   pr text := null;
   fn text := nullif(trim(coalesce(new.raw_user_meta_data->>'full_name', '')), '');
 begin
-  if meta_role in ('student', 'tutor') then pr := meta_role; end if;
+  if meta_role = 'student' then pr := 'student'; end if;
   insert into public.profiles (id, email, planner_role, full_name, updated_at)
   values (new.id, new.email, pr, fn, now())
   on conflict (id) do update set

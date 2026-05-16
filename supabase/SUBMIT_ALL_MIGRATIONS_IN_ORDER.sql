@@ -1663,6 +1663,9 @@ create policy "Admins can update bug reports"
 
 -- ─── profiles: planner facet ───────────────────────────────────────────────
 alter table public.profiles
+  add column if not exists email text;
+
+alter table public.profiles
   add column if not exists planner_role text
     check (
       planner_role is null
@@ -1684,7 +1687,7 @@ declare
   pr text := null;
   fn text := nullif(trim(coalesce(new.raw_user_meta_data->>'full_name', '')), '');
 begin
-  if meta_role in ('student', 'tutor') then pr := meta_role; end if;
+  if meta_role = 'student' then pr := 'student'; end if;
 
   insert into public.profiles (id, email, planner_role, full_name, updated_at)
   values (new.id, new.email, pr, fn, now())
@@ -2341,10 +2344,21 @@ create policy "plan_members: select" on public.plan_members
 drop policy if exists "plan_members: insert" on public.plan_members;
 create policy "plan_members: insert" on public.plan_members
   for insert with check (
-    user_id = (select auth.uid())
+    exists (
+      select 1
+      from public.plans p
+      where p.id = plan_members.plan_id
+        and p.student_id = (select auth.uid())
+        and (
+          (plan_members.role = 'student' and plan_members.user_id = (select auth.uid()))
+          or plan_members.role = 'tutor'
+        )
+    )
     or exists (
       select 1 from public.plans p
-      where p.id = plan_members.plan_id and p.tutor_id = (select auth.uid())
+      where p.id = plan_members.plan_id
+        and p.tutor_id = (select auth.uid())
+        and plan_members.role = 'tutor'
     )
   );
 
@@ -2352,27 +2366,36 @@ drop policy if exists "plan_members: update" on public.plan_members;
 create policy "plan_members: update" on public.plan_members
   for update
   using (
-    user_id = (select auth.uid())
-    or exists (
+    exists (
       select 1 from public.plans p
-      where p.id = plan_members.plan_id and p.tutor_id = (select auth.uid())
+      where p.id = plan_members.plan_id
+        and (
+          p.student_id = (select auth.uid())
+          or p.tutor_id = (select auth.uid())
+        )
     )
   )
   with check (
-    user_id = (select auth.uid())
-    or exists (
+    exists (
       select 1 from public.plans p
-      where p.id = plan_members.plan_id and p.tutor_id = (select auth.uid())
+      where p.id = plan_members.plan_id
+        and (
+          p.student_id = (select auth.uid())
+          or p.tutor_id = (select auth.uid())
+        )
     )
   );
 
 drop policy if exists "plan_members: delete" on public.plan_members;
 create policy "plan_members: delete" on public.plan_members
   for delete using (
-    user_id = (select auth.uid())
-    or exists (
+    exists (
       select 1 from public.plans p
-      where p.id = plan_members.plan_id and p.tutor_id = (select auth.uid())
+      where p.id = plan_members.plan_id
+        and (
+          p.student_id = (select auth.uid())
+          or p.tutor_id = (select auth.uid())
+        )
     )
   );
 
@@ -2446,17 +2469,23 @@ drop policy if exists "plan_members: update" on public.plan_members;
 create policy "plan_members: update" on public.plan_members
   for update
   using (
-    user_id = (select auth.uid())
-    or exists (
+    exists (
       select 1 from public.plans p
-      where p.id = plan_members.plan_id and p.tutor_id = (select auth.uid())
+      where p.id = plan_members.plan_id
+        and (
+          p.student_id = (select auth.uid())
+          or p.tutor_id = (select auth.uid())
+        )
     )
   )
   with check (
-    user_id = (select auth.uid())
-    or exists (
+    exists (
       select 1 from public.plans p
-      where p.id = plan_members.plan_id and p.tutor_id = (select auth.uid())
+      where p.id = plan_members.plan_id
+        and (
+          p.student_id = (select auth.uid())
+          or p.tutor_id = (select auth.uid())
+        )
     )
   );
 
@@ -2464,10 +2493,13 @@ create policy "plan_members: update" on public.plan_members
 drop policy if exists "plan_members: delete" on public.plan_members;
 create policy "plan_members: delete" on public.plan_members
   for delete using (
-    user_id = (select auth.uid())
-    or exists (
+    exists (
       select 1 from public.plans p
-      where p.id = plan_members.plan_id and p.tutor_id = (select auth.uid())
+      where p.id = plan_members.plan_id
+        and (
+          p.student_id = (select auth.uid())
+          or p.tutor_id = (select auth.uid())
+        )
     )
   );
 
@@ -2985,4 +3017,329 @@ begin
   return new;
 end;
 $$;
+
+
+-- ========== 034_sjt_questions.sql ==========
+-- SJT question bank: server-side only (no direct SELECT for anon/authenticated).
+-- Clients fetch one scenario at a time via get_random_sjt_question.
+
+create table if not exists public.sjt_questions (
+  id text primary key,
+  type text not null check (type in ('appropriateness', 'importance', 'ranking')),
+  domain text not null,
+  difficulty text not null check (difficulty in ('foundation', 'standard', 'challenging')),
+  stem text not null,
+  pivot_insight text,
+  gmp_ref jsonb,
+  items jsonb not null,
+  created_at timestamptz not null default now()
+);
+
+comment on table public.sjt_questions is 'UCAT SJT trainer scenarios; read only via get_random_sjt_question RPC.';
+
+create index if not exists sjt_questions_type_idx on public.sjt_questions (type);
+
+alter table public.sjt_questions enable row level security;
+
+-- No SELECT/INSERT/UPDATE policies for anon or authenticated (service role seeds only).
+
+create or replace function public.get_random_sjt_question(
+  p_type text,
+  p_exclude_ids text[] default '{}'
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  row_rec public.sjt_questions%rowtype;
+begin
+  if p_type is null or p_type not in ('appropriateness', 'importance', 'ranking') then
+    raise exception 'Invalid question type';
+  end if;
+
+  select * into row_rec
+  from public.sjt_questions q
+  where q.type = p_type
+    and not (q.id = any (coalesce(p_exclude_ids, '{}')))
+  order by random()
+  limit 1;
+
+  if not found then
+    return null;
+  end if;
+
+  return jsonb_build_object(
+    'id', row_rec.id,
+    'type', row_rec.type,
+    'domain', row_rec.domain,
+    'difficulty', row_rec.difficulty,
+    'stem', row_rec.stem,
+    'pivotInsight', row_rec.pivot_insight,
+    'gmpRef', row_rec.gmp_ref,
+    'items', row_rec.items
+  );
+end;
+$$;
+
+comment on function public.get_random_sjt_question(text, text[]) is
+  'Returns one random SJT scenario as JSON (camelCase). Callable by anon for free trainers.';
+
+grant execute on function public.get_random_sjt_question(text, text[]) to anon, authenticated;
+
+
+-- ========== 035_lock_syllogism_questions.sql ==========
+-- Lock syllogism_questions: revoke public table read; serve drills via RPC only.
+
+drop policy if exists "Allow public read access to syllogism questions" on public.syllogism_questions;
+
+create or replace function public.get_syllogism_micro_batch(p_count integer default 10)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  n integer;
+  result jsonb;
+begin
+  n := greatest(1, least(coalesce(p_count, 10), 50));
+
+  select coalesce(
+    jsonb_agg(
+      jsonb_build_object(
+        'id', q.id,
+        'macro_block_id', q.macro_block_id,
+        'stimulus_text', q.stimulus_text,
+        'conclusion_text', q.conclusion_text,
+        'is_correct', q.is_correct,
+        'logic_group', q.logic_group,
+        'trick_type', q.trick_type,
+        'explanation', q.explanation
+      )
+    ),
+    '[]'::jsonb
+  )
+  into result
+  from (
+    select sq.*
+    from public.syllogism_questions sq
+    order by random()
+    limit n
+  ) q;
+
+  return result;
+end;
+$$;
+
+comment on function public.get_syllogism_micro_batch(integer) is
+  'Returns up to 50 random syllogism questions for micro drill. Callable by anon.';
+
+create or replace function public.get_syllogism_macro_block(p_exclude_block_ids uuid[] default '{}')
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  chosen_block uuid;
+  result jsonb;
+begin
+  select sq.macro_block_id into chosen_block
+  from public.syllogism_questions sq
+  where sq.macro_block_id is not null
+    and not (sq.macro_block_id = any (coalesce(p_exclude_block_ids, '{}')))
+  group by sq.macro_block_id
+  having count(*) = 5
+  order by random()
+  limit 1;
+
+  if chosen_block is null then
+    return '[]'::jsonb;
+  end if;
+
+  select coalesce(
+    jsonb_agg(
+      jsonb_build_object(
+        'id', q.id,
+        'macro_block_id', q.macro_block_id,
+        'stimulus_text', q.stimulus_text,
+        'conclusion_text', q.conclusion_text,
+        'is_correct', q.is_correct,
+        'logic_group', q.logic_group,
+        'trick_type', q.trick_type,
+        'explanation', q.explanation
+      )
+      order by q.id
+    ),
+    '[]'::jsonb
+  )
+  into result
+  from public.syllogism_questions q
+  where q.macro_block_id = chosen_block;
+
+  return result;
+end;
+$$;
+
+comment on function public.get_syllogism_macro_block(uuid[]) is
+  'Returns one random macro block (5 conclusions per stimulus). Callable by anon.';
+
+grant execute on function public.get_syllogism_micro_batch(integer) to anon, authenticated;
+grant execute on function public.get_syllogism_macro_block(uuid[]) to anon, authenticated;
+
+
+-- ========== 036_harden_profile_roles_memberships_public_writes.sql ==========
+-- Security hardening:
+-- 1) Keep privilege-bearing profile columns writable only by trusted/server roles.
+-- 2) Prevent clients from self-linking plan_members rows.
+-- 3) Disable anonymous writes to high-volume public tables.
+
+-- Profiles: users may maintain profile preferences, but not privilege/identity fields.
+alter table public.profiles add column if not exists email text;
+alter table public.profiles add column if not exists stream text;
+alter table public.profiles add column if not exists first_name text;
+alter table public.profiles add column if not exists last_name text;
+alter table public.profiles add column if not exists entry_year text;
+alter table public.profiles add column if not exists email_marketing_opt_in boolean not null default false;
+alter table public.profiles add column if not exists email_marketing_opt_in_at timestamptz;
+alter table public.profiles add column if not exists ucat_exam_date date;
+
+alter policy "Users can update own profile" on public.profiles
+  using ((select auth.uid()) = id)
+  with check ((select auth.uid()) = id);
+
+revoke insert, update on public.profiles from anon, authenticated;
+grant insert (
+  id,
+  full_name,
+  stream,
+  first_name,
+  last_name,
+  entry_year,
+  email_marketing_opt_in,
+  email_marketing_opt_in_at,
+  updated_at,
+  ucat_exam_date
+) on public.profiles to authenticated;
+grant update (
+  full_name,
+  stream,
+  first_name,
+  last_name,
+  entry_year,
+  email_marketing_opt_in,
+  email_marketing_opt_in_at,
+  updated_at,
+  ucat_exam_date
+) on public.profiles to authenticated;
+
+-- The auth trigger may still set planner_role='student' from invite/login metadata,
+-- but tutor status must be provisioned server-side or by an admin SQL operation.
+create or replace function public.handle_auth_user_profiles_planner_sync()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  meta_role text := trim(lower(coalesce(new.raw_user_meta_data->>'role', '')));
+  pr text := null;
+  fn text := nullif(trim(coalesce(new.raw_user_meta_data->>'full_name', '')), '');
+begin
+  if meta_role = 'student' then pr := 'student'; end if;
+
+  insert into public.profiles (id, email, planner_role, full_name, updated_at)
+  values (new.id, new.email, pr, fn, now())
+  on conflict (id) do update set
+    email        = coalesce(excluded.email, profiles.email),
+    planner_role = coalesce(excluded.planner_role, profiles.planner_role),
+    full_name    = case
+                     when excluded.full_name is not null and length(trim(excluded.full_name)) > 0
+                       then excluded.full_name
+                     else profiles.full_name
+                   end,
+    updated_at   = now();
+  return new;
+end;
+$$;
+
+revoke execute on function public.handle_auth_user_profiles_planner_sync() from public, anon, authenticated;
+grant execute on function public.handle_auth_user_profiles_planner_sync() to service_role;
+
+-- plan_members grants access to student plans. Direct client writes must be
+-- scoped to plans owned by the caller, not merely rows where user_id=auth.uid().
+drop policy if exists "plan_members: insert" on public.plan_members;
+drop policy if exists "plan_members: update" on public.plan_members;
+drop policy if exists "plan_members: delete" on public.plan_members;
+
+create policy "plan_members: insert" on public.plan_members
+  for insert with check (
+    exists (
+      select 1
+      from public.plans p
+      where p.id = plan_members.plan_id
+        and p.student_id = (select auth.uid())
+        and (
+          (plan_members.role = 'student' and plan_members.user_id = (select auth.uid()))
+          or plan_members.role = 'tutor'
+        )
+    )
+    or exists (
+      select 1
+      from public.plans p
+      where p.id = plan_members.plan_id
+        and p.tutor_id = (select auth.uid())
+        and plan_members.role = 'tutor'
+    )
+  );
+
+create policy "plan_members: update" on public.plan_members
+  for update
+  using (
+    exists (
+      select 1
+      from public.plans p
+      where p.id = plan_members.plan_id
+        and (
+          p.student_id = (select auth.uid())
+          or p.tutor_id = (select auth.uid())
+        )
+    )
+  )
+  with check (
+    exists (
+      select 1
+      from public.plans p
+      where p.id = plan_members.plan_id
+        and (
+          p.student_id = (select auth.uid())
+          or p.tutor_id = (select auth.uid())
+        )
+    )
+  );
+
+create policy "plan_members: delete" on public.plan_members
+  for delete using (
+    exists (
+      select 1
+      from public.plans p
+      where p.id = plan_members.plan_id
+        and (
+          p.student_id = (select auth.uid())
+          or p.tutor_id = (select auth.uid())
+        )
+    )
+  );
+
+-- Anonymous analytics/question feedback are easy to spam with the public anon key.
+-- Keep authenticated inserts; guests will fail closed until a rate-limited endpoint is added.
+drop policy if exists "Anyone can insert analytics events" on public.analytics_events;
+create policy "Authenticated users can insert analytics events"
+  on public.analytics_events for insert
+  to authenticated
+  with check (user_id is null or user_id = (select auth.uid()));
+
+drop policy if exists "Anyone can insert anonymous question feedback" on public.question_feedback;
 
