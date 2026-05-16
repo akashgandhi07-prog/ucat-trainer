@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpDown, RotateCcw, ChevronRight } from "lucide-react";
+import SJTPerformancePanel from "../components/sjt/SJTPerformancePanel";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import SEOHead from "../components/seo/SEOHead";
@@ -27,6 +28,7 @@ export default function SJTRankingPage() {
   const [sessionMax, setSessionMax] = useState(0);
   const [questionsAttempted, setQuestionsAttempted] = useState(0);
   const [lastScore, setLastScore] = useState<{ score: number; max: number } | null>(null);
+  const [perfKey, setPerfKey] = useState(0);
 
   const base = getSiteBaseUrl();
   const canonical = base ? `${base}/ucat-sjt-ranking-trainer` : undefined;
@@ -36,6 +38,7 @@ export default function SJTRankingPage() {
     setSessionMax((m) => m + max);
     setQuestionsAttempted((n) => n + 1);
     setLastScore({ score, max });
+    setPerfKey((k) => k + 1);
     setPhase("between");
   }, []);
 
@@ -68,7 +71,7 @@ export default function SJTRankingPage() {
         <div className="w-full max-w-4xl mx-auto">
 
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 rounded-xl bg-purple-500/10 text-purple-600">
+            <div className="p-2 rounded-xl bg-primary/10 text-primary">
               <ArrowUpDown className="w-5 h-5" aria-hidden />
             </div>
             <div>
@@ -176,6 +179,10 @@ export default function SJTRankingPage() {
                   <RotateCcw className="w-4 h-4" aria-hidden />
                   Reset session
                 </button>
+              </div>
+              <div className="pt-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Domain performance</p>
+                <SJTPerformancePanel refreshKey={perfKey} onClear={() => setPerfKey((k) => k + 1)} />
               </div>
               <p className="text-center text-sm">
                 <Link to="/ucat-sjt-practice" className="text-muted-foreground hover:text-primary">

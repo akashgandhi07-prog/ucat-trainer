@@ -48,7 +48,7 @@ export default function SJTDomainBadge({ domain, showLink = false, className }: 
           href={d.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-blue-600 transition-colors"
+          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
           aria-label={`Read GMP guidance on ${d.name}`}
         >
           GMP guidance

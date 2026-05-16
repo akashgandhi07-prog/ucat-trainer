@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Scale, Star, ArrowUpDown, ExternalLink, ChevronRight, Users } from "lucide-react";
 import Header from "../components/layout/Header";
@@ -6,7 +7,9 @@ import SEOHead from "../components/seo/SEOHead";
 import UcatGuidesPanel from "../components/layout/UcatGuidesPanel";
 import TrainerFaqSection from "../components/seo/TrainerFaqSection";
 import SkillsSectionLayout, { SkillsSectionBlock } from "../components/layout/SkillsSectionLayout";
+import SJTPerformancePanel from "../components/sjt/SJTPerformancePanel";
 import { GMC_DOMAINS_LIST, GMP_MAIN_URL } from "../data/gmcDomains";
+import { getSJTStats } from "../lib/sjtAnalytics";
 import { trainerFaqs } from "../data/trainerFaqs";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 import { cn } from "../lib/cn";
@@ -55,6 +58,7 @@ const domainColors: Record<string, string> = {
 export default function SJTHubPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [perfKey, setPerfKey] = useState(0);
   const base = getSiteBaseUrl();
   const canonical = base ? `${base}/ucat-sjt-practice` : undefined;
   const breadcrumbs =
@@ -117,6 +121,15 @@ export default function SJTHubPage() {
                 ))}
               </div>
             </SkillsSectionBlock>
+
+            {getSJTStats() && (
+              <SkillsSectionBlock
+                title="Your domain performance"
+                description="How you are scoring across the four GMC Good Medical Practice domains. Updates automatically as you practise."
+              >
+                <SJTPerformancePanel refreshKey={perfKey} onClear={() => setPerfKey((k) => k + 1)} />
+              </SkillsSectionBlock>
+            )}
 
             <SkillsSectionBlock
               title="GMC Good Medical Practice: The Four Domains"

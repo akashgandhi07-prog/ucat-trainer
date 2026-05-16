@@ -8,6 +8,7 @@ import {
   IMPORTANCE_LABELS,
   getAdjacentRating,
 } from "../../types/sjt";
+import { recordSJTAttempt } from "../../lib/sjtAnalytics";
 import { cn } from "../../lib/cn";
 
 type ItemPhase = "rating" | "feedback";
@@ -60,8 +61,17 @@ export default function SJTRatingQuiz({ question, onComplete }: Props) {
 
   function handleNext() {
     if (isLastItem) {
-      const total = [...scores].reduce((a, b) => a + b, 0);
-      onComplete(total, question.items.length * 2);
+      const allScores = [...scores];
+      const total = allScores.reduce((a, b) => a + b, 0);
+      const maxScore = question.items.length * 2;
+      recordSJTAttempt({
+        questionId: question.id,
+        domain: question.domain,
+        type: question.type,
+        score: total,
+        maxScore,
+      });
+      onComplete(total, maxScore);
     } else {
       setItemIndex((i) => i + 1);
       setItemPhase("rating");
@@ -78,188 +88,192 @@ export default function SJTRatingQuiz({ question, onComplete }: Props) {
   const progressPct = Math.round((itemIndex / question.items.length) * 100);
 
   return (
-    <div className="lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start space-y-4 lg:space-y-0">
+    <div className="space-y-4">
 
-      {/* Left col: Scenario — stays fixed on desktop while items advance */}
-      <div className="lg:sticky lg:top-4">
-        <div className="rounded-xl border border-border bg-card shadow-sm p-5">
-          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Scenario</p>
-          <p className="text-sm text-foreground leading-relaxed">{question.stem}</p>
+      {/* Progress — full width above both columns so cards align */}
+      <div>
+        <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
+          <span>Item {itemIndex + 1} of {question.items.length}</span>
+          <span>{question.items.length - itemIndex - 1} remaining</span>
+        </div>
+        <div className="h-1.5 rounded-full bg-border overflow-hidden">
+          <div
+            className="h-full rounded-full bg-primary transition-all duration-500"
+            style={{ width: `${progressPct}%` }}
+          />
         </div>
       </div>
 
-      {/* Right col: Progress + Item + Action */}
-      <div className="space-y-4">
+      {/* 2-col on desktop: scenario left (sticky), item right */}
+      <div className="lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start space-y-4 lg:space-y-0">
 
-        {/* Progress */}
-        <div>
-          <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
-            <span>Item {itemIndex + 1} of {question.items.length}</span>
-            <span>{question.items.length - itemIndex - 1} remaining</span>
-          </div>
-          <div className="h-1.5 rounded-full bg-border overflow-hidden">
-            <div
-              className="h-full rounded-full bg-primary transition-all duration-500"
-              style={{ width: `${progressPct}%` }}
-            />
+        {/* Left col: Scenario */}
+        <div className="lg:sticky lg:top-4">
+          <div className="rounded-xl border border-border bg-card shadow-sm p-5">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Scenario</p>
+            <p className="text-sm text-foreground leading-relaxed">{question.stem}</p>
           </div>
         </div>
 
-        {/* Item card */}
-        <div className={cn(
-          "rounded-xl border p-5 space-y-4",
-          itemPhase === "feedback"
-            ? currentScore === 2
-              ? "bg-training-success-muted border-training-success"
-              : currentScore === 1
-              ? "bg-amber-50 border-amber-200"
-              : "bg-destructive-muted border-destructive"
-            : "border-border bg-card shadow-sm"
-        )}>
-          <div className="flex items-start gap-2">
-            {itemPhase === "feedback" && (
-              <span className="shrink-0 mt-0.5">
-                {currentScore === 2 ? (
-                  <CheckCircle2 className="w-5 h-5 text-training-success" aria-hidden />
-                ) : currentScore === 1 ? (
-                  <AlertCircle className="w-5 h-5 text-amber-500" aria-hidden />
-                ) : (
-                  <XCircle className="w-5 h-5 text-destructive" aria-hidden />
-                )}
-              </span>
-            )}
-            <div className="flex-1">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                {question.type === "appropriateness"
-                  ? "How appropriate is this response?"
-                  : "How important is this consideration?"}
-              </p>
-              <p className="text-sm font-medium text-foreground leading-relaxed">{item.text}</p>
-            </div>
-          </div>
+        {/* Right col: Item + Action */}
+        <div className="space-y-4">
 
-          {/* Rating buttons */}
-          {itemPhase === "rating" && (
-            <div className="space-y-2">
-              {scale.map((r) => (
-                <button
-                  key={r}
-                  type="button"
-                  onClick={() => handleSelect(r)}
-                  aria-pressed={selected === r}
-                  className={cn(
-                    "w-full text-left px-4 py-3 rounded-xl border text-sm font-medium transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary",
-                    selected === r
-                      ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                      : "bg-card border-border text-foreground hover:bg-secondary"
+          {/* Item card */}
+          <div className={cn(
+            "rounded-xl border p-5 space-y-4",
+            itemPhase === "feedback"
+              ? currentScore === 2
+                ? "bg-training-success-muted border-training-success"
+                : currentScore === 1
+                ? "bg-amber-50 border-amber-200"
+                : "bg-destructive-muted border-destructive"
+              : "border-border bg-card shadow-sm"
+          )}>
+            <div className="flex items-start gap-2">
+              {itemPhase === "feedback" && (
+                <span className="shrink-0 mt-0.5">
+                  {currentScore === 2 ? (
+                    <CheckCircle2 className="w-5 h-5 text-training-success" aria-hidden />
+                  ) : currentScore === 1 ? (
+                    <AlertCircle className="w-5 h-5 text-amber-500" aria-hidden />
+                  ) : (
+                    <XCircle className="w-5 h-5 text-destructive" aria-hidden />
                   )}
-                >
-                  {labelMap[r]}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Feedback */}
-          {itemPhase === "feedback" && selected && (
-            <div className="space-y-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className={cn(
-                  "px-2.5 py-1 rounded-full text-xs font-semibold",
-                  currentScore === 2
-                    ? "bg-green-100 text-green-800"
-                    : currentScore === 1
-                    ? "bg-amber-100 text-amber-800"
-                    : "bg-red-100 text-red-800"
-                )}>
-                  {currentScore === 2 ? "Full marks" : currentScore === 1 ? "Partial credit" : "Incorrect"}
                 </span>
-                <span className="text-xs text-muted-foreground">
-                  Your answer: <strong className="text-foreground">{userLabel}</strong>
-                </span>
-                {currentScore !== 2 && (
-                  <span className="text-xs text-muted-foreground">
-                    Correct: <strong className="text-foreground">{correctLabel}</strong>
-                  </span>
-                )}
+              )}
+              <div className="flex-1">
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                  {question.type === "appropriateness"
+                    ? "How appropriate is this response?"
+                    : "How important is this consideration?"}
+                </p>
+                <p className="text-sm font-medium text-foreground leading-relaxed">{item.text}</p>
               </div>
+            </div>
 
-              <div className="rounded-lg bg-card border border-border p-4 space-y-3">
-                <div>
-                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                    Why {correctLabel} is correct
-                  </p>
-                  <p className="text-sm text-foreground leading-relaxed">{item.rationale}</p>
+            {/* Rating buttons */}
+            {itemPhase === "rating" && (
+              <div className="space-y-2">
+                {scale.map((r) => (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => handleSelect(r)}
+                    aria-pressed={selected === r}
+                    className={cn(
+                      "w-full text-left px-4 py-3 rounded-xl border text-sm font-medium transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary",
+                      selected === r
+                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                        : "bg-card border-border text-foreground hover:bg-secondary"
+                    )}
+                  >
+                    {labelMap[r]}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Feedback */}
+            {itemPhase === "feedback" && selected && (
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={cn(
+                    "px-2.5 py-1 rounded-full text-xs font-semibold",
+                    currentScore === 2
+                      ? "bg-green-100 text-green-800"
+                      : currentScore === 1
+                      ? "bg-amber-100 text-amber-800"
+                      : "bg-red-100 text-red-800"
+                  )}>
+                    {currentScore === 2 ? "Full marks" : currentScore === 1 ? "Partial credit" : "Incorrect"}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    Your answer: <strong className="text-foreground">{userLabel}</strong>
+                  </span>
+                  {currentScore !== 2 && (
+                    <span className="text-xs text-muted-foreground">
+                      Correct: <strong className="text-foreground">{correctLabel}</strong>
+                    </span>
+                  )}
                 </div>
 
-                {currentScore !== 2 && (
-                  <div className="border-t border-border pt-3">
+                <div className="rounded-lg bg-card border border-border p-4 space-y-3">
+                  <div>
                     <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                      Why not {userLabel}
+                      Why {correctLabel} is correct
                     </p>
-                    <p className="text-sm text-foreground leading-relaxed">{item.whyNotAdjacent}</p>
+                    <p className="text-sm text-foreground leading-relaxed">{item.rationale}</p>
                   </div>
-                )}
 
-                {item.gmpRef && (
-                  <div className="border-t border-border pt-3">
-                    <a
-                      href={item.gmpRef.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-semibold"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" aria-hidden />
-                      GMC Good Medical Practice: {item.gmpRef.label}
-                    </a>
-                  </div>
-                )}
+                  {currentScore !== 2 && (
+                    <div className="border-t border-border pt-3">
+                      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                        Why not {userLabel}
+                      </p>
+                      <p className="text-sm text-foreground leading-relaxed">{item.whyNotAdjacent}</p>
+                    </div>
+                  )}
+
+                  {item.gmpRef && (
+                    <div className="border-t border-border pt-3">
+                      <a
+                        href={item.gmpRef.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-semibold"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" aria-hidden />
+                        GMC Good Medical Practice: {item.gmpRef.label}
+                      </a>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-
-        {/* Pivot insight on last item */}
-        {itemPhase === "feedback" && isLastItem && question.pivotInsight && (
-          <div className="rounded-xl border border-border bg-secondary p-4">
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-              Key insight for this scenario
-            </p>
-            <p className="text-sm text-foreground leading-relaxed">{question.pivotInsight}</p>
-            {question.gmpRef && (
-              <a
-                href={question.gmpRef.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-semibold mt-2"
-              >
-                <ExternalLink className="w-3.5 h-3.5" aria-hidden />
-                GMC Good Medical Practice: {question.gmpRef.label}
-              </a>
             )}
           </div>
-        )}
 
-        {/* Action */}
-        {itemPhase === "rating" ? (
-          <button
-            type="button"
-            disabled={!selected}
-            onClick={handleConfirm}
-            className="w-full min-h-[44px] rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            Confirm answer
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={handleNext}
-            className="w-full min-h-[44px] rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors inline-flex items-center justify-center gap-2"
-          >
-            {isLastItem ? "See results" : "Next item"}
-            <ChevronRight className="w-4 h-4" aria-hidden />
-          </button>
-        )}
+          {/* Pivot insight on last item */}
+          {itemPhase === "feedback" && isLastItem && question.pivotInsight && (
+            <div className="rounded-xl border border-border bg-secondary p-4">
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                Key insight for this scenario
+              </p>
+              <p className="text-sm text-foreground leading-relaxed">{question.pivotInsight}</p>
+              {question.gmpRef && (
+                <a
+                  href={question.gmpRef.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-semibold mt-2"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" aria-hidden />
+                  GMC Good Medical Practice: {question.gmpRef.label}
+                </a>
+              )}
+            </div>
+          )}
+
+          {/* Action */}
+          {itemPhase === "rating" ? (
+            <button
+              type="button"
+              disabled={!selected}
+              onClick={handleConfirm}
+              className="w-full min-h-[44px] rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Confirm answer
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleNext}
+              className="w-full min-h-[44px] rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors inline-flex items-center justify-center gap-2"
+            >
+              {isLastItem ? "See results" : "Next item"}
+              <ChevronRight className="w-4 h-4" aria-hidden />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

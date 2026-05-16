@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CheckCircle2, XCircle, ExternalLink, ChevronRight } from "lucide-react";
 import type { SJTRankingQuestion, RankingAnswer } from "../../types/sjt";
+import { recordSJTAttempt } from "../../lib/sjtAnalytics";
 import { cn } from "../../lib/cn";
 
 type Phase = "answering" | "results";
@@ -29,6 +30,13 @@ export default function SJTRankingQuiz({ question, onComplete }: Props) {
   const score = (mostCorrect ? 1 : 0) + (leastCorrect ? 1 : 0);
 
   function handleSubmit() {
+    recordSJTAttempt({
+      questionId: question.id,
+      domain: question.domain,
+      type: "ranking",
+      score,
+      maxScore: 2,
+    });
     setPhase("results");
     onComplete(score, 2);
   }
