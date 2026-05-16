@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { CheckCircle2, XCircle, AlertCircle, ExternalLink, ChevronRight } from "lucide-react";
+import { CheckCircle2, XCircle, AlertCircle, ChevronRight } from "lucide-react";
+import SjtGmpGuidanceLink from "./SjtGmpGuidanceLink";
+import { resolveSjtGmpRef } from "../../lib/sjtGmpRef";
 import type { SJTRatingQuestion, SJTRating } from "../../types/sjt";
 import {
   APPROPRIATENESS_RATINGS,
@@ -77,6 +79,7 @@ export default function SJTRatingQuiz({ question, onComplete }: Props) {
   const userLabel = selected ? labelMap[selected] : null;
   const nextBestRating = getAdjacentRating(item.correctRating, question.type);
   const nextBestLabel = nextBestRating ? labelMap[nextBestRating] : null;
+  const gmpRef = resolveSjtGmpRef(question.domain, item.gmpRef, question.gmpRef);
   const progressPct = Math.round(((itemIndex + 1) / question.items.length) * 100);
 
   return (
@@ -189,36 +192,31 @@ export default function SJTRatingQuiz({ question, onComplete }: Props) {
                 )}
               </div>
 
-              <div className="rounded-lg bg-card border border-border p-4 space-y-3 lg:max-h-[min(36vh,24rem)] lg:overflow-y-auto">
-                <div>
-                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                    Why {correctLabel} is correct
+              <div className="rounded-lg bg-card border border-border p-4 space-y-3">
+                <div className="rounded-md border border-primary/20 bg-primary/5 p-3">
+                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
+                    GMC guidance
                   </p>
-                  <p className="text-sm text-foreground leading-relaxed">{item.rationale}</p>
+                  <SjtGmpGuidanceLink gmpRef={gmpRef} />
                 </div>
 
-                {currentScore !== 1 && (
-                  <div className="border-t border-border pt-3">
+                <div className="space-y-3 lg:max-h-[min(32vh,20rem)] lg:overflow-y-auto">
+                  <div>
                     <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                      Why not {userLabel}
+                      Why {correctLabel} is correct
                     </p>
-                    <p className="text-sm text-foreground leading-relaxed">{item.whyNotAdjacent}</p>
+                    <p className="text-sm text-foreground leading-relaxed">{item.rationale}</p>
                   </div>
-                )}
 
-                {item.gmpRef && (
-                  <div className="border-t border-border pt-3">
-                    <a
-                      href={item.gmpRef.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-semibold"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" aria-hidden />
-                      GMC Good Medical Practice: {item.gmpRef.label}
-                    </a>
-                  </div>
-                )}
+                  {currentScore !== 1 && (
+                    <div className="border-t border-border pt-3">
+                      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                        Why not {userLabel}
+                      </p>
+                      <p className="text-sm text-foreground leading-relaxed">{item.whyNotAdjacent}</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -231,17 +229,7 @@ export default function SJTRatingQuiz({ question, onComplete }: Props) {
               Key insight for this scenario
             </p>
             <p className="text-sm text-foreground leading-relaxed">{question.pivotInsight}</p>
-            {question.gmpRef && (
-              <a
-                href={question.gmpRef.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-semibold mt-2"
-              >
-                <ExternalLink className="w-3.5 h-3.5" aria-hidden />
-                GMC Good Medical Practice: {question.gmpRef.label}
-              </a>
-            )}
+            <SjtGmpGuidanceLink gmpRef={gmpRef} className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-semibold mt-2" />
           </div>
         )}
 
