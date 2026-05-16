@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { CheckCircle2, XCircle, AlertCircle, ExternalLink, ChevronRight } from "lucide-react";
-import type { SJTRatingQuestion, SJTRating } from "../../types/sjt";
+import type { SJTRatingQuestion, SJTRating, SJTQuizProgress } from "../../types/sjt";
 import {
   APPROPRIATENESS_RATINGS,
   IMPORTANCE_RATINGS,
@@ -8,7 +8,6 @@ import {
   IMPORTANCE_LABELS,
   getAdjacentRating,
 } from "../../types/sjt";
-import { recordSJTAttempt } from "../../lib/sjtAnalytics";
 import { cn } from "../../lib/cn";
 
 type ItemPhase = "rating" | "feedback";
@@ -16,6 +15,7 @@ type ItemPhase = "rating" | "feedback";
 type Props = {
   question: SJTRatingQuestion;
   onComplete: (score: number, total: number) => void;
+  onProgress?: (progress: SJTQuizProgress) => void;
 };
 
 function getRatingScale(type: "appropriateness" | "importance"): SJTRating[] {
@@ -30,17 +30,17 @@ function scoreItem(
   userRating: SJTRating,
   correct: SJTRating,
   type: "appropriateness" | "importance"
-): 0 | 1 | 2 {
-  if (userRating === correct) return 2;
-  if (getAdjacentRating(correct, type) === userRating) return 1;
+): 0 | 0.5 | 1 {
+  if (userRating === correct) return 1;
+  if (getAdjacentRating(correct, type) === userRating) return 0.5;
   return 0;
 }
 
-export default function SJTRatingQuiz({ question, onComplete }: Props) {
+export default function SJTRatingQuiz({ question, onComplete, onProgress }: Props) {
   const [itemIndex, setItemIndex] = useState(0);
   const [itemPhase, setItemPhase] = useState<ItemPhase>("rating");
   const [selected, setSelected] = useState<SJTRating | null>(null);
-  const [scores, setScores] = useState<(0 | 1 | 2)[]>([]);
+  const [scores, setScores] = useState<(0 | 0.5 | 1)[]>([]);
 
   const scale = getRatingScale(question.type);
   const labelMap = getLabelMap(question.type);
@@ -55,23 +55,21 @@ export default function SJTRatingQuiz({ question, onComplete }: Props) {
   function handleConfirm() {
     if (!selected) return;
     const s = scoreItem(selected, item.correctRating, question.type);
-    setScores((prev) => [...prev, s]);
+    const nextScores = [...scores, s];
+    setScores(nextScores);
+    onProgress?.({
+      itemsAttempted: nextScores.length,
+      itemsTotal: question.items.length,
+      partialScore: nextScores.reduce<number>((a, b) => a + b, 0),
+    });
     setItemPhase("feedback");
   }
 
   function handleNext() {
     if (isLastItem) {
       const allScores = [...scores];
-      const total = allScores.reduce((a, b) => a + b, 0);
-      const maxScore = question.items.length * 2;
-      recordSJTAttempt({
-        questionId: question.id,
-        domain: question.domain,
-        type: question.type,
-        score: total,
-        maxScore,
-      });
-      onComplete(total, maxScore);
+      const total = allScores.reduce<number>((a, b) => a + b, 0);
+      onComplete(total, question.items.length);
     } else {
       setItemIndex((i) => i + 1);
       setItemPhase("rating");
@@ -122,9 +120,9 @@ export default function SJTRatingQuiz({ question, onComplete }: Props) {
           <div className={cn(
             "rounded-xl border p-5 space-y-4",
             itemPhase === "feedback"
-              ? currentScore === 2
+              ? currentScore === 1
                 ? "bg-training-success-muted border-training-success"
-                : currentScore === 1
+                : currentScore === 0.5
                 ? "bg-amber-50 border-amber-200"
                 : "bg-destructive-muted border-destructive"
               : "border-border bg-card shadow-sm"
@@ -132,9 +130,9 @@ export default function SJTRatingQuiz({ question, onComplete }: Props) {
             <div className="flex items-start gap-2">
               {itemPhase === "feedback" && (
                 <span className="shrink-0 mt-0.5">
-                  {currentScore === 2 ? (
+                  {currentScore === 1 ? (
                     <CheckCircle2 className="w-5 h-5 text-training-success" aria-hidden />
-                  ) : currentScore === 1 ? (
+                  ) : currentScore === 0.5 ? (
                     <AlertCircle className="w-5 h-5 text-amber-500" aria-hidden />
                   ) : (
                     <XCircle className="w-5 h-5 text-destructive" aria-hidden />
@@ -179,18 +177,18 @@ export default function SJTRatingQuiz({ question, onComplete }: Props) {
                 <div className="flex flex-wrap items-center gap-2">
                   <span className={cn(
                     "px-2.5 py-1 rounded-full text-xs font-semibold",
-                    currentScore === 2
+                    currentScore === 1
                       ? "bg-green-100 text-green-800"
-                      : currentScore === 1
+                      : currentScore === 0.5
                       ? "bg-amber-100 text-amber-800"
                       : "bg-red-100 text-red-800"
                   )}>
-                    {currentScore === 2 ? "Full marks" : currentScore === 1 ? "Partial credit" : "Incorrect"}
+                    {currentScore === 1 ? "Full marks" : currentScore === 0.5 ? "Half mark" : "Incorrect"}
                   </span>
                   <span className="text-xs text-muted-foreground">
                     Your answer: <strong className="text-foreground">{userLabel}</strong>
                   </span>
-                  {currentScore !== 2 && (
+                  {currentScore !== 1 && (
                     <span className="text-xs text-muted-foreground">
                       Correct: <strong className="text-foreground">{correctLabel}</strong>
                     </span>
@@ -205,7 +203,7 @@ export default function SJTRatingQuiz({ question, onComplete }: Props) {
                     <p className="text-sm text-foreground leading-relaxed">{item.rationale}</p>
                   </div>
 
-                  {currentScore !== 2 && (
+                  {currentScore !== 1 && (
                     <div className="border-t border-border pt-3">
                       <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
                         Why not {userLabel}

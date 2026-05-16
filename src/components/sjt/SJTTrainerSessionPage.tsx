@@ -15,7 +15,7 @@ import { trainerFaqs } from "../../data/trainerFaqs";
 import { recordSJTAttempt } from "../../lib/sjtAnalytics";
 import { getSiteBaseUrl } from "../../lib/siteUrl";
 import { cn } from "../../lib/cn";
-import { isRatingQuestion, type SJTQuestion, type SJTQuestionType, type SJTQuizProgress } from "../../types/sjt";
+import type { SJTQuestion, SJTQuestionType, SJTQuizProgress } from "../../types/sjt";
 
 type Phase = "intro" | "quiz" | "between";
 
@@ -115,10 +115,6 @@ export default function SJTTrainerSessionPage({
       type: q.type,
       score: progress.partialScore,
       maxScore,
-      completed: false,
-      itemsAttempted: progress.itemsAttempted,
-      itemsTotal: progress.itemsTotal,
-      userId: userIdRef.current,
     });
   }, []);
 
@@ -142,17 +138,12 @@ export default function SJTTrainerSessionPage({
     (score: number, max: number) => {
       if (question) {
         savedQuestionIdRef.current = question.id;
-        const itemsTotal = isRatingQuestion(question) ? question.items.length : 1;
         recordSJTAttempt({
           questionId: question.id,
           domain: question.domain,
           type: question.type,
           score,
           maxScore: max,
-          completed: true,
-          itemsAttempted: itemsTotal,
-          itemsTotal,
-          userId: user?.id ?? null,
         });
       }
       setSessionScore((s) => s + score);
@@ -161,6 +152,7 @@ export default function SJTTrainerSessionPage({
       setLastScore({ score, max });
       setPerformanceRefreshKey((key) => key + 1);
       setPhase("between");
+      window.scrollTo({ top: 0, behavior: "instant" });
     },
     [question, user?.id],
   );
@@ -172,6 +164,7 @@ export default function SJTTrainerSessionPage({
       savedQuestionIdRef.current = null;
       progressRef.current = null;
       setPhase("quiz");
+      window.scrollTo({ top: 0, behavior: "instant" });
     } finally {
       setAdvancing(false);
     }
@@ -211,21 +204,20 @@ export default function SJTTrainerSessionPage({
               <h1 className="text-lg font-bold text-foreground">{title}</h1>
               <p className="text-xs text-muted-foreground">{subtitle}</p>
             </div>
-            {questionsAttempted > 0 && (
-              <div className="ml-auto text-right">
-                <p className="text-xs text-muted-foreground">{questionsAttempted} done</p>
-                {sessionPct != null && (
-                  <p className="text-sm font-bold text-foreground">{sessionPct}%</p>
-                )}
-              </div>
-            )}
-          </div>
-
-          {question && phase !== "between" && (
-            <div className="mb-4">
-              <SJTDomainBadge domain={question.domain} showLink />
+            <div className="ml-auto flex items-center gap-4">
+              {question && phase !== "between" && (
+                <SJTDomainBadge domain={question.domain} showLink />
+              )}
+              {questionsAttempted > 0 && (
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground">{questionsAttempted} done</p>
+                  {sessionPct != null && (
+                    <p className="text-sm font-bold text-foreground">{sessionPct}%</p>
+                  )}
+                </div>
+              )}
             </div>
-          )}
+          </div>
 
           {error && (
             <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive-muted p-4 text-sm text-foreground">
@@ -269,7 +261,7 @@ export default function SJTTrainerSessionPage({
           {phase === "quiz" && question && renderQuiz(question, quizHandlers)}
 
           {phase === "between" && (
-            <div className="space-y-5">
+            <div className="space-y-5 max-w-xl mx-auto">
               {lastScore && (
                 <div
                   className={cn(

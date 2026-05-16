@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Scale, Star, ArrowUpDown, ExternalLink, ChevronRight, Users } from "lucide-react";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
@@ -57,7 +57,6 @@ const domainColors: Record<string, string> = {
 
 export default function SJTHubPage() {
   const navigate = useNavigate();
-  const location = useLocation();
   const [perfKey, setPerfKey] = useState(0);
   const base = getSiteBaseUrl();
   const canonical = base ? `${base}/ucat-sjt-practice` : undefined;

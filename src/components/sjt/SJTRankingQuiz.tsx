@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { CheckCircle2, XCircle, ExternalLink, ChevronRight } from "lucide-react";
 import type { SJTRankingQuestion, RankingAnswer } from "../../types/sjt";
-import { recordSJTAttempt } from "../../lib/sjtAnalytics";
 import { cn } from "../../lib/cn";
+import type { SJTQuizProgress } from "../../types/sjt";
 
 type Phase = "answering" | "results";
 
 type Props = {
   question: SJTRankingQuestion;
   onComplete: (score: number, total: number) => void;
+  onProgress?: (progress: SJTQuizProgress) => void;
 };
 
 function getRankLabel(rank: 1 | 2 | 3): string {
@@ -17,7 +18,7 @@ function getRankLabel(rank: 1 | 2 | 3): string {
   return "Middle option";
 }
 
-export default function SJTRankingQuiz({ question, onComplete }: Props) {
+export default function SJTRankingQuiz({ question, onComplete, onProgress }: Props) {
   const [phase, setPhase] = useState<Phase>("answering");
   const [answer, setAnswer] = useState<RankingAnswer>({ most: null, least: null });
 
@@ -30,12 +31,10 @@ export default function SJTRankingQuiz({ question, onComplete }: Props) {
   const score = (mostCorrect ? 1 : 0) + (leastCorrect ? 1 : 0);
 
   function handleSubmit() {
-    recordSJTAttempt({
-      questionId: question.id,
-      domain: question.domain,
-      type: "ranking",
-      score,
-      maxScore: 2,
+    onProgress?.({
+      itemsAttempted: 1,
+      itemsTotal: 1,
+      partialScore: score,
     });
     setPhase("results");
     onComplete(score, 2);
