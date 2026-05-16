@@ -14,7 +14,8 @@ export type TrainerFaqKey =
   | "quantHub"
   | "mentalMaths"
   | "decisionHub"
-  | "syllogismMacro";
+  | "syllogismMacro"
+  | "sjtHub";
 
 export type TrainerFaqMap = Record<TrainerFaqKey, TrainerFaqItem[]>;
 
@@ -673,6 +674,56 @@ export const trainerFaqs: TrainerFaqMap = {
       question: "When should I add Syllogism Macro drills into my study plan?",
       answer:
         "Once you are comfortable with the basic logic from micro exercises, start adding one or two macro drills into each Decision Making study session. This gives you enough exposure to exam-style complexity without overwhelming your practice with only the hardest questions.",
+    },
+  ],
+  sjtHub: [
+    {
+      id: "what-is-sjt",
+      question: "What is the UCAT Situational Judgement Test?",
+      answer:
+        "The Situational Judgement Test (SJT) is the fifth section of the UCAT. It presents clinical and professional scenarios and asks you to judge how appropriate or important various responses are. Rather than testing medical knowledge, it assesses whether you can recognise the values and behaviours expected of a medical professional, as defined in the GMC's Good Medical Practice guidance.",
+    },
+    {
+      id: "sjt-question-types",
+      question: "What are the two question types in the UCAT SJT?",
+      answer:
+        "There are two types. Rating questions ask you to rate individual responses on a four-point scale — either for appropriateness (Very Appropriate → Very Inappropriate) or for importance (Very Important → Not Important at All). Ranking questions present three possible responses and ask you to identify the most appropriate and the least appropriate from the set.",
+    },
+    {
+      id: "sjt-scoring",
+      question: "How is the SJT scored and what do the bands mean?",
+      answer:
+        "The SJT is reported in four bands rather than a scaled score. Band 1 is the highest and indicates performance closely aligned with the professional approach of doctors. Band 4 is the lowest. You receive full marks for an exact answer, partial credit if you are one rating step away from the correct answer, and no credit for answers two or more steps away. Most competitive medical schools require Band 1 or Band 2.",
+    },
+    {
+      id: "sjt-gmc-gmp",
+      question: "What is GMC Good Medical Practice and why does it matter for the SJT?",
+      answer:
+        "Good Medical Practice (GMP) is the GMC's official framework for what it means to be a good doctor. Every SJT scenario is designed around the same principles: being competent and safe, partnering with patients, working well with colleagues, and maintaining trust and professionalism. Understanding which domain is being tested in a scenario is the fastest route to the correct answer.",
+    },
+    {
+      id: "sjt-appropriateness-tips",
+      question: "How should I approach Appropriateness Rating questions?",
+      answer:
+        "Ask yourself two questions: Does this action directly address the core professional duty in the scenario? And does it risk any harm — to the patient, a colleague, or the profession? Very Appropriate actions tackle the key duty proactively without creating new problems. Very Inappropriate actions either do nothing or actively make things worse. Most nuance sits in the Appropriate versus Inappropriate boundary, which is where the GMC domain reference helps most.",
+    },
+    {
+      id: "sjt-importance-tips",
+      question: "How should I approach Importance Rating questions?",
+      answer:
+        "Identify whether each consideration directly relates to patient safety, a core professional duty, or a legal or ethical obligation. These almost always sit at Very Important. Considerations that serve personal convenience, reputation, or institutional politics generally sit at Minor Importance or Not Important at All. The hardest items involve professional development or team dynamics — these typically land at Important rather than Very Important unless there is an immediate risk at stake.",
+    },
+    {
+      id: "sjt-ranking-tips",
+      question: "How should I approach Ranking questions?",
+      answer:
+        "In a ranking question you are only scored on your Most and Least choices — the middle item is implicit. Identify the option that most directly addresses the central professional obligation in the scenario without overstepping or causing harm: that is your Most. Then look for the option that either ignores the problem entirely or would actively make things worse: that is your Least. When two options seem similarly good or bad, the GMC domain context usually provides the tiebreaker.",
+    },
+    {
+      id: "sjt-partial-credit",
+      question: "What is partial credit and how do I use it strategically?",
+      answer:
+        "Partial credit means that being one step away from the correct rating still earns you a mark. This makes the SJT more forgiving than other UCAT sections but also means you lose marks gradually by drifting in the wrong direction. Strategically, if you are unsure between two adjacent options, pick the one that better reflects active professional responsibility. Guessing at random across a four-point scale will, on average, cost you marks, so anchoring your answers to the GMC principles reduces that risk.",
     },
   ],
 };

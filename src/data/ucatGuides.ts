@@ -13,6 +13,7 @@ export type UcatGuideContext =
   | "verbalHub"
   | "decisionHub"
   | "quantHub"
+  | "sjtHub"
   | "application";
 
 export type UcatGuidesPanelContext = UcatGuideContext | "trainer" | "studyGuides";
@@ -321,6 +322,8 @@ export function getCatalogSectionIdForPanelContext(context?: UcatGuidesPanelCont
       return "decision";
     case "quantHub":
       return "quant";
+    case "sjtHub":
+      return "sjt";
     case "application":
       return "application";
     case "home":
@@ -375,6 +378,12 @@ const CONTEXT_GUIDES: Record<UcatGuideContext, UcatGuide[]> = {
     UCAT_GUIDES.qrCalculator,
     UCAT_GUIDES.qrPercentages,
     UCAT_APPLICATION_LINKS.scoreCalculator,
+  ],
+  sjtHub: [
+    UCAT_GUIDES.sjtComplete,
+    UCAT_GUIDES.sjtMostLeast,
+    UCAT_GUIDES.sjtGmcGmp,
+    UCAT_GUIDES.sjtBandsUnis,
   ],
   application: [
     UCAT_APPLICATION_LINKS.scoreCalculator,
@@ -457,6 +466,11 @@ const PANEL_COPY: Record<UcatGuidesPanelContext, { title: string; description: s
     title: `New Quantitative Reasoning guides · ${UCAT_GUIDES_YEAR}`,
     description:
       "Every free 2026 guide is below in one library. Quantitative Reasoning opens first on this page. Expand Verbal Reasoning, Decision Making, SJT, essentials or application for the full set.",
+  },
+  sjtHub: {
+    title: `New SJT guides · ${UCAT_GUIDES_YEAR}`,
+    description:
+      "Every free 2026 guide is below in one library. Situational Judgement opens first on this page. Expand Verbal Reasoning, Decision Making, Quantitative Reasoning, essentials or application for the full set.",
   },
   application: {
     title: `UCAT scoring & universities · ${UCAT_GUIDES_YEAR}`,

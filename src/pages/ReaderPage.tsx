@@ -39,8 +39,9 @@ type ConfigureState = {
   wpm: number;
   questionCount?: number;
   difficulty?: TrainingDifficulty;
-   guidedChunkingEnabled?: boolean;
-   guidedChunkSize?: number;
+  category?: string;
+  guidedChunkingEnabled?: boolean;
+  guidedChunkSize?: number;
 };
 
 export default function ReaderPage() {
@@ -49,7 +50,7 @@ export default function ReaderPage() {
   const [phase, setPhase] = useState<Phase>("reading");
   const [readingKey, setReadingKey] = useState(0);
   const [passage, setPassage] = useState<Passage>(
-    () => configureState?.passage ?? pickNewRandomPassage(null, configureState?.difficulty)
+    () => configureState?.passage ?? pickNewRandomPassage(null, configureState?.difficulty, configureState?.category)
   );
   const [wpm, setWpm] = useState<number>(() => configureState?.wpm ?? 300);
   const [quizCorrect, setQuizCorrect] = useState(0);
@@ -123,6 +124,7 @@ export default function ReaderPage() {
   const WPM_MIN = 200;
   const WPM_MAX = 900;
   const difficulty: TrainingDifficulty = configureState?.difficulty ?? "medium";
+  const category: string = configureState?.category ?? "all";
 
   const handleReaderFinish = useCallback((finishedWpm: number, opts?: { timeSpentSeconds: number; usedOvertime?: boolean }) => {
     if (opts?.timeSpentSeconds != null && opts.timeSpentSeconds > 0) {
@@ -210,7 +212,7 @@ export default function ReaderPage() {
     setReadingTimeSeconds(null);
     setPhase("reading");
     setReadingKey((k) => k + 1);
-    setPassage((current) => pickNewRandomPassage(current?.id, difficulty));
+    setPassage((current) => pickNewRandomPassage(current?.id, difficulty, category));
     readingStartTimeRef.current = null;
   }, [difficulty]);
 
@@ -221,7 +223,7 @@ export default function ReaderPage() {
       hasAutoSavedRef.current = false;
       setPhase("reading");
       setReadingKey((k) => k + 1);
-      setPassage((current) => pickNewRandomPassage(current?.id, difficulty));
+      setPassage((current) => pickNewRandomPassage(current?.id, difficulty, category));
       readingStartTimeRef.current = null;
     },
     [difficulty]
@@ -301,6 +303,7 @@ export default function ReaderPage() {
         {phase === "quiz" && (
           <DistortionQuiz
             passageText={passageText}
+            passageTitle={passage?.title}
             passageId={passage?.id ?? "unknown"}
             trainerType="speed_reading"
             onComplete={handleQuizComplete}

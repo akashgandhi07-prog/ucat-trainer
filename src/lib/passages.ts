@@ -17,17 +17,23 @@ function getDifficultyRange(level?: TrainingDifficulty): [number, number] | null
 
 export function pickNewRandomPassage(
   currentId?: string | null,
-  difficulty?: TrainingDifficulty
+  difficulty?: TrainingDifficulty,
+  category?: string
 ): Passage {
   if (PASSAGES.length === 0) {
     throw new Error("No passages available");
   }
 
   const range = getDifficultyRange(difficulty);
-  const pool =
-    range == null
-      ? PASSAGES
-      : PASSAGES.filter((p) => p.difficulty >= range[0] && p.difficulty <= range[1]);
+  let pool = range == null
+    ? PASSAGES
+    : PASSAGES.filter((p) => p.difficulty >= range[0] && p.difficulty <= range[1]);
+
+  if (category && category !== "all") {
+    const catFiltered = pool.filter((p) => p.category === category);
+    // Only apply category filter if it yields results; otherwise fall back to difficulty pool
+    if (catFiltered.length > 0) pool = catFiltered;
+  }
 
   const source = pool.length > 0 ? pool : PASSAGES;
 
