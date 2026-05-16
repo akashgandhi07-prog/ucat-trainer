@@ -19,7 +19,6 @@ const TRAINERS = [
       "Rate each response as Very Appropriate, Appropriate, Inappropriate, or Very Inappropriate. The most common SJT question type.",
     icon: Scale,
     path: "/ucat-sjt-appropriateness-trainer",
-    accent: "emerald" as const,
     benefit: "Most common type",
     tip: "Focus on what a good doctor would do, not what is easiest or most convenient.",
   },
@@ -30,7 +29,6 @@ const TRAINERS = [
       "Rate each consideration as Very Important, Important, Of Minor Importance, or Not Important at All.",
     icon: Star,
     path: "/ucat-sjt-importance-trainer",
-    accent: "blue" as const,
     benefit: "Partial credit scoring",
     tip: "Patient safety and professional duty tend to sit at Very Important. Personal feelings rarely do.",
   },
@@ -41,26 +39,11 @@ const TRAINERS = [
       "Choose the most and least appropriate response from three options. Tests your ability to compare and prioritise.",
     icon: ArrowUpDown,
     path: "/ucat-sjt-ranking-trainer",
-    accent: "purple" as const,
     benefit: "Best vs worst",
     tip: "You only need to identify the best and worst option. The middle option is not scored.",
   },
 ] as const;
 
-const trainerAccent: Record<string, { icon: string; btn: string }> = {
-  emerald: {
-    icon: "bg-emerald-500/10 text-emerald-600",
-    btn: "bg-emerald-600 hover:bg-emerald-700 text-white",
-  },
-  blue: {
-    icon: "bg-blue-500/10 text-blue-600",
-    btn: "bg-blue-600 hover:bg-blue-700 text-white",
-  },
-  purple: {
-    icon: "bg-purple-500/10 text-purple-600",
-    btn: "bg-purple-600 hover:bg-purple-700 text-white",
-  },
-};
 
 const domainColors: Record<string, string> = {
   blue: "bg-blue-500/10 text-blue-700 border-blue-200",
@@ -104,37 +87,34 @@ export default function SJTHubPage() {
 
             <SkillsSectionBlock title="Pick a trainer">
               <div className="grid gap-3 sm:gap-4 sm:grid-cols-3 text-left">
-                {TRAINERS.map(({ id, title, description, icon: Icon, path, accent, benefit, tip }) => {
-                  const colors = trainerAccent[accent];
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => navigate(path)}
-                      className="group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm hover:border-primary/40 hover:shadow-md p-4 sm:p-5 text-left transition-all duration-200"
-                    >
-                      <div className="flex flex-col gap-1 sm:gap-2 mb-3">
-                        <span className={cn("inline-flex h-9 w-9 items-center justify-center rounded-lg shrink-0", colors.icon)}>
-                          <Icon className="w-5 h-5" aria-hidden />
-                        </span>
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                          {benefit}
-                        </span>
-                      </div>
-                      <p className="text-sm sm:text-base font-semibold text-foreground">{title}</p>
-                      <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-muted-foreground flex-1">
-                        {description}
-                      </p>
-                      <div className="mt-4 rounded-lg bg-muted/50 border border-border px-3 py-2">
-                        <p className="text-xs text-muted-foreground leading-relaxed">{tip}</p>
-                      </div>
-                      <div className={cn("mt-4 w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors", colors.btn)}>
-                        Start trainer
-                        <ChevronRight className="w-4 h-4" aria-hidden />
-                      </div>
-                    </button>
-                  );
-                })}
+                {TRAINERS.map(({ id, title, description, icon: Icon, path, benefit, tip }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => navigate(path)}
+                    className="group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm hover:border-primary/40 hover:shadow-md p-4 sm:p-5 text-left transition-all duration-200"
+                  >
+                    <div className="flex flex-col gap-1 sm:gap-2 mb-3">
+                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg shrink-0 bg-primary/10 text-primary">
+                        <Icon className="w-5 h-5" aria-hidden />
+                      </span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                        {benefit}
+                      </span>
+                    </div>
+                    <p className="text-sm sm:text-base font-semibold text-foreground">{title}</p>
+                    <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-muted-foreground flex-1">
+                      {description}
+                    </p>
+                    <div className="mt-4 rounded-lg bg-muted/50 border border-border px-3 py-2">
+                      <p className="text-xs text-muted-foreground leading-relaxed">{tip}</p>
+                    </div>
+                    <div className="mt-4 w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors bg-primary hover:bg-primary/90 text-primary-foreground">
+                      Start trainer
+                      <ChevronRight className="w-4 h-4" aria-hidden />
+                    </div>
+                  </button>
+                ))}
               </div>
             </SkillsSectionBlock>
 
