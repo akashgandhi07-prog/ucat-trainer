@@ -65,30 +65,28 @@ export default function SJTAppropriatenessPage() {
       />
       <Header />
       <main className="flex-1 py-8 px-4">
-        <div className="w-full max-w-2xl mx-auto">
+        <div className="w-full max-w-4xl mx-auto">
 
-          {/* Page header */}
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600">
               <Scale className="w-5 h-5" aria-hidden />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-slate-900">Appropriateness Rater</h1>
-              <p className="text-xs text-slate-500">
-                Rate each response on a 4-point scale · Partial credit for adjacent answers
+              <h1 className="text-lg font-bold text-foreground">Appropriateness Rater</h1>
+              <p className="text-xs text-muted-foreground">
+                Rate each response on a 4-point scale. Partial credit for adjacent answers.
               </p>
             </div>
             {questionsAttempted > 0 && (
               <div className="ml-auto text-right">
-                <p className="text-xs text-slate-500">{questionsAttempted} done</p>
+                <p className="text-xs text-muted-foreground">{questionsAttempted} done</p>
                 {sessionPct != null && (
-                  <p className="text-sm font-bold text-slate-700">{sessionPct}%</p>
+                  <p className="text-sm font-bold text-foreground">{sessionPct}%</p>
                 )}
               </div>
             )}
           </div>
 
-          {/* Domain filter hint */}
           {question && phase !== "between" && (
             <div className="mb-4">
               <SJTDomainBadge domain={question.domain} showLink />
@@ -97,17 +95,17 @@ export default function SJTAppropriatenessPage() {
 
           {phase === "intro" && (
             <div className="space-y-5">
-              <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                <h2 className="text-sm font-semibold text-slate-700 mb-3">How this trainer works</h2>
-                <div className="space-y-2 text-sm text-slate-600">
+              <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+                <h2 className="text-sm font-semibold text-foreground mb-3">How this trainer works</h2>
+                <div className="space-y-2 text-sm text-muted-foreground">
                   <p>1. You will be presented with a clinical or training scenario.</p>
-                  <p>2. Rate each listed response as <strong>Very Appropriate</strong>, <strong>Appropriate</strong>, <strong>Inappropriate</strong>, or <strong>Very Inappropriate</strong>.</p>
-                  <p>3. After submitting, you will see the correct rating for each item with a full rationale — and an explanation of why the adjacent option falls short.</p>
+                  <p>2. Rate each listed response as <strong className="text-foreground">Very Appropriate</strong>, <strong className="text-foreground">Appropriate</strong>, <strong className="text-foreground">Inappropriate</strong>, or <strong className="text-foreground">Very Inappropriate</strong>.</p>
+                  <p>3. After confirming each answer, you will see the correct rating with a full rationale and an explanation of why the adjacent option falls short.</p>
                 </div>
               </div>
-              <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4">
-                <p className="text-xs font-semibold text-amber-700 uppercase tracking-wider mb-1">Scoring</p>
-                <p className="text-sm text-amber-800">
+              <div className="rounded-xl border border-border bg-secondary p-4">
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Scoring</p>
+                <p className="text-sm text-foreground">
                   Full marks for the exact correct rating. Partial credit if you are one step away. No credit for two or more steps off.
                 </p>
               </div>
@@ -115,17 +113,17 @@ export default function SJTAppropriatenessPage() {
                 <button
                   type="button"
                   onClick={() => setPhase("quiz")}
-                  className="w-full min-h-[44px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition-colors inline-flex items-center justify-center gap-2"
+                  className="w-full min-h-[44px] rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors inline-flex items-center justify-center gap-2"
                 >
                   Start practising
                   <ChevronRight className="w-4 h-4" aria-hidden />
                 </button>
               ) : (
-                <p className="text-sm text-slate-500 text-center">No appropriateness questions available yet.</p>
+                <p className="text-sm text-muted-foreground text-center">No appropriateness questions available yet.</p>
               )}
               <p className="text-center text-sm">
-                <Link to="/ucat-sjt-practice" className="text-slate-500 hover:text-blue-600">
-                  ← Back to SJT hub
+                <Link to="/ucat-sjt-practice" className="text-muted-foreground hover:text-primary">
+                  Back to SJT hub
                 </Link>
               </p>
             </div>
@@ -142,18 +140,18 @@ export default function SJTAppropriatenessPage() {
                   className={cn(
                     "rounded-xl border p-5 text-center",
                     lastScore.score === lastScore.max
-                      ? "border-emerald-200 bg-emerald-50"
+                      ? "bg-training-success-muted border-training-success"
                       : lastScore.score >= lastScore.max * 0.6
-                      ? "border-amber-200 bg-amber-50"
-                      : "border-red-200 bg-red-50"
+                      ? "bg-amber-50 border-amber-200"
+                      : "bg-destructive-muted border-destructive"
                   )}
                 >
-                  <p className="text-2xl font-bold text-slate-900 mb-1">
+                  <p className="text-2xl font-bold text-foreground mb-1">
                     {lastScore.score} / {lastScore.max}
                   </p>
-                  <p className="text-sm text-slate-600">on this scenario</p>
+                  <p className="text-sm text-muted-foreground">on this scenario</p>
                   {sessionPct != null && questionsAttempted > 1 && (
-                    <p className="text-xs text-slate-500 mt-2">
+                    <p className="text-xs text-muted-foreground mt-2">
                       Session total: {sessionScore} / {sessionMax} ({sessionPct}%) across {questionsAttempted} scenarios
                     </p>
                   )}
@@ -163,7 +161,7 @@ export default function SJTAppropriatenessPage() {
                 <button
                   type="button"
                   onClick={handleNext}
-                  className="flex-1 min-h-[44px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition-colors inline-flex items-center justify-center gap-2"
+                  className="flex-1 min-h-[44px] rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors inline-flex items-center justify-center gap-2"
                 >
                   Next scenario
                   <ChevronRight className="w-4 h-4" aria-hidden />
@@ -171,15 +169,15 @@ export default function SJTAppropriatenessPage() {
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="flex-1 min-h-[44px] rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm transition-colors inline-flex items-center justify-center gap-2"
+                  className="flex-1 min-h-[44px] rounded-xl border border-border bg-card hover:bg-secondary text-foreground font-semibold text-sm transition-colors inline-flex items-center justify-center gap-2"
                 >
                   <RotateCcw className="w-4 h-4" aria-hidden />
                   Reset session
                 </button>
               </div>
               <p className="text-center text-sm">
-                <Link to="/ucat-sjt-practice" className="text-slate-500 hover:text-blue-600">
-                  ← Back to SJT hub
+                <Link to="/ucat-sjt-practice" className="text-muted-foreground hover:text-primary">
+                  Back to SJT hub
                 </Link>
               </p>
             </div>
@@ -187,11 +185,12 @@ export default function SJTAppropriatenessPage() {
 
         </div>
       </main>
-      <UcatGuidesPanel context="sjtHub" />
+      <UcatGuidesPanel embedded context="sjtHub" />
       <TrainerFaqSection
+        embedded
         id="sjt-appropriateness-faq"
         title="Common questions about the UCAT SJT"
-        intro="Frequently asked questions about the Situational Judgement Test — how it works, how it's scored, and how to approach each question type using GMC Good Medical Practice."
+        intro="Frequently asked questions about the Situational Judgement Test: how it works, how it's scored, and how to approach each question type using GMC Good Medical Practice."
         faqs={trainerFaqs.sjtHub}
         collapseIntoSingleAccordion
       />
