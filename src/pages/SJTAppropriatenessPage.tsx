@@ -10,7 +10,7 @@ export default function SJTAppropriatenessPage() {
       type="appropriateness"
       icon={Scale}
       title="Appropriateness Rater"
-      subtitle="Rate each response on a 4-point scale. Partial credit for adjacent answers."
+      subtitle="Rate each response on a 4-point scale. Half marks for the next best answer."
       seoTitle="UCAT SJT appropriateness trainer (UK)"
       seoDescription="Practice rating responses as Very Appropriate, Appropriate, Inappropriate or Very Inappropriate. Free UCAT SJT trainer grounded in GMC Good Medical Practice."
       canonicalPath="/ucat-sjt-appropriateness-trainer"
@@ -31,7 +31,7 @@ export default function SJTAppropriatenessPage() {
               </p>
               <p>
                 3. After confirming each answer, you will see the correct rating with a full rationale
-                and an explanation of why the adjacent option falls short.
+                and an explanation of how the next best answer compares.
               </p>
             </div>
           </div>
@@ -40,8 +40,8 @@ export default function SJTAppropriatenessPage() {
               Scoring
             </p>
             <p className="text-sm text-foreground">
-              Full marks for the exact correct rating. Partial credit if you are one step away. No
-              credit for two or more steps off.
+              One mark for the exact correct rating. Half a mark for the next best answer. No credit
+              for the remaining options.
             </p>
           </div>
         </>

@@ -31,7 +31,7 @@ export default function SJTImportancePage() {
               </p>
               <p>
                 3. After confirming each answer, you will see why each consideration sits at the
-                rating it does, and why the alternatives fall short.
+                rating it does, and how the next best answer compares.
               </p>
             </div>
           </div>
@@ -40,9 +40,8 @@ export default function SJTImportancePage() {
               Key pattern to spot
             </p>
             <p className="text-sm text-foreground">
-              Patient safety and core professional duties almost always sit at Very Important.
-              Personal feelings, reputation, and convenience almost always sit at Not Important at
-              All or Of Minor Importance.
+              Exact answers are worth one mark. The next best answer is worth half a mark, so be
+              especially careful when choosing between adjacent ratings.
             </p>
           </div>
         </>

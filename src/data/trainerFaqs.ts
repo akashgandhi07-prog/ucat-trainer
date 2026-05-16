@@ -687,13 +687,13 @@ export const trainerFaqs: TrainerFaqMap = {
       id: "sjt-question-types",
       question: "What are the two question types in the UCAT SJT?",
       answer:
-        "There are two types. Rating questions ask you to rate individual responses on a four-point scale — either for appropriateness (Very Appropriate → Very Inappropriate) or for importance (Very Important → Not Important at All). Ranking questions present three possible responses and ask you to identify the most appropriate and the least appropriate from the set.",
+        "There are two types. Rating questions ask you to rate individual responses on a four-point scale, either for appropriateness (Very Appropriate to Very Inappropriate) or for importance (Very Important to Not Important at All). Ranking questions present three possible responses and ask you to identify the most appropriate and the least appropriate from the set.",
     },
     {
       id: "sjt-scoring",
       question: "How is the SJT scored and what do the bands mean?",
       answer:
-        "The SJT is reported in four bands rather than a scaled score. Band 1 is the highest and indicates performance closely aligned with the professional approach of doctors. Band 4 is the lowest. You receive full marks for an exact answer, partial credit if you are one rating step away from the correct answer, and no credit for answers two or more steps away. Most competitive medical schools require Band 1 or Band 2.",
+        "The SJT is reported in four bands rather than a scaled score. Band 1 is the highest and indicates performance closely aligned with the professional approach of doctors. Band 4 is the lowest. In this trainer, exact answers are worth one mark, the next best rating answer is worth half a mark, and the remaining rating options receive no credit. Ranking scenarios are worth one mark total, split into half a mark for the most appropriate response and half a mark for the least appropriate response.",
     },
     {
       id: "sjt-gmc-gmp",
@@ -717,14 +717,13 @@ export const trainerFaqs: TrainerFaqMap = {
       id: "sjt-ranking-tips",
       question: "How should I approach Ranking questions?",
       answer:
-        "In a ranking question you are only scored on your Most and Least choices — the middle item is implicit. Identify the option that most directly addresses the central professional obligation in the scenario without overstepping or causing harm: that is your Most. Then look for the option that either ignores the problem entirely or would actively make things worse: that is your Least. When two options seem similarly good or bad, the GMC domain context usually provides the tiebreaker.",
+        "In a ranking question you are only scored on your Most and Least choices; the middle item is implicit. Identify the option that most directly addresses the central professional obligation in the scenario without overstepping or causing harm: that is your Most. Then look for the option that either ignores the problem entirely or would actively make things worse: that is your Least. Each correct extreme is worth half a mark.",
     },
     {
       id: "sjt-partial-credit",
       question: "What is partial credit and how do I use it strategically?",
       answer:
-        "Partial credit means that being one step away from the correct rating still earns you a mark. This makes the SJT more forgiving than other UCAT sections but also means you lose marks gradually by drifting in the wrong direction. Strategically, if you are unsure between two adjacent options, pick the one that better reflects active professional responsibility. Guessing at random across a four-point scale will, on average, cost you marks, so anchoring your answers to the GMC principles reduces that risk.",
+        "Partial credit means the next best rating answer earns half a mark. This makes the SJT more forgiving than all-or-nothing scoring, but it still rewards precise professional judgement. Strategically, if you are unsure between two adjacent options, pick the one that better reflects active professional responsibility. Guessing at random across a four-point scale will, on average, cost you marks, so anchoring your answers to the GMC principles reduces that risk.",
     },
   ],
 };
-

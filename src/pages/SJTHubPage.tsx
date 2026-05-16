@@ -32,7 +32,7 @@ const TRAINERS = [
       "Rate each consideration as Very Important, Important, Of Minor Importance, or Not Important at All.",
     icon: Star,
     path: "/ucat-sjt-importance-trainer",
-    benefit: "Partial credit scoring",
+    benefit: "Half mark scoring",
     tip: "Patient safety and professional duty tend to sit at Very Important. Personal feelings rarely do.",
   },
   {
@@ -166,9 +166,9 @@ export default function SJTHubPage() {
             <SkillsSectionBlock title="How SJT scoring works">
               <div className="rounded-xl border border-border bg-card p-5 space-y-3">
                 {[
-                  { label: "Full marks", color: "text-training-success", desc: "your rating or selection exactly matches the correct answer." },
-                  { label: "Partial credit", color: "text-warning", desc: "your rating is one step away from the correct answer (e.g. you chose Appropriate when Very Appropriate was correct)." },
-                  { label: "No credit", color: "text-destructive", desc: "your rating is two or more steps from correct, or you chose the wrong most/least option in a ranking question." },
+                  { label: "Full mark", color: "text-training-success", desc: "your rating exactly matches the correct answer, or both ranking selections are correct." },
+                  { label: "Half mark", color: "text-warning", desc: "you choose the next best rating answer, or one of the two ranking selections is correct." },
+                  { label: "No credit", color: "text-destructive", desc: "you choose an option outside the next best rating answer, or neither ranking selection is correct." },
                 ].map(({ label, color, desc }) => (
                   <div key={label} className="flex items-start gap-2 text-sm text-muted-foreground">
                     <span className={cn("font-semibold shrink-0", color)}>{label}</span>

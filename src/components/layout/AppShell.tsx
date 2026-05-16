@@ -1,8 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
+import { LogIn, Menu, MessageSquare, X } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { supabase } from "../../lib/supabase";
 import { AppShellProvider } from "../../contexts/AppShellContext";
+import { useAuthModal } from "../../contexts/AuthModalContext";
+import { useBugReportModal } from "../../contexts/BugReportContext";
 import AppTopBar from "./AppTopBar";
 import AppSidebar, {
   readSidebarCollapsedPreference,
@@ -10,12 +13,15 @@ import AppSidebar, {
 } from "./AppSidebar";
 import { cn } from "../../lib/cn";
 import { isPlannerIntegrated } from "../../lib/plannerUrl";
+import { getAppTopBarTitle } from "../../lib/appPageTitles";
 
 const NO_SHELL = ["/reset-password"];
 
 export default function AppShell() {
   const location = useLocation();
   const { user } = useAuth();
+  const { openAuthModal } = useAuthModal();
+  const { openBugReport } = useBugReportModal();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => readSidebarCollapsedPreference());
   const [showTutorNav, setShowTutorNav] = useState(false);
@@ -81,20 +87,51 @@ export default function AppShell() {
     <AppShellProvider>
       <div className="flex flex-col h-dvh min-h-0 overflow-hidden bg-background">
         {/* Mobile: full-width chrome */}
-        <div className="lg:hidden shrink-0 border-b border-border bg-background">
-          <div className="flex items-center gap-2 px-3 py-2">
+        <div className="lg:hidden shrink-0 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
+          <div className="flex min-h-[60px] items-center gap-3 px-3 py-2">
             <button
               type="button"
-              className="px-2 py-1 text-sm font-medium rounded-lg border border-border"
+              className={cn(
+                "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-background text-foreground shadow-sm",
+                "transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+              )}
               onClick={() => setMobileOpen((o) => !o)}
               aria-expanded={mobileOpen}
               aria-controls="app-sidebar-mobile"
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
             >
-              Menu
+              {mobileOpen ? <X className="h-5 w-5" aria-hidden /> : <Menu className="h-5 w-5" aria-hidden />}
             </button>
-            <span className="font-semibold text-sm">TheUKCATPeople</span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                TheUKCATPeople
+              </p>
+              <p className="truncate text-base font-semibold leading-tight text-foreground">
+                {getAppTopBarTitle(location.pathname)}
+              </p>
+            </div>
+            <div className="ml-auto flex shrink-0 items-center gap-1.5">
+              <button
+                type="button"
+                onClick={openBugReport}
+                className="flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                aria-label="Send feedback"
+                title="Feedback"
+              >
+                <MessageSquare className="h-4 w-4" aria-hidden />
+              </button>
+              {!user ? (
+                <button
+                  type="button"
+                  onClick={() => openAuthModal("login")}
+                  className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-primary px-3 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                >
+                  <LogIn className="h-4 w-4" aria-hidden />
+                  <span>Sign in</span>
+                </button>
+              ) : null}
+            </div>
           </div>
-          <AppTopBar className="border-b-0 shadow-none" />
         </div>
 
         <div className="flex flex-1 min-h-0 bg-background">

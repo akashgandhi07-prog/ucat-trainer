@@ -29,9 +29,9 @@ function scoreItem(
   userRating: SJTRating,
   correct: SJTRating,
   type: "appropriateness" | "importance"
-): 0 | 1 | 2 {
-  if (userRating === correct) return 2;
-  if (getAdjacentRating(correct, type) === userRating) return 1;
+): 0 | 0.5 | 1 {
+  if (userRating === correct) return 1;
+  if (getAdjacentRating(correct, type) === userRating) return 0.5;
   return 0;
 }
 
@@ -39,7 +39,7 @@ export default function SJTRatingQuiz({ question, onComplete }: Props) {
   const [itemIndex, setItemIndex] = useState(0);
   const [itemPhase, setItemPhase] = useState<ItemPhase>("rating");
   const [selected, setSelected] = useState<SJTRating | null>(null);
-  const [scores, setScores] = useState<(0 | 1 | 2)[]>([]);
+  const [scores, setScores] = useState<(0 | 0.5 | 1)[]>([]);
 
   const scale = getRatingScale(question.type);
   const labelMap = getLabelMap(question.type);
@@ -61,7 +61,7 @@ export default function SJTRatingQuiz({ question, onComplete }: Props) {
   function handleNext() {
     if (isLastItem) {
       const total = scores.reduce<number>((sum, s) => sum + s, 0);
-      onComplete(total, question.items.length * 2);
+      onComplete(total, question.items.length);
     } else {
       setItemIndex((i) => i + 1);
       setItemPhase("rating");
@@ -75,6 +75,8 @@ export default function SJTRatingQuiz({ question, onComplete }: Props) {
 
   const correctLabel = labelMap[item.correctRating];
   const userLabel = selected ? labelMap[selected] : null;
+  const nextBestRating = getAdjacentRating(item.correctRating, question.type);
+  const nextBestLabel = nextBestRating ? labelMap[nextBestRating] : null;
   const progressPct = Math.round(((itemIndex + 1) / question.items.length) * 100);
 
   return (
@@ -92,8 +94,8 @@ export default function SJTRatingQuiz({ question, onComplete }: Props) {
         </div>
       </div>
 
-      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.08fr)] lg:gap-5 xl:gap-6 lg:items-start space-y-3 lg:space-y-0">
-        <div className="lg:sticky lg:top-24">
+      <div className="lg:grid lg:grid-cols-[minmax(18rem,0.8fr)_minmax(0,1.2fr)] lg:gap-5 xl:gap-6 lg:items-start space-y-3 lg:space-y-0">
+        <div className="lg:self-start">
           <div className="rounded-xl border border-border bg-card shadow-sm p-4 sm:p-5">
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Scenario</p>
             <p className="text-sm text-foreground leading-relaxed lg:text-[15px]">{question.stem}</p>
@@ -105,9 +107,9 @@ export default function SJTRatingQuiz({ question, onComplete }: Props) {
         <div className={cn(
           "rounded-xl border p-4 sm:p-5 space-y-4",
           itemPhase === "feedback"
-            ? currentScore === 2
+            ? currentScore === 1
               ? "bg-training-success-muted border-training-success"
-              : currentScore === 1
+              : currentScore === 0.5
               ? "bg-warning-muted border-warning"
               : "bg-destructive-muted border-destructive"
             : "border-border bg-card shadow-sm"
@@ -116,9 +118,9 @@ export default function SJTRatingQuiz({ question, onComplete }: Props) {
             <span className="shrink-0 mt-0.5 w-5">
               {itemPhase === "feedback" && (
                 <>
-                {currentScore === 2 ? (
+                {currentScore === 1 ? (
                   <CheckCircle2 className="w-5 h-5 text-training-success" aria-hidden />
-                ) : currentScore === 1 ? (
+                ) : currentScore === 0.5 ? (
                   <AlertCircle className="w-5 h-5 text-warning" aria-hidden />
                 ) : (
                   <XCircle className="w-5 h-5 text-destructive" aria-hidden />
@@ -164,20 +166,25 @@ export default function SJTRatingQuiz({ question, onComplete }: Props) {
               <div className="grid gap-2 text-xs text-muted-foreground sm:grid-cols-[auto_1fr] sm:items-center">
                 <span className={cn(
                   "w-fit px-2.5 py-1 rounded-full font-semibold",
-                  currentScore === 2
+                  currentScore === 1
                     ? "bg-training-success-muted text-training-success"
-                    : currentScore === 1
+                    : currentScore === 0.5
                     ? "bg-warning-muted text-warning"
                     : "bg-destructive-muted text-destructive"
                 )}>
-                  {currentScore === 2 ? "Full marks" : currentScore === 1 ? "Partial credit" : "Incorrect"}
+                  {currentScore === 1 ? "Full mark" : currentScore === 0.5 ? "Half mark" : "Incorrect"}
                 </span>
                 <span>
                   Your answer: <strong className="text-foreground">{userLabel}</strong>
                 </span>
-                {currentScore !== 2 && (
+                {currentScore !== 1 && (
                   <span className="sm:col-start-2">
                     Correct: <strong className="text-foreground">{correctLabel}</strong>
+                  </span>
+                )}
+                {currentScore !== 1 && nextBestLabel && (
+                  <span className="sm:col-start-2">
+                    Next best for 0.5 marks: <strong className="text-foreground">{nextBestLabel}</strong>
                   </span>
                 )}
               </div>
@@ -190,7 +197,7 @@ export default function SJTRatingQuiz({ question, onComplete }: Props) {
                   <p className="text-sm text-foreground leading-relaxed">{item.rationale}</p>
                 </div>
 
-                {currentScore !== 2 && (
+                {currentScore !== 1 && (
                   <div className="border-t border-border pt-3">
                     <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
                       Why not {userLabel}

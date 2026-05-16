@@ -26,11 +26,11 @@ export default function SJTRankingQuiz({ question, onComplete }: Props) {
 
   const mostCorrect = answer.most === mostItem.id;
   const leastCorrect = answer.least === leastItem.id;
-  const score = (mostCorrect ? 1 : 0) + (leastCorrect ? 1 : 0);
+  const score = (mostCorrect ? 0.5 : 0) + (leastCorrect ? 0.5 : 0);
 
   function handleSubmit() {
     setPhase("results");
-    onComplete(score, 2);
+    onComplete(score, 1);
   }
 
   function selectMost(id: string) {
@@ -86,9 +86,9 @@ export default function SJTRankingQuiz({ question, onComplete }: Props) {
           <>
             {/* Score */}
             <div className="rounded-xl border border-border bg-card p-5 text-center">
-              <p className="text-2xl font-bold text-foreground mb-1">{score} / 2</p>
+              <p className="text-2xl font-bold text-foreground mb-1">{score} / 1</p>
               <p className="text-xs text-muted-foreground">
-                One mark for most appropriate. One mark for least appropriate.
+                Half a mark for most appropriate. Half a mark for least appropriate.
               </p>
             </div>
 

@@ -37,8 +37,8 @@ export default function SJTRankingPage() {
               The middle option
             </p>
             <p className="text-sm text-foreground">
-              You are not scored on the middle option, but reading its rationale helps you understand
-              the gradient between best and worst. That gradient is where most students lose marks.
+              Each ranking scenario is worth one mark: half a mark for the most appropriate response
+              and half a mark for the least appropriate response.
             </p>
           </div>
         </>

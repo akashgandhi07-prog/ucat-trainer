@@ -228,33 +228,37 @@ export function LandingSectionHub({ onVerbal, onDecision, onQuant, onSjt }: Sect
             under two minutes.
           </SectionIntro>
         </div>
-        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
           {cards.map(({ onClick, icon: Icon, accent, title, desc, label }) => (
             <button
               key={title}
               type="button"
               onClick={onClick}
-              className="group relative flex flex-col items-center p-6 sm:p-8 bg-card border border-border rounded-2xl shadow-sm hover:shadow-md hover:border-primary/50 transition-all text-center text-left md:text-center"
+              className="group relative flex items-start gap-4 rounded-xl border border-border bg-card p-4 text-left shadow-sm transition-all hover:border-primary/50 hover:shadow-md md:flex-col md:items-center md:rounded-2xl md:p-8 md:text-center"
             >
-              <span className="absolute top-4 right-4 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                {label}
-              </span>
               <div
                 className={cn(
-                  "p-3 rounded-full group-hover:scale-110 transition-transform duration-300",
+                  "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-105 md:h-auto md:w-auto md:rounded-full md:p-3 md:group-hover:scale-110",
                   accent,
                 )}
               >
-                <Icon className="w-9 h-9" aria-hidden />
+                <Icon className="h-6 w-6 md:h-9 md:w-9" aria-hidden />
               </div>
-              <h3 className="mt-4 text-xl font-bold text-foreground group-hover:text-primary transition-colors">
-                {title}
-              </h3>
-              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{desc}</p>
-              <span className="mt-4 text-sm font-medium text-primary inline-flex items-center gap-1">
-                Open hub
-                <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden />
-              </span>
+              <div className="min-w-0 flex-1 md:flex md:flex-col md:items-center">
+                <div className="flex items-start justify-between gap-3 md:block">
+                  <h3 className="text-lg font-bold leading-snug text-foreground transition-colors group-hover:text-primary md:mt-4 md:text-xl">
+                    {title}
+                  </h3>
+                  <span className="shrink-0 rounded-full bg-muted px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground md:absolute md:right-4 md:top-4 md:bg-transparent md:p-0">
+                    {label}
+                  </span>
+                </div>
+                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground md:mt-2">{desc}</p>
+                <span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary md:mt-4">
+                  Open hub
+                  <ArrowRight className="h-4 w-4 transition-opacity md:opacity-0 md:group-hover:opacity-100" aria-hidden />
+                </span>
+              </div>
             </button>
           ))}
         </div>
