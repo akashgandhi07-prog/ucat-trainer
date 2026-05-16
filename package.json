@@ -9,6 +9,8 @@
     "lint": "npx eslint .",
     "verify:qr-maths": "tsx scripts/verify-qr-question-maths.ts",
     "seed:syllogisms": "tsx scripts/seedSyllogisms.ts",
+    "seed:sjt": "tsx scripts/seedSjtQuestions.ts",
+    "export:sjt": "tsx scripts/exportSjtQuestionsJson.ts",
     "unify:bullet1-audit": "node scripts/unify-bullet1-audit.mjs",
     "unify:check-migrations": "node scripts/check-migrations-trainer-safe.mjs",
     "unify:trainer-smoke": "npm run lint && npm run build",

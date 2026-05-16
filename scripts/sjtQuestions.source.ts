@@ -1,5 +1,5 @@
-import type { SJTQuestion } from "../types/sjt";
-import { GMP_MAIN_URL } from "./gmcDomains";
+import type { SJTQuestion } from "../src/types/sjt";
+import { GMP_MAIN_URL } from "../src/data/gmcDomains";
 
 export const SJT_QUESTIONS: SJTQuestion[] = [
   // ─────────────────────────────────────────────────────────────

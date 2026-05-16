@@ -4,7 +4,10 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { supabase } from "../../lib/supabase";
+import {
+  fetchSyllogismMacroBlock,
+  fetchSyllogismMicroBatch,
+} from "../../lib/syllogismApi";
 import { saveSyllogismSession } from "../../utils/syllogismStorage";
 import { trackEvent, setActiveTrainer, clearActiveTrainer } from "../../lib/analytics";
 import type { SyllogismQuestion, LogicGroup } from "../../types/syllogisms";
@@ -26,15 +29,6 @@ function toErrorMessage(e: unknown): string {
     return (e as { message: string }).message;
   }
   return "Failed to load syllogism questions. Please try again or check your connection.";
-}
-
-function shuffle<T>(arr: T[]): T[] {
-  const out = [...arr];
-  for (let i = out.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [out[i], out[j]] = [out[j], out[i]];
-  }
-  return out;
 }
 
 export type SyllogismMode = "micro" | "macro";
@@ -64,6 +58,8 @@ export function useSyllogismLogic(mode: SyllogismMode) {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   /** Micro: set when submitAnswer is called so Space can advance before state flushes. */
   const justAnsweredIndexRef = useRef<number | null>(null);
+  /** Macro: block ids already used this tab session (avoid immediate repeats). */
+  const seenBlockIdsRef = useRef<string[]>([]);
   /** Macro: mirror of userAnswers so finishSession always reads latest (avoids stale closure). */
   const userAnswersRef = useRef<(boolean | null)[]>(userAnswers);
 
@@ -129,34 +125,15 @@ export function useSyllogismLogic(mode: SyllogismMode) {
     setSessionFinished(false);
     setLastSummary(null);
     try {
-      const { data, error: fetchErr } = await supabase
-        .from("syllogism_questions")
-        .select(
-          "id, macro_block_id, stimulus_text, conclusion_text, is_correct, logic_group, trick_type, explanation"
-        )
-        .limit(count * 3);
-      if (fetchErr) throw fetchErr;
-      type DbRow = { id: string; macro_block_id?: string; stimulus_text: string; conclusion_text: string; is_correct: boolean; logic_group: string; trick_type: string; explanation: string };
-      const rawList: SyllogismQuestion[] =
-        data?.map((row: DbRow) => ({
-          id: row.id,
-          macro_block_id: row.macro_block_id ?? row.id,
-          stimulus_text: row.stimulus_text,
-          conclusion_text: row.conclusion_text,
-          is_correct: row.is_correct,
-          logic_group: row.logic_group as LogicGroup,
-          trick_type: row.trick_type,
-          explanation: row.explanation,
-        })) ?? [];
+      const list = await fetchSyllogismMicroBatch(count);
 
-      if (rawList.length === 0) {
+      if (list.length === 0) {
         setError(SEED_ERROR_MESSAGE);
         setQuestions([]);
         setUserAnswers([]);
         return;
       }
 
-      const list = shuffle(rawList).slice(0, count);
       setQuestions(list);
       setUserAnswers(list.map(() => null));
       setCurrentIndex(0);
@@ -176,72 +153,17 @@ export function useSyllogismLogic(mode: SyllogismMode) {
     setError(null);
     setSessionFinished(false);
     setLastSummary(null);
-    const MACRO_FETCH_TIMEOUT_MS = 15000;
     try {
-      // Fetch enough rows to include all macro blocks (5 questions each). Micro questions
-      // use unique macro_block_ids, so we must group client-side and pick only blocks with 5.
-      const queryPromise = supabase
-        .from("syllogism_questions")
-        .select(
-          "id, macro_block_id, stimulus_text, conclusion_text, is_correct, logic_group, trick_type, explanation"
-        )
-        .not("macro_block_id", "is", null)
-        .limit(1500);
-      let timeoutId: ReturnType<typeof setTimeout>;
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        timeoutId = setTimeout(
-          () =>
-            reject(
-              new Error(
-                "Request timed out. Check your connection and try again."
-              )
-            ),
-          MACRO_FETCH_TIMEOUT_MS
-        );
-      });
-      const result = await Promise.race([
-        queryPromise.then((r) => {
-          clearTimeout(timeoutId!);
-          return r;
-        }),
-        timeoutPromise,
-      ]);
-      const { data: rows, error: fetchErr } = result;
-      if (fetchErr) throw fetchErr;
-      type DbRow = { id: string; macro_block_id?: string; stimulus_text: string; conclusion_text: string; is_correct: boolean; logic_group: string; trick_type: string; explanation: string };
-      const raw =
-        rows?.map((row: DbRow) => ({
-          id: row.id,
-          macro_block_id: row.macro_block_id ?? row.id,
-          stimulus_text: row.stimulus_text,
-          conclusion_text: row.conclusion_text,
-          is_correct: row.is_correct,
-          logic_group: row.logic_group as LogicGroup,
-          trick_type: row.trick_type,
-          explanation: row.explanation,
-        })) ?? [];
+      const list = await fetchSyllogismMacroBlock(seenBlockIdsRef.current);
 
-      const byBlock = new Map<string, SyllogismQuestion[]>();
-      raw.forEach((q: SyllogismQuestion) => {
-        const id = q.macro_block_id;
-        if (!byBlock.has(id)) byBlock.set(id, []);
-        byBlock.get(id)!.push(q);
-      });
-      const fullBlocks = [...byBlock.values()].filter(
-        (group) => group.length === 5
-      );
-      if (fullBlocks.length === 0) {
+      if (list.length !== 5) {
         setError(SEED_ERROR_MESSAGE);
         setQuestions([]);
         setUserAnswers([]);
         return;
       }
-      const chosen =
-        fullBlocks[Math.floor(Math.random() * fullBlocks.length)];
-      const list = chosen.sort(
-        (a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
-      );
 
+      seenBlockIdsRef.current = [...seenBlockIdsRef.current, list[0].macro_block_id];
       setQuestions(list);
       setUserAnswers(list.map(() => null));
       setCurrentIndex(0);
