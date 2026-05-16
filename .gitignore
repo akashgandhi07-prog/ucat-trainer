@@ -16,6 +16,9 @@ dist-ssr
 *.env*
 *.local
 
+# Local Codex / Claude worktrees (not part of the app)
+.claude/worktrees/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

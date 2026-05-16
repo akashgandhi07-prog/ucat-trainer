@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import {
   LineChart,
@@ -46,6 +46,11 @@ import type { SessionRow } from "../types/session";
 import type { SyllogismSession } from "../types/syllogisms";
 import SyllogismAnalytics from "../components/dashboard/SyllogismAnalytics";
 import UnifiedProductHub from "../components/dashboard/UnifiedProductHub";
+import DashboardHeroCard from "../components/dashboard/DashboardHeroCard";
+import LatestMockCard from "../components/dashboard/LatestMockCard";
+import TodayPlanStrip from "../components/dashboard/TodayPlanStrip";
+import WeekSummaryCard from "../components/dashboard/WeekSummaryCard";
+import { computeRollingDelta, StatDelta } from "../lib/dashboardDeltas";
 import { isPlannerIntegrated } from "../lib/plannerUrl";
 import { useAppShell } from "../contexts/AppShellContext";
 import { APP_CONTENT_X, appContentWidthClass } from "../lib/appContentLayout";
@@ -400,6 +405,45 @@ export default function Dashboard() {
     return m;
   }, [sessions]);
 
+  const wpmDelta = useMemo(
+    () => computeRollingDelta(byType.speed_reading, (s) => s.wpm),
+    [byType.speed_reading],
+  );
+  const rapidAccDelta = useMemo(
+    () =>
+      computeRollingDelta(byType.rapid_recall, (s) =>
+        s.total > 0 ? (s.correct / s.total) * 100 : null,
+      ),
+    [byType.rapid_recall],
+  );
+  const keywordAccDelta = useMemo(
+    () =>
+      computeRollingDelta(byType.keyword_scanning, (s) =>
+        s.total > 0 ? (s.correct / s.total) * 100 : null,
+      ),
+    [byType.keyword_scanning],
+  );
+  const inferenceAccDelta = useMemo(
+    () =>
+      computeRollingDelta(byType.inference_trainer, (s) =>
+        s.total > 0 ? (s.correct / s.total) * 100 : null,
+      ),
+    [byType.inference_trainer],
+  );
+  const calcKpsDelta = useMemo(
+    () => computeRollingDelta(byType.calculator, (s) => s.wpm),
+    [byType.calculator],
+  );
+  const mentalMathsTimeDelta = useMemo(
+    () => computeRollingDelta(byType.mental_maths, (s) => s.wpm),
+    [byType.mental_maths],
+  );
+
+  const scrollToExamDate = useCallback(() => {
+    document.getElementById("dashboard-exam-date")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    setUcatEditing(true);
+  }, []);
+
   const speedReadingSessions = byType.speed_reading;
   const lastSpeedSession = speedReadingSessions[speedReadingSessions.length - 1];
   const lastPassageTitle =
@@ -747,14 +791,6 @@ export default function Dashboard() {
   }, [sessions]);
   const lastPracticedDaysAgo =
     lastSessionDate != null ? Math.floor((today - lastSessionDate) / (24 * 60 * 60 * 1000)) : null;
-  const lastPracticedLabel =
-    lastPracticedDaysAgo == null
-      ? null
-      : lastPracticedDaysAgo === 0
-        ? "Today"
-        : lastPracticedDaysAgo === 1
-          ? "Yesterday"
-          : `${lastPracticedDaysAgo} days ago`;
   const sevenDaysAgo = today - 7 * 24 * 60 * 60 * 1000;
   const uniqueDaysInLast7 = useMemo(() => {
     const set = new Set<string>();
@@ -947,7 +983,19 @@ export default function Dashboard() {
 
     return (
       <div className="flex flex-col lg:flex-row lg:items-start gap-8 lg:gap-10">
-        <div className="min-w-0 flex-1 space-y-8">
+        <div className="min-w-0 flex-1 space-y-4">
+        <DashboardHeroCard
+          name={greetingName}
+          streak={streak}
+          lastPracticedDaysAgo={lastPracticedDaysAgo}
+          examDateISO={profile?.ucat_exam_date ?? null}
+          totalSessions={sessions.length + syllogismSessions.length}
+          uniqueDaysInLast7={uniqueDaysInLast7}
+          onSetExamDate={scrollToExamDate}
+        />
+        {user && <TodayPlanStrip userId={user.id} />}
+        {user && <LatestMockCard userId={user.id} />}
+        <div className="space-y-8 pt-2">
         {isPlannerIntegrated() ? <UnifiedProductHub /> : null}
         <section className="mb-8">
           <div className="bg-white rounded-xl border-2 border-slate-300 shadow-sm overflow-hidden">
@@ -1024,7 +1072,7 @@ export default function Dashboard() {
                 <span className="text-slate-900 font-medium">{lastCheckUp}</span>
               </div>
               {user && (
-                <div className="border-t border-slate-200 pt-3 mt-3">
+                <div id="dashboard-exam-date" className="border-t border-slate-200 pt-3 mt-3">
                   <div className="flex flex-wrap items-center gap-2 mb-2">
                     <span className="text-slate-500">UCAT exam date:</span>
                     <span className="text-xs text-slate-400">
@@ -1174,6 +1222,7 @@ export default function Dashboard() {
                   <p className="text-sm font-medium text-slate-500">Your typical WPM</p>
                   <p className="text-slate-500 text-xs mb-1">Average from your history</p>
                   <p className="text-3xl font-bold text-slate-900">{averageWpm}</p>
+                  <StatDelta delta={wpmDelta.delta} direction={wpmDelta.direction} unit=" WPM" />
                 </div>
                 <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                   <p className="text-sm font-medium text-slate-500">Best WPM</p>
@@ -1350,6 +1399,7 @@ export default function Dashboard() {
                     <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                       <p className="text-sm font-medium text-slate-500">Average score</p>
                       <p className="text-2xl font-bold text-slate-900">{rapidRecallAvg}%</p>
+                      <StatDelta delta={rapidAccDelta.delta} direction={rapidAccDelta.direction} unit="%" />
                     </div>
                     <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                       <p className="text-sm font-medium text-slate-500">Best score</p>
@@ -1390,6 +1440,7 @@ export default function Dashboard() {
                     <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                       <p className="text-sm font-medium text-slate-500">Average accuracy</p>
                       <p className="text-2xl font-bold text-slate-900">{keywordAvg}%</p>
+                      <StatDelta delta={keywordAccDelta.delta} direction={keywordAccDelta.direction} unit="%" />
                     </div>
                     <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                       <p className="text-sm font-medium text-slate-500">Best accuracy</p>
@@ -1436,6 +1487,7 @@ export default function Dashboard() {
                     <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                       <p className="text-sm font-medium text-slate-500">Average accuracy</p>
                       <p className="text-2xl font-bold text-slate-900">{inferenceAvg}%</p>
+                      <StatDelta delta={inferenceAccDelta.delta} direction={inferenceAccDelta.direction} unit="%" />
                     </div>
                     <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                       <p className="text-sm font-medium text-slate-500">Best accuracy</p>
@@ -1489,6 +1541,7 @@ export default function Dashboard() {
                     <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                       <p className="text-sm font-medium text-slate-500">Your Average KPS</p>
                       <p className="text-3xl font-bold text-slate-900">{calculatorAvgKps}</p>
+                      <StatDelta delta={calcKpsDelta.delta} direction={calcKpsDelta.direction} unit=" KPS" />
                     </div>
                     <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                       <p className="text-sm font-medium text-slate-500">Best KPS</p>
@@ -1585,6 +1638,16 @@ export default function Dashboard() {
                       <p className="text-3xl font-bold text-slate-900">
                         {mentalMathsAvgTimeMs != null ? `${(mentalMathsAvgTimeMs / 1000).toFixed(1)}s` : "-"}
                       </p>
+                      <StatDelta
+                        delta={
+                          mentalMathsTimeDelta.delta != null
+                            ? Math.round(mentalMathsTimeDelta.delta / 1000)
+                            : null
+                        }
+                        direction={mentalMathsTimeDelta.direction}
+                        invertGood
+                        unit="s"
+                      />
                     </div>
                     <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                       <p className="text-sm font-medium text-slate-500">Sessions</p>
@@ -1648,6 +1711,10 @@ export default function Dashboard() {
             </section>
 
             <section className="mt-10">
+              <WeekSummaryCard sessions={sessions} syllogismSessions={syllogismSessions} />
+            </section>
+
+            <section className="mt-10">
               <SyllogismAnalytics sessions={syllogismSessions} />
             </section>
 
@@ -1696,6 +1763,7 @@ export default function Dashboard() {
             )}
           </>
         )}
+        </div>
         </div>
         <aside
           className="shrink-0 w-full lg:w-[min(22rem,100%)] xl:w-96 lg:sticky lg:top-6 lg:self-start space-y-4"
@@ -1771,20 +1839,12 @@ export default function Dashboard() {
         <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">
-              {user ? "Welcome back," : "Your reading dashboard"}
-              {" "}
-              {user ? greetingName : ""}
+              {user ? "Dashboard" : "Your reading dashboard"}
             </h1>
-            {user && sessions.length > 0 && (
-              <div className="flex flex-wrap gap-3 mt-2 text-sm text-slate-600">
-                {lastPracticedLabel && (
-                  <span>Last practiced: {lastPracticedLabel}</span>
-                )}
-                <span>Practiced on {uniqueDaysInLast7} days in the last 7</span>
-                {streak > 0 && (
-                  <span className="font-medium text-green-700">{streak}-day streak</span>
-                )}
-              </div>
+            {!user && (
+              <p className="text-sm text-slate-600 mt-1">
+                Sign in to save progress and unlock your full analytics.
+              </p>
             )}
           </div>
           <div className="flex items-center gap-4">
