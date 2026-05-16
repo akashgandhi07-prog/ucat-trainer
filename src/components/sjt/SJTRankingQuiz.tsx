@@ -1,8 +1,7 @@
-import { useState, useEffect } from "react";
-import { CheckCircle2, XCircle, ChevronRight } from "lucide-react";
-import SjtGmpGuidanceLink from "./SjtGmpGuidanceLink";
-import { resolveSjtGmpRef } from "../../lib/sjtGmpRef";
-import type { SJTRankingQuestion, RankingAnswer, SJTQuizProgress } from "../../types/sjt";
+import { useState } from "react";
+import { CheckCircle2, XCircle, ExternalLink, ChevronRight } from "lucide-react";
+import type { SJTRankingQuestion, RankingAnswer } from "../../types/sjt";
+import { recordSJTAttempt } from "../../lib/sjtAnalytics";
 import { cn } from "../../lib/cn";
 
 type Phase = "answering" | "results";
@@ -10,7 +9,6 @@ type Phase = "answering" | "results";
 type Props = {
   question: SJTRankingQuestion;
   onComplete: (score: number, total: number) => void;
-  onProgress?: (progress: SJTQuizProgress) => void;
 };
 
 function getRankLabel(rank: 1 | 2 | 3): string {
@@ -19,19 +17,9 @@ function getRankLabel(rank: 1 | 2 | 3): string {
   return "Middle option";
 }
 
-export default function SJTRankingQuiz({ question, onComplete, onProgress }: Props) {
+export default function SJTRankingQuiz({ question, onComplete }: Props) {
   const [phase, setPhase] = useState<Phase>("answering");
   const [answer, setAnswer] = useState<RankingAnswer>({ most: null, least: null });
-
-  useEffect(() => {
-    if (!onProgress || phase !== "answering") return;
-    const started = answer.most !== null || answer.least !== null;
-    onProgress({
-      itemsAttempted: started ? 1 : 0,
-      itemsTotal: 1,
-      partialScore: 0,
-    });
-  }, [answer.most, answer.least, phase, onProgress]);
 
   const mostItem = question.items.find((i) => i.rank === 1)!;
   const leastItem = question.items.find((i) => i.rank === 3)!;
@@ -39,12 +27,18 @@ export default function SJTRankingQuiz({ question, onComplete, onProgress }: Pro
 
   const mostCorrect = answer.most === mostItem.id;
   const leastCorrect = answer.least === leastItem.id;
-  const score = (mostCorrect ? 0.5 : 0) + (leastCorrect ? 0.5 : 0);
-  const scenarioGmpRef = resolveSjtGmpRef(question.domain, undefined, question.gmpRef);
+  const score = (mostCorrect ? 1 : 0) + (leastCorrect ? 1 : 0);
 
   function handleSubmit() {
+    recordSJTAttempt({
+      questionId: question.id,
+      domain: question.domain,
+      type: "ranking",
+      score,
+      maxScore: 2,
+    });
     setPhase("results");
-    onComplete(score, 1);
+    onComplete(score, 2);
   }
 
   function selectMost(id: string) {
@@ -64,7 +58,7 @@ export default function SJTRankingQuiz({ question, onComplete, onProgress }: Pro
   return (
     <div className="lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start space-y-4 lg:space-y-0">
 
-      {/* Left col: Scenario stays fixed on desktop */}
+      {/* Left col: Scenario — stays fixed on desktop */}
       <div className="lg:sticky lg:top-4">
         <div className="rounded-xl border border-border bg-card shadow-sm p-5">
           <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Scenario</p>
@@ -78,10 +72,17 @@ export default function SJTRankingQuiz({ question, onComplete, onProgress }: Pro
               Key insight
             </p>
             <p className="text-sm text-foreground leading-relaxed">{question.pivotInsight}</p>
-            <SjtGmpGuidanceLink
-              gmpRef={scenarioGmpRef}
-              className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-semibold mt-2"
-            />
+            {question.gmpRef && (
+              <a
+                href={question.gmpRef.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-semibold mt-2"
+              >
+                <ExternalLink className="w-3.5 h-3.5" aria-hidden />
+                GMC Good Medical Practice: {question.gmpRef.label}
+              </a>
+            )}
           </div>
         )}
       </div>
@@ -93,9 +94,9 @@ export default function SJTRankingQuiz({ question, onComplete, onProgress }: Pro
           <>
             {/* Score */}
             <div className="rounded-xl border border-border bg-card p-5 text-center">
-              <p className="text-2xl font-bold text-foreground mb-1">{score} / 1</p>
+              <p className="text-2xl font-bold text-foreground mb-1">{score} / 2</p>
               <p className="text-xs text-muted-foreground">
-                Half a mark for most appropriate. Half a mark for least appropriate.
+                One mark for most appropriate. One mark for least appropriate.
               </p>
             </div>
 
@@ -110,7 +111,6 @@ export default function SJTRankingQuiz({ question, onComplete, onProgress }: Pro
                 const isError =
                   (item.rank !== 1 && userSelectedMost) ||
                   (item.rank !== 3 && userSelectedLeast);
-                const itemGmpRef = resolveSjtGmpRef(question.domain, item.gmpRef, question.gmpRef);
 
                 return (
                   <div
@@ -142,19 +142,22 @@ export default function SJTRankingQuiz({ question, onComplete, onProgress }: Pro
                       </p>
                     )}
 
-                    <div className="rounded-lg bg-card border border-border p-3 space-y-3">
-                      <div className="rounded-md border border-primary/20 bg-primary/5 p-2.5">
-                        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                          GMC guidance
-                        </p>
-                        <SjtGmpGuidanceLink gmpRef={itemGmpRef} />
-                      </div>
-                      <div>
-                        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                          Why ranked {item.rank === 1 ? "first" : item.rank === 2 ? "second" : "last"}
-                        </p>
-                        <p className="text-sm text-foreground leading-relaxed">{item.rationale}</p>
-                      </div>
+                    <div className="rounded-lg bg-card border border-border p-3">
+                      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                        Why ranked {item.rank === 1 ? "first" : item.rank === 2 ? "second" : "last"}
+                      </p>
+                      <p className="text-sm text-foreground leading-relaxed">{item.rationale}</p>
+                      {item.gmpRef && (
+                        <a
+                          href={item.gmpRef.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-semibold mt-2"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" aria-hidden />
+                          GMC Good Medical Practice: {item.gmpRef.label}
+                        </a>
+                      )}
                     </div>
                   </div>
                 );
@@ -168,10 +171,17 @@ export default function SJTRankingQuiz({ question, onComplete, onProgress }: Pro
                   Key insight
                 </p>
                 <p className="text-sm text-foreground leading-relaxed">{question.pivotInsight}</p>
-                <SjtGmpGuidanceLink
-                  gmpRef={scenarioGmpRef}
-                  className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-semibold mt-2"
-                />
+                {question.gmpRef && (
+                  <a
+                    href={question.gmpRef.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline font-semibold mt-2"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" aria-hidden />
+                    GMC Good Medical Practice: {question.gmpRef.label}
+                  </a>
+                )}
               </div>
             )}
           </>
