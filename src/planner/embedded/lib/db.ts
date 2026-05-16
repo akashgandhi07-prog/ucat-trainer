@@ -10,6 +10,12 @@ import {
   DBUser, DateRange
 } from '@/types'
 import { generateFullPlan, planToDBRows, PlanInputs } from './plan-engine'
+import {
+  anchorDateForRegenerate,
+  deletePlanDaysByDates,
+  deletePlanTimetableByDates,
+  prepareRegeneratedRows,
+} from './regenerate-plan-cleanup'
 import { PLAN_TIMETABLE_TABLE, PROFILES_TABLE } from '@/lib/planner-db-tables'
 import { generateSlug, toISODate } from './utils'
 
@@ -429,25 +435,31 @@ export async function regenerateFutureWeeks(planId: string, fromWeekNumber: numb
     inputs.ucatSen ?? false,
   )
 
-  // Delete only future weeks
-  const futureWeekIds = (weeks ?? [])
-    .filter(w => w.week_number >= fromWeekNumber && !w.is_locked)
-    .map(w => w.id)
+  const weekRows = weeks ?? []
+  const fromDateIso = anchorDateForRegenerate(weekRows, fromWeekNumber)
+  const {
+    datesToClear,
+    futureNewWeeks,
+    futureNewDays,
+    futureNewSessions,
+    futureWeekRowIds,
+  } = prepareRegeneratedRows(
+    weekRows,
+    fromWeekNumber,
+    fromDateIso,
+    newWeeks,
+    newDays,
+    newSessions,
+  )
 
-  if (futureWeekIds.length > 0) {
-    await sb.from('plan_weeks').delete().in('id', futureWeekIds)
+  if (datesToClear.length > 0) {
+    await deletePlanTimetableByDates(sb, planId, PLAN_TIMETABLE_TABLE, datesToClear)
+    await deletePlanDaysByDates(sb, planId, datesToClear)
   }
 
-  // Insert new weeks
-  const futureNewWeeks = newWeeks.filter(w => w.week_number >= fromWeekNumber)
-  const futureNewDays = newDays.filter(d => {
-    const weekId = futureNewWeeks.find(w => w.id === d.plan_week_id)
-    return !!weekId
-  })
-  const futureNewSessions = newSessions.filter(s => {
-    const dayId = futureNewDays.find(d => d.id === s.plan_day_id)
-    return !!dayId
-  })
+  if (futureWeekRowIds.length > 0) {
+    await sb.from('plan_weeks').delete().in('id', futureWeekRowIds)
+  }
 
   if (futureNewWeeks.length) await sb.from('plan_weeks').insert(futureNewWeeks)
   if (futureNewDays.length) await sb.from('plan_days').insert(futureNewDays)

@@ -1,4 +1,5 @@
 import type { GMCDomainId, SJTQuestionType } from "../types/sjt";
+import { persistSJTSession, type GuestSJTSessionPayload } from "./sjtSessionStorage";
 
 const STORAGE_KEY = "ucat_sjt_analytics_v1";
 const MAX_RECORDS = 1000;
@@ -71,16 +72,44 @@ function saveAttempts(attempts: SJTAttempt[]): void {
   }
 }
 
-export function recordSJTAttempt(attempt: Omit<SJTAttempt, "id" | "timestamp">): void {
+export type RecordSJTAttemptInput = Omit<SJTAttempt, "id" | "timestamp"> & {
+  completed?: boolean;
+  itemsAttempted?: number;
+  itemsTotal?: number;
+  userId?: string | null;
+};
+
+export function recordSJTAttempt(attempt: RecordSJTAttemptInput): void {
   if (attempt.maxScore <= 0) return;
+
+  const completed = attempt.completed ?? true;
+  const itemsTotal = attempt.itemsTotal ?? Math.max(1, Math.round(attempt.maxScore));
+  const itemsAttempted = attempt.itemsAttempted ?? itemsTotal;
 
   const attempts = loadAttempts();
   attempts.push({
-    ...attempt,
+    questionId: attempt.questionId,
+    domain: attempt.domain,
+    type: attempt.type,
+    score: attempt.score,
+    maxScore: attempt.maxScore,
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     timestamp: Date.now(),
   });
   saveAttempts(attempts);
+
+  const cloudPayload: GuestSJTSessionPayload = {
+    question_id: attempt.questionId,
+    question_type: attempt.type,
+    domain: attempt.domain,
+    score: attempt.score,
+    max_score: attempt.maxScore,
+    items_attempted: itemsAttempted,
+    items_total: itemsTotal,
+    completed,
+  };
+
+  void persistSJTSession(attempt.userId ?? null, cloudPayload);
 }
 
 export function getSJTStats(): SJTOverallStats | null {

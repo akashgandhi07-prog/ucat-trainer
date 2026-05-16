@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CheckCircle2, XCircle, ChevronRight } from "lucide-react";
 import SjtGmpGuidanceLink from "./SjtGmpGuidanceLink";
 import { resolveSjtGmpRef } from "../../lib/sjtGmpRef";
-import type { SJTRankingQuestion, RankingAnswer } from "../../types/sjt";
+import type { SJTRankingQuestion, RankingAnswer, SJTQuizProgress } from "../../types/sjt";
 import { cn } from "../../lib/cn";
 
 type Phase = "answering" | "results";
@@ -10,6 +10,7 @@ type Phase = "answering" | "results";
 type Props = {
   question: SJTRankingQuestion;
   onComplete: (score: number, total: number) => void;
+  onProgress?: (progress: SJTQuizProgress) => void;
 };
 
 function getRankLabel(rank: 1 | 2 | 3): string {
@@ -18,9 +19,19 @@ function getRankLabel(rank: 1 | 2 | 3): string {
   return "Middle option";
 }
 
-export default function SJTRankingQuiz({ question, onComplete }: Props) {
+export default function SJTRankingQuiz({ question, onComplete, onProgress }: Props) {
   const [phase, setPhase] = useState<Phase>("answering");
   const [answer, setAnswer] = useState<RankingAnswer>({ most: null, least: null });
+
+  useEffect(() => {
+    if (!onProgress || phase !== "answering") return;
+    const started = answer.most !== null || answer.least !== null;
+    onProgress({
+      itemsAttempted: started ? 1 : 0,
+      itemsTotal: 1,
+      partialScore: 0,
+    });
+  }, [answer.most, answer.least, phase, onProgress]);
 
   const mostItem = question.items.find((i) => i.rank === 1)!;
   const leastItem = question.items.find((i) => i.rank === 3)!;

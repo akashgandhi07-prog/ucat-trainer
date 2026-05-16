@@ -1,4 +1,5 @@
 import type { OnboardingState } from '../embedded/types'
+import { ensureProfileForUser } from '../embedded/lib/ensure-profile'
 import { generateFullPlan, planToDBRows, type PlanInputs } from '../embedded/lib/plan-engine'
 import { PLAN_TIMETABLE_TABLE } from '../embedded/lib/planner-db-tables'
 import { generateSlug, parseDate, toISODate } from '../embedded/lib/utils'
@@ -32,6 +33,13 @@ export async function createPlanFromOnboarding({
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Sign in required to save your plan to the cloud')
+
+  try {
+    await ensureProfileForUser(supabase, user)
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Could not set up your profile'
+    throw new Error(msg)
+  }
 
   const examDate = parseDate(examIso)
   const inputs: PlanInputs = {

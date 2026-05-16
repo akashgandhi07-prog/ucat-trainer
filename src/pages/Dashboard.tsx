@@ -44,6 +44,9 @@ import { trackEvent } from "../lib/analytics";
 import { upsertProfile, type Stream } from "../lib/profileApi";
 import type { SessionRow } from "../types/session";
 import type { SyllogismSession } from "../types/syllogisms";
+import type { SJTSessionsRow } from "../types/sjt";
+import { SJT_QUESTION_TYPE_LABELS } from "../types/sjt";
+import { formatSJTSessionScore, getGuestSJTSessions } from "../lib/sjtSessionStorage";
 import SyllogismAnalytics from "../components/dashboard/SyllogismAnalytics";
 import UnifiedProductHub from "../components/dashboard/UnifiedProductHub";
 import DashboardHeroCard from "../components/dashboard/DashboardHeroCard";
@@ -156,6 +159,7 @@ export default function Dashboard() {
   const [targetWpmError, setTargetWpmError] = useState<string | null>(null);
   const [guestSummary, setGuestSummary] = useState<GuestDashboardSummary | null>(null);
   const [syllogismSessions, setSyllogismSessions] = useState<SyllogismSession[]>([]);
+  const [sjtSessions, setSjtSessions] = useState<SJTSessionsRow[]>([]);
 
   // UCAT exam date: official sitting dates only (13 Jul to 24 Sep 2026).
   const [ucatYear, setUcatYear] = useState<number>(UCAT_EXAM_YEAR);
@@ -236,13 +240,15 @@ export default function Dashboard() {
     dashboardLog.info("Dashboard ready (authenticated)", {
       session_count: sessions.length,
       syllogism_session_count: syllogismSessions.length,
+      sjt_session_count: sjtSessions.length,
     });
     trackEvent("dashboard_loaded", {
       authenticated: true,
       session_count: sessions.length,
       syllogism_session_count: syllogismSessions.length,
+      sjt_session_count: sjtSessions.length,
     });
-  }, [user, loading, error, sessions.length, syllogismSessions.length]);
+  }, [user, loading, error, sessions.length, syllogismSessions.length, sjtSessions.length]);
   // Reset so a fresh load (e.g. after re-login) logs again
   useEffect(() => {
     if (!user) hasLoggedReady.current = false;
@@ -352,12 +358,40 @@ export default function Dashboard() {
   }, [user]);
 
   useEffect(() => {
+    if (!user) {
+      setSjtSessions([]);
+      return;
+    }
+    let cancelled = false;
+    supabase
+      .from("sjt_sessions")
+      .select(
+        "id, user_id, question_id, question_type, domain, score, max_score, items_attempted, items_total, completed, created_at",
+      )
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: true })
+      .then(({ data, error: err }) => {
+        if (cancelled) return;
+        if (err) {
+          dashboardLog.warn("SJT sessions fetch failed", { message: err.message, code: err.code });
+          setSjtSessions([]);
+          return;
+        }
+        setSjtSessions((data as SJTSessionsRow[]) ?? []);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  useEffect(() => {
     if (user) {
       setGuestSummary(null);
       return;
     }
     const guestSessions = getGuestSessions();
-    if (!guestSessions.length) {
+    const guestSjt = getGuestSJTSessions();
+    if (!guestSessions.length && !guestSjt.length) {
       setGuestSummary(null);
       dashboardLog.info("Dashboard ready (guest)", { guest_session_count: 0 });
       trackEvent("dashboard_loaded", { authenticated: false, guest_session_count: 0 });
@@ -377,7 +411,7 @@ export default function Dashboard() {
     const kwAccValues = keyword.filter((s) => s.total > 0).map((s) => (s.correct / s.total) * 100);
     const keywordScanningAvgAccuracy = kwAccValues.length > 0 ? Math.round(kwAccValues.reduce((a, b) => a + b, 0) / kwAccValues.length) : null;
     setGuestSummary({
-      totalSessions: guestSessions.length,
+      totalSessions: guestSessions.length + guestSjt.length,
       speedReadingCount: speed.length,
       rapidRecallCount: rapid.length,
       keywordScanningCount: keyword.length,
@@ -386,8 +420,14 @@ export default function Dashboard() {
       rapidRecallAvgAccuracy,
       keywordScanningAvgAccuracy,
     });
-    dashboardLog.info("Dashboard ready (guest)", { guest_session_count: guestSessions.length });
-    trackEvent("dashboard_loaded", { authenticated: false, guest_session_count: guestSessions.length });
+    dashboardLog.info("Dashboard ready (guest)", {
+      guest_session_count: guestSessions.length,
+      guest_sjt_count: guestSjt.length,
+    });
+    trackEvent("dashboard_loaded", {
+      authenticated: false,
+      guest_session_count: guestSessions.length + guestSjt.length,
+    });
   }, [user]);
 
   const byType = useMemo(() => {
@@ -710,11 +750,18 @@ export default function Dashboard() {
       timeDisplay: s.average_time_per_decision > 0 ? `${Math.round(s.average_time_per_decision * s.total_questions)}s` : "-",
       scoreDisplay: s.mode === "macro" ? `${s.score} pts` : `${s.score} / ${s.total_questions} correct`,
     }));
-    const merged = [...fromSessions, ...fromSyllogism].sort(
+    const fromSjt: RecentActivityItem[] = sjtSessions.map((s) => ({
+      id: `sjt-${s.id}`,
+      created_at: s.created_at,
+      label: SJT_QUESTION_TYPE_LABELS[s.question_type],
+      timeDisplay: s.completed ? "-" : `${s.items_attempted}/${s.items_total} items`,
+      scoreDisplay: formatSJTSessionScore(s),
+    }));
+    const merged = [...fromSessions, ...fromSyllogism, ...fromSjt].sort(
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
     return merged.slice(0, 30);
-  }, [sessions, syllogismSessions]);
+  }, [sessions, syllogismSessions, sjtSessions]);
 
   // Shared difficulty breakdown renderer
   const renderDifficultyBreakdown = (breakdown: Record<TrainingDifficulty, DifficultyStats>) => {
@@ -794,8 +841,13 @@ export default function Dashboard() {
   const sevenDaysAgo = today - 7 * 24 * 60 * 60 * 1000;
   const uniqueDaysInLast7 = useMemo(() => {
     const set = new Set<string>();
-    for (const s of sessions) {
-      const t = new Date(s.created_at).getTime();
+    const allDates = [
+      ...sessions.map((s) => s.created_at),
+      ...syllogismSessions.map((s) => s.created_at),
+      ...sjtSessions.map((s) => s.created_at),
+    ];
+    for (const createdAt of allDates) {
+      const t = new Date(createdAt).getTime();
       if (t >= sevenDaysAgo) {
         const d = new Date(t);
         d.setHours(0, 0, 0, 0);
@@ -804,15 +856,20 @@ export default function Dashboard() {
     }
     return set.size;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- sevenDaysAgo derived from stable today
-  }, [sessions]);
+  }, [sessions, syllogismSessions, sjtSessions]);
   const streak = useMemo(() => {
-    if (sessions.length === 0) return 0;
+    const allSessions = [
+      ...sessions,
+      ...syllogismSessions.map((s) => ({ created_at: s.created_at })),
+      ...sjtSessions.map((s) => ({ created_at: s.created_at })),
+    ];
+    if (allSessions.length === 0) return 0;
     const dateStrings = new Set(
-      sessions.map((s) => {
+      allSessions.map((s) => {
         const d = new Date(s.created_at);
         d.setHours(0, 0, 0, 0);
         return d.getTime();
-      })
+      }),
     );
     let count = 0;
     let check = today;
@@ -821,7 +878,7 @@ export default function Dashboard() {
       check -= 24 * 60 * 60 * 1000;
     }
     return count;
-  }, [sessions, today]);
+  }, [sessions, syllogismSessions, sjtSessions, today]);
 
   const skipLinkClass =
     "absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-slate-900 font-medium rounded-lg ring-2 ring-blue-600 opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
@@ -989,7 +1046,7 @@ export default function Dashboard() {
           streak={streak}
           lastPracticedDaysAgo={lastPracticedDaysAgo}
           examDateISO={profile?.ucat_exam_date ?? null}
-          totalSessions={sessions.length + syllogismSessions.length}
+          totalSessions={sessions.length + syllogismSessions.length + sjtSessions.length}
           uniqueDaysInLast7={uniqueDaysInLast7}
           onSetExamDate={scrollToExamDate}
         />
@@ -1178,7 +1235,7 @@ export default function Dashboard() {
           </div>
         </section>
 
-        {sessions.length === 0 && syllogismSessions.length === 0 ? (
+        {sessions.length === 0 && syllogismSessions.length === 0 && sjtSessions.length === 0 ? (
           <section className="mb-10">
             <div className="bg-slate-100 border border-slate-200 rounded-xl p-6 text-center">
               <p className="text-slate-700 font-medium mb-4">
@@ -1711,7 +1768,11 @@ export default function Dashboard() {
             </section>
 
             <section className="mt-10">
-              <WeekSummaryCard sessions={sessions} syllogismSessions={syllogismSessions} />
+              <WeekSummaryCard
+                sessions={sessions}
+                syllogismSessions={syllogismSessions}
+                sjtSessions={sjtSessions}
+              />
             </section>
 
             <section className="mt-10">

@@ -145,3 +145,34 @@ export function getAdjacentRating(
 
 export type RatingAnswer = Record<string, SJTRating>;
 export type RankingAnswer = { most: string | null; least: string | null };
+
+/** Row from public.sjt_sessions (Supabase). */
+export type SJTSessionsRow = {
+  id: string;
+  user_id: string;
+  question_id: string;
+  question_type: SJTQuestionType;
+  domain: GMCDomainId;
+  score: number;
+  max_score: number;
+  items_attempted: number;
+  items_total: number;
+  completed: boolean;
+  created_at: string;
+};
+
+export type SJTSessionsInsert = Omit<SJTSessionsRow, "id" | "created_at">;
+
+export type SJTSessionsPayload = Omit<SJTSessionsInsert, "user_id">;
+
+export type SJTQuizProgress = {
+  itemsAttempted: number;
+  itemsTotal: number;
+  partialScore: number;
+};
+
+export const SJT_QUESTION_TYPE_LABELS: Record<SJTQuestionType, string> = {
+  appropriateness: "SJT · Appropriateness",
+  importance: "SJT · Importance",
+  ranking: "SJT · Ranking",
+};

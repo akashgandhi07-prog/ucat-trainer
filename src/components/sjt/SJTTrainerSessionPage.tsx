@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, type ReactNode } from "react";
+import { useState, useCallback, useEffect, useRef, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { RotateCcw, ChevronRight, type LucideIcon } from "lucide-react";
 import Header from "../layout/Header";
@@ -10,13 +10,19 @@ import SJTDomainBadge from "./SJTDomainBadge";
 import SJTQuestionSkeleton from "./SJTQuestionSkeleton";
 import SJTPerformancePanel from "./SJTPerformancePanel";
 import { useSJTQuestionSession } from "../../hooks/useSJTQuestionSession";
+import { useAuth } from "../../hooks/useAuth";
 import { trainerFaqs } from "../../data/trainerFaqs";
 import { recordSJTAttempt } from "../../lib/sjtAnalytics";
 import { getSiteBaseUrl } from "../../lib/siteUrl";
 import { cn } from "../../lib/cn";
-import type { SJTQuestion, SJTQuestionType } from "../../types/sjt";
+import { isRatingQuestion, type SJTQuestion, type SJTQuestionType, type SJTQuizProgress } from "../../types/sjt";
 
 type Phase = "intro" | "quiz" | "between";
+
+export type SJTQuizHandlers = {
+  onComplete: (score: number, max: number) => void;
+  onProgress: (progress: SJTQuizProgress) => void;
+};
 
 type Props = {
   type: SJTQuestionType;
@@ -29,7 +35,7 @@ type Props = {
   faqId: string;
   emptyMessage: string;
   introContent: ReactNode;
-  renderQuiz: (question: SJTQuestion, onComplete: (score: number, max: number) => void) => ReactNode;
+  renderQuiz: (question: SJTQuestion, handlers: SJTQuizHandlers) => ReactNode;
 };
 
 export default function SJTTrainerSessionPage({
@@ -45,6 +51,7 @@ export default function SJTTrainerSessionPage({
   introContent,
   renderQuiz,
 }: Props) {
+  const { user } = useAuth();
   const [phase, setPhase] = useState<Phase>("intro");
   const {
     question,
@@ -63,9 +70,24 @@ export default function SJTTrainerSessionPage({
   const [advancing, setAdvancing] = useState(false);
   const [performanceRefreshKey, setPerformanceRefreshKey] = useState(0);
 
+  const progressRef = useRef<SJTQuizProgress | null>(null);
+  const savedQuestionIdRef = useRef<string | null>(null);
+  const phaseRef = useRef(phase);
+  const questionRef = useRef(question);
+  const userIdRef = useRef(user?.id ?? null);
+
+  phaseRef.current = phase;
+  questionRef.current = question;
+  userIdRef.current = user?.id ?? null;
+
   const base = getSiteBaseUrl();
   const canonical = base ? `${base}${canonicalPath}` : undefined;
   const sessionPct = sessionMax > 0 ? Math.round((sessionScore / sessionMax) * 100) : null;
+
+  useEffect(() => {
+    savedQuestionIdRef.current = null;
+    progressRef.current = null;
+  }, [question?.id]);
 
   useEffect(() => {
     if (phase === "between") {
@@ -73,28 +95,79 @@ export default function SJTTrainerSessionPage({
     }
   }, [phase, prefetchNext]);
 
-  const handleComplete = useCallback((score: number, max: number) => {
-    if (question) {
-      recordSJTAttempt({
-        questionId: question.id,
-        domain: question.domain,
-        type: question.type,
-        score,
-        maxScore: max,
-      });
-    }
-    setSessionScore((s) => s + score);
-    setSessionMax((m) => m + max);
-    setQuestionsAttempted((n) => n + 1);
-    setLastScore({ score, max });
-    setPerformanceRefreshKey((key) => key + 1);
-    setPhase("between");
-  }, [question]);
+  const flushPartialIfNeeded = useCallback(() => {
+    const q = questionRef.current;
+    if (phaseRef.current !== "quiz" || !q) return;
+    if (savedQuestionIdRef.current === q.id) return;
+
+    const progress = progressRef.current;
+    if (!progress || progress.itemsAttempted <= 0) return;
+
+    savedQuestionIdRef.current = q.id;
+    const maxScore = progress.itemsTotal;
+
+    recordSJTAttempt({
+      questionId: q.id,
+      domain: q.domain,
+      type: q.type,
+      score: progress.partialScore,
+      maxScore,
+      completed: false,
+      itemsAttempted: progress.itemsAttempted,
+      itemsTotal: progress.itemsTotal,
+      userId: userIdRef.current,
+    });
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      flushPartialIfNeeded();
+    };
+  }, [flushPartialIfNeeded]);
+
+  useEffect(() => {
+    const onPageHide = () => flushPartialIfNeeded();
+    window.addEventListener("pagehide", onPageHide);
+    return () => window.removeEventListener("pagehide", onPageHide);
+  }, [flushPartialIfNeeded]);
+
+  const handleProgress = useCallback((progress: SJTQuizProgress) => {
+    progressRef.current = progress;
+  }, []);
+
+  const handleComplete = useCallback(
+    (score: number, max: number) => {
+      if (question) {
+        savedQuestionIdRef.current = question.id;
+        const itemsTotal = isRatingQuestion(question) ? question.items.length : 1;
+        recordSJTAttempt({
+          questionId: question.id,
+          domain: question.domain,
+          type: question.type,
+          score,
+          maxScore: max,
+          completed: true,
+          itemsAttempted: itemsTotal,
+          itemsTotal,
+          userId: user?.id ?? null,
+        });
+      }
+      setSessionScore((s) => s + score);
+      setSessionMax((m) => m + max);
+      setQuestionsAttempted((n) => n + 1);
+      setLastScore({ score, max });
+      setPerformanceRefreshKey((key) => key + 1);
+      setPhase("between");
+    },
+    [question, user?.id],
+  );
 
   const handleNext = useCallback(async () => {
     setAdvancing(true);
     try {
       await advanceToNext();
+      savedQuestionIdRef.current = null;
+      progressRef.current = null;
       setPhase("quiz");
     } finally {
       setAdvancing(false);
@@ -102,16 +175,24 @@ export default function SJTTrainerSessionPage({
   }, [advanceToNext]);
 
   const handleReset = useCallback(() => {
+    flushPartialIfNeeded();
     setSessionScore(0);
     setSessionMax(0);
     setQuestionsAttempted(0);
     setLastScore(null);
+    savedQuestionIdRef.current = null;
+    progressRef.current = null;
     setPhase("intro");
     resetSession();
-  }, [resetSession]);
+  }, [resetSession, flushPartialIfNeeded]);
 
   const showIntroSkeleton = phase === "intro" && loading && !question;
   const noQuestions = !loading && !question && !error;
+
+  const quizHandlers: SJTQuizHandlers = {
+    onComplete: handleComplete,
+    onProgress: handleProgress,
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -182,7 +263,7 @@ export default function SJTTrainerSessionPage({
             </div>
           )}
 
-          {phase === "quiz" && question && renderQuiz(question, handleComplete)}
+          {phase === "quiz" && question && renderQuiz(question, quizHandlers)}
 
           {phase === "between" && (
             <div className="space-y-5">
@@ -209,6 +290,10 @@ export default function SJTTrainerSessionPage({
                   )}
                 </div>
               )}
+              <p className="text-xs text-muted-foreground text-center px-2">
+                Completed scenarios sync to your dashboard when you are signed in. If you leave
+                mid-scenario, partial progress is saved too.
+              </p>
               {advancing && <SJTQuestionSkeleton />}
               <div className="flex flex-col sm:flex-row gap-3">
                 <button

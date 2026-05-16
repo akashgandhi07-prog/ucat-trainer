@@ -5,6 +5,7 @@ import { authLog } from "../lib/logger";
 import { trackEvent } from "../lib/analytics";
 import { getProfile, upsertProfile } from "../lib/profileApi";
 import { getGuestSessions, clearGuestSessions } from "../lib/guestSessions";
+import { mergeGuestSJTOnSignIn, migrateLocalSJTAttemptsToCloud } from "../lib/sjtSessionStorage";
 import { useToast } from "../contexts/ToastContext";
 import { syncSignupToMailchimp } from "../lib/mailchimpSync";
 import type { AuthState } from "../types/session";
@@ -248,6 +249,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             count: guestSessions.length,
             success: !error,
           });
+        }
+
+        try {
+          const sjtMerged = await mergeGuestSJTOnSignIn(session.user.id);
+          await migrateLocalSJTAttemptsToCloud(session.user.id);
+          if (!sjtMerged && authListenerActive) {
+            authLog.warn("Guest SJT sessions merge failed");
+          }
+        } catch (sjtErr) {
+          authLog.error("Guest SJT merge failed", sjtErr);
         }
 
         try {

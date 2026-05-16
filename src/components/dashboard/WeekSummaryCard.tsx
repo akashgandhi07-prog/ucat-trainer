@@ -1,11 +1,13 @@
 import type { SessionRow } from "../../types/session";
 import type { SyllogismSession } from "../../types/syllogisms";
+import type { SJTSessionsRow } from "../../types/sjt";
 import { TRAINING_TYPE_LABELS } from "../../types/training";
 import type { TrainingType } from "../../types/training";
 
 interface WeekSummaryCardProps {
   sessions: SessionRow[];
   syllogismSessions: SyllogismSession[];
+  sjtSessions: SJTSessionsRow[];
 }
 
 function getTrainingType(s: SessionRow): TrainingType {
@@ -28,19 +30,24 @@ function startOfDayMs(date: Date): number {
   return d.getTime();
 }
 
-export default function WeekSummaryCard({ sessions, syllogismSessions }: WeekSummaryCardProps) {
+export default function WeekSummaryCard({
+  sessions,
+  syllogismSessions,
+  sjtSessions,
+}: WeekSummaryCardProps) {
   const now = Date.now();
   const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
   const weekStart = now - sevenDaysMs;
 
   const thisWeekSessions = sessions.filter(
-    (s) => new Date(s.created_at).getTime() >= weekStart
+    (s) => new Date(s.created_at).getTime() >= weekStart,
   );
   const thisWeekSyllogisms = syllogismSessions.filter(
-    (s) => new Date(s.created_at).getTime() >= weekStart
+    (s) => new Date(s.created_at).getTime() >= weekStart,
   );
+  const thisWeekSjt = sjtSessions.filter((s) => new Date(s.created_at).getTime() >= weekStart);
 
-  const totalThisWeek = thisWeekSessions.length + thisWeekSyllogisms.length;
+  const totalThisWeek = thisWeekSessions.length + thisWeekSyllogisms.length + thisWeekSjt.length;
 
   const uniqueDays = new Set<number>();
   for (const s of thisWeekSessions) {
@@ -49,25 +56,31 @@ export default function WeekSummaryCard({ sessions, syllogismSessions }: WeekSum
   for (const s of thisWeekSyllogisms) {
     uniqueDays.add(startOfDayMs(new Date(s.created_at)));
   }
+  for (const s of thisWeekSjt) {
+    uniqueDays.add(startOfDayMs(new Date(s.created_at)));
+  }
 
-  // Most practiced trainer this week
-  const typeCounts: Partial<Record<TrainingType | "syllogism", number>> = {};
+  const typeCounts: Partial<Record<TrainingType | "syllogism" | "sjt", number>> = {};
   for (const s of thisWeekSessions) {
     const t = getTrainingType(s);
     typeCounts[t] = (typeCounts[t] ?? 0) + 1;
   }
   if (thisWeekSyllogisms.length > 0) {
-    typeCounts["syllogism"] = thisWeekSyllogisms.length;
+    typeCounts.syllogism = thisWeekSyllogisms.length;
+  }
+  if (thisWeekSjt.length > 0) {
+    typeCounts.sjt = thisWeekSjt.length;
   }
   const topEntry = Object.entries(typeCounts).sort(([, a], [, b]) => b - a)[0];
   const topTrainer =
     topEntry != null
       ? topEntry[0] === "syllogism"
         ? "Decision Making"
-        : TRAINING_TYPE_LABELS[topEntry[0] as TrainingType] ?? topEntry[0]
+        : topEntry[0] === "sjt"
+          ? "Situational Judgement"
+          : (TRAINING_TYPE_LABELS[topEntry[0] as TrainingType] ?? topEntry[0])
       : null;
 
-  // Best accuracy score this week (across scored sessions)
   let bestPct: number | null = null;
   for (const s of thisWeekSessions) {
     if (s.total > 0) {
@@ -81,36 +94,45 @@ export default function WeekSummaryCard({ sessions, syllogismSessions }: WeekSum
       if (bestPct == null || pct > bestPct) bestPct = pct;
     }
   }
+  for (const s of thisWeekSjt) {
+    if (s.max_score > 0) {
+      const pct = Math.round((s.score / s.max_score) * 100);
+      if (bestPct == null || pct > bestPct) bestPct = pct;
+    }
+  }
 
-  // Vs previous week
   const prevWeekSessions = sessions.filter((s) => {
     const t = new Date(s.created_at).getTime();
     return t >= weekStart - sevenDaysMs && t < weekStart;
   });
-  const prevWeekTotal = prevWeekSessions.length +
+  const prevWeekTotal =
+    prevWeekSessions.length +
     syllogismSessions.filter((s) => {
+      const t = new Date(s.created_at).getTime();
+      return t >= weekStart - sevenDaysMs && t < weekStart;
+    }).length +
+    sjtSessions.filter((s) => {
       const t = new Date(s.created_at).getTime();
       return t >= weekStart - sevenDaysMs && t < weekStart;
     }).length;
 
   const sessionDelta = totalThisWeek - prevWeekTotal;
 
-  // Day-of-week mini dots (Mon-Sun)
   const dayDots: boolean[] = [];
-  const todayDay = new Date().getDay(); // 0=Sun
+  const todayDay = new Date().getDay();
   for (let i = 6; i >= 0; i--) {
     const d = new Date(now - i * 24 * 60 * 60 * 1000);
     d.setHours(0, 0, 0, 0);
     const ms = d.getTime();
     const had =
       sessions.some((s) => startOfDayMs(new Date(s.created_at)) === ms) ||
-      syllogismSessions.some((s) => startOfDayMs(new Date(s.created_at)) === ms);
+      syllogismSessions.some((s) => startOfDayMs(new Date(s.created_at)) === ms) ||
+      sjtSessions.some((s) => startOfDayMs(new Date(s.created_at)) === ms);
     dayDots.push(had);
   }
   void todayDay;
 
   const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  // Align dots to Mon-Sun
   const dotLabels: string[] = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date(now - i * 24 * 60 * 60 * 1000);
@@ -123,7 +145,6 @@ export default function WeekSummaryCard({ sessions, syllogismSessions }: WeekSum
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
       <h2 className="text-base font-semibold text-slate-900 mb-4">This week</h2>
 
-      {/* Activity dots */}
       <div className="flex gap-1.5 mb-5">
         {dayDots.map((active, i) => (
           <div key={i} className="flex flex-col items-center gap-1 flex-1">
@@ -137,7 +158,6 @@ export default function WeekSummaryCard({ sessions, syllogismSessions }: WeekSum
         ))}
       </div>
 
-      {/* Stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="text-center">
           <p className="text-2xl font-bold text-slate-900">
@@ -172,9 +192,7 @@ export default function WeekSummaryCard({ sessions, syllogismSessions }: WeekSum
         </div>
 
         <div className="text-center">
-          <p className="text-sm font-bold text-slate-900 leading-tight">
-            {topTrainer ?? "-"}
-          </p>
+          <p className="text-sm font-bold text-slate-900 leading-tight">{topTrainer ?? "-"}</p>
           <p className="text-xs text-slate-500 mt-0.5">Top trainer</p>
         </div>
       </div>

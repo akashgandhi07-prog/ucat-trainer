@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CheckCircle2, XCircle, AlertCircle, ChevronRight } from "lucide-react";
 import SjtGmpGuidanceLink from "./SjtGmpGuidanceLink";
 import { resolveSjtGmpRef } from "../../lib/sjtGmpRef";
-import type { SJTRatingQuestion, SJTRating } from "../../types/sjt";
+import type { SJTRatingQuestion, SJTRating, SJTQuizProgress } from "../../types/sjt";
 import {
   APPROPRIATENESS_RATINGS,
   IMPORTANCE_RATINGS,
@@ -17,6 +17,7 @@ type ItemPhase = "rating" | "feedback";
 type Props = {
   question: SJTRatingQuestion;
   onComplete: (score: number, total: number) => void;
+  onProgress?: (progress: SJTQuizProgress) => void;
 };
 
 function getRatingScale(type: "appropriateness" | "importance"): SJTRating[] {
@@ -37,7 +38,7 @@ function scoreItem(
   return 0;
 }
 
-export default function SJTRatingQuiz({ question, onComplete }: Props) {
+export default function SJTRatingQuiz({ question, onComplete, onProgress }: Props) {
   const [itemIndex, setItemIndex] = useState(0);
   const [itemPhase, setItemPhase] = useState<ItemPhase>("rating");
   const [selected, setSelected] = useState<SJTRating | null>(null);
@@ -60,9 +61,23 @@ export default function SJTRatingQuiz({ question, onComplete }: Props) {
     setItemPhase("feedback");
   }
 
+  useEffect(() => {
+    if (!onProgress) return;
+    const partialScore = scores.reduce<number>((sum, s) => sum + s, 0);
+    onProgress({
+      itemsAttempted: scores.length,
+      itemsTotal: question.items.length,
+      partialScore,
+    });
+  }, [scores, question.items.length, onProgress]);
+
   function handleNext() {
     if (isLastItem) {
-      const total = scores.reduce<number>((sum, s) => sum + s, 0);
+      const lastItemScore =
+        selected && itemPhase === "feedback"
+          ? scoreItem(selected, item.correctRating, question.type)
+          : 0;
+      const total = scores.reduce<number>((sum, s) => sum + s, 0) + lastItemScore;
       onComplete(total, question.items.length);
     } else {
       setItemIndex((i) => i + 1);

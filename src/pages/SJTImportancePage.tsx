@@ -46,12 +46,13 @@ export default function SJTImportancePage() {
           </div>
         </>
       }
-      renderQuiz={(question: SJTQuestion, onComplete) =>
+      renderQuiz={(question: SJTQuestion, { onComplete, onProgress }) =>
         isRatingQuestion(question) ? (
           <SJTRatingQuiz
             key={question.id}
             question={question as SJTRatingQuestion}
             onComplete={onComplete}
+            onProgress={onProgress}
           />
         ) : null
       }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { isMocksOnlyPlaceholderPlan } from "../../planner/lib/load-planner-data";
 import { supabase } from "../../lib/supabase";
 
 interface PlanSession {
@@ -51,7 +52,7 @@ export default function TodayPlanStrip({ userId }: TodayPlanStripProps) {
     async function load() {
       const { data: plan } = await supabase
         .from("plans")
-        .select("id")
+        .select("id, exam_date")
         .eq("student_id", userId)
         .eq("status", "active")
         .order("created_at", { ascending: false })
@@ -59,7 +60,7 @@ export default function TodayPlanStrip({ userId }: TodayPlanStripProps) {
         .maybeSingle();
 
       if (cancelled) return;
-      if (!plan) {
+      if (!plan || isMocksOnlyPlaceholderPlan(plan)) {
         setLoading(false);
         return;
       }

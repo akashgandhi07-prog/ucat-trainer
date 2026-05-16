@@ -1,49 +1,35 @@
-import { useEffect, useState } from 'react'
+import { useCallback } from 'react'
 import { Navigate } from 'react-router-dom'
 import { PlanCalendar } from '@/components/plan/plan-calendar'
 import { GuestPlanPage } from '@/components/guest/guest-plan-page'
 import { hasGuestPlanner } from '@/lib/guest-planner-store'
 import { useAuth } from '../../hooks/useAuth'
 import { useCloudPlannerRefresh } from '../../planner/hooks/useCloudPlannerRefresh'
+import { useCloudPlannerLoad } from '../../planner/hooks/useCloudPlannerLoad'
 import PlannerPageLayout from '../../planner/PlannerPageLayout'
 import PlannerLoading from '../../planner/components/PlannerLoading'
+import PlannerLoadError from '../../planner/components/PlannerLoadError'
+import type { DBPlan } from '../../planner/embedded/types'
 
 function CloudPlanView() {
   const { user } = useAuth()
   const refreshTick = useCloudPlannerRefresh()
-  const [data, setData] = useState<Record<string, unknown> | null>(null)
-  const [missingPlan, setMissingPlan] = useState(false)
 
-  useEffect(() => {
-    if (!user) return
-    let cancelled = false
-    setData(null)
-    void import('../../planner/lib/load-planner-data').then(async ({ fetchActivePlan, loadPlanCalendar }) => {
-      const plan = await fetchActivePlan(user.id)
-      if (cancelled) return
-      if (!plan) {
-        setMissingPlan(true)
-        return
-      }
-      setMissingPlan(false)
-      const loaded = await loadPlanCalendar(user.id, plan)
-      if (!cancelled) setData(loaded as Record<string, unknown>)
-    }).catch(() => {
-      if (!cancelled) setMissingPlan(true)
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [user, refreshTick])
+  const loadPlan = useCallback(async (plan: DBPlan, userId: string) => {
+    const { loadPlanCalendar } = await import('../../planner/lib/load-planner-data')
+    return loadPlanCalendar(userId, plan)
+  }, [])
 
-  if (missingPlan) return <Navigate to="/study-plan" replace />
-  if (!data) return <PlannerLoading />
+  const load = useCloudPlannerLoad(user?.id, refreshTick, loadPlan)
 
-  return (
-    <PlanCalendar
-      {...(data as object)}
-    />
-  )
+  if (load.status === 'no-plan') return <Navigate to="/study-plan" replace />
+  if (load.status === 'error' && !load.data) {
+    return <PlannerLoadError message={load.message} onRetry={load.retry} />
+  }
+  if (load.status === 'loading' && !load.data) return <PlannerLoading />
+  if (!load.data) return <PlannerLoading />
+
+  return <PlanCalendar {...(load.data as object)} />
 }
 
 export default function StudyPlanPlanPage() {

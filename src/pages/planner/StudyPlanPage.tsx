@@ -50,6 +50,9 @@ export default function StudyPlanPage() {
       return
     }
     let cancelled = false
+    const timer = window.setTimeout(() => {
+      if (!cancelled) setCloudReady(false)
+    }, 25_000)
     import('../../planner/lib/load-planner-data')
       .then(({ fetchActivePlan, isMocksOnlyPlaceholderPlan }) =>
         fetchActivePlan(user.id).then((plan) => {
@@ -59,8 +62,12 @@ export default function StudyPlanPage() {
       .catch(() => {
         if (!cancelled) setCloudReady(false)
       })
+      .finally(() => {
+        window.clearTimeout(timer)
+      })
     return () => {
       cancelled = true
+      window.clearTimeout(timer)
     }
   }, [user, authLoading])
 

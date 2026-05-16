@@ -1,15 +1,31 @@
+-- Tutor membership check only (see 039_fix_plans_insert_select_rls.sql).
+create or replace function public.planner_user_is_linked_tutor(p_plan_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.plan_members pm
+    where pm.plan_id = p_plan_id
+      and pm.user_id = (select auth.uid())
+      and pm.role = 'tutor'
+  );
+$$;
+
+revoke all on function public.planner_user_is_linked_tutor(uuid) from public;
+grant execute on function public.planner_user_is_linked_tutor(uuid) to authenticated;
+
 -- Policies (explicit subqueries avoid recursion patterns)
 drop policy if exists "plans: public read" on public.plans;
 drop policy if exists "plans: student or tutor select" on public.plans;
 create policy "plans: student or tutor select" on public.plans
   for select using (
     student_id = (select auth.uid())
-    or exists (
-      select 1 from public.plan_members pm
-      where pm.plan_id = plans.id
-        and pm.user_id = (select auth.uid())
-        and pm.role = 'tutor'
-    )
+    or tutor_id = (select auth.uid())
+    or public.planner_user_is_linked_tutor(id)
   );
 
 drop policy if exists "plans: student insert" on public.plans;
@@ -21,21 +37,13 @@ create policy "plans: student_or_tutor_update" on public.plans
   for update
   using (
     student_id = (select auth.uid())
-    or exists (
-      select 1 from public.plan_members pm
-      where pm.plan_id = plans.id
-        and pm.user_id = (select auth.uid())
-        and pm.role = 'tutor'
-    )
+    or tutor_id = (select auth.uid())
+    or public.planner_user_is_linked_tutor(id)
   )
   with check (
     student_id = (select auth.uid())
-    or exists (
-      select 1 from public.plan_members pm
-      where pm.plan_id = plans.id
-        and pm.user_id = (select auth.uid())
-        and pm.role = 'tutor'
-    )
+    or tutor_id = (select auth.uid())
+    or public.planner_user_is_linked_tutor(id)
   );
 
 drop policy if exists "plan_weeks: select" on public.plan_weeks;

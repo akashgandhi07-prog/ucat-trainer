@@ -1,7 +1,14 @@
-import type { DateRange, DBPlan, DBPlanDay, DBPlanWeek, DBSession } from '../embedded/types'
+import type { DateRange, DBPlan } from '../embedded/types'
 import { generateFullPlan, planToDBRows, type PlanInputs } from '../embedded/lib/plan-engine'
 import { PLAN_TIMETABLE_TABLE } from '../embedded/lib/planner-db-tables'
+import {
+  anchorDateForRegenerate,
+  deletePlanDaysByDates,
+  deletePlanTimetableByDates,
+  prepareRegeneratedRows,
+} from '../embedded/lib/regenerate-plan-cleanup'
 import { supabase } from '../../lib/supabase'
+import { invalidateActivePlanCache } from './load-planner-data'
 
 export async function updateDayAvailability(
   planId: string,
@@ -128,22 +135,32 @@ export async function regenerateFutureWeeks(planId: string, fromWeekNumber: numb
     inputs.ucatSen ?? false,
   )
 
-  const futureWeekIds = (weeks ?? [])
-    .filter((w) => w.week_number >= fromWeekNumber && !w.is_locked)
-    .map((w) => w.id)
+  const weekRows = weeks ?? []
+  const fromDateIso = anchorDateForRegenerate(weekRows, fromWeekNumber)
+  const {
+    datesToClear,
+    futureNewWeeks,
+    futureNewDays,
+    futureNewSessions,
+    futureWeekRowIds,
+  } = prepareRegeneratedRows(
+    weekRows,
+    fromWeekNumber,
+    fromDateIso,
+    newWeeks,
+    newDays,
+    newSessions,
+  )
 
-  if (futureWeekIds.length > 0) {
-    const { error } = await supabase.from('plan_weeks').delete().in('id', futureWeekIds)
-    if (error) throw new Error(error.message)
+  if (datesToClear.length > 0) {
+    await deletePlanTimetableByDates(supabase, planId, PLAN_TIMETABLE_TABLE, datesToClear)
+    await deletePlanDaysByDates(supabase, planId, datesToClear)
   }
 
-  const futureNewWeeks = newWeeks.filter((w) => w.week_number >= fromWeekNumber) as DBPlanWeek[]
-  const futureNewDays = newDays.filter((d) => {
-    return futureNewWeeks.some((w) => w.id === d.plan_week_id)
-  }) as DBPlanDay[]
-  const futureNewSessions = newSessions.filter((s) => {
-    return futureNewDays.some((d) => d.id === s.plan_day_id)
-  }) as DBSession[]
+  if (futureWeekRowIds.length > 0) {
+    const { error } = await supabase.from('plan_weeks').delete().in('id', futureWeekRowIds)
+    if (error) throw new Error(error.message)
+  }
 
   if (futureNewWeeks.length) {
     const { error } = await supabase.from('plan_weeks').insert(futureNewWeeks)
@@ -157,4 +174,6 @@ export async function regenerateFutureWeeks(planId: string, fromWeekNumber: numb
     const { error } = await supabase.from(PLAN_TIMETABLE_TABLE).insert(futureNewSessions)
     if (error) throw new Error(error.message)
   }
+
+  invalidateActivePlanCache(plan.student_id)
 }

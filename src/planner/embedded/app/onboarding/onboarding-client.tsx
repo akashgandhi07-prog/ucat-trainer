@@ -18,6 +18,7 @@ import {
 import { buildGuestPlannerFromOnboarding } from '@/lib/build-guest-plan'
 import { getGuestPlanner, saveGuestPlanner } from '@/lib/guest-planner-store'
 import { createPlanFromOnboarding } from '@/lib/create-plan-from-onboarding'
+import { isMocksOnlyPlaceholderPlan } from '../../../lib/load-planner-data'
 import { cn } from '../../../../lib/cn'
 import { APP_CONTENT_X } from '../../../../lib/appContentLayout'
 import { PlannerOnboardingAside } from '../../../../components/layout/ProductUpsell'
@@ -96,12 +97,14 @@ export default function OnboardingClient({
     sb.auth.getUser().then(({ data: { user } }) => {
       if (!user) return
       sb.from('plans')
-        .select('id')
+        .select('id, exam_date')
         .eq('student_id', user.id)
         .eq('status', 'active')
         .limit(1)
         .maybeSingle()
-        .then(({ data }) => { if (data) router.replace('/dashboard') })
+        .then(({ data }) => {
+          if (data && !isMocksOnlyPlaceholderPlan(data)) router.replace('/dashboard')
+        })
     })
   }, [router])
 
