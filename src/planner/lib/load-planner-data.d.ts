@@ -11,6 +11,7 @@ export type SessionWithCompletion = {
 
 export type DBPlanLite = {
   id: string
+  student_id: string
   exam_date: string
   mock_target_total?: number | null
   mock_target_sjt_band?: number | null
@@ -22,6 +23,12 @@ export type DBPlanLite = {
 export function fetchActivePlan(studentId: string): Promise<DBPlanLite | null>
 
 export function invalidateActivePlanCache(studentId?: string): void
+
+export const MOCKS_ONLY_PLAN_EXAM_SENTINEL: string
+
+export function isMocksOnlyPlaceholderPlan(plan: Pick<DBPlanLite, 'exam_date'>): boolean
+
+export function ensureActivePlanForMocks(studentId: string): Promise<DBPlanLite>
 
 export function loadTodayDashboard(
   studentId: string,

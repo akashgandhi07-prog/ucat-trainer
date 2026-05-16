@@ -3,6 +3,12 @@ import { createClient } from '@/lib/supabase/server'
 import { ensureProfileForUser } from '@/lib/ensure-profile'
 import { createPlan } from '@/lib/db'
 import { PlanInputs } from '@/lib/plan-engine'
+import {
+  UCAT_EXAM_WINDOW_END_ISO,
+  UCAT_EXAM_WINDOW_START_ISO,
+  isWithinUcatExamWindow,
+  normaliseExamDateIso,
+} from '../../../../../../lib/ucatExamWindow'
 
 export async function POST(request: Request) {
   try {
@@ -18,10 +24,16 @@ export async function POST(request: Request) {
     if (!examRaw) {
       return NextResponse.json({ error: 'examDate is required' }, { status: 400 })
     }
-    const examDate = new Date(examRaw)
-    if (Number.isNaN(examDate.getTime())) {
-      return NextResponse.json({ error: 'Invalid examDate' }, { status: 400 })
+    const examIso = typeof examRaw === 'string' ? normaliseExamDateIso(examRaw) : null
+    if (!examIso || !isWithinUcatExamWindow(examIso)) {
+      return NextResponse.json(
+        {
+          error: `examDate must be between ${UCAT_EXAM_WINDOW_START_ISO} and ${UCAT_EXAM_WINDOW_END_ISO} inclusive`,
+        },
+        { status: 400 },
+      )
     }
+    const examDate = new Date(examIso)
 
     const inputs: PlanInputs = {
       planId: '',

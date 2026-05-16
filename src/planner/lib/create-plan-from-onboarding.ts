@@ -3,6 +3,10 @@ import { generateFullPlan, planToDBRows, type PlanInputs } from '../embedded/lib
 import { PLAN_TIMETABLE_TABLE } from '../embedded/lib/planner-db-tables'
 import { generateSlug, parseDate, toISODate } from '../embedded/lib/utils'
 import { supabase } from '../../lib/supabase'
+import {
+  isWithinUcatExamWindow,
+  normaliseExamDateIso,
+} from '../../lib/ucatExamWindow'
 import { invalidateActivePlanCache } from './load-planner-data'
 
 export type CreatePlanFromOnboardingInput = {
@@ -19,10 +23,17 @@ export async function createPlanFromOnboarding({
     throw new Error('Incomplete onboarding')
   }
 
+  const examIso = normaliseExamDateIso(state.examDate)
+  if (!examIso || !isWithinUcatExamWindow(examIso)) {
+    throw new Error(
+      'Exam date must be within the official UCAT sitting dates for this cycle.',
+    )
+  }
+
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Sign in required to save your plan to the cloud')
 
-  const examDate = parseDate(state.examDate)
+  const examDate = parseDate(examIso)
   const inputs: PlanInputs = {
     planId: '',
     examDate,

@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { toISODate } from '@/lib/utils'
+import { UCAT_EXAM_WINDOW_END_ISO, UCAT_EXAM_WINDOW_START_ISO, clampToUcatExamWindow } from '@/lib/ucatExamWindow'
 
 interface SettingsViewProps {
   planId: string
@@ -19,14 +19,16 @@ export function SettingsView({
   examTime: initialTime,
   ucatSen: initialUcatSen,
 }: SettingsViewProps) {
-  const [examDate, setExamDate] = useState(initialDate)
+  const [examDate, setExamDate] = useState(() => clampToUcatExamWindow(initialDate))
   const [examTime, setExamTime] = useState(initialTime ?? '')
   const [ucatSen, setUcatSen] = useState(initialUcatSen)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
 
-  const today = toISODate(new Date())
+  useEffect(() => {
+    setExamDate(clampToUcatExamWindow(initialDate))
+  }, [initialDate])
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
@@ -76,8 +78,12 @@ export function SettingsView({
               label="Exam date"
               type="date"
               value={examDate}
-              min={today}
-              onChange={e => setExamDate(e.target.value)}
+              min={UCAT_EXAM_WINDOW_START_ISO}
+              max={UCAT_EXAM_WINDOW_END_ISO}
+              hint="Official UCAT running period: 13 July to 24 September 2026."
+              onChange={e =>
+                setExamDate(e.target.value ? clampToUcatExamWindow(e.target.value) : '')
+              }
               required
             />
             <div>

@@ -50,12 +50,12 @@ export default function StudyPlanPage() {
       return
     }
     let cancelled = false
-    import('../../planner/lib/load-planner-data').then(({ fetchActivePlan }) =>
-      fetchActivePlan(user.id),
-    )
-      .then((plan) => {
-        if (!cancelled) setCloudReady(!!plan)
-      })
+    import('../../planner/lib/load-planner-data')
+      .then(({ fetchActivePlan, isMocksOnlyPlaceholderPlan }) =>
+        fetchActivePlan(user.id).then((plan) => {
+          if (!cancelled) setCloudReady(!!plan && !isMocksOnlyPlaceholderPlan(plan))
+        }),
+      )
       .catch(() => {
         if (!cancelled) setCloudReady(false)
       })

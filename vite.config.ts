@@ -32,6 +32,7 @@ export default defineConfig(({ mode }) => {
           plannerShim,
           'guest-sign-in-cta.tsx',
         ),
+        '@/lib/ucatExamWindow': path.resolve(rootDir, 'src/lib/ucatExamWindow.ts'),
         '@': plannerEmbedded,
       },
     },

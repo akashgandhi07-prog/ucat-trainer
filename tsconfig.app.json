@@ -24,7 +24,8 @@
       "@/lib/create-plan-from-onboarding": ["./src/planner/lib/create-plan-from-onboarding.ts"],
       "@/lib/planner-client": ["./src/planner/lib/planner-client.ts"],
       "@/lib/export-plan-pdf": ["./src/planner/lib/export-plan-pdf.ts"],
-      "@/components/guest/guest-sign-in-cta": ["./src/planner/shim/guest-sign-in-cta.tsx"]
+      "@/components/guest/guest-sign-in-cta": ["./src/planner/shim/guest-sign-in-cta.tsx"],
+      "@/lib/ucatExamWindow": ["./src/lib/ucatExamWindow.ts"]
     },
     /* Linting */
     "strict": true,

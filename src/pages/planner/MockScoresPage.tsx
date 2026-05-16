@@ -13,35 +13,31 @@ function CloudMockScoresView() {
   const { user } = useAuth()
   const refreshTick = useCloudPlannerRefresh()
   const [data, setData] = useState<Record<string, unknown> | null>(null)
-  const [missingPlan, setMissingPlan] = useState(false)
+  const [loadError, setLoadError] = useState(false)
 
   useEffect(() => {
     if (!user) return
     let cancelled = false
     setData(null)
-    setMissingPlan(false)
-    void import('../../planner/lib/load-planner-data').then(async ({ fetchActivePlan, loadMockScores }) => {
-      const plan = await fetchActivePlan(user.id)
+    setLoadError(false)
+    void import('../../planner/lib/load-planner-data').then(async ({ ensureActivePlanForMocks, loadMockScores }) => {
+      const plan = await ensureActivePlanForMocks(user.id)
       if (cancelled) return
-      if (!plan) {
-        setMissingPlan(true)
-        return
-      }
       const loaded = await loadMockScores(plan)
       if (!cancelled) setData(loaded as Record<string, unknown>)
     }).catch(() => {
-      if (!cancelled) setMissingPlan(true)
+      if (!cancelled) setLoadError(true)
     })
     return () => {
       cancelled = true
     }
   }, [user, refreshTick])
 
-  if (missingPlan) {
+  if (loadError) {
     if (hasGuestPlanner()) {
       return <GuestScoresPage />
     }
-    return <MockScoresBrowseView signedIn />
+    return <MockScoresBrowseView loadError />
   }
   if (!data) return <PlannerLoading />
 

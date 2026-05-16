@@ -13,6 +13,7 @@ import { addMockScore, updateMockTargets } from '@/lib/planner-client'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts'
+import { BarChart3 } from 'lucide-react'
 import { UCAT_APPLICATION_LINKS } from '../../../../data/ucatGuides'
 import { useAppShell } from '../../../../contexts/AppShellContext'
 import { appContentWidthClass } from '../../../../lib/appContentLayout'
@@ -310,35 +311,58 @@ export function MockScoresView({
   ])
 
   return (
-    <div
-      className={cn(
-        "px-4 sm:px-6 lg:px-8 py-6 md:py-10 space-y-8",
-        appContentWidthClass({ inAppShell }),
-      )}
-    >
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Mock Scores</h1>
-          <p className="text-muted-foreground mt-1">Track your progress across full and mini mocks</p>
-          <p className="text-sm text-muted-foreground mt-2 max-w-xl">
-            If you only have raw marks, use the{' '}
-            <a
-              href={UCAT_APPLICATION_LINKS.scoreCalculator.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary font-medium hover:underline"
-            >
-              UCAT score calculator
-            </a>
-            {' '}at The UKCAT People to convert them to scaled scores (300 to 900 per section) before logging.
-          </p>
-        </div>
-        {!readOnly && (
-          <Button type="button" onClick={toggleLogForm} variant={showForm ? 'secondary' : 'primary'}>
-            {showForm ? 'Cancel' : '+ Log scores'}
-          </Button>
+      <div
+        className={cn(
+          'px-4 sm:px-6 lg:px-8 py-6 md:py-10 space-y-8',
+          appContentWidthClass({ inAppShell }),
         )}
-      </div>
+      >
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 space-y-2 sm:space-y-3">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Mock Scores</h1>
+              <p className="text-sm sm:text-base text-muted-foreground mt-1">
+                Track your progress across full and mini mocks
+              </p>
+            </div>
+            <div className="rounded-xl border border-border bg-muted/30 px-3 py-2.5 sm:px-4 text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              <span className="sm:hidden">
+                Raw marks? Convert with the{' '}
+                <a
+                  href={UCAT_APPLICATION_LINKS.scoreCalculator.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-primary hover:underline"
+                >
+                  UCAT score calculator
+                </a>{' '}
+                (scaled 300 to 900 per section) before logging.
+              </span>
+              <span className="hidden sm:inline">
+                If you only have raw marks, use the{' '}
+                <a
+                  href={UCAT_APPLICATION_LINKS.scoreCalculator.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-primary hover:underline"
+                >
+                  UCAT score calculator
+                </a>
+                {' at The UKCAT People to convert them to scaled scores (300 to 900 per section) before logging.'}
+              </span>
+            </div>
+          </div>
+          {!readOnly && (
+            <Button
+              type="button"
+              onClick={toggleLogForm}
+              variant={showForm ? 'secondary' : 'primary'}
+              className="w-full shrink-0 sm:w-auto"
+            >
+              {showForm ? 'Cancel' : '+ Log scores'}
+            </Button>
+          )}
+        </div>
 
       {showForm && !readOnly ? (
         <div ref={formSectionRef} className="scroll-mt-24">
@@ -505,7 +529,7 @@ export function MockScoresView({
                 ) : (
                   <span className="text-slate-500">
                     {browseOnly
-                      ? 'Set a study plan to save mock goals and scores.'
+                      ? 'Register for free to save mock goals and scores to your account.'
                       : 'No goals stored for this student yet.'}
                   </span>
                 )}
@@ -587,12 +611,13 @@ export function MockScoresView({
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2">
+      <div className="flex w-full gap-2 sm:w-auto sm:max-w-xl">
         {(['full', 'mini'] as Tab[]).map(tab => (
           <button
             key={tab}
+            type="button"
             onClick={() => setActiveTab(tab)}
-            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            className={`rounded-lg px-4 py-2.5 text-sm font-medium transition-colors flex-1 min-w-[10rem] sm:flex-initial sm:min-w-0 ${
               activeTab === tab
                 ? 'bg-blue-600 text-white'
                 : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
@@ -833,14 +858,22 @@ export function MockScoresView({
           </div>
         </Card>
       ) : (
-        <div className="text-center py-16 text-slate-400">
-          <div className="text-4xl mb-3">📊</div>
-          <p>No {activeTab === 'full' ? 'full' : 'mini'} mock scores logged yet.</p>
+        <div className="text-center py-12 sm:py-16 px-2 text-slate-400">
+          <div className="mx-auto mb-3 flex justify-center" aria-hidden>
+            <BarChart3 className="h-10 w-10 text-slate-300" strokeWidth={1.5} />
+          </div>
+          <p className="text-sm sm:text-base text-slate-500">
+            No {activeTab === 'full' ? 'full' : 'mini'} mock scores logged yet.
+          </p>
           {!readOnly && (
-            <p className="text-sm mt-1">After completing a mock, log your scores above.</p>
+            <p className="text-xs sm:text-sm mt-2 text-slate-400">
+              After completing a mock, log your scores using the button above.
+            </p>
           )}
           {readOnly && browseOnly && (
-            <p className="text-sm mt-1 text-slate-500">Create a study plan to start logging.</p>
+            <p className="text-xs sm:text-sm mt-2 text-slate-500">
+              Register for free to log mocks and track progress here.
+            </p>
           )}
         </div>
       )}

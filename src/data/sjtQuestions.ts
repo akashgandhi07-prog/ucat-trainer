@@ -12,9 +12,9 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     difficulty: "standard",
     stem: `Priya is a final-year medical student on a hospital ward round. She notices that a senior registrar, Dr Mensah, has prescribed a patient a dose of a blood-thinning medication that appears to be twice the standard therapeutic dose. Dr Mensah has already moved on to the next patient. Priya is not completely certain the dose is wrong, but it does appear unusual to her.`,
     pivotInsight:
-      "Patient safety always overrides hierarchy and personal discomfort. The question is not whether to act, but how — proportionately and professionally.",
+      "Patient safety always overrides hierarchy and personal discomfort. The question is not whether to act, but how, proportionately and professionally.",
     gmpRef: {
-      label: "GMP – Colleagues, culture and safety",
+      label: "GMP · Colleagues, culture and safety",
       url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
     },
     items: [
@@ -23,11 +23,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Quietly inform Dr Mensah of the apparent discrepancy before the prescription is dispensed.",
         correctRating: "very_appropriate",
         rationale:
-          "This is the ideal response. Patient safety requires that concerns are raised promptly and directly with the person responsible. Approaching Dr Mensah privately respects the professional relationship while ensuring the error is reviewed before it can cause harm. GMP is clear that all members of the healthcare team — including students — have a duty to raise patient safety concerns, and doing so directly and promptly is best practice.",
+          "This is the ideal response. Patient safety requires that concerns are raised promptly and directly with the person responsible. Approaching Dr Mensah privately respects the professional relationship while ensuring the error is reviewed before it can cause harm. GMP is clear that all members of the healthcare team, including students, have a duty to raise patient safety concerns, and doing so directly and promptly is best practice.",
         whyNotAdjacent:
-          "'Appropriate' would imply some reservation, but there is none here — this is the textbook response. It is timely, direct, and professional.",
+          "'Appropriate' would imply some reservation, but there is none here, this is the textbook response. It is timely, direct, and professional.",
         gmpRef: {
-          label: "GMP – Colleagues, culture and safety",
+          label: "GMP · Colleagues, culture and safety",
           url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
         },
       },
@@ -36,11 +36,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Say nothing, as she might be wrong and it would be embarrassing to challenge a senior.",
         correctRating: "very_inappropriate",
         rationale:
-          "GMP is explicit that personal discomfort, hierarchy, or uncertainty does not excuse failing to raise a patient safety concern. A student who stays silent when a potentially dangerous prescription error is in front of them is placing their own comfort above a patient's life. Uncertainty does not remove the duty — it lowers the threshold for raising the concern, not raising it.",
+          "GMP is explicit that personal discomfort, hierarchy, or uncertainty does not excuse failing to raise a patient safety concern. A student who stays silent when a potentially dangerous prescription error is in front of them is placing their own comfort above a patient's life. Uncertainty does not remove the duty, it lowers the threshold for raising the concern, not raising it.",
         whyNotAdjacent:
           "'Inappropriate' understates the risk. A significant prescribing error that goes unchallenged can cause serious patient harm. This moves clearly into 'Very Inappropriate' territory.",
         gmpRef: {
-          label: "GMP – Colleagues, culture and safety",
+          label: "GMP · Colleagues, culture and safety",
           url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
         },
       },
@@ -51,7 +51,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         rationale:
           "Raising a concern is the right instinct, but how it is raised matters. Publicly embarrassing a senior colleague mid-ward round does not align with the collaborative, respectful working culture GMP requires, and may actually make it harder for Dr Mensah to receive the information constructively. The concern is valid; the manner is disproportionate.",
         whyNotAdjacent:
-          "This is not 'Very Inappropriate' because the underlying motivation — patient safety — is correct. It is 'Inappropriate' because the execution undermines professional relationships without improving outcomes.",
+          "This is not 'Very Inappropriate' because the underlying motivation, patient safety, is correct. It is 'Inappropriate' because the execution undermines professional relationships without improving outcomes.",
       },
       {
         id: "app-001-d",
@@ -74,7 +74,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     pivotInsight:
       "Patients with capacity must always be addressed directly, regardless of language barriers or well-meaning relatives. Assumptions about capacity based on age or communication difficulties are never appropriate.",
     gmpRef: {
-      label: "GMP – Patients, partnership and communication",
+      label: "GMP · Patients, partnership and communication",
       url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
     },
     items: [
@@ -83,7 +83,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Continue addressing questions directly to Mr Eze and use Theo to translate the responses.",
         correctRating: "very_appropriate",
         rationale:
-          "A patient with mental capacity must always be the primary participant in their own consultation. There is no indication Mr Eze lacks capacity — language is a communication barrier, not a capacity issue. Marcus should use Theo as a communication facilitator, not a substitute decision-maker. Continuing to direct questions at the patient respects his dignity and autonomy.",
+          "A patient with mental capacity must always be the primary participant in their own consultation. There is no indication Mr Eze lacks capacity, language is a communication barrier, not a capacity issue. Marcus should use Theo as a communication facilitator, not a substitute decision-maker. Continuing to direct questions at the patient respects his dignity and autonomy.",
         whyNotAdjacent:
           "There is no reason this should be merely 'Appropriate'. Addressing the patient directly is the GMP standard, not an optional extra.",
       },
@@ -92,7 +92,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Allow Theo to lead the conversation as it saves time and Mr Eze seems comfortable.",
         correctRating: "very_inappropriate",
         rationale:
-          "Assuming a patient with capacity cannot or should not speak for themselves — based on age, language, or a relative's behaviour — fundamentally undermines patient autonomy and dignity. GMP requires clinicians to ensure patients are involved in decisions about their own care. Deferring to a relative without any assessment of capacity is not acceptable, regardless of convenience or assumed comfort.",
+          "Assuming a patient with capacity cannot or should not speak for themselves, based on age, language, or a relative's behaviour, fundamentally undermines patient autonomy and dignity. GMP requires clinicians to ensure patients are involved in decisions about their own care. Deferring to a relative without any assessment of capacity is not acceptable, regardless of convenience or assumed comfort.",
         whyNotAdjacent:
           "This is not merely 'Inappropriate'. Systematically excluding a patient from their own consultation is a serious breach of patient-centred care principles.",
       },
@@ -103,14 +103,14 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         rationale:
           "This response actively corrects the dynamic in a respectful, non-confrontational way. It preserves Mr Eze's autonomy, maintains the therapeutic relationship with the family, and sets a clear, professional boundary for how the consultation should proceed. This is an excellent demonstration of patient-centred communication.",
         whyNotAdjacent:
-          "This goes beyond 'Appropriate' — it actively addresses a concerning dynamic rather than just tolerating it.",
+          "This goes beyond 'Appropriate', it actively addresses a concerning dynamic rather than just tolerating it.",
       },
       {
         id: "app-002-d",
         text: "Ask Theo to wait outside so that Marcus can speak to Mr Eze alone.",
         correctRating: "inappropriate",
         rationale:
-          "While the intention to restore direct communication with the patient is sound, removing the only available translator would make the consultation impossible and could leave Mr Eze feeling isolated and unsupported. There are better ways to address the issue — such as clarifying Theo's role — without excluding him entirely. This response overcorrects.",
+          "While the intention to restore direct communication with the patient is sound, removing the only available translator would make the consultation impossible and could leave Mr Eze feeling isolated and unsupported. There are better ways to address the issue, such as clarifying Theo's role, without excluding him entirely. This response overcorrects.",
         whyNotAdjacent:
           "It is not 'Very Inappropriate' because the motivation is to protect patient autonomy, which is correct. The execution is however poor and likely to cause harm to the consultation.",
       },
@@ -126,7 +126,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     pivotInsight:
       "Modest gifts given after care has concluded, as a genuine expression of gratitude, are generally acceptable when declared and handled appropriately. The concern arises when gifts could reasonably be seen to influence clinical judgement.",
     gmpRef: {
-      label: "GMP – Trust and professionalism (gifts)",
+      label: "GMP · Trust and professionalism (gifts)",
       url: `${GMP_MAIN_URL}/trust-and-professionalism`,
     },
     items: [
@@ -137,9 +137,9 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         rationale:
           "A modest token of genuine gratitude from a patient after care has concluded is broadly acceptable under GMP, provided it is declared and handled in line with local policy. Informing her supervisor demonstrates transparency and professional integrity. The gift is small, the clinical relationship is complete, and Lena is not in a position to make clinical decisions that could be influenced by it.",
         whyNotAdjacent:
-          "This is not merely 'Appropriate' — the combination of transparency, proportionality, and following proper process makes it the ideal response.",
+          "This is not merely 'Appropriate', the combination of transparency, proportionality, and following proper process makes it the ideal response.",
         gmpRef: {
-          label: "GMP – Trust and professionalism (gifts)",
+          label: "GMP · Trust and professionalism (gifts)",
           url: `${GMP_MAIN_URL}/trust-and-professionalism`,
         },
       },
@@ -148,16 +148,16 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Decline the gift and explain to the patient that she cannot accept it.",
         correctRating: "appropriate",
         rationale:
-          "Declining a modest thank-you gift is not wrong — students are often uncertain about gift policies and erring on the side of caution is understandable. However, it is not necessary in this case. The gift is small, given after care concluded, and from a patient expressing genuine gratitude. Declining may unnecessarily disappoint the patient and is more cautious than required.",
+          "Declining a modest thank-you gift is not wrong, students are often uncertain about gift policies and erring on the side of caution is understandable. However, it is not necessary in this case. The gift is small, given after care concluded, and from a patient expressing genuine gratitude. Declining may unnecessarily disappoint the patient and is more cautious than required.",
         whyNotAdjacent:
-          "It is not 'Very Appropriate' because no breach has occurred — there is no need to decline. It is 'Appropriate' because the caution, while excessive, comes from a professionally sound instinct.",
+          "It is not 'Very Appropriate' because no breach has occurred, there is no need to decline. It is 'Appropriate' because the caution, while excessive, comes from a professionally sound instinct.",
       },
       {
         id: "app-003-c",
         text: "Accept the gift without telling anyone, as it was given in good faith.",
         correctRating: "inappropriate",
         rationale:
-          "Even a modest gift that is perfectly acceptable to keep should be declared in line with practice policy. Keeping the gift without disclosure lacks the transparency that underpins trust in professional relationships. GMP requires that clinicians manage gifts and benefits honestly — silence is not the same as honest handling.",
+          "Even a modest gift that is perfectly acceptable to keep should be declared in line with practice policy. Keeping the gift without disclosure lacks the transparency that underpins trust in professional relationships. GMP requires that clinicians manage gifts and benefits honestly, silence is not the same as honest handling.",
         whyNotAdjacent:
           "It is not 'Very Inappropriate' because the gift itself is not problematic. The issue is exclusively the lack of transparency, which places this at 'Inappropriate'.",
       },
@@ -168,7 +168,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         rationale:
           "Redirecting a patient's gratitude into a request for a different gift is unprofessional and places the patient in an uncomfortable position. It also risks appearing opportunistic. The appropriate response is to handle the existing gift correctly, not to leverage the patient's gratitude for a more favourable outcome.",
         whyNotAdjacent:
-          "This is closer to 'Very Inappropriate' than 'Appropriate', but the underlying gesture of sharing with the team is not inherently wrong — the manner is the problem.",
+          "This is closer to 'Very Inappropriate' than 'Appropriate', but the underlying gesture of sharing with the team is not inherently wrong, the manner is the problem.",
       },
     ],
   },
@@ -183,9 +183,9 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     difficulty: "standard",
     stem: `Amara is a dental student who has been paired with a fellow student, James, for a skills assessment. She has noticed over the past two weeks that James often arrives late to clinical sessions, sometimes smelling faintly of alcohol, and that his hands appear to tremble slightly when handling instruments. Their clinical supervisor has not yet raised any concerns. Amara is trying to decide how to respond to the situation.`,
     pivotInsight:
-      "When a colleague's fitness to practise may be impaired, the primary concern must always be patient safety — not colleague loyalty, not personal discomfort. The weight given to each consideration flows directly from how directly it connects to that principle.",
+      "When a colleague's fitness to practise may be impaired, the primary concern must always be patient safety, not colleague loyalty, not personal discomfort. The weight given to each consideration flows directly from how directly it connects to that principle.",
     gmpRef: {
-      label: "GMP – Colleagues, culture and safety",
+      label: "GMP · Colleagues, culture and safety",
       url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
     },
     items: [
@@ -194,11 +194,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That patients may be placed at risk if James continues to practise in his current state.",
         correctRating: "very_important",
         rationale:
-          "This is the most important consideration. Patient safety is the overriding duty of every healthcare professional, including students. GMP is unequivocal that you must act — and act promptly — when there are reasonable grounds to believe a colleague's conduct or health may be putting patients at risk. Everything else in this scenario flows from this concern.",
+          "This is the most important consideration. Patient safety is the overriding duty of every healthcare professional, including students. GMP is unequivocal that you must act, and act promptly, when there are reasonable grounds to believe a colleague's conduct or health may be putting patients at risk. Everything else in this scenario flows from this concern.",
         whyNotAdjacent:
-          "It would be wrong to rate this as merely 'Important'. Patient safety is not one factor among many — it is the primary professional duty.",
+          "It would be wrong to rate this as merely 'Important'. Patient safety is not one factor among many, it is the primary professional duty.",
         gmpRef: {
-          label: "GMP – Colleagues, culture and safety",
+          label: "GMP · Colleagues, culture and safety",
           url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
         },
       },
@@ -209,14 +209,14 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         rationale:
           "Personal relationships and professional comfort must not prevent a clinician from acting when patient safety is at risk. GMP explicitly states that the duty to raise concerns is not negated by personal loyalty or the discomfort of reporting a colleague. While the impact on a friendship is an understandable human concern, it has no legitimate weight as a professional consideration in this context.",
         whyNotAdjacent:
-          "This should not be rated 'Of Minor Importance'. It is not a professional consideration at all — personal relationships are irrelevant when patient safety is at stake.",
+          "This should not be rated 'Of Minor Importance'. It is not a professional consideration at all, personal relationships are irrelevant when patient safety is at stake.",
       },
       {
         id: "imp-001-c",
         text: "Whether there might be a personal or health reason behind James's behaviour.",
         correctRating: "important",
         rationale:
-          "Understanding whether James is struggling with a health issue, personal crisis, or substance dependency is genuinely important — not because it changes the duty to act, but because it shapes how Amara responds. A compassionate, supportive approach that connects James with help is far better than one that simply reports him without consideration of his wellbeing. GMP acknowledges the duty to support colleagues in difficulty as well as the duty to protect patients.",
+          "Understanding whether James is struggling with a health issue, personal crisis, or substance dependency is genuinely important, not because it changes the duty to act, but because it shapes how Amara responds. A compassionate, supportive approach that connects James with help is far better than one that simply reports him without consideration of his wellbeing. GMP acknowledges the duty to support colleagues in difficulty as well as the duty to protect patients.",
         whyNotAdjacent:
           "This is 'Important', not 'Very Important'. It informs how to act, but it does not override patient safety as the primary consideration.",
       },
@@ -225,9 +225,9 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That her clinical supervisor has not already raised the issue.",
         correctRating: "minor_importance",
         rationale:
-          "The fact that a supervisor has not yet acted does not remove Amara's own duty to raise concerns. Students and junior clinicians cannot defer their professional responsibilities upwards and assume that silence from a senior means no concern exists. It is worth considering as context — perhaps the supervisor has noticed and is already managing it — but it is of minor importance as a reason for Amara to stay silent.",
+          "The fact that a supervisor has not yet acted does not remove Amara's own duty to raise concerns. Students and junior clinicians cannot defer their professional responsibilities upwards and assume that silence from a senior means no concern exists. It is worth considering as context, perhaps the supervisor has noticed and is already managing it, but it is of minor importance as a reason for Amara to stay silent.",
         whyNotAdjacent:
-          "It is not 'Not Important at All' — the supervisor's awareness is relevant context. But it should never be used as a justification for inaction.",
+          "It is not 'Not Important at All', the supervisor's awareness is relevant context. But it should never be used as a justification for inaction.",
       },
     ],
   },
@@ -239,9 +239,9 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     difficulty: "foundation",
     stem: `Callum is a medical student who has just started a surgery placement. During his second week, a registrar asks him to assist with a minor procedure. Callum has not been trained on this specific technique at university, although he has seen it demonstrated once. He is flattered to be asked and does not want to appear incompetent in front of the surgical team. He is thinking about how to respond.`,
     pivotInsight:
-      "Honesty about the limits of your competence is not weakness — it is a core professional duty. A student who overstates their abilities to avoid embarrassment is placing patient safety at risk.",
+      "Honesty about the limits of your competence is not weakness, it is a core professional duty. A student who overstates their abilities to avoid embarrassment is placing patient safety at risk.",
     gmpRef: {
-      label: "GMP – Knowledge, skills and development",
+      label: "GMP · Knowledge, skills and development",
       url: `${GMP_MAIN_URL}/knowledge-skills-and-development`,
     },
     items: [
@@ -250,11 +250,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That he has not received formal training in this technique.",
         correctRating: "very_important",
         rationale:
-          "Callum must be honest about his level of competence before agreeing to assist. GMP requires all clinicians — including students — to recognise and work within the limits of their knowledge and skills. Proceeding with a technique he has only seen once and not been formally trained in, without disclosing this, risks patient harm and breaches the foundational duty of honest self-assessment.",
+          "Callum must be honest about his level of competence before agreeing to assist. GMP requires all clinicians, including students, to recognise and work within the limits of their knowledge and skills. Proceeding with a technique he has only seen once and not been formally trained in, without disclosing this, risks patient harm and breaches the foundational duty of honest self-assessment.",
         whyNotAdjacent:
           "This cannot be merely 'Important'. Concealing a competence gap when preparing to perform a clinical procedure is directly linked to patient safety.",
         gmpRef: {
-          label: "GMP – Knowledge, skills and development",
+          label: "GMP · Knowledge, skills and development",
           url: `${GMP_MAIN_URL}/knowledge-skills-and-development`,
         },
       },
@@ -272,7 +272,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That this is an opportunity to develop a new clinical skill under supervision.",
         correctRating: "important",
         rationale:
-          "Learning new skills under appropriate supervision is one of the core purposes of a clinical placement and is encouraged by GMP. If Callum discloses his lack of training and the registrar provides direct supervision, this becomes a legitimate and valuable learning opportunity. The consideration is important, but only after the competence gap has been disclosed — not as a reason to overlook it.",
+          "Learning new skills under appropriate supervision is one of the core purposes of a clinical placement and is encouraged by GMP. If Callum discloses his lack of training and the registrar provides direct supervision, this becomes a legitimate and valuable learning opportunity. The consideration is important, but only after the competence gap has been disclosed, not as a reason to overlook it.",
         whyNotAdjacent:
           "It is 'Important' but not 'Very Important'. It is only valid as a consideration after the safety question has been properly addressed.",
       },
@@ -281,9 +281,9 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Whether the registrar is aware of what procedures are typically taught at his university.",
         correctRating: "minor_importance",
         rationale:
-          "It is possible the registrar does not know that this technique is not part of Callum's curriculum. This is worth bearing in mind as context — the registrar may simply have assumed training has been given. However, this does not change what Callum should do: be honest about his competence level regardless of what the registrar may or may not know.",
+          "It is possible the registrar does not know that this technique is not part of Callum's curriculum. This is worth bearing in mind as context, the registrar may simply have assumed training has been given. However, this does not change what Callum should do: be honest about his competence level regardless of what the registrar may or may not know.",
         whyNotAdjacent:
-          "It is not 'Not Important at All' — it gives useful context. But it is of minor importance because it does not alter Callum's duty to disclose.",
+          "It is not 'Not Important at All', it gives useful context. But it is of minor importance because it does not alter Callum's duty to disclose.",
       },
     ],
   },
@@ -295,9 +295,9 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     difficulty: "challenging",
     stem: `Nina is a final-year medical student assisting in a GP consultation. The patient, a 45-year-old woman named Mrs Osei, has been diagnosed with type 2 diabetes and needs to start medication. The GP asks Nina to explain the medication and answer any questions while he briefly steps out. Mrs Osei nods along but asks no questions. Partway through Nina's explanation, it becomes clear to Nina that Mrs Osei may not have fully understood what she has been told. Nina is considering how to proceed.`,
     pivotInsight:
-      "Checking understanding is not the same as giving information. A patient nodding is not evidence of informed consent — genuine understanding requires active verification.",
+      "Checking understanding is not the same as giving information. A patient nodding is not evidence of informed consent, genuine understanding requires active verification.",
     gmpRef: {
-      label: "GMP – Patients, partnership and communication",
+      label: "GMP · Patients, partnership and communication",
       url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
     },
     items: [
@@ -306,11 +306,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That Mrs Osei may not have fully understood the information she has been given.",
         correctRating: "very_important",
         rationale:
-          "For a patient to make an informed decision about their treatment, they must genuinely understand the information they have received. GMP requires that patients are given the opportunity to understand — not merely to hear — information about their care. If Nina has reason to believe understanding is absent, she must act on that. Starting a new medication without understanding what it is, why it is needed, and what to expect compromises the patient's autonomy and safety.",
+          "For a patient to make an informed decision about their treatment, they must genuinely understand the information they have received. GMP requires that patients are given the opportunity to understand, not merely to hear, information about their care. If Nina has reason to believe understanding is absent, she must act on that. Starting a new medication without understanding what it is, why it is needed, and what to expect compromises the patient's autonomy and safety.",
         whyNotAdjacent:
           "This is the core issue in this scenario and cannot be rated lower than 'Very Important'. Informed consent is a fundamental patient right.",
         gmpRef: {
-          label: "GMP – Patients, partnership and communication",
+          label: "GMP · Patients, partnership and communication",
           url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
         },
       },
@@ -319,7 +319,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That the GP will be back shortly and can pick up the explanation.",
         correctRating: "minor_importance",
         rationale:
-          "The GP's return is relevant context but does not reduce Nina's immediate responsibility. Nina has been asked to explain the medication and is currently in the room with a patient who may not understand. Waiting and deferring the conversation entirely is unlikely to serve the patient well — and if Nina leaves the room without addressing the concern, the GP may not know to revisit it. Nina should act now, within her competence.",
+          "The GP's return is relevant context but does not reduce Nina's immediate responsibility. Nina has been asked to explain the medication and is currently in the room with a patient who may not understand. Waiting and deferring the conversation entirely is unlikely to serve the patient well, and if Nina leaves the room without addressing the concern, the GP may not know to revisit it. Nina should act now, within her competence.",
         whyNotAdjacent:
           "This is of minor importance. It is not irrelevant, but it should not be used as a reason for Nina to disengage from a patient who needs clearer communication.",
       },
@@ -328,7 +328,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Whether there are any language or health literacy barriers affecting Mrs Osei's understanding.",
         correctRating: "very_important",
         rationale:
-          "Understanding why a patient may be struggling to follow an explanation is essential to addressing it effectively. Language, health literacy, anxiety, and many other factors can all affect how patients process clinical information. GMP requires clinicians to communicate in a way that patients can understand — which means adapting the approach based on the individual patient's needs. Identifying what is causing the comprehension difficulty is as important as recognising that it exists.",
+          "Understanding why a patient may be struggling to follow an explanation is essential to addressing it effectively. Language, health literacy, anxiety, and many other factors can all affect how patients process clinical information. GMP requires clinicians to communicate in a way that patients can understand, which means adapting the approach based on the individual patient's needs. Identifying what is causing the comprehension difficulty is as important as recognising that it exists.",
         whyNotAdjacent:
           "This is not merely 'Important'. It is directly tied to the patient's ability to give informed consent, which is a fundamental GMP obligation.",
       },
@@ -337,7 +337,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That Nina should complete the explanation she was asked to give before raising concerns.",
         correctRating: "not_important",
         rationale:
-          "Completing an explanation that is not being understood does not serve the patient. If Nina recognises mid-explanation that Mrs Osei is not following, continuing as if nothing has changed would compound the problem. GMP requires responsiveness to patients — clinicians must adapt in real time, not adhere rigidly to a plan that is clearly not working.",
+          "Completing an explanation that is not being understood does not serve the patient. If Nina recognises mid-explanation that Mrs Osei is not following, continuing as if nothing has changed would compound the problem. GMP requires responsiveness to patients, clinicians must adapt in real time, not adhere rigidly to a plan that is clearly not working.",
         whyNotAdjacent:
           "This is appropriately rated 'Not Important at All'. Prioritising task completion over patient understanding is contrary to patient-centred care.",
       },
@@ -356,7 +356,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     pivotInsight:
       "This tests whether you prioritise patient confidentiality appropriately, choose a proportionate response, and distinguish between passive inaction and active escalation.",
     gmpRef: {
-      label: "GMP – Patients, partnership and communication (confidentiality)",
+      label: "GMP · Patients, partnership and communication (confidentiality)",
       url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
     },
     items: [
@@ -372,14 +372,14 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Report the nurses to their ward manager immediately after leaving the café.",
         rank: 2,
         rationale:
-          "Escalating a confidentiality breach is appropriate and may be necessary if the nurses are unreceptive or if the breach was deliberate. However, escalating without first attempting a direct, private intervention is disproportionate as a first step — especially given that the nurses appear unaware. This is the right second step, not the first.",
+          "Escalating a confidentiality breach is appropriate and may be necessary if the nurses are unreceptive or if the breach was deliberate. However, escalating without first attempting a direct, private intervention is disproportionate as a first step, especially given that the nurses appear unaware. This is the right second step, not the first.",
       },
       {
         id: "rank-001-c",
         text: "Walk away and say nothing, as it is not his place as a student to challenge qualified staff.",
         rank: 3,
         rationale:
-          "This is the least appropriate response. Hierarchy and student status do not override the duty to protect patient confidentiality. GMP applies to students too — they are not bystanders. Staying silent while a patient's private medical information is being disclosed in a public space is a failure to act on a clear professional responsibility.",
+          "This is the least appropriate response. Hierarchy and student status do not override the duty to protect patient confidentiality. GMP applies to students too, they are not bystanders. Staying silent while a patient's private medical information is being disclosed in a public space is a failure to act on a clear professional responsibility.",
       },
     ],
   },
@@ -389,11 +389,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     type: "ranking",
     domain: "knowledge_skills_development",
     difficulty: "challenging",
-    stem: `Fatima is a dental student in her third year. During a supervised clinical session, her tutor, Dr Patel, briefly leaves the room to take an urgent phone call. While Dr Patel is away, the patient — who is mid-procedure — begins to express discomfort and asks Fatima if she can continue with the treatment herself to get it over with. Fatima is not yet signed off to perform this procedure independently.`,
+    stem: `Fatima is a dental student in her third year. During a supervised clinical session, her tutor, Dr Patel, briefly leaves the room to take an urgent phone call. While Dr Patel is away, the patient, who is mid-procedure, begins to express discomfort and asks Fatima if she can continue with the treatment herself to get it over with. Fatima is not yet signed off to perform this procedure independently.`,
     pivotInsight:
       "A student's competence boundary is non-negotiable, regardless of patient preference or pressure. The question is how to manage the situation with compassion and without leaving the patient worse off.",
     gmpRef: {
-      label: "GMP – Knowledge, skills and development",
+      label: "GMP · Knowledge, skills and development",
       url: `${GMP_MAIN_URL}/knowledge-skills-and-development`,
     },
     items: [
@@ -402,21 +402,21 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Reassure the patient, pause the procedure, and go to find Dr Patel immediately.",
         rank: 1,
         rationale:
-          "Patient safety requires that Fatima stays within her competence. She cannot perform the procedure unsupervised. However, leaving the patient without explanation or reassurance would be poor practice — so the ideal response combines both: clear, compassionate communication followed by immediate action to retrieve appropriate supervision. This is the most appropriate response.",
+          "Patient safety requires that Fatima stays within her competence. She cannot perform the procedure unsupervised. However, leaving the patient without explanation or reassurance would be poor practice, so the ideal response combines both: clear, compassionate communication followed by immediate action to retrieve appropriate supervision. This is the most appropriate response.",
       },
       {
         id: "rank-002-b",
         text: "Explain to the patient that she is not yet qualified to continue alone, and wait calmly until Dr Patel returns.",
         rank: 2,
         rationale:
-          "Being honest with the patient about her limitations is correct and respectful. However, simply waiting is less proactive than going to find Dr Patel, who may be unaware that the patient is in discomfort and the procedure has stalled. This is appropriate but not optimal — active retrieval of the supervisor is preferable to passive waiting.",
+          "Being honest with the patient about her limitations is correct and respectful. However, simply waiting is less proactive than going to find Dr Patel, who may be unaware that the patient is in discomfort and the procedure has stalled. This is appropriate but not optimal, active retrieval of the supervisor is preferable to passive waiting.",
       },
       {
         id: "rank-002-c",
         text: "Continue the procedure to avoid distressing the patient further, given that she has already seen it performed many times.",
         rank: 3,
         rationale:
-          "This is the least appropriate response. Familiarity with a procedure does not constitute sign-off or competence. Proceeding outside the limits of her authorised practice — however well-intentioned — puts the patient at risk, breaches GMP, and could have serious consequences for both the patient and Fatima. Patient preference cannot override clinical safety boundaries.",
+          "This is the least appropriate response. Familiarity with a procedure does not constitute sign-off or competence. Proceeding outside the limits of her authorised practice, however well-intentioned, puts the patient at risk, breaches GMP, and could have serious consequences for both the patient and Fatima. Patient preference cannot override clinical safety boundaries.",
       },
     ],
   },
@@ -428,9 +428,9 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     difficulty: "standard",
     stem: `Isabelle is a medical student who has been asked by a friend from her course, Daniel, to help him prepare a reflective learning log that is required for their placement portfolio. Daniel has missed several placement sessions due to personal difficulties and is now significantly behind. He asks Isabelle to write some reflective entries on his behalf, describing experiences she had that he can adapt as if they were his own. He tells her he will fail the placement without it.`,
     pivotInsight:
-      "Academic integrity sits at the heart of professional trust. A clinician who fabricates records in training will fabricate records in practice. Isabelle's response must be honest and supportive — but not complicit.",
+      "Academic integrity sits at the heart of professional trust. A clinician who fabricates records in training will fabricate records in practice. Isabelle's response must be honest and supportive, but not complicit.",
     gmpRef: {
-      label: "GMP – Trust and professionalism (honesty and integrity)",
+      label: "GMP · Trust and professionalism (honesty and integrity)",
       url: `${GMP_MAIN_URL}/trust-and-professionalism`,
     },
     items: [
@@ -439,21 +439,21 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Decline to write the entries, but offer to help Daniel approach his placement supervisor honestly to discuss his situation and options.",
         rank: 1,
         rationale:
-          "This is the most appropriate response. GMP requires absolute honesty in all professional documentation. Writing reflective entries on someone else's behalf is dishonest, regardless of the circumstances. However, Isabelle can still support Daniel in a legitimate way — by encouraging transparency with his supervisor, who may be able to offer extensions, additional sessions, or alternative arrangements. Supporting a colleague honestly is far more valuable than helping them deceive.",
+          "This is the most appropriate response. GMP requires absolute honesty in all professional documentation. Writing reflective entries on someone else's behalf is dishonest, regardless of the circumstances. However, Isabelle can still support Daniel in a legitimate way, by encouraging transparency with his supervisor, who may be able to offer extensions, additional sessions, or alternative arrangements. Supporting a colleague honestly is far more valuable than helping them deceive.",
       },
       {
         id: "rank-003-b",
         text: "Decline to help and encourage Daniel to speak to the placement office about his personal difficulties.",
         rank: 2,
         rationale:
-          "Declining is correct and refusing to be party to academic dishonesty is the right professional choice. Directing Daniel to the placement office is also sound. However, this response is slightly less supportive than rank 1 — it does not offer Isabelle's active assistance in navigating the situation, and Daniel may find it harder to take that step alone. The response is appropriate but less compassionate in its execution.",
+          "Declining is correct and refusing to be party to academic dishonesty is the right professional choice. Directing Daniel to the placement office is also sound. However, this response is slightly less supportive than rank 1, it does not offer Isabelle's active assistance in navigating the situation, and Daniel may find it harder to take that step alone. The response is appropriate but less compassionate in its execution.",
       },
       {
         id: "rank-003-c",
         text: "Write the reflective entries for Daniel, as he is clearly struggling and the entries are based on real experiences from the placement.",
         rank: 3,
         rationale:
-          "This is the least appropriate response. Fabricating professional documentation — even based on real events — is dishonest and directly contrary to GMP. A doctor who is willing to falsify records under personal pressure is a risk to patients and to the profession. Compassion for a friend does not justify academic fraud. If discovered, both students could face serious disciplinary consequences.",
+          "This is the least appropriate response. Fabricating professional documentation, even based on real events, is dishonest and directly contrary to GMP. A doctor who is willing to falsify records under personal pressure is a risk to patients and to the profession. Compassion for a friend does not justify academic fraud. If discovered, both students could face serious disciplinary consequences.",
       },
     ],
   },
@@ -468,9 +468,9 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     difficulty: "foundation",
     stem: `Tom is a medical student who, while scrolling through social media, sees a post from his classmate Rajesh. Rajesh has uploaded a photograph taken on a hospital ward, captioned with details about an interesting case he observed that day. No patient names are mentioned, but a patient visible in the background is partially identifiable. Tom recognises the ward from his own placement.`,
     pivotInsight:
-      "Confidentiality does not require a name. Any information that could allow a patient to be identified — including context, ward, or case details — constitutes a potential breach, regardless of intent.",
+      "Confidentiality does not require a name. Any information that could allow a patient to be identified, including context, ward, or case details, constitutes a potential breach, regardless of intent.",
     gmpRef: {
-      label: "GMP – Trust and professionalism",
+      label: "GMP · Trust and professionalism",
       url: `${GMP_MAIN_URL}/trust-and-professionalism`,
     },
     items: [
@@ -479,11 +479,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Message Rajesh privately to explain the potential confidentiality concern and suggest he remove the post.",
         correctRating: "very_appropriate",
         rationale:
-          "This is the ideal first step. Patient confidentiality is a fundamental GMP duty and a legal obligation. Raising the issue directly and privately with Rajesh gives him the opportunity to correct the situation immediately. Most students are unaware of exactly how confidentiality applies to social media — a supportive, private approach is proportionate and likely to be effective.",
+          "This is the ideal first step. Patient confidentiality is a fundamental GMP duty and a legal obligation. Raising the issue directly and privately with Rajesh gives him the opportunity to correct the situation immediately. Most students are unaware of exactly how confidentiality applies to social media, a supportive, private approach is proportionate and likely to be effective.",
         whyNotAdjacent:
-          "This is not merely 'Appropriate' — it is the textbook response. Prompt, direct, private communication is exactly what GMP and professional social media guidance recommend.",
+          "This is not merely 'Appropriate', it is the textbook response. Prompt, direct, private communication is exactly what GMP and professional social media guidance recommend.",
         gmpRef: {
-          label: "GMP – Trust and professionalism",
+          label: "GMP · Trust and professionalism",
           url: `${GMP_MAIN_URL}/trust-and-professionalism`,
         },
       },
@@ -492,7 +492,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Report the post directly to the medical school without speaking to Rajesh first.",
         correctRating: "appropriate",
         rationale:
-          "Escalating a potential confidentiality breach is legitimate. However, going directly to the institution without first attempting a private conversation with Rajesh is disproportionate as an initial step — especially if he is simply unaware of the issue. If he ignores a private message or refuses to remove the post, formal escalation becomes necessary. This is appropriate as a second step, not the first.",
+          "Escalating a potential confidentiality breach is legitimate. However, going directly to the institution without first attempting a private conversation with Rajesh is disproportionate as an initial step, especially if he is simply unaware of the issue. If he ignores a private message or refuses to remove the post, formal escalation becomes necessary. This is appropriate as a second step, not the first.",
         whyNotAdjacent:
           "It is not 'Very Appropriate' because a direct conversation should come first. It is not 'Inappropriate' because escalation is always a valid route when patient confidentiality is at risk.",
       },
@@ -503,14 +503,14 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         rationale:
           "While the intention to educate peers may be well-meaning, sharing the post further distributes the potential privacy breach to a wider audience. It compounds the problem rather than resolving it. This is inappropriate even though it comes from a place of professional concern.",
         whyNotAdjacent:
-          "This is 'Inappropriate' rather than 'Very Inappropriate' because the underlying motivation — raising awareness — is professionally sound. The method is the problem.",
+          "This is 'Inappropriate' rather than 'Very Inappropriate' because the underlying motivation, raising awareness, is professionally sound. The method is the problem.",
       },
       {
         id: "app-004-d",
         text: "Ignore it, as no patient names were included and the image was not posted with malicious intent.",
         correctRating: "very_inappropriate",
         rationale:
-          "Patient confidentiality is not contingent on names. GMP and GMC social media guidance are explicit that patients can be identifiable through context, background, or case details even without names being used. A partially visible patient on a ward, with case details in the caption, constitutes a real risk. Inaction in the face of a clear confidentiality concern is not passive — it is a failure to act on a professional duty.",
+          "Patient confidentiality is not contingent on names. GMP and GMC social media guidance are explicit that patients can be identifiable through context, background, or case details even without names being used. A partially visible patient on a ward, with case details in the caption, constitutes a real risk. Inaction in the face of a clear confidentiality concern is not passive, it is a failure to act on a professional duty.",
         whyNotAdjacent:
           "This is correctly 'Very Inappropriate'. Intent is not a defence for a confidentiality breach, and staying silent perpetuates the problem.",
       },
@@ -526,20 +526,20 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     pivotInsight:
       "Nurses are often the first to detect deterioration. A student's duty to act on patient safety concerns does not disappear because the concern was raised by someone else and dismissed by someone senior.",
     gmpRef: {
-      label: "GMP – Colleagues, culture and safety",
+      label: "GMP · Colleagues, culture and safety",
       url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
     },
     items: [
       {
         id: "app-005-a",
-        text: "After the ward round, check on the patient and speak to Sandra privately — acknowledge her concern and suggest she document it formally.",
+        text: "After the ward round, check on the patient and speak to Sandra privately, acknowledge her concern and suggest she document it formally.",
         correctRating: "very_appropriate",
         rationale:
           "This response takes Sandra's concern seriously as a potential patient safety issue and acts on it in a measured, appropriate way. Checking the patient directly is a reasonable step for a senior student. Encouraging Sandra to document her concern formally ensures it is on record and cannot simply be disregarded. GMP requires that concerns about patient safety are raised and, where dismissed, followed up through proper channels.",
         whyNotAdjacent:
           "This is 'Very Appropriate': it supports the colleague, acts on the safety concern, and works through proper channels without creating unnecessary conflict.",
         gmpRef: {
-          label: "GMP – Colleagues, culture and safety",
+          label: "GMP · Colleagues, culture and safety",
           url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
         },
       },
@@ -550,14 +550,14 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         rationale:
           "Discussing a patient safety concern with a trusted supervisor is a reasonable response. However, it is less direct than checking on the patient and engaging with Sandra, and there is a risk that time passes before anything is acted upon. It is appropriate but not the most proactive option.",
         whyNotAdjacent:
-          "This is 'Appropriate' but not 'Very Appropriate' — it relies on a third party to act on a concern Orla could address more directly herself.",
+          "This is 'Appropriate' but not 'Very Appropriate', it relies on a third party to act on a concern Orla could address more directly herself.",
       },
       {
         id: "app-005-c",
-        text: "Say nothing — Mr Barratt is the consultant, has reviewed the patient, and it is not Orla's place to second-guess him.",
+        text: "Say nothing, Mr Barratt is the consultant, has reviewed the patient, and it is not Orla's place to second-guess him.",
         correctRating: "very_inappropriate",
         rationale:
-          "Hierarchy does not override patient safety. GMP is explicit that all members of the healthcare team — including students — have a duty to act when there is a reasonable concern about a patient's wellbeing. Deferring entirely to a consultant who dismissed a concern without re-examination is not acceptable professional behaviour.",
+          "Hierarchy does not override patient safety. GMP is explicit that all members of the healthcare team, including students, have a duty to act when there is a reasonable concern about a patient's wellbeing. Deferring entirely to a consultant who dismissed a concern without re-examination is not acceptable professional behaviour.",
         whyNotAdjacent:
           "This is correctly 'Very Inappropriate'. Staying silent in the face of a possible patient deterioration is a patient safety failure, regardless of the seniority of those involved.",
       },
@@ -566,7 +566,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Interrupt Mr Barratt during the ward round to suggest that Sandra's concern should be taken seriously.",
         correctRating: "inappropriate",
         rationale:
-          "Raising a patient safety concern publicly during a ward round — particularly when challenging a consultant — is likely to create conflict without improving outcomes. The underlying motivation is sound, but the approach is disproportionate and may make the working environment hostile without benefiting the patient.",
+          "Raising a patient safety concern publicly during a ward round, particularly when challenging a consultant, is likely to create conflict without improving outcomes. The underlying motivation is sound, but the approach is disproportionate and may make the working environment hostile without benefiting the patient.",
         whyNotAdjacent:
           "This is 'Inappropriate' rather than 'Very Inappropriate' because the instinct to act on a patient safety concern is professionally correct. The execution is the problem.",
       },
@@ -580,9 +580,9 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     difficulty: "standard",
     stem: `Zara is a dental student assisting Dr Pearce in a consultation. The patient, Mr Holloway, aged 58, has been advised to have a failing molar extracted. Dr Pearce has explained the clinical need clearly and Mr Holloway has confirmed he understands. He says he would prefer to try antibiotics first to see if the pain settles. Dr Pearce looks visibly frustrated, says this is "not the right choice", and briefly leaves the room, asking Zara to "see if you can change his mind."`,
     pivotInsight:
-      "A competent adult patient has the right to decline recommended treatment. The role of the clinician — and the student — is to ensure the decision is truly informed, not to override it.",
+      "A competent adult patient has the right to decline recommended treatment. The role of the clinician, and the student, is to ensure the decision is truly informed, not to override it.",
     gmpRef: {
-      label: "GMP – Patients, partnership and communication",
+      label: "GMP · Patients, partnership and communication",
       url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
     },
     items: [
@@ -591,11 +591,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Ask Mr Holloway about his main concerns regarding the extraction and ensure he understands the likely consequences of delaying treatment.",
         correctRating: "very_appropriate",
         rationale:
-          "GMP requires that patients are given the information they need to make a genuinely informed decision. Understanding what is driving Mr Holloway's preference — anxiety, a previous bad experience, cost — allows Zara to provide useful information. Checking his understanding of the consequences ensures the decision, whatever it is, is fully informed. This is patient-centred care.",
+          "GMP requires that patients are given the information they need to make a genuinely informed decision. Understanding what is driving Mr Holloway's preference, anxiety, a previous bad experience, cost, allows Zara to provide useful information. Checking his understanding of the consequences ensures the decision, whatever it is, is fully informed. This is patient-centred care.",
         whyNotAdjacent:
           "This is the ideal response. It respects autonomy, fulfils the duty to inform, and is led by the patient's concerns rather than an agenda.",
         gmpRef: {
-          label: "GMP – Patients, partnership and communication",
+          label: "GMP · Patients, partnership and communication",
           url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
         },
       },
@@ -606,7 +606,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         rationale:
           "Using the clinician's authority as a reason for the patient to comply undermines the patient's autonomy and informed consent. GMP is clear that patients must not be pressured into decisions. Substituting deference for genuine engagement with the patient's concerns is not patient-centred care.",
         whyNotAdjacent:
-          "This is 'Inappropriate' rather than 'Very Inappropriate' — the intention is to help the patient receive the clinically appropriate treatment, but the method compromises patient autonomy.",
+          "This is 'Inappropriate' rather than 'Very Inappropriate', the intention is to help the patient receive the clinically appropriate treatment, but the method compromises patient autonomy.",
       },
       {
         id: "app-006-c",
@@ -622,7 +622,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Explain to Mr Holloway that refusing the extraction will almost certainly lead to a much more serious and expensive problem.",
         correctRating: "inappropriate",
         rationale:
-          "Patients should be informed of the likely consequences of declining treatment. However, framing clinical information as a persuasion technique — particularly after Dr Pearce has already explained the risks — crosses into pressure territory. If Mr Holloway already understands the risk, repeating it with emphasis is not informing him: it is attempting to coerce him. The aim is to inform, not to override.",
+          "Patients should be informed of the likely consequences of declining treatment. However, framing clinical information as a persuasion technique, particularly after Dr Pearce has already explained the risks, crosses into pressure territory. If Mr Holloway already understands the risk, repeating it with emphasis is not informing him: it is attempting to coerce him. The aim is to inform, not to override.",
         whyNotAdjacent:
           "This is 'Inappropriate' rather than 'Very Inappropriate'. Providing clinical information about consequences is valid; using it as a lever to reverse a patient's decision is not.",
       },
@@ -636,9 +636,9 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     difficulty: "challenging",
     stem: `Remi is a medical student observing a consultation at a care home. The attending nurse, Carl, is helping an elderly patient, Mrs Thornton, out of a chair. As Carl does so, Remi notices that Carl grips Mrs Thornton's arm very tightly, causing her to wince and tense. When Remi looks more carefully, he notices several faint bruises on both of Mrs Thornton's upper arms. Carl does not appear to notice Mrs Thornton's reaction and continues moving her to another chair.`,
     pivotInsight:
-      "Students are not passive observers. Where a vulnerable patient may be experiencing harm, GMP requires action — not certainty, not seniority, not permission.",
+      "Students are not passive observers. Where a vulnerable patient may be experiencing harm, GMP requires action, not certainty, not seniority, not permission.",
     gmpRef: {
-      label: "GMP – Colleagues, culture and safety",
+      label: "GMP · Colleagues, culture and safety",
       url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
     },
     items: [
@@ -647,11 +647,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Calmly ask Mrs Thornton if she is all right, and promptly document and report his observations to a senior member of staff.",
         correctRating: "very_appropriate",
         rationale:
-          "Checking on the patient directly is a compassionate immediate response and may allow her to disclose further concerns. Documenting and reporting what was observed is a core GMP duty — students must raise concerns about patient safety, even when those concerns involve qualified colleagues. The combination of direct patient check and timely, documented reporting is the ideal response.",
+          "Checking on the patient directly is a compassionate immediate response and may allow her to disclose further concerns. Documenting and reporting what was observed is a core GMP duty, students must raise concerns about patient safety, even when those concerns involve qualified colleagues. The combination of direct patient check and timely, documented reporting is the ideal response.",
         whyNotAdjacent:
           "This is 'Very Appropriate': it prioritises patient welfare, acts immediately and compassionately, and uses proper reporting channels.",
         gmpRef: {
-          label: "GMP – Colleagues, culture and safety",
+          label: "GMP · Colleagues, culture and safety",
           url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
         },
       },
@@ -660,16 +660,16 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Speak to Carl privately after the consultation and ask him to be more careful when handling patients.",
         correctRating: "inappropriate",
         rationale:
-          "Speaking privately to Carl alone, without involving a senior, risks the concern being dismissed and Mrs Thornton remaining vulnerable. Where physical harm to a patient is possible — particularly given the visible bruising — the matter must be escalated appropriately. A quiet word with the person involved is not sufficient when safeguarding is a possibility.",
+          "Speaking privately to Carl alone, without involving a senior, risks the concern being dismissed and Mrs Thornton remaining vulnerable. Where physical harm to a patient is possible, particularly given the visible bruising, the matter must be escalated appropriately. A quiet word with the person involved is not sufficient when safeguarding is a possibility.",
         whyNotAdjacent:
           "This is 'Inappropriate' rather than 'Very Inappropriate' because speaking to Carl is not entirely wrong in isolation. The problem is that it bypasses the safeguarding escalation that the bruising makes necessary.",
       },
       {
         id: "app-007-c",
-        text: "Say nothing — Carl is a qualified nurse, may simply have been clumsy, and Remi cannot be certain he saw what he thinks he saw.",
+        text: "Say nothing, Carl is a qualified nurse, may simply have been clumsy, and Remi cannot be certain he saw what he thinks he saw.",
         correctRating: "very_inappropriate",
         rationale:
-          "GMP does not require certainty before raising a concern — it requires reasonable grounds. Mrs Thornton winced in pain and has visible bruising on both arms. Staying silent because the evidence is imperfect allows potential harm to continue. Qualification does not make a colleague immune from causing harm, and students are not bystanders when patient safety is at risk.",
+          "GMP does not require certainty before raising a concern, it requires reasonable grounds. Mrs Thornton winced in pain and has visible bruising on both arms. Staying silent because the evidence is imperfect allows potential harm to continue. Qualification does not make a colleague immune from causing harm, and students are not bystanders when patient safety is at risk.",
         whyNotAdjacent:
           "This is correctly 'Very Inappropriate'. Uncertainty is not an excuse for inaction where a vulnerable patient may be experiencing harm.",
       },
@@ -678,7 +678,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Interrupt the transfer to tell Carl that his handling technique appears to be causing the patient discomfort.",
         correctRating: "appropriate",
         rationale:
-          "Raising the concern in the moment — when a patient has visibly reacted to pain — is not unreasonable and may prevent immediate further harm. However, interrupting without having first formed a clearer picture of the situation is not the most measured response. The underlying instinct is correct; the approach requires more care, particularly given the possible safeguarding dimension.",
+          "Raising the concern in the moment, when a patient has visibly reacted to pain, is not unreasonable and may prevent immediate further harm. However, interrupting without having first formed a clearer picture of the situation is not the most measured response. The underlying instinct is correct; the approach requires more care, particularly given the possible safeguarding dimension.",
         whyNotAdjacent:
           "This is 'Appropriate' but not 'Very Appropriate'. Immediate action is warranted, but the response should be proportionate and take account of the broader safeguarding concern.",
       },
@@ -692,9 +692,9 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     difficulty: "standard",
     stem: `Elena is a final-year medical student who was present during a consultation that has since become the subject of a formal patient complaint. A senior registrar, Dr Novak, approaches Elena privately before she is due to give her account to the hospital's complaints team. Dr Novak tells her that it would "look better for everyone" if she kept her account "broad and non-specific" rather than describing exactly what she witnessed.`,
     pivotInsight:
-      "Honesty in formal investigations is a non-negotiable GMP requirement. Adjusting an account under pressure from a senior is not loyalty — it is dishonesty that undermines the investigation and risks the patient.",
+      "Honesty in formal investigations is a non-negotiable GMP requirement. Adjusting an account under pressure from a senior is not loyalty, it is dishonesty that undermines the investigation and risks the patient.",
     gmpRef: {
-      label: "GMP – Trust and professionalism",
+      label: "GMP · Trust and professionalism",
       url: `${GMP_MAIN_URL}/trust-and-professionalism`,
     },
     items: [
@@ -703,11 +703,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Give an honest, accurate account of exactly what she observed to the complaints team.",
         correctRating: "very_appropriate",
         rationale:
-          "GMP requires absolute honesty in all professional matters, including formal investigations. Elena's account is sought because she was present — the complaints process depends on accurate information to identify what went wrong and prevent recurrence. Giving an honest account is the only professionally acceptable course of action, regardless of any pressure from colleagues.",
+          "GMP requires absolute honesty in all professional matters, including formal investigations. Elena's account is sought because she was present, the complaints process depends on accurate information to identify what went wrong and prevent recurrence. Giving an honest account is the only professionally acceptable course of action, regardless of any pressure from colleagues.",
         whyNotAdjacent:
           "This is the required professional standard, not an optional extra. It cannot be rated merely 'Appropriate'.",
         gmpRef: {
-          label: "GMP – Trust and professionalism",
+          label: "GMP · Trust and professionalism",
           url: `${GMP_MAIN_URL}/trust-and-professionalism`,
         },
       },
@@ -716,7 +716,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Speak to her own educational supervisor before giving her statement, explaining the pressure she has been placed under.",
         correctRating: "appropriate",
         rationale:
-          "Seeking guidance from a trusted supervisor before navigating a difficult situation is entirely reasonable. It ensures Elena has appropriate advice and is not left to manage the pressure alone. However, this does not replace the obligation to give an honest account — it is a sensible additional step.",
+          "Seeking guidance from a trusted supervisor before navigating a difficult situation is entirely reasonable. It ensures Elena has appropriate advice and is not left to manage the pressure alone. However, this does not replace the obligation to give an honest account, it is a sensible additional step.",
         whyNotAdjacent:
           "This is 'Appropriate' because seeking support is sound, but Elena's duty to give an honest account exists regardless. It is not the most complete response on its own.",
       },
@@ -727,14 +727,14 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         rationale:
           "Deliberately providing an inaccurate or incomplete account in a formal complaint investigation is dishonest and may itself constitute professional misconduct. GMP is clear that honesty must be maintained in all professional dealings. Compromising the integrity of a patient safety investigation to protect a colleague is a serious breach of professional standards.",
         whyNotAdjacent:
-          "This is correctly 'Very Inappropriate'. This is not discretion — it is dishonesty in a formal legal setting.",
+          "This is correctly 'Very Inappropriate'. This is not discretion, it is dishonesty in a formal legal setting.",
       },
       {
         id: "app-008-d",
         text: "Tell Dr Novak she is uncomfortable with the request, but agree to avoid specific details in her account.",
         correctRating: "inappropriate",
         rationale:
-          "Voicing discomfort while still complying with the inappropriate request is not sufficient. Elena may feel she has acknowledged the problem, but the result is the same: an inaccurate account that undermines the investigation. GMP requires honesty — acknowledging that a request is uncomfortable does not excuse complying with it.",
+          "Voicing discomfort while still complying with the inappropriate request is not sufficient. Elena may feel she has acknowledged the problem, but the result is the same: an inaccurate account that undermines the investigation. GMP requires honesty, acknowledging that a request is uncomfortable does not excuse complying with it.",
         whyNotAdjacent:
           "This is 'Inappropriate' rather than 'Very Inappropriate' because the discomfort shows some awareness of the ethical problem, but the action ultimately fails the patient and the process.",
       },
@@ -750,7 +750,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     pivotInsight:
       "A student cannot act as a substitute clinician, but that does not mean abandoning a distressed patient. The priority is patient welfare and prompt retrieval of an appropriate clinician.",
     gmpRef: {
-      label: "GMP – Knowledge, skills and development",
+      label: "GMP · Knowledge, skills and development",
       url: `${GMP_MAIN_URL}/knowledge-skills-and-development`,
     },
     items: [
@@ -761,9 +761,9 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         rationale:
           "This response prioritises the patient's immediate welfare while staying within the limits of Sasha's competence. Acknowledging her role honestly is required by GMP; staying with the patient and listening shows compassion; and locating the GP promptly ensures appropriate care is provided without unnecessary delay. This is the ideal balance.",
         whyNotAdjacent:
-          "This is the textbook response — compassionate, honest, and safety-focused. It cannot be rated merely 'Appropriate'.",
+          "This is the textbook response, compassionate, honest, and safety-focused. It cannot be rated merely 'Appropriate'.",
         gmpRef: {
-          label: "GMP – Knowledge, skills and development",
+          label: "GMP · Knowledge, skills and development",
           url: `${GMP_MAIN_URL}/knowledge-skills-and-development`,
         },
       },
@@ -774,7 +774,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         rationale:
           "Sending an unwell, distressed patient to wait alone without support is not patient-centred. While Sasha cannot complete the consultation, she is capable of sitting with the patient, acknowledging his distress, and getting help quickly. Turning him away lacks any regard for his immediate welfare.",
         whyNotAdjacent:
-          "This is 'Inappropriate' rather than 'Very Inappropriate' because Sasha is not ignoring Mr Delaney entirely — but dismissing a distressed patient is a poor response.",
+          "This is 'Inappropriate' rather than 'Very Inappropriate' because Sasha is not ignoring Mr Delaney entirely, but dismissing a distressed patient is a poor response.",
       },
       {
         id: "app-009-c",
@@ -792,7 +792,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         rationale:
           "Letting the patient begin to describe his concerns while moving quickly to find the GP is helpful and practical. It shows awareness of both the patient's needs and Sasha's own limitations. It is slightly less ideal than staying with the patient while sending someone else to retrieve the GP, but it is a sound and reasonable course of action.",
         whyNotAdjacent:
-          "This is 'Appropriate' but not 'Very Appropriate' — remaining with the patient while assistance is retrieved would better serve Mr Delaney's immediate welfare.",
+          "This is 'Appropriate' but not 'Very Appropriate', remaining with the patient while assistance is retrieved would better serve Mr Delaney's immediate welfare.",
       },
     ],
   },
@@ -802,11 +802,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     type: "appropriateness",
     domain: "patients_partnership_communication",
     difficulty: "challenging",
-    stem: `Jake is a dental student assisting in a special care dental clinic. The next patient, Brendan, is a 34-year-old man with severe autism who communicates primarily through a symbol board. His paid carer tells the team: "He's always like this — he's fine." As the dentist prepares to begin the procedure, Brendan is rocking repeatedly, making vocalisations, and pulling at his bib. The carer continues to insist the team should "just get on with it."`,
+    stem: `Jake is a dental student assisting in a special care dental clinic. The next patient, Brendan, is a 34-year-old man with severe autism who communicates primarily through a symbol board. His paid carer tells the team: "He's always like this, he's fine." As the dentist prepares to begin the procedure, Brendan is rocking repeatedly, making vocalisations, and pulling at his bib. The carer continues to insist the team should "just get on with it."`,
     pivotInsight:
       "Non-verbal communication is still communication. A patient who cannot speak in words may be clearly indicating distress through behaviour, and that signal must be taken seriously regardless of what a carer asserts.",
     gmpRef: {
-      label: "GMP – Patients, partnership and communication",
+      label: "GMP · Patients, partnership and communication",
       url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
     },
     items: [
@@ -817,15 +817,15 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         rationale:
           "Brendan is displaying multiple behavioural signs of distress. Proceeding with treatment on a patient who cannot verbalise consent or distress risks harm and potentially breaches his rights under mental capacity frameworks. Pausing to use his communication aids is proportionate, compassionate, and clinically correct. The carer's assertion does not override the patient's expressed distress.",
         whyNotAdjacent:
-          "This is 'Very Appropriate'. Patient safety and dignity require that distress signals — however communicated — are responded to before proceeding.",
+          "This is 'Very Appropriate'. Patient safety and dignity require that distress signals, however communicated, are responded to before proceeding.",
         gmpRef: {
-          label: "GMP – Patients, partnership and communication",
+          label: "GMP · Patients, partnership and communication",
           url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
         },
       },
       {
         id: "app-010-b",
-        text: "Proceed as the carer instructs — carers know their patients and will say if something is seriously wrong.",
+        text: "Proceed as the carer instructs, carers know their patients and will say if something is seriously wrong.",
         correctRating: "very_inappropriate",
         rationale:
           "Deferring entirely to a carer when a patient is displaying signs of distress is not acceptable. The carer is not the clinical decision-maker. GMP requires clinicians to respond to the patient in front of them. Proceeding with a procedure on a visibly distressed patient who cannot verbalise consent is a serious breach of patient dignity and safety.",
@@ -837,7 +837,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Ask the carer to help communicate with Brendan via his symbol board before the team proceeds.",
         correctRating: "appropriate",
         rationale:
-          "Involving the carer as a communication facilitator — rather than a proxy decision-maker — is helpful and appropriate. It uses available resources to better understand Brendan's state. However, it does not go as far as pausing the procedure, and may not be sufficient if Brendan remains distressed once communication is attempted.",
+          "Involving the carer as a communication facilitator, rather than a proxy decision-maker, is helpful and appropriate. It uses available resources to better understand Brendan's state. However, it does not go as far as pausing the procedure, and may not be sufficient if Brendan remains distressed once communication is attempted.",
         whyNotAdjacent:
           "This is 'Appropriate' but not 'Very Appropriate'. A good instinct, but the first priority should be pausing the procedure rather than attempting communication while preparing to proceed.",
       },
@@ -862,7 +862,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     pivotInsight:
       "Placement feedback is used to protect future students' learning experiences. Artificially inflating scores undermines that purpose and forms part of a pattern of professional honesty that GMP requires at every stage of training.",
     gmpRef: {
-      label: "GMP – Trust and professionalism",
+      label: "GMP · Trust and professionalism",
       url: `${GMP_MAIN_URL}/trust-and-professionalism`,
     },
     items: [
@@ -875,7 +875,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         whyNotAdjacent:
           "This is 'Very Appropriate'. Honesty in formal evaluations is a GMP obligation, and reporting inappropriate pressure demonstrates professional integrity.",
         gmpRef: {
-          label: "GMP – Trust and professionalism",
+          label: "GMP · Trust and professionalism",
           url: `${GMP_MAIN_URL}/trust-and-professionalism`,
         },
       },
@@ -902,7 +902,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Leave the sections about organisation and feedback blank rather than scoring them poorly.",
         correctRating: "inappropriate",
         rationale:
-          "Omitting negative data from a formal assessment is a form of dishonesty by omission. Blank fields are not neutral — they prevent the university from understanding the placement's true quality. Selective omission avoids the discomfort of negative feedback without fulfilling the purpose of the evaluation.",
+          "Omitting negative data from a formal assessment is a form of dishonesty by omission. Blank fields are not neutral, they prevent the university from understanding the placement's true quality. Selective omission avoids the discomfort of negative feedback without fulfilling the purpose of the evaluation.",
         whyNotAdjacent:
           "This is 'Inappropriate'. Selective omission is not honest, even if it avoids a direct lie.",
       },
@@ -916,9 +916,9 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     difficulty: "challenging",
     stem: `Max is a medical student on a busy surgical ward. He notices that his classmate Keiran has taken a small amount of paracetamol from an unlocked medication trolley without recording it, explaining he has a headache and "it's basically over-the-counter." The medication trolley is the ward's shared supply and includes both controlled and non-controlled drugs.`,
     pivotInsight:
-      "Taking medications from a ward supply without authorisation is a breach of professional standards regardless of the drug involved. The integrity of the medication system is a patient safety issue — and an unlocked trolley containing controlled drugs is an immediate hazard.",
+      "Taking medications from a ward supply without authorisation is a breach of professional standards regardless of the drug involved. The integrity of the medication system is a patient safety issue, and an unlocked trolley containing controlled drugs is an immediate hazard.",
     gmpRef: {
-      label: "GMP – Colleagues, culture and safety",
+      label: "GMP · Colleagues, culture and safety",
       url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
     },
     items: [
@@ -931,7 +931,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         whyNotAdjacent:
           "This is 'Very Appropriate'. Addressing both the colleague's behaviour and the immediate safety concern is the complete and correct response.",
         gmpRef: {
-          label: "GMP – Colleagues, culture and safety",
+          label: "GMP · Colleagues, culture and safety",
           url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
         },
       },
@@ -946,7 +946,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
       },
       {
         id: "app-012-c",
-        text: "Say nothing — it is only paracetamol and there was clearly no malicious intent.",
+        text: "Say nothing, it is only paracetamol and there was clearly no malicious intent.",
         correctRating: "very_inappropriate",
         rationale:
           "Intent does not determine whether conduct meets professional standards. Taking medication from a ward supply without authorisation or documentation is contrary to the governance frameworks that protect patients. The unlocked trolley is a patient safety concern in itself. Inaction here normalises conduct that could escalate.",
@@ -974,7 +974,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     pivotInsight:
       "Medication safety information disclosed by a patient must reach the responsible clinician, regardless of how incidentally it was shared. Patients often disclose significant information to students or less senior team members.",
     gmpRef: {
-      label: "GMP – Patients, partnership and communication",
+      label: "GMP · Patients, partnership and communication",
       url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
     },
     items: [
@@ -987,7 +987,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         whyNotAdjacent:
           "This is 'Very Appropriate'. Prompt escalation of a medication safety concern is a core professional duty.",
         gmpRef: {
-          label: "GMP – Patients, partnership and communication",
+          label: "GMP · Patients, partnership and communication",
           url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
         },
       },
@@ -1011,7 +1011,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
       },
       {
         id: "app-013-d",
-        text: "Say nothing — Mr Cartwright did not direct the comment at Faye and may not want it shared.",
+        text: "Say nothing, Mr Cartwright did not direct the comment at Faye and may not want it shared.",
         correctRating: "very_inappropriate",
         rationale:
           "Patient confidentiality does not require clinicians to ignore safety information. When a patient discloses information with direct implications for their health, GMP requires it is properly documented and acted upon. The manner in which the information was shared is irrelevant to the obligation to act.",
@@ -1026,11 +1026,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     type: "appropriateness",
     domain: "knowledge_skills_development",
     difficulty: "foundation",
-    stem: `Conor is a final-year medical student on a GP placement. His supervisor, Dr Rees, asks him to call Mrs Patel to inform her of her recent blood test results. The results include a mildly elevated serum calcium that Conor recognises could warrant further investigation. Dr Rees, glancing at the results briefly, says: "Just tell her the results are broadly fine and not to worry — I'll review properly next week."`,
+    stem: `Conor is a final-year medical student on a GP placement. His supervisor, Dr Rees, asks him to call Mrs Patel to inform her of her recent blood test results. The results include a mildly elevated serum calcium that Conor recognises could warrant further investigation. Dr Rees, glancing at the results briefly, says: "Just tell her the results are broadly fine and not to worry, I'll review properly next week."`,
     pivotInsight:
       "Giving a patient incomplete or misleading information about their health is not an acceptable shortcut. A student asked to communicate false reassurance faces a direct conflict between following instructions and upholding their duty to the patient.",
     gmpRef: {
-      label: "GMP – Knowledge, skills and development",
+      label: "GMP · Knowledge, skills and development",
       url: `${GMP_MAIN_URL}/knowledge-skills-and-development`,
     },
     items: [
@@ -1043,7 +1043,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         whyNotAdjacent:
           "This is the correct response. Challenging misleading patient communication, however gently, is a GMP obligation.",
         gmpRef: {
-          label: "GMP – Knowledge, skills and development",
+          label: "GMP · Knowledge, skills and development",
           url: `${GMP_MAIN_URL}/knowledge-skills-and-development`,
         },
       },
@@ -1084,9 +1084,9 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     difficulty: "challenging",
     stem: `Danielle is a final-year medical student on a night shift. A consultant she has never met, Mr Okafor, approaches and tells her she has been asked to perform an arterial blood gas draw on a patient in the next bay. Danielle has never performed an ABG and has not been signed off for the procedure. Mr Okafor says her own supervisor authorised it. When Danielle tries to call her supervisor, there is no answer.`,
     pivotInsight:
-      "A student cannot proceed with an unsupervised procedure they have not been trained in simply because a senior has authorised it — particularly when that authorisation cannot be verified. The patient's safety depends on the procedure being performed by someone competent to do it.",
+      "A student cannot proceed with an unsupervised procedure they have not been trained in simply because a senior has authorised it, particularly when that authorisation cannot be verified. The patient's safety depends on the procedure being performed by someone competent to do it.",
     gmpRef: {
-      label: "GMP – Trust and professionalism",
+      label: "GMP · Trust and professionalism",
       url: `${GMP_MAIN_URL}/trust-and-professionalism`,
     },
     items: [
@@ -1099,7 +1099,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         whyNotAdjacent:
           "This is 'Very Appropriate'. A student who is honest about their limitations protects the patient and upholds GMP.",
         gmpRef: {
-          label: "GMP – Trust and professionalism",
+          label: "GMP · Trust and professionalism",
           url: `${GMP_MAIN_URL}/trust-and-professionalism`,
         },
       },
@@ -1108,13 +1108,13 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Try to find a more senior student or registrar who is signed off for ABGs and ask them to perform the procedure.",
         correctRating: "appropriate",
         rationale:
-          "Identifying someone competent to perform the procedure is practical and helpful. It resolves the immediate problem while staying within her own competence. However, it does not directly address the fact that she was asked to perform a task she is not trained for — that concern should also be raised with Mr Okafor.",
+          "Identifying someone competent to perform the procedure is practical and helpful. It resolves the immediate problem while staying within her own competence. However, it does not directly address the fact that she was asked to perform a task she is not trained for, that concern should also be raised with Mr Okafor.",
         whyNotAdjacent:
           "This is 'Appropriate'. A sound practical solution but slightly indirect in how it handles the original inappropriate request.",
       },
       {
         id: "app-015-c",
-        text: "Attempt the procedure as instructed — Mr Okafor is a consultant and has indicated the supervisor has approved it.",
+        text: "Attempt the procedure as instructed, Mr Okafor is a consultant and has indicated the supervisor has approved it.",
         correctRating: "very_inappropriate",
         rationale:
           "Performing an unsupervised procedure she has never trained for, on the basis of an unverified authorisation, would place the patient at direct risk. GMP does not allow clinicians to exceed their competence simply because a senior has instructed them to.",
@@ -1140,9 +1140,9 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     difficulty: "standard",
     stem: `Hana is a medical student on a gynaecology placement. She observes her registrar, Dr Serrano, begin an intimate examination of a patient without offering a chaperone. The patient, who appears nervous, does not ask about a chaperone and does not say anything. Hana knows from her training that a chaperone should routinely be offered for intimate examinations.`,
     pivotInsight:
-      "Chaperone policy exists to protect both patients and clinicians. A patient who is not offered a chaperone may not know they can ask for one — their silence does not imply informed acceptance.",
+      "Chaperone policy exists to protect both patients and clinicians. A patient who is not offered a chaperone may not know they can ask for one, their silence does not imply informed acceptance.",
     gmpRef: {
-      label: "GMP – Colleagues, culture and safety",
+      label: "GMP · Colleagues, culture and safety",
       url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
     },
     items: [
@@ -1151,11 +1151,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "After the consultation, raise the omission privately with Dr Serrano and suggest that a chaperone should be offered routinely for intimate examinations.",
         correctRating: "very_appropriate",
         rationale:
-          "Raising the concern with Dr Serrano after the consultation — privately and constructively — is the most proportionate response. The examination has concluded without immediate harm, but the practice needs to change. Bringing this to Dr Serrano's attention is a professional duty under GMP and should be done supportively, not accusatorially.",
+          "Raising the concern with Dr Serrano after the consultation, privately and constructively, is the most proportionate response. The examination has concluded without immediate harm, but the practice needs to change. Bringing this to Dr Serrano's attention is a professional duty under GMP and should be done supportively, not accusatorially.",
         whyNotAdjacent:
           "This is 'Very Appropriate'. Addressing a clinical practice concern with the responsible clinician, privately and after the fact, is the ideal response.",
         gmpRef: {
-          label: "GMP – Colleagues, culture and safety",
+          label: "GMP · Colleagues, culture and safety",
           url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
         },
       },
@@ -1194,11 +1194,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     type: "appropriateness",
     domain: "patients_partnership_communication",
     difficulty: "challenging",
-    stem: `Sofia is a medical student observing a GP consultation. The patient, Mr Hasan, aged 62, has known heart failure. He mentions casually that he stopped taking his diuretic three weeks ago because "it makes me need the toilet a lot." He adds: "But please don't tell my heart specialist — she'll be annoyed and it makes me feel bad." The GP has not yet responded to the disclosure.`,
+    stem: `Sofia is a medical student observing a GP consultation. The patient, Mr Hasan, aged 62, has known heart failure. He mentions casually that he stopped taking his diuretic three weeks ago because "it makes me need the toilet a lot." He adds: "But please don't tell my heart specialist, she'll be annoyed and it makes me feel bad." The GP has not yet responded to the disclosure.`,
     pivotInsight:
       "Patient confidentiality is important, but it does not prevent relevant clinical information from being shared with members of the same treating team. A patient who has stopped a heart failure medication needs the clinical team to know.",
     gmpRef: {
-      label: "GMP – Patients, partnership and communication",
+      label: "GMP · Patients, partnership and communication",
       url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
     },
     items: [
@@ -1207,11 +1207,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "After the consultation, raise with the GP the importance of ensuring Mr Hasan's specialist is made aware, handled sensitively in line with his concerns.",
         correctRating: "very_appropriate",
         rationale:
-          "Mr Hasan's decision to stop his diuretic is clinically significant for the management of his heart failure. His specialist needs this information to provide safe ongoing care. The response must also acknowledge the patient's expressed concern. Suggesting to the GP that the information should be shared sensitively — with Mr Hasan's understanding — is the most balanced and clinically responsible approach.",
+          "Mr Hasan's decision to stop his diuretic is clinically significant for the management of his heart failure. His specialist needs this information to provide safe ongoing care. The response must also acknowledge the patient's expressed concern. Suggesting to the GP that the information should be shared sensitively, with Mr Hasan's understanding, is the most balanced and clinically responsible approach.",
         whyNotAdjacent:
           "This is 'Very Appropriate'. Clinically significant information must reach the treating team, handled with sensitivity to the patient's concerns.",
         gmpRef: {
-          label: "GMP – Patients, partnership and communication",
+          label: "GMP · Patients, partnership and communication",
           url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
         },
       },
@@ -1220,7 +1220,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Say nothing and trust that the GP will decide what to do with the information.",
         correctRating: "appropriate",
         rationale:
-          "The GP is the responsible clinician and will likely address this appropriately. However, Sofia has a role in actively contributing to good patient care — raising the clinical significance of the disclosure as a prompt, rather than remaining entirely passive, reflects better professional engagement.",
+          "The GP is the responsible clinician and will likely address this appropriately. However, Sofia has a role in actively contributing to good patient care, raising the clinical significance of the disclosure as a prompt, rather than remaining entirely passive, reflects better professional engagement.",
         whyNotAdjacent:
           "This is 'Appropriate'. Trusting the GP is not wrong, but being more active in flagging the concern is better practice.",
       },
@@ -1255,9 +1255,9 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     difficulty: "standard",
     stem: `Lorenzo is a medical student completing an anonymous peer assessment of his classmate Declan. Based on his direct observations, Lorenzo would honestly rate Declan below the expected standard in two clinical competency areas. Before Lorenzo submits the form, Declan approaches him and reveals he knows who is completing his assessment. He asks Lorenzo to be generous with the scores, explaining that a poor result could jeopardise his placement and that he has been struggling personally. Lorenzo is now deciding how to complete the form.`,
     pivotInsight:
-      "The integrity of assessment processes depends entirely on honest reporting. A student who adjusts scores under personal pressure helps no one — least of all Declan, who needs accurate feedback to receive the support that will help him improve.",
+      "The integrity of assessment processes depends entirely on honest reporting. A student who adjusts scores under personal pressure helps no one, least of all Declan, who needs accurate feedback to receive the support that will help him improve.",
     gmpRef: {
-      label: "GMP – Trust and professionalism",
+      label: "GMP · Trust and professionalism",
       url: `${GMP_MAIN_URL}/trust-and-professionalism`,
     },
     items: [
@@ -1266,11 +1266,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That the purpose of peer assessment is to identify students who need additional support.",
         correctRating: "very_important",
         rationale:
-          "Peer assessments exist precisely to give educators an accurate picture of student development. Inflating scores to protect a friend denies Declan access to the targeted support he may genuinely need to become a safe clinician. Honest assessment is not unkind — it is a professional duty that serves Declan's development and, ultimately, patient safety.",
+          "Peer assessments exist precisely to give educators an accurate picture of student development. Inflating scores to protect a friend denies Declan access to the targeted support he may genuinely need to become a safe clinician. Honest assessment is not unkind, it is a professional duty that serves Declan's development and, ultimately, patient safety.",
         whyNotAdjacent:
           "This is 'Very Important', not merely 'Important'. Honest self-assessment and peer assessment are core GMP obligations, and the consequences of dishonest assessment extend directly to patient safety.",
         gmpRef: {
-          label: "GMP – Trust and professionalism",
+          label: "GMP · Trust and professionalism",
           url: `${GMP_MAIN_URL}/trust-and-professionalism`,
         },
       },
@@ -1279,7 +1279,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That Declan is experiencing personal difficulties which may be affecting his performance.",
         correctRating: "important",
         rationale:
-          "Personal circumstances are a relevant and legitimate consideration. If Declan is struggling due to external pressures, his supervisors and support services need to know — but they can only help if they have accurate information. Understanding the context does not change what Lorenzo should report, but it informs how he might support Declan through other channels.",
+          "Personal circumstances are a relevant and legitimate consideration. If Declan is struggling due to external pressures, his supervisors and support services need to know, but they can only help if they have accurate information. Understanding the context does not change what Lorenzo should report, but it informs how he might support Declan through other channels.",
         whyNotAdjacent:
           "This is 'Important', not 'Very Important'. It contextualises the situation but does not justify dishonest assessment.",
       },
@@ -1299,7 +1299,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         rationale:
           "The habits of professional conduct formed during training carry forward into practice. A student who adjusts records under pressure is developing a pattern that, in a clinical setting, could mean falsified documentation, unreported errors, or concealed incompetence. The integrity of professional assessment is a foundation of safe healthcare systems.",
         whyNotAdjacent:
-          "This is 'Very Important'. It connects personal behaviour in training directly to systemic professional integrity — a core GMP concern.",
+          "This is 'Very Important'. It connects personal behaviour in training directly to systemic professional integrity, a core GMP concern.",
       },
     ],
   },
@@ -1311,9 +1311,9 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     difficulty: "standard",
     stem: `Harriet is a dental student who realises that her classmate Finn has been listed as present on the clinical attendance register for three consecutive sessions, despite Harriet being certain she has not seen him at any of them. A mutual classmate confirms that Finn has been asking other students to sign in for him while he was absent. Harriet is now considering how to respond.`,
     pivotInsight:
-      "Falsifying attendance records is not an administrative matter — it is a professional integrity issue with direct implications for patient safety. Students who are not present cannot develop the clinical competencies that will one day protect patients.",
+      "Falsifying attendance records is not an administrative matter, it is a professional integrity issue with direct implications for patient safety. Students who are not present cannot develop the clinical competencies that will one day protect patients.",
     gmpRef: {
-      label: "GMP – Colleagues, culture and safety",
+      label: "GMP · Colleagues, culture and safety",
       url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
     },
     items: [
@@ -1322,11 +1322,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That Finn may not have received the clinical training required to safely treat patients in the future.",
         correctRating: "very_important",
         rationale:
-          "Clinical attendance is not merely a bureaucratic requirement — it is how students develop the skills and experience needed to provide safe patient care. A student who falsifies their attendance is creating a gap between their recorded competence and their actual competence. This gap poses a direct future risk to patients and is the most important consideration in this scenario.",
+          "Clinical attendance is not merely a bureaucratic requirement, it is how students develop the skills and experience needed to provide safe patient care. A student who falsifies their attendance is creating a gap between their recorded competence and their actual competence. This gap poses a direct future risk to patients and is the most important consideration in this scenario.",
         whyNotAdjacent:
           "This is 'Very Important', not merely 'Important'. It connects academic misconduct directly to the patient safety implications that underpin GMP's standards of honesty.",
         gmpRef: {
-          label: "GMP – Colleagues, culture and safety",
+          label: "GMP · Colleagues, culture and safety",
           url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
         },
       },
@@ -1335,7 +1335,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That falsifying attendance records is a breach of professional integrity.",
         correctRating: "very_important",
         rationale:
-          "GMP requires all clinicians — including students — to act honestly in all professional activities. Creating or enabling false records is dishonest regardless of the context. This conduct would be misconduct in a clinical setting (e.g., falsifying patient records) and it is no less serious as a student. Honesty and integrity are not optional for dental professionals.",
+          "GMP requires all clinicians, including students, to act honestly in all professional activities. Creating or enabling false records is dishonest regardless of the context. This conduct would be misconduct in a clinical setting (e.g., falsifying patient records) and it is no less serious as a student. Honesty and integrity are not optional for dental professionals.",
         whyNotAdjacent:
           "This is 'Very Important'. Honesty is a non-negotiable GMP standard, not a preference.",
       },
@@ -1353,7 +1353,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That other students who signed in for Finn are also involved in the misconduct.",
         correctRating: "minor_importance",
         rationale:
-          "The fact that others have been involved in the falsification is relevant context — it may affect how Harriet approaches the situation and how she describes the scope of the issue when she reports it. However, it does not alter her primary responsibility, which is to raise the concern. This is a minor but not irrelevant consideration.",
+          "The fact that others have been involved in the falsification is relevant context, it may affect how Harriet approaches the situation and how she describes the scope of the issue when she reports it. However, it does not alter her primary responsibility, which is to raise the concern. This is a minor but not irrelevant consideration.",
         whyNotAdjacent:
           "This is 'Of Minor Importance', not 'Not Important at All'. It is relevant context for understanding the scope of the issue, even though it does not change what Harriet should do.",
       },
@@ -1367,9 +1367,9 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     difficulty: "challenging",
     stem: `Megan is a third-year medical student sitting in on a GP consultation. The patient, Mrs Baig, has attended with a musculoskeletal complaint. While the GP briefly steps out, Mrs Baig makes an almost incidental comment to Megan: "I sometimes get a bit rough treatment at home." She immediately changes the subject and adds that she does not want to talk about it. When the GP returns, he proceeds with the routine consultation. Megan is deciding how to respond.`,
     pivotInsight:
-      "A disclosure of possible domestic abuse must be taken seriously even when it is brief, ambiguous, or immediately withdrawn. The patient's reluctance to continue does not remove the duty to respond — it shapes how that duty is carried out.",
+      "A disclosure of possible domestic abuse must be taken seriously even when it is brief, ambiguous, or immediately withdrawn. The patient's reluctance to continue does not remove the duty to respond, it shapes how that duty is carried out.",
     gmpRef: {
-      label: "GMP – Patients, partnership and communication",
+      label: "GMP · Patients, partnership and communication",
       url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
     },
     items: [
@@ -1378,11 +1378,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That Mrs Baig's comment may indicate she is experiencing harm at home.",
         correctRating: "very_important",
         rationale:
-          "Even brief and ambiguous disclosures of possible domestic abuse must be taken seriously. GMP requires clinicians to act when there are reasonable grounds to believe a patient may be at risk of harm. The fact that Mrs Baig quickly withdrew the comment may itself be significant — it is common for patients experiencing domestic abuse to minimise or retract disclosures. This is the most important consideration in this scenario.",
+          "Even brief and ambiguous disclosures of possible domestic abuse must be taken seriously. GMP requires clinicians to act when there are reasonable grounds to believe a patient may be at risk of harm. The fact that Mrs Baig quickly withdrew the comment may itself be significant, it is common for patients experiencing domestic abuse to minimise or retract disclosures. This is the most important consideration in this scenario.",
         whyNotAdjacent:
-          "This is 'Very Important'. Patient safety and safeguarding obligations are paramount, even — especially — when the information is incomplete.",
+          "This is 'Very Important'. Patient safety and safeguarding obligations are paramount, even, especially, when the information is incomplete.",
         gmpRef: {
-          label: "GMP – Patients, partnership and communication",
+          label: "GMP · Patients, partnership and communication",
           url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
         },
       },
@@ -1391,16 +1391,16 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That Mrs Baig said she did not want to discuss the matter further.",
         correctRating: "important",
         rationale:
-          "Respecting a patient's expressed wishes is a core GMP obligation. Mrs Baig's reluctance to continue shapes how Megan responds — she should not press the patient in a way that feels coercive or unsafe. However, it does not mean the concern should be ignored. Megan must still ensure the GP is made aware, so the practice can respond appropriately and compassionately at the right moment.",
+          "Respecting a patient's expressed wishes is a core GMP obligation. Mrs Baig's reluctance to continue shapes how Megan responds, she should not press the patient in a way that feels coercive or unsafe. However, it does not mean the concern should be ignored. Megan must still ensure the GP is made aware, so the practice can respond appropriately and compassionately at the right moment.",
         whyNotAdjacent:
-          "This is 'Important', not 'Very Important'. Autonomy is a genuine consideration, but it does not override the safeguarding duty — it informs how that duty is carried out.",
+          "This is 'Important', not 'Very Important'. Autonomy is a genuine consideration, but it does not override the safeguarding duty, it informs how that duty is carried out.",
       },
       {
         id: "imp-006-c",
         text: "That Megan is only a student and this matter should be handled by the GP.",
         correctRating: "minor_importance",
         rationale:
-          "It is entirely appropriate for Megan to bring this to the GP's attention rather than manage it independently. The GP is the responsible clinician and has the authority and training to respond appropriately. However, 'I am only a student' cannot be used as a reason for inaction. Megan has a duty to pass the information on — she does not need to manage the situation herself.",
+          "It is entirely appropriate for Megan to bring this to the GP's attention rather than manage it independently. The GP is the responsible clinician and has the authority and training to respond appropriately. However, 'I am only a student' cannot be used as a reason for inaction. Megan has a duty to pass the information on, she does not need to manage the situation herself.",
         whyNotAdjacent:
           "This is 'Of Minor Importance'. It correctly identifies that Megan should involve the GP, but must not become an excuse for saying nothing at all.",
       },
@@ -1425,7 +1425,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     pivotInsight:
       "Clinical records are legal documents. An entry made in error by an untrained student could mislead future clinicians with serious consequences. The appeal to help a busy supervisor is understandable, but it does not override clinical safety requirements.",
     gmpRef: {
-      label: "GMP – Knowledge, skills and development",
+      label: "GMP · Knowledge, skills and development",
       url: `${GMP_MAIN_URL}/knowledge-skills-and-development`,
     },
     items: [
@@ -1438,7 +1438,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         whyNotAdjacent:
           "This is 'Very Important'. Clinical record accuracy is a patient safety issue, not an administrative preference.",
         gmpRef: {
-          label: "GMP – Knowledge, skills and development",
+          label: "GMP · Knowledge, skills and development",
           url: `${GMP_MAIN_URL}/knowledge-skills-and-development`,
         },
       },
@@ -1447,7 +1447,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That Theo has not been trained on the record system he would be using.",
         correctRating: "very_important",
         rationale:
-          "GMP requires clinicians at all levels to recognise and work within the limits of their competence. Using an unfamiliar system creates a real risk of errors — misrecorded treatments, incorrect navigation, or misattributed entries. Lack of training is not a minor concern; it is a specific competence gap that directly affects the quality and safety of clinical records.",
+          "GMP requires clinicians at all levels to recognise and work within the limits of their competence. Using an unfamiliar system creates a real risk of errors, misrecorded treatments, incorrect navigation, or misattributed entries. Lack of training is not a minor concern; it is a specific competence gap that directly affects the quality and safety of clinical records.",
         whyNotAdjacent:
           "This is 'Very Important'. Proceeding with a clinical task without appropriate training is a direct competence concern under GMP.",
       },
@@ -1477,11 +1477,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     type: "importance",
     domain: "trust_professionalism",
     difficulty: "standard",
-    stem: `Camille is a final-year dental student who, during a supervised procedure, mistakenly applied a slightly incorrect topical solution to a patient's gum before the correct one was applied. The error was identified and corrected immediately by her supervisor, Dr Yeoman. The patient did not appear to notice and no harm was caused. Dr Yeoman tells Camille: "These things happen. There is no need to tell the patient — it was minor and we don't want to alarm them unnecessarily." Camille is deciding how she should respond.`,
+    stem: `Camille is a final-year dental student who, during a supervised procedure, mistakenly applied a slightly incorrect topical solution to a patient's gum before the correct one was applied. The error was identified and corrected immediately by her supervisor, Dr Yeoman. The patient did not appear to notice and no harm was caused. Dr Yeoman tells Camille: "These things happen. There is no need to tell the patient, it was minor and we don't want to alarm them unnecessarily." Camille is deciding how she should respond.`,
     pivotInsight:
-      "The duty of candour requires honesty with patients about things that have gone wrong in their care, even where the outcome is not harmful. This is a professional and legal obligation — not a discretionary act of kindness.",
+      "The duty of candour requires honesty with patients about things that have gone wrong in their care, even where the outcome is not harmful. This is a professional and legal obligation, not a discretionary act of kindness.",
     gmpRef: {
-      label: "GMP – Trust and professionalism",
+      label: "GMP · Trust and professionalism",
       url: `${GMP_MAIN_URL}/trust-and-professionalism`,
     },
     items: [
@@ -1490,11 +1490,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That the patient has a right to know when something has gone wrong in their care.",
         correctRating: "very_important",
         rationale:
-          "The duty of candour — a professional and legal obligation — requires that patients are informed when errors occur during their treatment, even if no harm results. GMP is explicit: patients must be told when something has gone wrong. Dr Yeoman's instruction, though likely well-intentioned, conflicts directly with this duty.",
+          "The duty of candour, a professional and legal obligation, requires that patients are informed when errors occur during their treatment, even if no harm results. GMP is explicit: patients must be told when something has gone wrong. Dr Yeoman's instruction, though likely well-intentioned, conflicts directly with this duty.",
         whyNotAdjacent:
           "This is 'Very Important'. The duty of candour is a core GMP standard with no harm threshold.",
         gmpRef: {
-          label: "GMP – Trust and professionalism",
+          label: "GMP · Trust and professionalism",
           url: `${GMP_MAIN_URL}/trust-and-professionalism`,
         },
       },
@@ -1503,7 +1503,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That the error did not cause any detectable harm to the patient.",
         correctRating: "minor_importance",
         rationale:
-          "The absence of harm is relevant context — it may affect the tone of the disclosure and is genuinely reassuring. However, it does not remove the obligation to disclose. A finding of no harm is part of what should be explained to the patient, not a reason to stay silent.",
+          "The absence of harm is relevant context, it may affect the tone of the disclosure and is genuinely reassuring. However, it does not remove the obligation to disclose. A finding of no harm is part of what should be explained to the patient, not a reason to stay silent.",
         whyNotAdjacent:
           "This is 'Of Minor Importance'. It is context for how the disclosure is made, not a reason to withhold it.",
       },
@@ -1521,7 +1521,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That transparency about clinical errors contributes to learning and reduces future risk.",
         correctRating: "important",
         rationale:
-          "The broader systemic value of honesty about errors — in terms of learning, quality improvement, and professional culture — is genuinely important. However, in this immediate scenario, the primary reason to disclose is the patient's right to know, not the systemic benefits. This consideration is real but secondary.",
+          "The broader systemic value of honesty about errors, in terms of learning, quality improvement, and professional culture, is genuinely important. However, in this immediate scenario, the primary reason to disclose is the patient's right to know, not the systemic benefits. This consideration is real but secondary.",
         whyNotAdjacent:
           "This is 'Important'. A valid and valuable consideration, but secondary to the direct duty to the patient.",
       },
@@ -1537,7 +1537,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     pivotInsight:
       "Obtaining informed surgical consent requires specific training and detailed knowledge of the procedure's risks, benefits, and alternatives. A student who has not received this training cannot legally or ethically obtain consent, regardless of time pressure.",
     gmpRef: {
-      label: "GMP – Knowledge, skills and development",
+      label: "GMP · Knowledge, skills and development",
       url: `${GMP_MAIN_URL}/knowledge-skills-and-development`,
     },
     items: [
@@ -1550,7 +1550,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         whyNotAdjacent:
           "This is 'Very Important'. Competence to obtain consent is both a patient safety and patient autonomy issue.",
         gmpRef: {
-          label: "GMP – Knowledge, skills and development",
+          label: "GMP · Knowledge, skills and development",
           url: `${GMP_MAIN_URL}/knowledge-skills-and-development`,
         },
       },
@@ -1589,11 +1589,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     type: "importance",
     domain: "colleagues_culture_safety",
     difficulty: "foundation",
-    stem: `Beatrix is a first-year dental student partnered with her classmate Omar for a joint clinical skills session involving patient contact. That morning, Omar tells Beatrix he is unwell — he has a temperature, a cough, and feels "pretty rough" — but says he cannot miss the session because he is already borderline on attendance. He asks Beatrix not to say anything. Beatrix is considering what to do.`,
+    stem: `Beatrix is a first-year dental student partnered with her classmate Omar for a joint clinical skills session involving patient contact. That morning, Omar tells Beatrix he is unwell, he has a temperature, a cough, and feels "pretty rough", but says he cannot miss the session because he is already borderline on attendance. He asks Beatrix not to say anything. Beatrix is considering what to do.`,
     pivotInsight:
       "A student who is unwell and potentially infectious attending a clinical session creates a direct risk to vulnerable patients. Loyalty to a classmate cannot override the duty to protect patients from preventable harm.",
     gmpRef: {
-      label: "GMP – Colleagues, culture and safety",
+      label: "GMP · Colleagues, culture and safety",
       url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
     },
     items: [
@@ -1606,7 +1606,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         whyNotAdjacent:
           "This is 'Very Important'. Patient safety in clinical environments is the overriding concern.",
         gmpRef: {
-          label: "GMP – Colleagues, culture and safety",
+          label: "GMP · Colleagues, culture and safety",
           url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
         },
       },
@@ -1615,7 +1615,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That Omar's attendance record places him at academic risk if he misses this session.",
         correctRating: "not_important",
         rationale:
-          "Omar's academic difficulties are a real concern and deserve a compassionate response — through proper channels. However, the potential consequence for his progression does not make it acceptable for him to attend a patient contact session while unwell. Academic pressures are not a legitimate professional consideration when patient safety is at stake.",
+          "Omar's academic difficulties are a real concern and deserve a compassionate response, through proper channels. However, the potential consequence for his progression does not make it acceptable for him to attend a patient contact session while unwell. Academic pressures are not a legitimate professional consideration when patient safety is at stake.",
         whyNotAdjacent:
           "This is 'Not Important at All'. Omar's attendance concerns must be addressed through appropriate absence processes, not by attending while potentially infectious.",
       },
@@ -1624,7 +1624,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That there may be formal illness-related absence processes that could protect Omar without risking patient safety.",
         correctRating: "important",
         rationale:
-          "Most clinical schools have procedures for illness-related absences that prevent students from being unfairly penalised. Understanding whether these exist is genuinely important — it may represent the most helpful thing Beatrix can offer Omar: a way to manage the situation that protects both him and the patients.",
+          "Most clinical schools have procedures for illness-related absences that prevent students from being unfairly penalised. Understanding whether these exist is genuinely important, it may represent the most helpful thing Beatrix can offer Omar: a way to manage the situation that protects both him and the patients.",
         whyNotAdjacent:
           "This is 'Important'. It represents a constructive path forward for Omar without compromising patient safety.",
       },
@@ -1633,7 +1633,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That Omar has asked Beatrix to keep the matter confidential.",
         correctRating: "minor_importance",
         rationale:
-          "Omar's request for confidentiality is understandable but does not override the concern about patient safety. It is relevant context — Beatrix should handle the situation with sensitivity and respect for Omar — but it cannot be the reason for inaction.",
+          "Omar's request for confidentiality is understandable but does not override the concern about patient safety. It is relevant context, Beatrix should handle the situation with sensitivity and respect for Omar, but it cannot be the reason for inaction.",
         whyNotAdjacent:
           "This is 'Of Minor Importance'. It shapes how Beatrix responds but cannot prevent her from acting.",
       },
@@ -1647,9 +1647,9 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     difficulty: "standard",
     stem: `Roberto is a final-year medical student observing a palliative care consultation. The patient, Mr Sherwin, is 78 years old with terminal cancer and has clearly expressed to the clinical team that he does not wish to receive further aggressive treatment and wants to focus on comfort care. During the consultation, his adult children repeatedly press him to "at least try the chemotherapy" and tell him he is "giving up." Mr Sherwin appears distressed and visibly withdraws as his family speak.`,
     pivotInsight:
-      "A competent patient's expressed wishes about their own care must be respected, even when family members disagree. Family concern is understandable but cannot override patient autonomy — the patient is the decision-maker.",
+      "A competent patient's expressed wishes about their own care must be respected, even when family members disagree. Family concern is understandable but cannot override patient autonomy, the patient is the decision-maker.",
     gmpRef: {
-      label: "GMP – Patients, partnership and communication",
+      label: "GMP · Patients, partnership and communication",
       url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
     },
     items: [
@@ -1662,7 +1662,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         whyNotAdjacent:
           "This is 'Very Important'. Patient autonomy in treatment decisions is a fundamental GMP right.",
         gmpRef: {
-          label: "GMP – Patients, partnership and communication",
+          label: "GMP · Patients, partnership and communication",
           url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
         },
       },
@@ -1671,7 +1671,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That Mr Sherwin's family are motivated by genuine concern for his wellbeing.",
         correctRating: "minor_importance",
         rationale:
-          "The family's distress and concern are real and understandable. Compassionate acknowledgement of their feelings is part of good palliative care. However, their concerns — however sincere — cannot override the patient's own expressed wishes. This shapes how the conversation is handled, not the clinical decision itself.",
+          "The family's distress and concern are real and understandable. Compassionate acknowledgement of their feelings is part of good palliative care. However, their concerns, however sincere, cannot override the patient's own expressed wishes. This shapes how the conversation is handled, not the clinical decision itself.",
         whyNotAdjacent:
           "This is 'Of Minor Importance'. It is relevant to how the team communicates with the family, not to whether the patient's decision should be respected.",
       },
@@ -1689,7 +1689,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That the family's pressure might lead Mr Sherwin to reconsider and accept the chemotherapy.",
         correctRating: "not_important",
         rationale:
-          "The possibility that pressure might cause Mr Sherwin to change his mind is not a reason to allow the pressure to continue — it is a reason to stop it. A decision made under duress does not reflect the patient's genuine autonomous wishes. GMP is clear that patients must be free from coercion when making treatment decisions.",
+          "The possibility that pressure might cause Mr Sherwin to change his mind is not a reason to allow the pressure to continue, it is a reason to stop it. A decision made under duress does not reflect the patient's genuine autonomous wishes. GMP is clear that patients must be free from coercion when making treatment decisions.",
         whyNotAdjacent:
           "This is 'Not Important at All'. Changing a patient's mind through family pressure is contrary to patient autonomy and is not a legitimate clinical consideration.",
       },
@@ -1703,9 +1703,9 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     difficulty: "challenging",
     stem: `Kezia is a medical student who has been given login access to the hospital's electronic patient record system for her placement. At the end of a shift, out of curiosity about the outcome of a case she observed earlier in the week, she considers looking up a patient she was not directly involved with today, simply to see how their condition has progressed.`,
     pivotInsight:
-      "Access to patient records must be justified by clinical need. Curiosity — however well-intentioned — is not a legitimate reason to access a patient's records, and accessing records without clinical justification is a breach of confidentiality.",
+      "Access to patient records must be justified by clinical need. Curiosity, however well-intentioned, is not a legitimate reason to access a patient's records, and accessing records without clinical justification is a breach of confidentiality.",
     gmpRef: {
-      label: "GMP – Trust and professionalism",
+      label: "GMP · Trust and professionalism",
       url: `${GMP_MAIN_URL}/trust-and-professionalism`,
     },
     items: [
@@ -1714,11 +1714,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That accessing a patient's records without clinical justification is a breach of patient confidentiality.",
         correctRating: "very_important",
         rationale:
-          "Patient records contain highly sensitive information and must only be accessed by clinicians with a direct clinical need to do so. GMP and data protection legislation are clear that accessing records out of curiosity — even well-meaning curiosity — is a breach of confidentiality. Having system access does not confer the right to use it for non-clinical purposes.",
+          "Patient records contain highly sensitive information and must only be accessed by clinicians with a direct clinical need to do so. GMP and data protection legislation are clear that accessing records out of curiosity, even well-meaning curiosity, is a breach of confidentiality. Having system access does not confer the right to use it for non-clinical purposes.",
         whyNotAdjacent:
           "This is 'Very Important'. Unauthorised access to patient records is a serious professional and legal breach.",
         gmpRef: {
-          label: "GMP – Trust and professionalism",
+          label: "GMP · Trust and professionalism",
           url: `${GMP_MAIN_URL}/trust-and-professionalism`,
         },
       },
@@ -1736,7 +1736,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That looking at the records could help Kezia learn from the case.",
         correctRating: "minor_importance",
         rationale:
-          "Educational value is a more legitimate consideration than pure curiosity, and learning from clinical cases is encouraged. However, there are appropriate ways to do this — asking the team about the outcome, reviewing de-identified case discussions — that do not involve unauthorised access to live patient records.",
+          "Educational value is a more legitimate consideration than pure curiosity, and learning from clinical cases is encouraged. However, there are appropriate ways to do this, asking the team about the outcome, reviewing de-identified case discussions, that do not involve unauthorised access to live patient records.",
         whyNotAdjacent:
           "This is 'Of Minor Importance'. The educational intent is genuine, but it does not justify a confidentiality breach.",
       },
@@ -1761,7 +1761,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     pivotInsight:
       "Understaffing and clinical pressure do not expand a student's authorised scope of practice. A student who agrees to perform an unsupervised procedure they are not trained for places the patient and themselves at risk.",
     gmpRef: {
-      label: "GMP – Knowledge, skills and development",
+      label: "GMP · Knowledge, skills and development",
       url: `${GMP_MAIN_URL}/knowledge-skills-and-development`,
     },
     items: [
@@ -1770,11 +1770,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That Priya is not yet trained or signed off for independent cannulation on real patients.",
         correctRating: "very_important",
         rationale:
-          "GMP requires clinicians to practise within their competence, and simulation training does not equate to clinical sign-off. Performing an unsupervised procedure at a training level that has not been reached risks patient harm. The student's training status is the most important consideration — it is the direct patient safety issue.",
+          "GMP requires clinicians to practise within their competence, and simulation training does not equate to clinical sign-off. Performing an unsupervised procedure at a training level that has not been reached risks patient harm. The student's training status is the most important consideration, it is the direct patient safety issue.",
         whyNotAdjacent:
           "This is 'Very Important'. Working outside clinical competence cannot be overridden by pressure or goodwill.",
         gmpRef: {
-          label: "GMP – Knowledge, skills and development",
+          label: "GMP · Knowledge, skills and development",
           url: `${GMP_MAIN_URL}/knowledge-skills-and-development`,
         },
       },
@@ -1792,7 +1792,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That agreeing could allow Priya to gain valuable clinical experience.",
         correctRating: "not_important",
         rationale:
-          "Gaining clinical experience is a legitimate aim, but experience must be acquired safely through proper supervision. Performing an independent procedure without the training level required is not experience — it is risk. The distinction between supervised training and independent unsupervised practice is fundamental to GMP.",
+          "Gaining clinical experience is a legitimate aim, but experience must be acquired safely through proper supervision. Performing an independent procedure without the training level required is not experience, it is risk. The distinction between supervised training and independent unsupervised practice is fundamental to GMP.",
         whyNotAdjacent:
           "This is 'Not Important at All'. The desire for experience cannot justify unsafe unsupervised practice.",
       },
@@ -1801,7 +1801,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That Priya should clearly explain her training status to Nurse Thompson and suggest an alternative arrangement.",
         correctRating: "important",
         rationale:
-          "How Priya communicates her limitations is genuinely important. Declining without explanation could create unnecessary friction; explaining clearly that she is not signed off and actively suggesting alternatives — such as helping find a qualified colleague — is both professional and practically helpful. The manner of the refusal matters.",
+          "How Priya communicates her limitations is genuinely important. Declining without explanation could create unnecessary friction; explaining clearly that she is not signed off and actively suggesting alternatives, such as helping find a qualified colleague, is both professional and practically helpful. The manner of the refusal matters.",
         whyNotAdjacent:
           "This is 'Important'. Clear communication and proactive problem-solving when declining an inappropriate request reflects good professional practice.",
       },
@@ -1815,9 +1815,9 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     difficulty: "challenging",
     stem: `Jasper is a medical student who has independently heard concerns about a senior registrar, Dr Hadley, from three separate classmates. Each student has described a different uncomfortable encounter: one felt pressured during an assessment feedback session; one overheard Dr Hadley making dismissive comments about a patient; and one reported that Dr Hadley asked her to falsify part of a training record. Jasper is considering whether and how to act.`,
     pivotInsight:
-      "A pattern of independent concerns about the same individual carries more weight than any single incident. GMP requires concerns about a colleague's conduct to be raised appropriately — and a pattern of behaviour suggests a systemic issue that cannot be dismissed.",
+      "A pattern of independent concerns about the same individual carries more weight than any single incident. GMP requires concerns about a colleague's conduct to be raised appropriately, and a pattern of behaviour suggests a systemic issue that cannot be dismissed.",
     gmpRef: {
-      label: "GMP – Colleagues, culture and safety",
+      label: "GMP · Colleagues, culture and safety",
       url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
     },
     items: [
@@ -1830,7 +1830,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         whyNotAdjacent:
           "This is 'Very Important'. A pattern of independent concerns is a serious professional safety signal that cannot be ignored.",
         gmpRef: {
-          label: "GMP – Colleagues, culture and safety",
+          label: "GMP · Colleagues, culture and safety",
           url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
         },
       },
@@ -1839,7 +1839,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That one of the concerns involves an allegation of falsifying a training record.",
         correctRating: "very_important",
         rationale:
-          "Falsifying clinical or training records is among the most serious professional misconduct issues under GMP. Even if the other concerns were ambiguous, this specific allegation is not — it directly implicates GMP's requirements for honesty and integrity in professional documentation. This concern alone warrants formal escalation.",
+          "Falsifying clinical or training records is among the most serious professional misconduct issues under GMP. Even if the other concerns were ambiguous, this specific allegation is not, it directly implicates GMP's requirements for honesty and integrity in professional documentation. This concern alone warrants formal escalation.",
         whyNotAdjacent:
           "This is 'Very Important'. An allegation of falsifying records is a serious professional integrity matter requiring formal action.",
       },
@@ -1850,7 +1850,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         rationale:
           "Respecting the privacy and agency of those who shared concerns is an important consideration that should shape how Jasper proceeds. He should engage them in the decision about how to act rather than acting over their heads. Formal concerns are also stronger when they have the support of those directly affected.",
         whyNotAdjacent:
-          "This is 'Important'. The classmates' agency in the process matters and should inform how Jasper acts — though it cannot ultimately prevent the concerns from being raised.",
+          "This is 'Important'. The classmates' agency in the process matters and should inform how Jasper acts, though it cannot ultimately prevent the concerns from being raised.",
       },
       {
         id: "imp-014-d",
@@ -1871,9 +1871,9 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     difficulty: "foundation",
     stem: `Nadia is a first-year dental student observing a consultation. An elderly patient, Mr Holbrook, is being prepared for a routine dental extraction. As the nurse explains what is about to happen, Mr Holbrook asks: "Are you sure I agreed to this? I thought I was just coming in for a check-up." The nurse explains he signed the consent form at a previous appointment. Mr Holbrook nods, but continues to look uncertain. The dentist begins to prepare his instruments.`,
     pivotInsight:
-      "Consent is not a historic document — it must be current and freely given. A patient expressing uncertainty about what they have agreed to is a signal that requires attention before any procedure proceeds.",
+      "Consent is not a historic document, it must be current and freely given. A patient expressing uncertainty about what they have agreed to is a signal that requires attention before any procedure proceeds.",
     gmpRef: {
-      label: "GMP – Patients, partnership and communication",
+      label: "GMP · Patients, partnership and communication",
       url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
     },
     items: [
@@ -1886,7 +1886,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         whyNotAdjacent:
           "This is 'Very Important'. Real-time expressions of uncertainty about consent must stop a procedure until the issue is properly resolved.",
         gmpRef: {
-          label: "GMP – Patients, partnership and communication",
+          label: "GMP · Patients, partnership and communication",
           url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
         },
       },
@@ -1929,7 +1929,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     pivotInsight:
       "Providing paid medical advice while not yet qualified is a serious public safety issue. It is also a direct breach of professional standards that GMP applies to students and qualified practitioners alike.",
     gmpRef: {
-      label: "GMP – Trust and professionalism",
+      label: "GMP · Trust and professionalism",
       url: `${GMP_MAIN_URL}/trust-and-professionalism`,
     },
     items: [
@@ -1942,7 +1942,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         whyNotAdjacent:
           "This is 'Very Important'. Unqualified medical advice that may discourage people from seeking proper care is a direct public safety concern.",
         gmpRef: {
-          label: "GMP – Trust and professionalism",
+          label: "GMP · Trust and professionalism",
           url: `${GMP_MAIN_URL}/trust-and-professionalism`,
         },
       },
@@ -1951,7 +1951,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That at least one post may have advised against seeking medical attention for potentially serious symptoms.",
         correctRating: "very_important",
         rationale:
-          "Advice that actively discourages someone from seeking medical care for potentially serious symptoms could cause direct harm. This is not merely a regulatory concern — it is a live patient safety issue. The potential for harm is real and cannot be dismissed.",
+          "Advice that actively discourages someone from seeking medical care for potentially serious symptoms could cause direct harm. This is not merely a regulatory concern, it is a live patient safety issue. The potential for harm is real and cannot be dismissed.",
         whyNotAdjacent:
           "This is 'Very Important'. Advice that may prevent someone from seeking necessary care is a direct patient safety concern requiring action.",
       },
@@ -1983,9 +1983,9 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     difficulty: "standard",
     stem: `Adam is a medical student who realises, after leaving the ward, that he told a nurse the fluid balance target for a patient was "maintain at 2L positive per day" when he now believes the correct instruction was to maintain at no more than 500ml positive. The consultant who gave the instruction is currently in theatre and cannot be immediately reached. Adam is unsure whether to act.`,
     pivotInsight:
-      "Duty of candour and patient safety require that incorrect clinical information is corrected as quickly as possible. Uncertainty about whether an error was made is not a reason to delay — it is a reason to act immediately to verify and correct.",
+      "Duty of candour and patient safety require that incorrect clinical information is corrected as quickly as possible. Uncertainty about whether an error was made is not a reason to delay, it is a reason to act immediately to verify and correct.",
     gmpRef: {
-      label: "GMP – Knowledge, skills and development",
+      label: "GMP · Knowledge, skills and development",
       url: `${GMP_MAIN_URL}/knowledge-skills-and-development`,
     },
     items: [
@@ -1998,7 +1998,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         whyNotAdjacent:
           "This is 'Very Important'. Incorrect clinical instructions in an active patient care setting are an immediate patient safety concern.",
         gmpRef: {
-          label: "GMP – Knowledge, skills and development",
+          label: "GMP · Knowledge, skills and development",
           url: `${GMP_MAIN_URL}/knowledge-skills-and-development`,
         },
       },
@@ -2007,7 +2007,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That Adam acted in good faith and may simply have misremembered the instruction.",
         correctRating: "not_important",
         rationale:
-          "Good faith does not reduce the responsibility to correct an error that may be causing harm. The patient's safety does not depend on Adam's intent — it depends on the accuracy of the information the nursing team is acting on. Good intent, once an error has been made, is irrelevant to the duty to correct it.",
+          "Good faith does not reduce the responsibility to correct an error that may be causing harm. The patient's safety does not depend on Adam's intent, it depends on the accuracy of the information the nursing team is acting on. Good intent, once an error has been made, is irrelevant to the duty to correct it.",
         whyNotAdjacent:
           "This is 'Not Important at All'. Good intent does not alter the duty to act once an error is suspected.",
       },
@@ -2025,7 +2025,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "That Adam will need to explain the mistake to the consultant once they are available.",
         correctRating: "important",
         rationale:
-          "Informing the consultant once accessible is an important step — they need to know about the error for clinical continuity, and the incident should be documented and reviewed. However, this is a secondary step to the immediate priority of ensuring the nurse is informed and the error is corrected before any harm occurs.",
+          "Informing the consultant once accessible is an important step, they need to know about the error for clinical continuity, and the incident should be documented and reviewed. However, this is a secondary step to the immediate priority of ensuring the nurse is informed and the error is corrected before any harm occurs.",
         whyNotAdjacent:
           "This is 'Important'. Disclosure to the supervising consultant is a necessary follow-up but not the most time-critical action.",
       },
@@ -2042,9 +2042,9 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     difficulty: "standard",
     stem: `Miriam is a medical student reviewing a shared group project document before it is submitted. She notices that a large section written by her classmate Stuart appears to have been copied directly from a published journal article, with no citation or attribution. The project is due in two days. Stuart is a close friend who has been going through a difficult time, and Miriam does not want to make things worse for him.`,
     pivotInsight:
-      "Academic integrity is not separate from professional integrity — the same honesty that patients and colleagues will one day depend on must be evident in how students conduct themselves during training.",
+      "Academic integrity is not separate from professional integrity, the same honesty that patients and colleagues will one day depend on must be evident in how students conduct themselves during training.",
     gmpRef: {
-      label: "GMP – Trust and professionalism",
+      label: "GMP · Trust and professionalism",
       url: `${GMP_MAIN_URL}/trust-and-professionalism`,
     },
     items: [
@@ -2053,7 +2053,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Speak to Stuart privately about what she has found and give him the opportunity to correct the plagiarised section before submission.",
         rank: 1,
         rationale:
-          "This is the most appropriate response. Speaking to Stuart directly, privately, and with the goal of giving him the opportunity to do the right thing is both honest and compassionate. It makes clear that the work as submitted is unacceptable while respecting the friendship. If Stuart refuses to correct it, escalation becomes necessary — but giving him the first opportunity to act is the correct starting point.",
+          "This is the most appropriate response. Speaking to Stuart directly, privately, and with the goal of giving him the opportunity to do the right thing is both honest and compassionate. It makes clear that the work as submitted is unacceptable while respecting the friendship. If Stuart refuses to correct it, escalation becomes necessary, but giving him the first opportunity to act is the correct starting point.",
       },
       {
         id: "rank-004-b",
@@ -2067,7 +2067,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Quietly rephrase or remove the copied text herself before submission so the group does not face consequences.",
         rank: 3,
         rationale:
-          "This is the least appropriate response. Altering Stuart's work without disclosure does not resolve the underlying dishonesty — it conceals it and makes Miriam complicit in the misconduct. GMP requires honesty in all professional dealings. Hiding someone else's dishonesty is a separate act of dishonesty, not an act of loyalty.",
+          "This is the least appropriate response. Altering Stuart's work without disclosure does not resolve the underlying dishonesty, it conceals it and makes Miriam complicit in the misconduct. GMP requires honesty in all professional dealings. Hiding someone else's dishonesty is a separate act of dishonesty, not an act of loyalty.",
       },
     ],
   },
@@ -2077,11 +2077,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     type: "ranking",
     domain: "patients_partnership_communication",
     difficulty: "challenging",
-    stem: `Niamh is a dental student assisting at a paediatric dental clinic. While examining a six-year-old patient, she notices multiple bruises in unusual locations — the inner forearms and upper back — that are inconsistent with common childhood bumps. When she gently asks how the child got the bruises, the child says "I fell" but avoids eye contact. The supervising dentist, Dr Lim, is currently occupied with another patient in a separate room.`,
+    stem: `Niamh is a dental student assisting at a paediatric dental clinic. While examining a six-year-old patient, she notices multiple bruises in unusual locations, the inner forearms and upper back, that are inconsistent with common childhood bumps. When she gently asks how the child got the bruises, the child says "I fell" but avoids eye contact. The supervising dentist, Dr Lim, is currently occupied with another patient in a separate room.`,
     pivotInsight:
-      "Safeguarding vulnerable patients — particularly children — is one of the most serious responsibilities in clinical practice. A student who fails to act on possible signs of abuse because they are unsupported, uncertain, or afraid of being wrong causes harm by omission.",
+      "Safeguarding vulnerable patients, particularly children, is one of the most serious responsibilities in clinical practice. A student who fails to act on possible signs of abuse because they are unsupported, uncertain, or afraid of being wrong causes harm by omission.",
     gmpRef: {
-      label: "GMP – Patients, partnership and communication",
+      label: "GMP · Patients, partnership and communication",
       url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
     },
     items: [
@@ -2097,14 +2097,14 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Excuse herself from the appointment and go immediately to find Dr Lim to report her concerns.",
         rank: 2,
         rationale:
-          "Interrupting Dr Lim directly is appropriate if there is a risk the patient and family will leave before Niamh can escalate otherwise. In most circumstances, careful note-taking during the appointment followed by a prompt handover to Dr Lim before the patient departs is sufficient and less disruptive. This is a valid response — just slightly less measured than the most appropriate one.",
+          "Interrupting Dr Lim directly is appropriate if there is a risk the patient and family will leave before Niamh can escalate otherwise. In most circumstances, careful note-taking during the appointment followed by a prompt handover to Dr Lim before the patient departs is sufficient and less disruptive. This is a valid response, just slightly less measured than the most appropriate one.",
       },
       {
         id: "rank-005-c",
         text: "Say nothing at this stage, as the bruises may have a benign explanation and she is only a student.",
         rank: 3,
         rationale:
-          "This is the least appropriate response. Safeguarding is not a function of seniority — all members of the dental team, including students, have a duty to act on possible signs of abuse. Uncertainty about the cause of the bruises is not a reason for inaction; it is a reason to pass the concern to someone with greater experience and authority. Staying silent is a safeguarding failure.",
+          "This is the least appropriate response. Safeguarding is not a function of seniority, all members of the dental team, including students, have a duty to act on possible signs of abuse. Uncertainty about the cause of the bruises is not a reason for inaction; it is a reason to pass the concern to someone with greater experience and authority. Staying silent is a safeguarding failure.",
       },
     ],
   },
@@ -2116,9 +2116,9 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     difficulty: "standard",
     stem: `Patrick is a fourth-year medical student on a surgical placement. During a post-operative debrief, he witnesses a senior registrar, Dr Hollis, publicly berate a foundation doctor in front of the entire surgical team, using aggressive language and dismissing her contribution entirely. The foundation doctor looks visibly distressed. The rest of the team appears uncomfortable but nobody says anything. Patrick is trying to decide what to do.`,
     pivotInsight:
-      "Bullying and undermining behaviour in healthcare creates a culture where people are afraid to speak up — and where patients are ultimately harmed. GMP requires all members of the team, including students, to contribute to a safe and respectful working environment.",
+      "Bullying and undermining behaviour in healthcare creates a culture where people are afraid to speak up, and where patients are ultimately harmed. GMP requires all members of the team, including students, to contribute to a safe and respectful working environment.",
     gmpRef: {
-      label: "GMP – Colleagues, culture and safety",
+      label: "GMP · Colleagues, culture and safety",
       url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
     },
     items: [
@@ -2138,7 +2138,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
       },
       {
         id: "rank-006-c",
-        text: "Say nothing — Patrick is only a student and it is not his place to get involved in matters between qualified doctors.",
+        text: "Say nothing, Patrick is only a student and it is not his place to get involved in matters between qualified doctors.",
         rank: 3,
         rationale:
           "This is the least appropriate response. Student status does not exempt Patrick from his professional responsibility to contribute to a safe, respectful working culture. GMP requires all members of the team to act if they witness bullying, harassment, or undermining behaviour. Staying silent normalises harmful behaviour and contributes to the culture of fear that makes speaking up feel impossible.",
@@ -2151,11 +2151,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     type: "ranking",
     domain: "knowledge_skills_development",
     difficulty: "challenging",
-    stem: `Yemi is a medical student on placement. His classmate Dana approaches him and explains that she has been asked by a registrar to perform a venepuncture on a patient that afternoon. Dana has never performed a venepuncture, not even in a simulation setting. She is nervous and asks Yemi — who has completed several under supervision — if he can come along and step in to do it if she struggles, without telling the registrar. The registrar believes Dana has prior experience.`,
+    stem: `Yemi is a medical student on placement. His classmate Dana approaches him and explains that she has been asked by a registrar to perform a venepuncture on a patient that afternoon. Dana has never performed a venepuncture, not even in a simulation setting. She is nervous and asks Yemi, who has completed several under supervision, if he can come along and step in to do it if she struggles, without telling the registrar. The registrar believes Dana has prior experience.`,
     pivotInsight:
-      "The registrar's incorrect assumption about Dana's competence is the core patient safety concern. The solution must address that assumption honestly — not work around it. Helping Dana conceal a competence gap benefits neither the patient nor Dana.",
+      "The registrar's incorrect assumption about Dana's competence is the core patient safety concern. The solution must address that assumption honestly, not work around it. Helping Dana conceal a competence gap benefits neither the patient nor Dana.",
     gmpRef: {
-      label: "GMP – Knowledge, skills and development",
+      label: "GMP · Knowledge, skills and development",
       url: `${GMP_MAIN_URL}/knowledge-skills-and-development`,
     },
     items: [
@@ -2171,7 +2171,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Decline to help cover for Dana but suggest she speaks to the registrar about her concern before the procedure takes place.",
         rank: 2,
         rationale:
-          "Declining to be complicit in concealing a competence gap is correct. Directing Dana to speak to the registrar is appropriate. This response is slightly less supportive than rank 1 — it does not offer Yemi's active presence to help Dana approach the conversation with confidence. The response is appropriate but less practically helpful.",
+          "Declining to be complicit in concealing a competence gap is correct. Directing Dana to speak to the registrar is appropriate. This response is slightly less supportive than rank 1, it does not offer Yemi's active presence to help Dana approach the conversation with confidence. The response is appropriate but less practically helpful.",
       },
       {
         id: "rank-007-c",
@@ -2188,11 +2188,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     type: "ranking",
     domain: "trust_professionalism",
     difficulty: "standard",
-    stem: `Callum is a medical student who is asked by a ward nurse to sign as "patient's witness" on a consent form for an orthopaedic procedure. The nurse explains: "The patient signed it earlier when you were on the ward — I just need a witness signature. It's only a formality." Callum was not present when the patient signed and did not witness the consent process.`,
+    stem: `Callum is a medical student who is asked by a ward nurse to sign as "patient's witness" on a consent form for an orthopaedic procedure. The nurse explains: "The patient signed it earlier when you were on the ward, I just need a witness signature. It's only a formality." Callum was not present when the patient signed and did not witness the consent process.`,
     pivotInsight:
-      "Signing a legal document as a witness to something you did not witness is falsifying a medical record. This is not a formality — it is professional misconduct, regardless of whether the patient did in fact consent.",
+      "Signing a legal document as a witness to something you did not witness is falsifying a medical record. This is not a formality, it is professional misconduct, regardless of whether the patient did in fact consent.",
     gmpRef: {
-      label: "GMP – Trust and professionalism",
+      label: "GMP · Trust and professionalism",
       url: `${GMP_MAIN_URL}/trust-and-professionalism`,
     },
     items: [
@@ -2208,7 +2208,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Decline to sign but offer to speak to the patient now to check they still consent and understand the procedure.",
         rank: 2,
         rationale:
-          "Declining to sign as a false witness is correct. Offering to speak to the patient is a helpful and constructive alternative that supports the team without compromising integrity. However, speaking to the patient now is not a substitute for properly witnessing the original consent — the form itself should only be signed by someone who was present for that process.",
+          "Declining to sign as a false witness is correct. Offering to speak to the patient is a helpful and constructive alternative that supports the team without compromising integrity. However, speaking to the patient now is not a substitute for properly witnessing the original consent, the form itself should only be signed by someone who was present for that process.",
       },
       {
         id: "rank-008-c",
@@ -2227,9 +2227,9 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     difficulty: "challenging",
     stem: `Isla is a final-year medical student in A&E when a patient, Mr Osei, a 42-year-old Jehovah's Witness, is brought in following a road traffic accident. He is conscious and alert. His haemoglobin is critically low and the attending doctor tells Isla the patient will almost certainly die without an immediate blood transfusion. Mr Osei states clearly: "No blood. My religion does not permit it. I understand what you are telling me."`,
     pivotInsight:
-      "A competent adult patient has the legal right to refuse life-saving treatment for any reason. This is one of the most difficult situations in medicine — but GMP and the law are explicit that competent refusal must be respected.",
+      "A competent adult patient has the legal right to refuse life-saving treatment for any reason. This is one of the most difficult situations in medicine, but GMP and the law are explicit that competent refusal must be respected.",
     gmpRef: {
-      label: "GMP – Patients, partnership and communication",
+      label: "GMP · Patients, partnership and communication",
       url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
     },
     items: [
@@ -2238,14 +2238,14 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Ensure Mr Osei's capacity is formally assessed and, if confirmed, that his refusal is fully documented and respected.",
         rank: 1,
         rationale:
-          "A competent adult may refuse any treatment, including life-saving treatment. GMP is explicit that patient autonomy must be respected even where the consequences are fatal. The crucial step is a formal capacity assessment — Mr Osei appears to have capacity, and if confirmed, his refusal must be documented and honoured. This is the most appropriate response: following the process that protects both the patient's rights and the clinical team.",
+          "A competent adult may refuse any treatment, including life-saving treatment. GMP is explicit that patient autonomy must be respected even where the consequences are fatal. The crucial step is a formal capacity assessment, Mr Osei appears to have capacity, and if confirmed, his refusal must be documented and honoured. This is the most appropriate response: following the process that protects both the patient's rights and the clinical team.",
       },
       {
         id: "rank-009-b",
         text: "Ensure the responsible clinician is aware of the refusal and that any discussion with Mr Osei is conducted calmly, without pressure.",
         rank: 2,
         rationale:
-          "Ensuring the responsible senior clinician is involved is appropriate and may be necessary for both the capacity assessment and documentation. Ensuring the discussion is pressure-free is essential — GMP is clear that patients must not be coerced into decisions. This is an appropriate response, slightly less primary than formally establishing and documenting capacity.",
+          "Ensuring the responsible senior clinician is involved is appropriate and may be necessary for both the capacity assessment and documentation. Ensuring the discussion is pressure-free is essential, GMP is clear that patients must not be coerced into decisions. This is an appropriate response, slightly less primary than formally establishing and documenting capacity.",
       },
       {
         id: "rank-009-c",
@@ -2262,11 +2262,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     type: "ranking",
     domain: "colleagues_culture_safety",
     difficulty: "foundation",
-    stem: `Tomasz is a medical student who realises that two consultants — Dr Firth and Mr Blaine — have given conflicting advice to the same patient, Mrs Hemmings, about her post-operative care. Dr Firth told her to mobilise and walk the corridor twice daily. Mr Blaine, who saw her an hour later, told her to stay in bed and rest. Mrs Hemmings is confused and distressed, unsure what to do.`,
+    stem: `Tomasz is a medical student who realises that two consultants, Dr Firth and Mr Blaine, have given conflicting advice to the same patient, Mrs Hemmings, about her post-operative care. Dr Firth told her to mobilise and walk the corridor twice daily. Mr Blaine, who saw her an hour later, told her to stay in bed and rest. Mrs Hemmings is confused and distressed, unsure what to do.`,
     pivotInsight:
-      "Conflicting clinical instructions to a patient are a patient safety issue. The patient cannot safely navigate contradictory advice, and the confusion must be resolved through the team — not left for the patient to manage herself.",
+      "Conflicting clinical instructions to a patient are a patient safety issue. The patient cannot safely navigate contradictory advice, and the confusion must be resolved through the team, not left for the patient to manage herself.",
     gmpRef: {
-      label: "GMP – Colleagues, culture and safety",
+      label: "GMP · Colleagues, culture and safety",
       url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
     },
     items: [
@@ -2282,14 +2282,14 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Tell Mrs Hemmings to follow whichever piece of advice feels most sensible to her and ask the nurse to clarify with the team.",
         rank: 2,
         rationale:
-          "Asking the nurse to escalate the confusion is appropriate and helpful. However, telling the patient to decide for herself between conflicting clinical instructions is not appropriate — she lacks the clinical knowledge to judge which instruction is correct, and placing that burden on her is poor practice. This response partially addresses the problem.",
+          "Asking the nurse to escalate the confusion is appropriate and helpful. However, telling the patient to decide for herself between conflicting clinical instructions is not appropriate, she lacks the clinical knowledge to judge which instruction is correct, and placing that burden on her is poor practice. This response partially addresses the problem.",
       },
       {
         id: "rank-010-c",
         text: "Tell Mrs Hemmings not to worry, that these disagreements happen, and that she should wait to ask at the next ward round.",
         rank: 3,
         rationale:
-          "This is the least appropriate response. A patient who is confused and distressed by contradictory clinical advice deserves a prompt, clear response — not dismissal. 'These things happen' is not reassuring and does not resolve an immediate safety question. Waiting for the next ward round could mean hours of uncertainty during which the patient may make an unsafe choice.",
+          "This is the least appropriate response. A patient who is confused and distressed by contradictory clinical advice deserves a prompt, clear response, not dismissal. 'These things happen' is not reassuring and does not resolve an immediate safety question. Waiting for the next ward round could mean hours of uncertainty during which the patient may make an unsafe choice.",
       },
     ],
   },
@@ -2299,11 +2299,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     type: "ranking",
     domain: "knowledge_skills_development",
     difficulty: "standard",
-    stem: `Petra is a final-year medical student who has been consistently working longer hours than her timetable requires because the foundation doctors rely on her help and she does not want to let the team down. Over the past three weeks she has been working 10–12 hour days despite a recommended 8-hour maximum. She feels exhausted, has made two small documentation errors this week, and is struggling to concentrate by the end of shifts.`,
+    stem: `Petra is a final-year medical student who has been consistently working longer hours than her timetable requires because the foundation doctors rely on her help and she does not want to let the team down. Over the past three weeks she has been working 10 to 12 hour days despite a recommended 8-hour maximum. She feels exhausted, has made two small documentation errors this week, and is struggling to concentrate by the end of shifts.`,
     pivotInsight:
-      "Working when fatigued impairs clinical performance and creates patient safety risks. GMP requires clinicians to recognise when their own health or performance is affected and to take appropriate action — not simply absorb the pressure.",
+      "Working when fatigued impairs clinical performance and creates patient safety risks. GMP requires clinicians to recognise when their own health or performance is affected and to take appropriate action, not simply absorb the pressure.",
     gmpRef: {
-      label: "GMP – Knowledge, skills and development",
+      label: "GMP · Knowledge, skills and development",
       url: `${GMP_MAIN_URL}/knowledge-skills-and-development`,
     },
     items: [
@@ -2326,7 +2326,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Continue working the extended hours because the team relies on her, managing the fatigue as best she can.",
         rank: 3,
         rationale:
-          "This is the least appropriate response. GMP requires clinicians to recognise when their health or performance may be compromised. A student who continues working to exhaustion, has already made documentation errors, and is struggling to concentrate is creating an escalating patient safety risk. Absorbing pressure at the expense of safety is not loyalty — it is a patient safety failure.",
+          "This is the least appropriate response. GMP requires clinicians to recognise when their health or performance may be compromised. A student who continues working to exhaustion, has already made documentation errors, and is struggling to concentrate is creating an escalating patient safety risk. Absorbing pressure at the expense of safety is not loyalty, it is a patient safety failure.",
       },
     ],
   },
@@ -2336,11 +2336,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     type: "ranking",
     domain: "trust_professionalism",
     difficulty: "challenging",
-    stem: `Yusuf is a medical student one month from graduation. His supervising registrar, Dr Nakamura, is extremely busy and says: "You know how to do this — just sign off the discharge prescription. I'll countersign later." Yusuf is not yet a qualified doctor and does not hold a prescribing licence.`,
+    stem: `Yusuf is a medical student one month from graduation. His supervising registrar, Dr Nakamura, is extremely busy and says: "You know how to do this, just sign off the discharge prescription. I'll countersign later." Yusuf is not yet a qualified doctor and does not hold a prescribing licence.`,
     pivotInsight:
       "Prescribing without a licence is illegal, regardless of any supervision promised after the fact. A student who signs a prescription without authority places the patient and themselves at serious legal and clinical risk.",
     gmpRef: {
-      label: "GMP – Trust and professionalism",
+      label: "GMP · Trust and professionalism",
       url: `${GMP_MAIN_URL}/trust-and-professionalism`,
     },
     items: [
@@ -2356,7 +2356,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Prepare the prescription but leave the signature line blank and wait for Dr Nakamura to return to sign it.",
         rank: 2,
         rationale:
-          "Preparing a prescription for a qualified clinician to review and sign is appropriate, and leaving the signature line blank is correct — Yusuf should not sign. However, this response is passive in that it does not directly communicate to Dr Nakamura why Yusuf cannot sign. A clear explanation is better than silent compliance.",
+          "Preparing a prescription for a qualified clinician to review and sign is appropriate, and leaving the signature line blank is correct, Yusuf should not sign. However, this response is passive in that it does not directly communicate to Dr Nakamura why Yusuf cannot sign. A clear explanation is better than silent compliance.",
       },
       {
         id: "rank-012-c",
@@ -2375,9 +2375,9 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     difficulty: "standard",
     stem: `Precious is a dental student attending a handover at the start of a community placement shift. The supervising dentist, Mr Carrick, refers to one of the afternoon's patients by a derogatory nickname based on their weight, prompting a laugh from one of the nurses present. The patient is not present. Precious feels uncomfortable but is unsure how to respond.`,
     pivotInsight:
-      "Derogatory comments about patients — even when the patient cannot hear them — undermine the dignity owed to every patient. GMP requires a culture of respect in all healthcare settings, and all team members have a role in maintaining it.",
+      "Derogatory comments about patients, even when the patient cannot hear them, undermine the dignity owed to every patient. GMP requires a culture of respect in all healthcare settings, and all team members have a role in maintaining it.",
     gmpRef: {
-      label: "GMP – Colleagues, culture and safety",
+      label: "GMP · Colleagues, culture and safety",
       url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
     },
     items: [
@@ -2410,11 +2410,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     type: "ranking",
     domain: "patients_partnership_communication",
     difficulty: "standard",
-    stem: `Chloe is a medical student observing a GP consultation with a patient, Mrs Alonzo, who speaks limited English. A professional telephone interpreter has been arranged. During the consultation, Chloe notices that the interpreter is not simply translating — they are adding commentary, summarising rather than directly translating the patient's words, and at one point appears to advise Mrs Alonzo on what to say. The GP appears not to have noticed.`,
+    stem: `Chloe is a medical student observing a GP consultation with a patient, Mrs Alonzo, who speaks limited English. A professional telephone interpreter has been arranged. During the consultation, Chloe notices that the interpreter is not simply translating, they are adding commentary, summarising rather than directly translating the patient's words, and at one point appears to advise Mrs Alonzo on what to say. The GP appears not to have noticed.`,
     pivotInsight:
       "An interpreter's role is to translate accurately and impartially, not to filter, advise, or advocate. A patient whose words are being altered or filtered is not receiving the consultation they are entitled to.",
     gmpRef: {
-      label: "GMP – Patients, partnership and communication",
+      label: "GMP · Patients, partnership and communication",
       url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
     },
     items: [
@@ -2437,7 +2437,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Say nothing, as interpreters are trained professionals who are experienced in managing these consultations.",
         rank: 3,
         rationale:
-          "Professional training does not guarantee appropriate conduct in any individual consultation. Chloe has directly observed that the interpreter is not simply translating — this is not an assumption, it is an observation. Staying silent because the interpreter is a professional ignores what Chloe can see happening in real time, and leaves Mrs Alonzo without the protection of accurate translation.",
+          "Professional training does not guarantee appropriate conduct in any individual consultation. Chloe has directly observed that the interpreter is not simply translating, this is not an assumption, it is an observation. Staying silent because the interpreter is a professional ignores what Chloe can see happening in real time, and leaves Mrs Alonzo without the protection of accurate translation.",
       },
     ],
   },
@@ -2449,9 +2449,9 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     difficulty: "challenging",
     stem: `Mei is a final-year medical student who arrives on time for her supervised GP clinic. Her supervising GP, Dr Hassan, sends a message saying he will be 40 minutes late due to a family emergency and asks Mei to "start seeing patients and take notes, and I'll review your findings when I arrive." There are several patients in the waiting room. Mei is not qualified to consult independently.`,
     pivotInsight:
-      "A student who begins consultations alone is not supervised — she is practising without a licence. Patients deserve to be seen by a qualified clinician, not reassured by a student working beyond their authorised scope.",
+      "A student who begins consultations alone is not supervised, she is practising without a licence. Patients deserve to be seen by a qualified clinician, not reassured by a student working beyond their authorised scope.",
     gmpRef: {
-      label: "GMP – Knowledge, skills and development",
+      label: "GMP · Knowledge, skills and development",
       url: `${GMP_MAIN_URL}/knowledge-skills-and-development`,
     },
     items: [
@@ -2474,7 +2474,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Begin seeing patients as requested, taking detailed notes for Dr Hassan to review, as she is nearly qualified and it is a supervised clinic.",
         rank: 3,
         rationale:
-          "This is the least appropriate response. Beginning independent consultations on real patients without a qualified clinician present is not supervision — it is unsupervised practice, regardless of how detailed the notes are. Dr Hassan's review after the fact does not constitute supervision in any meaningful clinical or legal sense. Mei would be practising without the authority to do so, placing patients at risk.",
+          "This is the least appropriate response. Beginning independent consultations on real patients without a qualified clinician present is not supervision, it is unsupervised practice, regardless of how detailed the notes are. Dr Hassan's review after the fact does not constitute supervision in any meaningful clinical or legal sense. Mei would be practising without the authority to do so, placing patients at risk.",
       },
     ],
   },
@@ -2488,7 +2488,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     pivotInsight:
       "Patients have the right to know who is treating them. While the error was accidental, GMP's duty of candour requires it to be acknowledged and reported so that affected patients can be appropriately informed.",
     gmpRef: {
-      label: "GMP – Trust and professionalism",
+      label: "GMP · Trust and professionalism",
       url: `${GMP_MAIN_URL}/trust-and-professionalism`,
     },
     items: [
@@ -2504,14 +2504,14 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Return both badges and report the mix-up, but not attempt to identify the affected patients as the error was minor.",
         rank: 2,
         rationale:
-          "Returning the badges and reporting the mix-up is correct. However, completely dismissing the impact on patients by not attempting to identify them understates the importance of patient transparency. Whether patients can in practice be identified depends on the records available — but the attempt should be made.",
+          "Returning the badges and reporting the mix-up is correct. However, completely dismissing the impact on patients by not attempting to identify them understates the importance of patient transparency. Whether patients can in practice be identified depends on the records available, but the attempt should be made.",
       },
       {
         id: "rank-016-c",
         text: "Simply swap the badges back and say nothing, as the error was accidental and he introduced himself correctly by name throughout.",
         rank: 3,
         rationale:
-          "The fact that Oliver introduced himself correctly does not fully resolve the issue for patients who may have relied on his badge for identification. Saying nothing when something has gone wrong — even accidentally — is contrary to GMP's duty of candour. Transparency about errors is a professional obligation, not an optional act.",
+          "The fact that Oliver introduced himself correctly does not fully resolve the issue for patients who may have relied on his badge for identification. Saying nothing when something has gone wrong, even accidentally, is contrary to GMP's duty of candour. Transparency about errors is a professional obligation, not an optional act.",
       },
     ],
   },
@@ -2523,9 +2523,9 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     difficulty: "challenging",
     stem: `Suki is a medical student on a night placement. At 2am, the outgoing registrar tells her that a patient, Mr Voss, "is fine but just a bit unsettled." Reviewing the observation chart on the way to the next bay, Suki notices that Mr Voss's respiratory rate has increased significantly over the last four hours, his blood pressure has dropped, and he had a temperature spike earlier that was not mentioned in the handover.`,
     pivotInsight:
-      "Inadequate handover information is a patient safety risk. A student who notices discrepancies between what they were told and what the clinical record shows must act immediately — not assume the outgoing team already knows.",
+      "Inadequate handover information is a patient safety risk. A student who notices discrepancies between what they were told and what the clinical record shows must act immediately, not assume the outgoing team already knows.",
     gmpRef: {
-      label: "GMP – Colleagues, culture and safety",
+      label: "GMP · Colleagues, culture and safety",
       url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
     },
     items: [

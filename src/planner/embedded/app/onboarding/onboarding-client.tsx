@@ -10,6 +10,11 @@ import { Input } from '@/components/ui/input'
 import { Slider } from '@/components/ui/slider'
 import { createClient } from '@/lib/supabase/client'
 import { parseDate, toISODate, weeksUntil, DAY_NAMES_FULL } from '@/lib/utils'
+import {
+  UCAT_EXAM_WINDOW_END_ISO,
+  UCAT_EXAM_WINDOW_START_ISO,
+  clampToUcatExamWindow,
+} from '@/lib/ucatExamWindow'
 import { buildGuestPlannerFromOnboarding } from '@/lib/build-guest-plan'
 import { getGuestPlanner, saveGuestPlanner } from '@/lib/guest-planner-store'
 import { createPlanFromOnboarding } from '@/lib/create-plan-from-onboarding'
@@ -76,7 +81,7 @@ export default function OnboardingClient({
     setState((s) => ({
       ...s,
       fullName: s.fullName || name || '',
-      examDate: s.examDate || exam || null,
+      examDate: s.examDate || (exam ? clampToUcatExamWindow(exam) : null),
     }))
   }, [profilePrefill?.fullName, profilePrefill?.examDate])
 
@@ -369,15 +374,20 @@ function Step2({ state, onUpdate }: StepProps) {
 // ─── Step 3: Exam date & time ─────────────────────────────────────────────────
 
 function Step3({ state, onUpdate, warning }: StepProps & { warning: boolean }) {
-  const today = toISODate(new Date())
   return (
     <div className="space-y-4">
       <Input
         label="UCAT exam date"
         type="date"
         value={state.examDate ?? ''}
-        min={today}
-        onChange={e => onUpdate({ examDate: e.target.value || null })}
+        min={UCAT_EXAM_WINDOW_START_ISO}
+        max={UCAT_EXAM_WINDOW_END_ISO}
+        hint="Official sittings only: 13 July to 24 September 2026."
+        onChange={e =>
+          onUpdate({
+            examDate: e.target.value ? clampToUcatExamWindow(e.target.value) : null,
+          })
+        }
       />
       <div>
         <label className="text-sm font-medium text-foreground mb-1.5 block">

@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 import { authLog, supabaseLog } from "./logger";
+import { isWithinUcatExamWindow } from "./ucatExamWindow";
 
 export type Stream =
   | "Medicine"
@@ -16,7 +17,7 @@ export type Profile = {
   role?: string | null;
   entry_year?: string | null;
   email_marketing_opt_in?: boolean;
-  /** UCAT exam date (April-September only). ISO date string YYYY-MM-DD. */
+  /** UCAT exam date (published sitting window). ISO date string YYYY-MM-DD. */
   ucat_exam_date?: string | null;
 };
 
@@ -69,7 +70,7 @@ export async function upsertProfile(
     lastName?: string | null;
     entryYear?: string | null;
     emailMarketingOptIn?: boolean | null;
-    /** UCAT exam date. ISO date YYYY-MM-DD; must be in April (4) through September (9). */
+    /** UCAT exam date. ISO YYYY-MM-DD; must fall in the app's published UCAT sitting window. */
     ucatExamDate?: string | null;
   }
 ): Promise<{ ok: boolean; error?: string }> {
@@ -105,7 +106,18 @@ export async function upsertProfile(
         }
       }
       if (extra.ucatExamDate !== undefined) {
-        payload.ucat_exam_date = extra.ucatExamDate && extra.ucatExamDate.trim() ? extra.ucatExamDate.trim() : null;
+        const trimmed =
+          extra.ucatExamDate && extra.ucatExamDate.trim()
+            ? extra.ucatExamDate.trim()
+            : null;
+        if (trimmed && !isWithinUcatExamWindow(trimmed)) {
+          return {
+            ok: false,
+            error:
+              "UCAT exam date must be within the official sitting dates for this cycle.",
+          };
+        }
+        payload.ucat_exam_date = trimmed;
       }
     }
     const { error } = await supabase.from("profiles").upsert(

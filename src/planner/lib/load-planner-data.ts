@@ -7,7 +7,7 @@ import type {
   DBWeeklyReflection,
 } from '../embedded/types'
 import { PLAN_TIMETABLE_TABLE } from '../embedded/lib/planner-db-tables'
-import { suggestHoursFromRecentSessions } from '../embedded/lib/utils'
+import { generateSlug, suggestHoursFromRecentSessions } from '../embedded/lib/utils'
 import { toISODate } from './date-utils'
 import { supabase } from '../../lib/supabase'
 
@@ -71,6 +71,57 @@ export async function fetchActivePlan(studentId: string): Promise<DBPlan | null>
     activePlanInFlight.set(studentId, pending)
   }
   return pending
+}
+
+/**
+ * Sentinel exam date for a minimal plan row used only so `mock_scores.plan_id` FK is satisfied.
+ * No calendar is generated; study-plan onboarding still treats this as “no real plan yet”.
+ */
+export const MOCKS_ONLY_PLAN_EXAM_SENTINEL = '2099-08-31'
+
+export function isMocksOnlyPlaceholderPlan(plan: Pick<DBPlan, 'exam_date'>): boolean {
+  return plan.exam_date === MOCKS_ONLY_PLAN_EXAM_SENTINEL
+}
+
+/** Ensure an active plan row exists so signed-in users can log mocks without completing study-plan onboarding. */
+export async function ensureActivePlanForMocks(studentId: string): Promise<DBPlan> {
+  let plan = await fetchActivePlan(studentId)
+  if (plan) return plan
+
+  const slug = generateSlug()
+  const { data: inserted, error: insErr } = await supabase
+    .from('plans')
+    .insert({
+      slug,
+      student_id: studentId,
+      exam_date: MOCKS_ONLY_PLAN_EXAM_SENTINEL,
+      status: 'active',
+    })
+    .select('*')
+    .single()
+
+  if (insErr) {
+    plan = await fetchActivePlan(studentId)
+    if (plan) return plan
+    throw new Error(insErr.message)
+  }
+
+  const row = inserted as DBPlan
+  const { error: memErr } = await supabase.from('plan_members').insert({
+    plan_id: row.id,
+    user_id: studentId,
+    role: 'student',
+  })
+  if (memErr) {
+    plan = await fetchActivePlan(studentId)
+    if (plan) return plan
+    throw new Error(memErr.message)
+  }
+
+  invalidateActivePlanCache(studentId)
+  const fresh = await fetchActivePlan(studentId)
+  if (!fresh) throw new Error('Plan was created but could not be reloaded')
+  return fresh
 }
 
 export async function loadTodayDashboard(
@@ -351,7 +402,7 @@ export async function loadMockScores(plan: DBPlan) {
   const { data: mockScores, error } = await supabase
     .from('mock_scores')
     .select('*')
-    .eq('plan_id', plan.id)
+    .eq('student_id', plan.student_id)
     .order('logged_date')
   if (error) throw new Error(error.message)
 

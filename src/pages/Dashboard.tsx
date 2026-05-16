@@ -33,6 +33,11 @@ import {
   hasActiveCourseUpsells,
   shouldShowDashboardTutoringUpsell,
 } from "../lib/productUpsell";
+import {
+  UCAT_EXAM_YEAR,
+  clampToUcatExamWindow,
+  ucatExamDayRangeInMonth,
+} from "../lib/ucatExamWindow";
 import { getGuestSessions } from "../lib/guestSessions";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 import { trackEvent } from "../lib/analytics";
@@ -147,13 +152,10 @@ export default function Dashboard() {
   const [guestSummary, setGuestSummary] = useState<GuestDashboardSummary | null>(null);
   const [syllogismSessions, setSyllogismSessions] = useState<SyllogismSession[]>([]);
 
-  // UCAT exam date (April-September only). Synced from profile when it loads.
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const defaultUcatYear = currentYear + (now.getMonth() >= 3 ? 1 : 0); // next exam window
-  const [ucatYear, setUcatYear] = useState<number>(defaultUcatYear);
-  const [ucatMonth, setUcatMonth] = useState<4 | 5 | 6 | 7 | 8 | 9>(4);
-  const [ucatDay, setUcatDay] = useState(1);
+  // UCAT exam date: official sitting dates only (13 Jul to 24 Sep 2026).
+  const [ucatYear, setUcatYear] = useState<number>(UCAT_EXAM_YEAR);
+  const [ucatMonth, setUcatMonth] = useState<7 | 8 | 9>(7);
+  const [ucatDay, setUcatDay] = useState(13);
   const [ucatSaveStatus, setUcatSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [ucatEditing, setUcatEditing] = useState(false);
 
@@ -174,15 +176,18 @@ export default function Dashboard() {
     else if (!streamEditing) setStreamEditValue(profile?.stream ?? "Medicine");
   }, [streamEditing, profile?.stream]);
 
-  const ucatMonthMaxDay = (m: number) => (m === 4 || m === 6 || m === 9 ? 30 : 31); // April, June, Sept = 30
-  const MONTH_NAMES = ["", "", "", "", "April", "May", "June", "July", "August", "September"] as const;
+  const UCAT_MONTH_NAMES: Record<number, string> = {
+    7: "July",
+    8: "August",
+    9: "September",
+  };
   const formatUcatDate = (iso: string) => {
     const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso.trim());
     if (!match) return iso;
     const d = parseInt(match[3], 10);
     const m = parseInt(match[2], 10);
     const y = match[1];
-    return `${d} ${MONTH_NAMES[m] ?? ""} ${y}`;
+    return `${d} ${UCAT_MONTH_NAMES[m] ?? ""} ${y}`;
   };
 
   useEffect(() => {
@@ -190,20 +195,25 @@ export default function Dashboard() {
     if (!raw || typeof raw !== "string") return;
     const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw.trim());
     if (!match) return;
-    const y = parseInt(match[1], 10);
-    const m = parseInt(match[2], 10);
-    const d = parseInt(match[3], 10);
-    if (Number.isFinite(y) && [4, 5, 6, 7, 8, 9].includes(m) && d >= 1 && d <= 31) {
-      setUcatYear(y);
-      setUcatMonth(m as 4 | 5 | 6 | 7 | 8 | 9);
-      setUcatDay(Math.min(d, ucatMonthMaxDay(m)));
-    }
+    const clamped = clampToUcatExamWindow(`${match[1]}-${match[2]}-${match[3]}`);
+    const cm = /^(\d{4})-(\d{2})-(\d{2})$/.exec(clamped);
+    if (!cm) return;
+    const y = parseInt(cm[1], 10);
+    const m = parseInt(cm[2], 10);
+    const d = parseInt(cm[3], 10);
+    const range = ucatExamDayRangeInMonth(m);
+    if (!range || y !== UCAT_EXAM_YEAR) return;
+    setUcatYear(y);
+    setUcatMonth(m as 7 | 8 | 9);
+    setUcatDay(Math.min(Math.max(d, range.minDay), range.maxDay));
   }, [profile?.ucat_exam_date]);
 
-  // Clamp day when month changes (e.g. 31 → September)
+  // Clamp day when month changes (window edge dates)
   useEffect(() => {
-    const maxDay = ucatMonthMaxDay(ucatMonth);
-    if (ucatDay > maxDay) setUcatDay(maxDay);
+    const range = ucatExamDayRangeInMonth(ucatMonth);
+    if (!range) return;
+    if (ucatDay < range.minDay) setUcatDay(range.minDay);
+    else if (ucatDay > range.maxDay) setUcatDay(range.maxDay);
   }, [ucatMonth, ucatDay]);
 
   // Track dashboard view once auth state is known (so we can tag authenticated vs guest)
@@ -1017,7 +1027,9 @@ export default function Dashboard() {
                 <div className="border-t border-slate-200 pt-3 mt-3">
                   <div className="flex flex-wrap items-center gap-2 mb-2">
                     <span className="text-slate-500">UCAT exam date:</span>
-                    <span className="text-xs text-slate-400">(April-September only)</span>
+                    <span className="text-xs text-slate-400">
+                      Official sittings · 13 July to 24 September {UCAT_EXAM_YEAR}
+                    </span>
                   </div>
                   {profile?.ucat_exam_date && !ucatEditing ? (
                     <div className="flex flex-wrap items-center gap-3 flex-1">
@@ -1043,19 +1055,14 @@ export default function Dashboard() {
                         className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
                         aria-label="Exam year"
                       >
-                        {[currentYear, currentYear + 1, currentYear + 2].map((y) => (
-                          <option key={y} value={y}>{y}</option>
-                        ))}
+                        <option value={UCAT_EXAM_YEAR}>{UCAT_EXAM_YEAR}</option>
                       </select>
                       <select
                         value={ucatMonth}
-                        onChange={(e) => setUcatMonth(parseInt(e.target.value, 10) as 4 | 5 | 6 | 7 | 8 | 9)}
+                        onChange={(e) => setUcatMonth(parseInt(e.target.value, 10) as 7 | 8 | 9)}
                         className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
                         aria-label="Exam month"
                       >
-                        <option value={4}>April</option>
-                        <option value={5}>May</option>
-                        <option value={6}>June</option>
                         <option value={7}>July</option>
                         <option value={8}>August</option>
                         <option value={9}>September</option>
@@ -1066,9 +1073,16 @@ export default function Dashboard() {
                         className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
                         aria-label="Exam day"
                       >
-                        {Array.from({ length: ucatMonthMaxDay(ucatMonth) }, (_, i) => i + 1).map((d) => (
-                          <option key={d} value={d}>{d}</option>
-                        ))}
+                        {(() => {
+                          const range = ucatExamDayRangeInMonth(ucatMonth);
+                          const min = range?.minDay ?? 1;
+                          const max = range?.maxDay ?? 31;
+                          return Array.from({ length: max - min + 1 }, (_, i) => i + min).map((d) => (
+                            <option key={d} value={d}>
+                              {d}
+                            </option>
+                          ));
+                        })()}
                       </select>
                       <button
                         type="button"
@@ -1076,7 +1090,13 @@ export default function Dashboard() {
                         onClick={async () => {
                           if (!user || !profile) return;
                           setUcatSaveStatus("saving");
-                          const day = Math.min(ucatDay, ucatMonthMaxDay(ucatMonth));
+                          const range = ucatExamDayRangeInMonth(ucatMonth);
+                          if (!range) {
+                            setUcatSaveStatus("error");
+                            setTimeout(() => setUcatSaveStatus("idle"), 3000);
+                            return;
+                          }
+                          const day = Math.min(Math.max(ucatDay, range.minDay), range.maxDay);
                           const iso = `${ucatYear}-${String(ucatMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
                           const { ok } = await upsertProfile(user.id, profile.full_name ?? null, profile.stream ?? null, { ucatExamDate: iso });
                           if (ok) {
