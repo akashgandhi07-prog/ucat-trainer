@@ -60,7 +60,7 @@ export default function SJTRatingQuiz({ question, onComplete }: Props) {
 
   function handleNext() {
     if (isLastItem) {
-      const total = [...scores].reduce((a, b) => a + b, 0);
+      const total = scores.reduce<number>((sum, s) => sum + s, 0);
       onComplete(total, question.items.length * 2);
     } else {
       setItemIndex((i) => i + 1);

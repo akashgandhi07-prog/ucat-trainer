@@ -81,6 +81,7 @@ export type RankingItem = {
   text: string;
   rank: 1 | 2 | 3;
   rationale: string;
+  gmpRef?: GmpReference;
 };
 
 export type SJTRatingQuestion = {
