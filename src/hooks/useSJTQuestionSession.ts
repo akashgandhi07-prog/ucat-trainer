@@ -34,8 +34,14 @@ export function useSJTQuestionSession(type: SJTQuestionType) {
         seenIdsRef.current = [...seenIdsRef.current, q.id];
       }
     } catch (e) {
-      if (controller.signal.aborted || isAbortError(e)) return;
-      setError(e instanceof Error ? e.message : "Failed to load question.");
+      // Only silently discard if WE deliberately aborted (navigation away, reset, etc.)
+      if (controller.signal.aborted) return;
+      // Everything else — network errors, timeouts, unexpected abort-shaped errors — surface as errors
+      setError(
+        !isAbortError(e) && e instanceof Error
+          ? e.message
+          : "Failed to load question. Please check your connection and try again.",
+      );
       setQuestion(null);
     } finally {
       if (!controller.signal.aborted) {
@@ -76,6 +82,31 @@ export function useSJTQuestionSession(type: SJTQuestionType) {
     };
   }, [type]); // eslint-disable-line react-hooks/exhaustive-deps -- remount when trainer type changes only
 
+  // Recover from BFCache restoration (browser back/forward) or tab re-focus while stuck loading
+  useEffect(() => {
+    const retry = () => {
+      if (loadAbortRef.current?.signal.aborted === false && !question) {
+        // Still loading but question never arrived — re-trigger
+        void loadInitial();
+      }
+    };
+
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) void loadInitial(); // page restored from BFCache
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") retry();
+    };
+
+    window.addEventListener("pageshow", onPageShow);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      window.removeEventListener("pageshow", onPageShow);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [loadInitial, question]);
+
   const advanceToNext = useCallback(async () => {
     if (prefetched) {
       setQuestion(prefetched);
@@ -99,8 +130,12 @@ export function useSJTQuestionSession(type: SJTQuestionType) {
         seenIdsRef.current = [...seenIdsRef.current, q.id];
       }
     } catch (e) {
-      if (controller.signal.aborted || isAbortError(e)) return;
-      setError(e instanceof Error ? e.message : "Failed to load question.");
+      if (controller.signal.aborted) return;
+      setError(
+        !isAbortError(e) && e instanceof Error
+          ? e.message
+          : "Failed to load question. Please check your connection and try again.",
+      );
     } finally {
       if (!controller.signal.aborted) {
         setLoading(false);

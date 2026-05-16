@@ -119,7 +119,6 @@ export default function WeekSummaryCard({
   const sessionDelta = totalThisWeek - prevWeekTotal;
 
   const dayDots: boolean[] = [];
-  const todayDay = new Date().getDay();
   for (let i = 6; i >= 0; i--) {
     const d = new Date(now - i * 24 * 60 * 60 * 1000);
     d.setHours(0, 0, 0, 0);
@@ -130,7 +129,6 @@ export default function WeekSummaryCard({
       sjtSessions.some((s) => startOfDayMs(new Date(s.created_at)) === ms);
     dayDots.push(had);
   }
-  void todayDay;
 
   const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const dotLabels: string[] = [];

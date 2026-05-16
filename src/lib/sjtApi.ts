@@ -1,10 +1,9 @@
 import { supabase } from "./supabase";
 import type { SJTQuestion, SJTQuestionType } from "../types/sjt";
 
+const FETCH_TIMEOUT_MS = 10_000;
+
 function toErrorMessage(e: unknown): string {
-  if (isAbortError(e)) {
-    return "Failed to load question. Please try again or check your connection.";
-  }
   if (e instanceof Error && e.message) return e.message;
   if (typeof e === "string" && e.trim().length > 0) return e;
   if (
@@ -57,12 +56,22 @@ export async function fetchRandomSJTQuestion(
     request = request.abortSignal(signal);
   }
 
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(
+      () => reject(new Error("Request timed out. Please check your connection and try again.")),
+      FETCH_TIMEOUT_MS,
+    );
+  });
+
   try {
-    const { data, error } = await request;
+    const { data, error } = await Promise.race([request, timeoutPromise]);
     if (error) throw error;
     return parseSjtQuestion(data);
   } catch (e) {
     if (isAbortError(e)) throw e;
     throw new Error(toErrorMessage(e));
+  } finally {
+    clearTimeout(timeoutId);
   }
 }

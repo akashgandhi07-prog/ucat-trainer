@@ -45,7 +45,7 @@ export default function TrainerFaqSection({
 }: TrainerFaqSectionProps) {
   const [openId, setOpenId] = useState<string | null>(faqs[0]?.id ?? null);
   const faqSchema = useMemo(() => buildFaqPageSchema(faqs), [faqs]);
-  const [groupOpen, setGroupOpen] = useState<boolean>(!collapseIntoSingleAccordion);
+  const [groupOpen, setGroupOpen] = useState<boolean>(true);
 
   if (!faqs.length) return null;
 

@@ -6,6 +6,12 @@ export interface MentalMathsStageConfig {
   questionCount: number;
 }
 
+export interface StagePersonalBest {
+  avgTimeMs: number;
+  accuracyPct: number;
+  completedAt: number;
+}
+
 export const MENTAL_MATHS_STAGES: MentalMathsStageConfig[] = [
   { id: 0, name: "Stage 1: Times tables & basics", requiredAccuracy: 80, maxAvgTimeMs: 8000, questionCount: 8 },
   { id: 1, name: "Stage 2: Percentages & shortcuts", requiredAccuracy: 80, maxAvgTimeMs: 10000, questionCount: 8 },
@@ -30,6 +36,31 @@ export function setHighestUnlockedStage(stageIndex: number): void {
   try {
     const clamped = Math.max(0, Math.min(stageIndex, MENTAL_MATHS_STAGES.length - 1));
     localStorage.setItem(STORAGE_KEY, String(clamped));
+  } catch {
+    // ignore
+  }
+}
+
+const PERSONAL_BEST_KEY = "ucat_mm_best_v1";
+
+export function getPersonalBests(): Record<number, StagePersonalBest> {
+  try {
+    const raw = localStorage.getItem(PERSONAL_BEST_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw) as Record<number, StagePersonalBest>;
+  } catch {
+    return {};
+  }
+}
+
+export function savePersonalBest(stageIndex: number, best: StagePersonalBest): void {
+  try {
+    const all = getPersonalBests();
+    const existing = all[stageIndex];
+    if (!existing || best.avgTimeMs < existing.avgTimeMs) {
+      all[stageIndex] = best;
+      localStorage.setItem(PERSONAL_BEST_KEY, JSON.stringify(all));
+    }
   } catch {
     // ignore
   }

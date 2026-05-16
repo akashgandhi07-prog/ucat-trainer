@@ -13,7 +13,7 @@ import { addMockScore, updateMockTargets } from '@/lib/planner-client'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts'
-import { BarChart3 } from 'lucide-react'
+import { BarChart3, Pencil, X, Check } from 'lucide-react'
 import { UCAT_APPLICATION_LINKS } from '../../../../data/ucatGuides'
 import { useAppShell } from '../../../../contexts/AppShellContext'
 import { appContentWidthClass } from '../../../../lib/appContentLayout'
@@ -23,13 +23,9 @@ interface MockScoresViewProps {
   planId: string
   mockScores: DBMockScore[]
   readOnly?: boolean
-  /** Browse-only (no plan): softer empty-state copy */
   browseOnly?: boolean
-  /** Goal VR+DM+QR combined total out of 2700. */
   initialTargetTotal?: number | null
-  /** Goal SJT band (1 = strongest in-app convention). */
   initialTargetSjtBand?: number | null
-  /** Save to localStorage (guest) instead of API */
   guestMode?: boolean
 }
 
@@ -54,7 +50,6 @@ function meanRound(nums: number[]): number | null {
   return Math.round(nums.reduce((a, b) => a + b, 0) / nums.length)
 }
 
-/** Summary stats for one mock type tab (list is chronological, oldest first). */
 function computeMockTabStats(list: DBMockScore[]) {
   if (list.length === 0) return null
 
@@ -78,13 +73,19 @@ function computeMockTabStats(list: DBMockScore[]) {
   }
   const bestSjt = sjtBands.length > 0 ? Math.min(...sjtBands) : null
 
+  // For full mocks every entry has all 3 sections so /2700 is correct.
+  // For mini mocks sections vary per entry — combined totals are not comparable.
+  const allHaveAllThree = list.every(
+    s => s.score_vr != null && s.score_dm != null && s.score_qr != null,
+  )
+
   return {
     count: list.length,
     avgVr: meanRound(vr),
     avgDm: meanRound(dm),
     avgQr: meanRound(qr),
-    avgTotal: meanRound(totals),
-    bestTotal: totals.length > 0 ? Math.max(...totals) : null,
+    avgTotal: allHaveAllThree ? meanRound(totals) : null,
+    bestTotal: allHaveAllThree ? (totals.length > 0 ? Math.max(...totals) : null) : null,
     bestSjt,
     latestSjt,
   }
@@ -110,10 +111,12 @@ export function MockScoresView({
   )
 
   const [appliedFingerprint, setAppliedFingerprint] = useState(propsFingerprint)
-
   const [scores, setScores] = useState(initialScores)
   const [targetTotalSaved, setTargetTotalSaved] = useState<number | null>(initialTargetTotal ?? null)
   const [targetSjtSaved, setTargetSjtSaved] = useState<number | null>(initialTargetSjtBand ?? null)
+
+  // Inline target editing
+  const [editingTarget, setEditingTarget] = useState(false)
   const [totalInput, setTotalInput] = useState(
     () => (initialTargetTotal != null ? String(initialTargetTotal) : ''),
   )
@@ -122,9 +125,32 @@ export function MockScoresView({
   )
   const [targetSaving, setTargetSaving] = useState(false)
   const [targetError, setTargetError] = useState<string | null>(null)
-  const [targetSavedNotice, setTargetSavedNotice] = useState<string | null>(null)
 
   const [showForm, setShowForm] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<Tab>('full')
+  const [form, setForm] = useState({
+    mockDate: toISODate(new Date()),
+    vr: '', dm: '', qr: '', sjt: '' as string,
+    mockType: 'full' as Tab,
+    mockSource: '' as MockSource | '',
+    weaknessTags: [] as string[],
+  })
+
+  function openTargetEdit() {
+    setTotalInput(targetTotalSaved != null ? String(targetTotalSaved) : '')
+    setSjtInput(targetSjtSaved != null ? String(targetSjtSaved) : '')
+    setTargetError(null)
+    setEditingTarget(true)
+  }
+
+  function cancelTargetEdit() {
+    setTotalInput(targetTotalSaved != null ? String(targetTotalSaved) : '')
+    setSjtInput(targetSjtSaved != null ? String(targetSjtSaved) : '')
+    setTargetError(null)
+    setEditingTarget(false)
+  }
 
   function toggleLogForm() {
     setShowForm((open) => {
@@ -137,16 +163,6 @@ export function MockScoresView({
       return next
     })
   }
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<Tab>('full')
-  const [form, setForm] = useState({
-    mockDate: toISODate(new Date()),
-    vr: '', dm: '', qr: '', sjt: '' as string,
-    mockType: 'full' as Tab,
-    mockSource: '' as MockSource | '',
-    weaknessTags: [] as string[],
-  })
 
   function toggleWeakness(id: string) {
     setForm(f => ({
@@ -163,9 +179,9 @@ export function MockScoresView({
     [scores, targetTotalSaved, targetSjtSaved],
   )
 
-  async function handleSaveTargets() {
+  async function handleSaveTargets(e?: React.FormEvent) {
+    e?.preventDefault()
     setTargetError(null)
-    setTargetSavedNotice(null)
     const trimmedTotal = totalInput.trim()
     const trimmedSjt = sjtInput.trim()
     let mockTargetTotal: number | null = null
@@ -173,7 +189,7 @@ export function MockScoresView({
     if (trimmedTotal !== '') {
       const n = Number(trimmedTotal)
       if (!Number.isInteger(n) || n < 900 || n > 2700) {
-        setTargetError('Combined total goal must be a whole number between 900 and 2700 (VR+DM+QR).')
+        setTargetError('Combined total must be 900–2700.')
         return
       }
       mockTargetTotal = n
@@ -181,7 +197,7 @@ export function MockScoresView({
     if (trimmedSjt !== '') {
       const n = Number(trimmedSjt)
       if (!Number.isInteger(n) || n < 1 || n > 4) {
-        setTargetError('SJT goal must be a band between 1 and 4.')
+        setTargetError('SJT band must be 1–4.')
         return
       }
       mockTargetSjtBand = n
@@ -191,21 +207,18 @@ export function MockScoresView({
     try {
       if (guestMode) {
         if (!getGuestPlanner()) {
-          setTargetError('No study plan on this device. Create a plan from Study Plan first.')
+          setTargetError('No study plan on this device.')
           return
         }
         updateGuestMockTargets(mockTargetTotal, mockTargetSjtBand)
-        setTargetTotalSaved(mockTargetTotal)
-        setTargetSjtSaved(mockTargetSjtBand)
-        setTargetSavedNotice('Goals saved on this device. Sign in to sync across devices.')
       } else {
         await updateMockTargets({ planId, mockTargetTotal, mockTargetSjtBand })
-        setTargetTotalSaved(mockTargetTotal)
-        setTargetSjtSaved(mockTargetSjtBand)
-        setTargetSavedNotice('Goals saved.')
       }
+      setTargetTotalSaved(mockTargetTotal)
+      setTargetSjtSaved(mockTargetSjtBand)
+      setEditingTarget(false)
     } catch (e) {
-      setTargetError(e instanceof Error ? e.message : 'Could not save goals')
+      setTargetError(e instanceof Error ? e.message : 'Could not save target')
     } finally {
       setTargetSaving(false)
     }
@@ -254,8 +267,7 @@ export function MockScoresView({
       setActiveTab(form.mockType)
       setForm(f => ({ ...f, vr: '', dm: '', qr: '', sjt: '', mockSource: '', weaknessTags: [] }))
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to save mock score'
-      setError(message)
+      setError(err instanceof Error ? err.message : 'Failed to save mock score')
     } finally {
       setLoading(false)
     }
@@ -265,12 +277,10 @@ export function MockScoresView({
   const miniScores = scores.filter(s => s.mock_type === 'mini')
   const displayed = activeTab === 'full' ? fullScores : miniScores
 
-  // Chart data per mock type: show date on x-axis
   function buildChartData(list: DBMockScore[]) {
     return list.map((s, i) => {
       const mainScores = [s.score_vr, s.score_dm, s.score_qr].filter(Boolean) as number[]
-      const total =
-        mainScores.length > 0 ? mainScores.reduce((a, b) => a + b, 0) : undefined
+      const total = mainScores.length === 3 ? mainScores.reduce((a, b) => a + b, 0) : undefined
       return {
         name: formatDate(parseDate(s.logged_date)),
         idx: i + 1,
@@ -310,61 +320,162 @@ export function MockScoresView({
     initialTargetSjtBand,
   ])
 
+  const hasTarget = targetTotalSaved != null || targetSjtSaved != null
+
   return (
-      <div
-        className={cn(
-          'px-4 sm:px-6 lg:px-8 py-6 md:py-10 space-y-8',
-          appContentWidthClass({ inAppShell }),
-        )}
-      >
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0 space-y-2 sm:space-y-3">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Mock Scores</h1>
-              <p className="text-sm sm:text-base text-muted-foreground mt-1">
-                Track your progress across full and mini mocks
-              </p>
-            </div>
-            <div className="rounded-xl border border-border bg-muted/30 px-3 py-2.5 sm:px-4 text-xs sm:text-sm text-muted-foreground leading-relaxed">
-              <span className="sm:hidden">
-                Raw marks? Convert with the{' '}
-                <a
-                  href={UCAT_APPLICATION_LINKS.scoreCalculator.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-medium text-primary hover:underline"
-                >
-                  UCAT score calculator
-                </a>{' '}
-                (scaled 300 to 900 per section) before logging.
-              </span>
-              <span className="hidden sm:inline">
-                If you only have raw marks, use the{' '}
-                <a
-                  href={UCAT_APPLICATION_LINKS.scoreCalculator.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-medium text-primary hover:underline"
-                >
-                  UCAT score calculator
-                </a>
-                {' at The UKCAT People to convert them to scaled scores (300 to 900 per section) before logging.'}
-              </span>
-            </div>
+    <div
+      className={cn(
+        'px-4 sm:px-6 lg:px-8 py-6 md:py-10 space-y-8',
+        appContentWidthClass({ inAppShell }),
+      )}
+    >
+      {/* Header */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 space-y-2">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Mock Scores</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
+              Track your progress across full and mini mocks
+            </p>
           </div>
+
+          {/* Inline target */}
           {!readOnly && (
-            <Button
-              type="button"
-              onClick={toggleLogForm}
-              variant={showForm ? 'secondary' : 'primary'}
-              className="w-full shrink-0 sm:w-auto"
-            >
-              {showForm ? 'Cancel' : '+ Log scores'}
-            </Button>
+            <div className="flex items-center gap-2 min-h-[28px]">
+              {editingTarget ? (
+                <form
+                  onSubmit={handleSaveTargets}
+                  className="flex flex-wrap items-center gap-2"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <label className="text-xs text-slate-500 whitespace-nowrap">Target (VR+DM+QR):</label>
+                    <input
+                      type="number"
+                      min={900}
+                      max={2700}
+                      step={10}
+                      placeholder="e.g. 2100"
+                      value={totalInput}
+                      onChange={e => { setTotalInput(e.target.value); setTargetError(null) }}
+                      className="w-24 h-7 rounded border border-slate-200 bg-white px-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <span className="text-xs text-slate-400">/ 2700</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <label className="text-xs text-slate-500">SJT:</label>
+                    <select
+                      value={sjtInput}
+                      onChange={e => { setSjtInput(e.target.value); setTargetError(null) }}
+                      className="h-7 rounded border border-slate-200 bg-white px-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Any band</option>
+                      <option value="1">Band 1</option>
+                      <option value="2">Band 2</option>
+                      <option value="3">Band 3</option>
+                      <option value="4">Band 4</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="submit"
+                      disabled={targetSaving}
+                      className="flex items-center gap-1 h-7 rounded bg-blue-600 px-2.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      <Check size={11} />
+                      {targetSaving ? 'Saving…' : 'Save'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={cancelTargetEdit}
+                      className="flex items-center gap-1 h-7 rounded border border-slate-200 bg-white px-2.5 text-xs text-slate-500 hover:bg-slate-50"
+                    >
+                      <X size={11} />
+                      Cancel
+                    </button>
+                  </div>
+                  {targetError && (
+                    <p className="w-full text-xs text-red-600">{targetError}</p>
+                  )}
+                </form>
+              ) : (
+                <button
+                  type="button"
+                  onClick={openTargetEdit}
+                  className="group flex items-center gap-1.5 rounded-full border border-dashed border-slate-300 bg-slate-50 px-3 py-1 text-xs text-slate-500 transition-colors hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700"
+                >
+                  {hasTarget ? (
+                    <>
+                      <span className="font-medium text-slate-700">
+                        {targetTotalSaved != null && `${targetTotalSaved}/2700`}
+                        {targetTotalSaved != null && targetSjtSaved != null && ' · '}
+                        {targetSjtSaved != null && `SJT Band ${targetSjtSaved}`}
+                      </span>
+                      <span className="text-slate-400">target</span>
+                    </>
+                  ) : (
+                    <span>+ Set target</span>
+                  )}
+                  <Pencil size={10} className="opacity-50 group-hover:opacity-100" />
+                </button>
+              )}
+            </div>
           )}
+
+          {/* Read-only target display */}
+          {readOnly && hasTarget && (
+            <p className="text-sm text-slate-600">
+              {targetTotalSaved != null && (
+                <span>Target <span className="font-semibold text-slate-900">{targetTotalSaved}</span> / 2700</span>
+              )}
+              {targetTotalSaved != null && targetSjtSaved != null && ' · '}
+              {targetSjtSaved != null && (
+                <span>SJT Band <span className="font-semibold text-slate-900">{targetSjtSaved}</span></span>
+              )}
+            </p>
+          )}
+
+          <div className="rounded-xl border border-border bg-muted/30 px-3 py-2.5 sm:px-4 text-xs sm:text-sm text-muted-foreground leading-relaxed">
+            <span className="sm:hidden">
+              Raw marks? Convert with the{' '}
+              <a
+                href={UCAT_APPLICATION_LINKS.scoreCalculator.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-primary hover:underline"
+              >
+                UCAT score calculator
+              </a>{' '}
+              (scaled 300–900 per section) before logging.
+            </span>
+            <span className="hidden sm:inline">
+              If you only have raw marks, use the{' '}
+              <a
+                href={UCAT_APPLICATION_LINKS.scoreCalculator.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-primary hover:underline"
+              >
+                UCAT score calculator
+              </a>
+              {' at The UKCAT People to convert them to scaled scores (300–900 per section) before logging.'}
+            </span>
+          </div>
         </div>
 
-      {showForm && !readOnly ? (
+        {!readOnly && (
+          <Button
+            type="button"
+            onClick={toggleLogForm}
+            variant={showForm ? 'secondary' : 'primary'}
+            className="w-full shrink-0 sm:w-auto"
+          >
+            {showForm ? 'Cancel' : '+ Log scores'}
+          </Button>
+        )}
+      </div>
+
+      {/* Log form */}
+      {showForm && !readOnly && (
         <div ref={formSectionRef} className="scroll-mt-24">
           <Card>
             <CardHeader>
@@ -412,21 +523,21 @@ export function MockScoresView({
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   <Input
-                    label="VR (300-900)"
+                    label="VR (300–900)"
                     type="number" min={300} max={900} step={10}
                     placeholder="e.g. 650"
                     value={form.vr}
                     onChange={e => setForm(f => ({ ...f, vr: e.target.value }))}
                   />
                   <Input
-                    label="DM (300-900)"
+                    label="DM (300–900)"
                     type="number" min={300} max={900} step={10}
                     placeholder="e.g. 650"
                     value={form.dm}
                     onChange={e => setForm(f => ({ ...f, dm: e.target.value }))}
                   />
                   <Input
-                    label="QR (300-900)"
+                    label="QR (300–900)"
                     type="number" min={300} max={900} step={10}
                     placeholder="e.g. 650"
                     value={form.qr}
@@ -447,6 +558,12 @@ export function MockScoresView({
                     </select>
                   </div>
                 </div>
+
+                {form.mockType === 'mini' && (
+                  <p className="text-xs text-slate-400">
+                    For a mini mock, only fill in the sections you practised.
+                  </p>
+                )}
 
                 <div>
                   <p className="text-sm font-medium text-slate-700 mb-2">Where did you leak marks?</p>
@@ -474,141 +591,27 @@ export function MockScoresView({
                   </div>
                 </div>
 
-                {form.mockType === 'mini' && (
-                  <p className="text-xs text-slate-400">
-                    For a mini mock, only fill in the sections you practiced.
-                  </p>
-                )}
                 {error && (
                   <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
                     {error}
                   </p>
                 )}
-
                 <Button type="submit" loading={loading}>Save scores</Button>
               </form>
             </CardContent>
           </Card>
         </div>
-      ) : null}
+      )}
 
-      {/* Goals + encouragement */}
-      <div className="space-y-4">
-        <Card className="border-slate-200">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Your mock goals</CardTitle>
-            {!readOnly && (
-              <p className="text-sm text-slate-500 font-normal mt-1">
-                Set your combined VR + DM + QR target out of 2700, plus an optional SJT band. Encouragement below
-                uses these once mocks are logged.
-              </p>
-            )}
-          </CardHeader>
-          <CardContent className="space-y-4 pt-0">
-            {readOnly ? (
-              <p className="text-sm text-slate-600">
-                {targetTotalSaved != null || targetSjtSaved != null ? (
-                  <>
-                    {targetTotalSaved != null && (
-                      <span>
-                        Goal total{' '}
-                        <span className="font-semibold text-slate-900">
-                          {targetTotalSaved}
-                        </span>
-                        {' '}/ 2700
-                      </span>
-                    )}
-                    {targetTotalSaved != null && targetSjtSaved != null && ' · '}
-                    {targetSjtSaved != null && (
-                      <span>
-                        SJT band{' '}
-                        <span className="font-semibold text-slate-900">{targetSjtSaved}</span>
-                      </span>
-                    )}
-                  </>
-                ) : (
-                  <span className="text-slate-500">
-                    {browseOnly
-                      ? 'Register for free to save mock goals and scores to your account.'
-                      : 'No goals stored for this student yet.'}
-                  </span>
-                )}
-              </p>
-            ) : (
-              <>
-                {guestMode && (
-                  <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                    You&apos;re browsing as a guest. Goals save in this browser only - sign in for cloud backup
-                    across devices.
-                  </p>
-                )}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Input
-                    label="Target VR + DM + QR total (optional)"
-                    type="number"
-                    min={900}
-                    max={2700}
-                    step={10}
-                    placeholder="e.g. 2040 · out of 2700"
-                    value={totalInput}
-                    onChange={e => {
-                      setTotalInput(e.target.value)
-                      setTargetSavedNotice(null)
-                    }}
-                  />
-                  <div>
-                    <label className="text-sm font-medium text-slate-700 mb-1.5 block">
-                      Target SJT band (optional)
-                    </label>
-                    <select
-                      value={sjtInput}
-                      onChange={e => {
-                        setSjtInput(e.target.value)
-                        setTargetSavedNotice(null)
-                      }}
-                      className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">- Not set -</option>
-                      <option value="1">Band 1 (best)</option>
-                      <option value="2">Band 2</option>
-                      <option value="3">Band 3</option>
-                      <option value="4">Band 4</option>
-                    </select>
-                  </div>
-                </div>
-                {targetError && (
-                  <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-                    {targetError}
-                  </p>
-                )}
-                {targetSavedNotice && (
-                  <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-                    {targetSavedNotice}
-                  </p>
-                )}
-                <Button type="button" variant="secondary" loading={targetSaving} onClick={handleSaveTargets}>
-                  Save goals
-                </Button>
-              </>
-            )}
+      {/* Encouragement */}
+      {encouragement && (
+        <Card className="border-blue-100 bg-gradient-to-br from-blue-50/80 to-white">
+          <CardContent className="pt-6 pb-5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-blue-700 mb-2">Momentum</p>
+            <p className="text-sm text-slate-700 leading-relaxed">{encouragement}</p>
           </CardContent>
         </Card>
-
-        {!readOnly && scores.length === 0 && (
-          <p className="text-sm text-slate-500 px-1">
-            After your first logged mock, a short personalised note appears here comparing progress to these goals.
-          </p>
-        )}
-
-        {encouragement && (
-          <Card className="border-blue-100 bg-gradient-to-br from-blue-50/80 to-white">
-            <CardContent className="pt-6 pb-5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-blue-700 mb-2">Momentum</p>
-              <p className="text-sm text-slate-700 leading-relaxed">{encouragement}</p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+      )}
 
       {/* Tabs */}
       <div className="flex w-full gap-2 sm:w-auto sm:max-w-xl">
@@ -633,6 +636,7 @@ export function MockScoresView({
         ))}
       </div>
 
+      {/* Summary stats */}
       {tabStats && (
         <Card className="border-slate-200">
           <CardHeader className="pb-3">
@@ -640,11 +644,12 @@ export function MockScoresView({
               Summary · {activeTab === 'full' ? 'full' : 'mini'} mocks
             </CardTitle>
             <p className="text-sm text-slate-500 font-normal mt-0.5">
-              From {tabStats.count} logged {tabStats.count === 1 ? 'mock' : 'mocks'} in this tab.
+              From {tabStats.count} logged {tabStats.count === 1 ? 'mock' : 'mocks'}.
             </p>
           </CardHeader>
           <CardContent className="pt-0">
             <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-4">
+              {/* Combined total only shown when all entries have all 3 sections (i.e. full mocks) */}
               {tabStats.avgTotal != null && (
                 <div>
                   <dt className="text-xs font-medium text-slate-500">Avg combined (VR+DM+QR)</dt>
@@ -666,19 +671,28 @@ export function MockScoresView({
               {tabStats.avgVr != null && (
                 <div>
                   <dt className="text-xs font-medium text-slate-500">Avg VR</dt>
-                  <dd className="text-lg font-semibold tabular-nums text-slate-900 mt-0.5">{tabStats.avgVr}</dd>
+                  <dd className="text-lg font-semibold tabular-nums text-slate-900 mt-0.5">
+                    {tabStats.avgVr}
+                    <span className="text-xs font-normal text-slate-400 ml-1">/ 900</span>
+                  </dd>
                 </div>
               )}
               {tabStats.avgDm != null && (
                 <div>
                   <dt className="text-xs font-medium text-slate-500">Avg DM</dt>
-                  <dd className="text-lg font-semibold tabular-nums text-slate-900 mt-0.5">{tabStats.avgDm}</dd>
+                  <dd className="text-lg font-semibold tabular-nums text-slate-900 mt-0.5">
+                    {tabStats.avgDm}
+                    <span className="text-xs font-normal text-slate-400 ml-1">/ 900</span>
+                  </dd>
                 </div>
               )}
               {tabStats.avgQr != null && (
                 <div>
                   <dt className="text-xs font-medium text-slate-500">Avg QR</dt>
-                  <dd className="text-lg font-semibold tabular-nums text-slate-900 mt-0.5">{tabStats.avgQr}</dd>
+                  <dd className="text-lg font-semibold tabular-nums text-slate-900 mt-0.5">
+                    {tabStats.avgQr}
+                    <span className="text-xs font-normal text-slate-400 ml-1">/ 900</span>
+                  </dd>
                 </div>
               )}
               {tabStats.bestSjt != null &&
@@ -719,7 +733,10 @@ export function MockScoresView({
             { key: 'DM', color: '#22c55e', label: 'Decision Making', kind: 'section' as const },
             { key: 'QR', color: '#f59e0b', label: 'Quantitative Reasoning', kind: 'section' as const },
             { key: 'SJT', color: '#a855f7', label: 'Situational Judgement', kind: 'sjt' as const },
-            { key: 'TOTAL', color: '#475569', label: 'VR + DM + QR total', kind: 'total' as const },
+            // TOTAL chart only shown for full mocks (all 3 sections present)
+            ...(activeTab === 'full'
+              ? [{ key: 'TOTAL' as const, color: '#475569', label: 'VR + DM + QR total', kind: 'total' as const }]
+              : []),
           ] as const).map(({ key, color, label, kind }) => {
             const hasData = chartData.some(d => (d as Record<string, unknown>)[key] !== undefined)
             if (!hasData) return null
@@ -755,7 +772,7 @@ export function MockScoresView({
                       )}
                       {kind === 'total' && (
                         <YAxis
-                          domain={[0, 2700]}
+                          domain={[900, 2700]}
                           tick={{ fontSize: 10, fill: '#64748b' }}
                           tickCount={5}
                           width={44}
@@ -764,12 +781,8 @@ export function MockScoresView({
                       <Tooltip
                         labelFormatter={(_, payload) => payload?.[0]?.payload?.name ?? ''}
                         formatter={(v) => {
-                          if (kind === 'sjt') {
-                            return [`Band ${v as number}`, 'SJT']
-                          }
-                          if (kind === 'total') {
-                            return [`${v as number} / 2700`, 'Total']
-                          }
+                          if (kind === 'sjt') return [`Band ${v as number}`, 'SJT']
+                          if (kind === 'total') return [`${v as number} / 2700`, 'Total']
                           return [v as number, key]
                         }}
                       />
@@ -813,9 +826,8 @@ export function MockScoresView({
               <tbody className="divide-y divide-slate-50">
                 {[...displayed].reverse().map(score => {
                   const mainScores = [score.score_vr, score.score_dm, score.score_qr].filter(Boolean) as number[]
-                  const total = mainScores.length > 0
-                    ? mainScores.reduce((a, b) => a + b, 0)
-                    : null
+                  const total = mainScores.length > 0 ? mainScores.reduce((a, b) => a + b, 0) : null
+                  const maxOut = mainScores.length * 900
                   const avg = total !== null ? Math.round(total / mainScores.length) : null
                   return (
                     <tr key={score.id} className="hover:bg-slate-50">
@@ -845,7 +857,9 @@ export function MockScoresView({
                       </td>
                       <td className="px-4 py-3 font-semibold text-slate-900">
                         {total ?? '-'}
-                        {total !== null && <span className="ml-1 text-xs font-normal text-slate-400">/2700</span>}
+                        {total !== null && (
+                          <span className="ml-1 text-xs font-normal text-slate-400">/ {maxOut}</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 font-semibold text-slate-900">
                         {avg ?? '-'}
