@@ -54,6 +54,7 @@ export default function HomePage() {
           onVerbal={() => navigate("/verbal")}
           onDecision={() => navigate("/decision-making")}
           onQuant={() => navigate("/quantitative")}
+          onSjt={() => navigate("/ucat-sjt-practice")}
         />
         <LandingHowItWorks />
         <LandingDrillCatalog />

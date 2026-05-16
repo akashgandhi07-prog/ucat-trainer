@@ -13,6 +13,7 @@ import {
   Library,
   LineChart,
   Scale,
+  Users,
 } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { supabase } from "../../lib/supabase";
@@ -288,6 +289,21 @@ export default function AppSidebar({
                 <Calculator className="h-4 w-4" aria-hidden />
               </NavIcon>
               {!iconOnly ? <span>Quantitative Reasoning</span> : null}
+            </>
+          )}
+        </NavLink>
+        <NavLink
+          to="/ucat-sjt-practice"
+          className={(p) => navClass(p, iconOnly)}
+          title="Situational Judgement"
+          onClick={onNavigate}
+        >
+          {({ isActive }) => (
+            <>
+              <NavIcon active={isActive}>
+                <Users className="h-4 w-4" aria-hidden />
+              </NavIcon>
+              {!iconOnly ? <span>Situational Judgement</span> : null}
             </>
           )}
         </NavLink>

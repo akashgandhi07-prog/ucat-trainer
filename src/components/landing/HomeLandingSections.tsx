@@ -14,6 +14,7 @@ import {
   Star,
   Target,
   TrendingUp,
+  Users,
   Zap,
 } from "lucide-react";
 import ProductUpsell from "../layout/ProductUpsell";
@@ -41,18 +42,20 @@ import { trackEvent } from "../../lib/analytics";
 
 const EXTERNAL = { target: "_blank" as const, rel: "noopener noreferrer" };
 
-const SECTION_ORDER: LandingTrainerSection[] = ["vr", "dm", "qr"];
+const SECTION_ORDER: LandingTrainerSection[] = ["vr", "dm", "qr", "sjt"];
 
 const SECTION_ICONS: Record<LandingTrainerSection, typeof BookOpen> = {
   vr: BookOpen,
   dm: Scale,
   qr: Calculator,
+  sjt: Users,
 };
 
 const SECTION_ACCENT: Record<LandingTrainerSection, string> = {
   vr: "text-blue-600 bg-blue-50 border-blue-100",
   dm: "text-amber-600 bg-amber-50 border-amber-100",
   qr: "text-emerald-600 bg-emerald-50 border-emerald-100",
+  sjt: "text-purple-600 bg-purple-50 border-purple-100",
 };
 
 function LandingContainer({ children, className }: { children: ReactNode; className?: string }) {
@@ -174,9 +177,10 @@ type SectionHubProps = {
   onVerbal: () => void;
   onDecision: () => void;
   onQuant: () => void;
+  onSjt: () => void;
 };
 
-export function LandingSectionHub({ onVerbal, onDecision, onQuant }: SectionHubProps) {
+export function LandingSectionHub({ onVerbal, onDecision, onQuant, onSjt }: SectionHubProps) {
   const cards = [
     {
       onClick: onVerbal,
@@ -202,6 +206,14 @@ export function LandingSectionHub({ onVerbal, onDecision, onQuant }: SectionHubP
       desc: "Calculator keypad speed and mental maths fluency.",
       label: "2 trainers",
     },
+    {
+      onClick: onSjt,
+      icon: Users,
+      accent: "bg-purple-50 text-purple-600 group-hover:bg-purple-100",
+      title: "Situational Judgement",
+      desc: "Appropriateness rating, importance rating and ranking questions.",
+      label: "3 trainers",
+    },
   ] as const;
 
   return (
@@ -215,7 +227,7 @@ export function LandingSectionHub({ onVerbal, onDecision, onQuant }: SectionHubP
             under two minutes.
           </SectionIntro>
         </div>
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
           {cards.map(({ onClick, icon: Icon, accent, title, desc, label }) => (
             <button
               key={title}

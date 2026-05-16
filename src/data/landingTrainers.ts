@@ -1,4 +1,4 @@
-export type LandingTrainerSection = "vr" | "dm" | "qr";
+export type LandingTrainerSection = "vr" | "dm" | "qr" | "sjt";
 
 export type LandingTrainer = {
   id: string;
@@ -27,6 +27,11 @@ export const LANDING_TRAINER_SECTION_META: Record<
     label: "Quantitative Reasoning",
     hubHref: "/quantitative",
     summary: "On-screen calculator fluency and non-calculator mental maths.",
+  },
+  sjt: {
+    label: "Situational Judgement",
+    hubHref: "/ucat-sjt-practice",
+    summary: "Appropriateness rating, importance rating and ranking — all grounded in GMC Good Medical Practice.",
   },
 };
 
@@ -94,6 +99,30 @@ export const LANDING_TRAINERS: readonly LandingTrainer[] = [
     tag: "No calculator",
     description: "Stages of arithmetic and estimation when the calculator is not an option.",
     href: "/ucat-mental-maths-trainer",
+  },
+  {
+    id: "sjt-appropriateness",
+    section: "sjt",
+    title: "Appropriateness Rater",
+    tag: "4-point scale",
+    description: "Rate each response as Very Appropriate, Appropriate, Inappropriate or Very Inappropriate.",
+    href: "/ucat-sjt-appropriateness-trainer",
+  },
+  {
+    id: "sjt-importance",
+    section: "sjt",
+    title: "Importance Rater",
+    tag: "Partial credit",
+    description: "Rate each consideration from Very Important down to Not Important at All.",
+    href: "/ucat-sjt-importance-trainer",
+  },
+  {
+    id: "sjt-ranking",
+    section: "sjt",
+    title: "Ranking Trainer",
+    tag: "Most / least",
+    description: "Select the most and least appropriate response from three options.",
+    href: "/ucat-sjt-ranking-trainer",
   },
 ] as const;
 
