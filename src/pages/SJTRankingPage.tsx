@@ -72,16 +72,16 @@ export default function SJTRankingPage() {
               <ArrowUpDown className="w-5 h-5" aria-hidden />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-slate-900">Ranking Trainer</h1>
-              <p className="text-xs text-slate-500">
-                Select most and least appropriate from three options · One mark each
+              <h1 className="text-lg font-bold text-foreground">Ranking Trainer</h1>
+              <p className="text-xs text-muted-foreground">
+                Select most and least appropriate from three options. One mark each.
               </p>
             </div>
             {questionsAttempted > 0 && (
               <div className="ml-auto text-right">
-                <p className="text-xs text-slate-500">{questionsAttempted} done</p>
+                <p className="text-xs text-muted-foreground">{questionsAttempted} done</p>
                 {sessionPct != null && (
-                  <p className="text-sm font-bold text-slate-700">{sessionPct}%</p>
+                  <p className="text-sm font-bold text-foreground">{sessionPct}%</p>
                 )}
               </div>
             )}
@@ -95,35 +95,35 @@ export default function SJTRankingPage() {
 
           {phase === "intro" && (
             <div className="space-y-5">
-              <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                <h2 className="text-sm font-semibold text-slate-700 mb-3">How this trainer works</h2>
-                <div className="space-y-2 text-sm text-slate-600">
+              <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+                <h2 className="text-sm font-semibold text-foreground mb-3">How this trainer works</h2>
+                <div className="space-y-2 text-sm text-muted-foreground">
                   <p>1. You will be presented with a clinical or training scenario and three possible responses.</p>
-                  <p>2. Select the <strong>most appropriate</strong> response and the <strong>least appropriate</strong> response.</p>
+                  <p>2. Select the <strong className="text-foreground">most appropriate</strong> response and the <strong className="text-foreground">least appropriate</strong> response.</p>
                   <p>3. After submitting, you will see a full rationale for each option's position in the ranking.</p>
                 </div>
               </div>
-              <div className="rounded-xl border border-purple-200 bg-purple-50/60 p-4">
-                <p className="text-xs font-semibold text-purple-700 uppercase tracking-wider mb-1">The middle option</p>
-                <p className="text-sm text-purple-800">
-                  You are not scored on the middle option — but reading its rationale helps you understand the gradient between best and worst. That gradient is where most students lose marks.
+              <div className="rounded-xl border border-border bg-secondary p-4">
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">The middle option</p>
+                <p className="text-sm text-foreground">
+                  You are not scored on the middle option, but reading its rationale helps you understand the gradient between best and worst. That gradient is where most students lose marks.
                 </p>
               </div>
               {question ? (
                 <button
                   type="button"
                   onClick={() => setPhase("quiz")}
-                  className="w-full min-h-[44px] rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm transition-colors inline-flex items-center justify-center gap-2"
+                  className="w-full min-h-[44px] rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors inline-flex items-center justify-center gap-2"
                 >
                   Start practising
                   <ChevronRight className="w-4 h-4" aria-hidden />
                 </button>
               ) : (
-                <p className="text-sm text-slate-500 text-center">No ranking questions available yet.</p>
+                <p className="text-sm text-muted-foreground text-center">No ranking questions available yet.</p>
               )}
               <p className="text-center text-sm">
-                <Link to="/ucat-sjt-practice" className="text-slate-500 hover:text-blue-600">
-                  ← Back to SJT hub
+                <Link to="/ucat-sjt-practice" className="text-muted-foreground hover:text-primary">
+                  Back to SJT hub
                 </Link>
               </p>
             </div>
@@ -140,20 +140,20 @@ export default function SJTRankingPage() {
                   className={cn(
                     "rounded-xl border p-5 text-center",
                     lastScore.score === 2
-                      ? "border-emerald-200 bg-emerald-50"
+                      ? "bg-training-success-muted border-training-success"
                       : lastScore.score === 1
-                      ? "border-amber-200 bg-amber-50"
-                      : "border-red-200 bg-red-50"
+                      ? "bg-amber-50 border-amber-200"
+                      : "bg-destructive-muted border-destructive"
                   )}
                 >
-                  <p className="text-2xl font-bold text-slate-900 mb-1">
+                  <p className="text-2xl font-bold text-foreground mb-1">
                     {lastScore.score} / 2
                   </p>
-                  <p className="text-sm text-slate-600">
+                  <p className="text-sm text-muted-foreground">
                     {lastScore.score === 2 ? "Both correct" : lastScore.score === 1 ? "One correct" : "Neither correct"}
                   </p>
                   {sessionPct != null && questionsAttempted > 1 && (
-                    <p className="text-xs text-slate-500 mt-2">
+                    <p className="text-xs text-muted-foreground mt-2">
                       Session total: {sessionScore} / {sessionMax} ({sessionPct}%) across {questionsAttempted} scenarios
                     </p>
                   )}
@@ -163,7 +163,7 @@ export default function SJTRankingPage() {
                 <button
                   type="button"
                   onClick={handleNext}
-                  className="flex-1 min-h-[44px] rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm transition-colors inline-flex items-center justify-center gap-2"
+                  className="flex-1 min-h-[44px] rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors inline-flex items-center justify-center gap-2"
                 >
                   Next scenario
                   <ChevronRight className="w-4 h-4" aria-hidden />
@@ -171,15 +171,15 @@ export default function SJTRankingPage() {
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="flex-1 min-h-[44px] rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm transition-colors inline-flex items-center justify-center gap-2"
+                  className="flex-1 min-h-[44px] rounded-xl border border-border bg-card hover:bg-secondary text-foreground font-semibold text-sm transition-colors inline-flex items-center justify-center gap-2"
                 >
                   <RotateCcw className="w-4 h-4" aria-hidden />
                   Reset session
                 </button>
               </div>
               <p className="text-center text-sm">
-                <Link to="/ucat-sjt-practice" className="text-slate-500 hover:text-blue-600">
-                  ← Back to SJT hub
+                <Link to="/ucat-sjt-practice" className="text-muted-foreground hover:text-primary">
+                  Back to SJT hub
                 </Link>
               </p>
             </div>
@@ -187,11 +187,12 @@ export default function SJTRankingPage() {
 
         </div>
       </main>
-      <UcatGuidesPanel context="sjtHub" />
+      <UcatGuidesPanel embedded context="sjtHub" />
       <TrainerFaqSection
+        embedded
         id="sjt-ranking-faq"
         title="Common questions about the UCAT SJT"
-        intro="Frequently asked questions about the Situational Judgement Test — how it works, how it's scored, and how to approach each question type using GMC Good Medical Practice."
+        intro="Frequently asked questions about the Situational Judgement Test: how it works, how it's scored, and how to approach each question type using GMC Good Medical Practice."
         faqs={trainerFaqs.sjtHub}
         collapseIntoSingleAccordion
       />
