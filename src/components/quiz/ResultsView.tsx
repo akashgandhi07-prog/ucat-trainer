@@ -4,6 +4,27 @@ import type { QuestionBreakdownItem } from "./DistortionQuiz";
 import ReReadPassageModal from "./ReReadPassageModal";
 import { PostDrillUpsell } from "../layout/ProductUpsell";
 
+function HighlightedText({
+  text,
+  fragment,
+  className,
+}: {
+  text: string;
+  fragment: string;
+  className: string;
+}) {
+  if (!fragment) return <>{text}</>;
+  const idx = text.toLowerCase().indexOf(fragment.toLowerCase());
+  if (idx === -1) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <mark className={className}>{text.slice(idx, idx + fragment.length)}</mark>
+      {text.slice(idx + fragment.length)}
+    </>
+  );
+}
+
 export type WpmRating =
   | "too_slow"
   | "slightly_slow"
@@ -200,13 +221,63 @@ export default function ResultsView({
                     </p>
                   )}
                   {item.passageSnippet && (
-                    <div className="mt-3 pt-3 border-t border-slate-200/60">
-                      <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">
-                        From the passage
-                      </p>
-                      <p className="text-sm text-slate-700 bg-amber-50/80 border-l-2 border-amber-400 pl-3 py-1.5 rounded-r">
-                        {item.passageSnippet}
-                      </p>
+                    <div className="mt-3 pt-3 border-t border-slate-200/60 space-y-2">
+                      {item.correctAnswerRaw === "false" && item.originalFragment && item.replacedFragment ? (
+                        <>
+                          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                            What changed
+                          </p>
+                          <div className="space-y-1.5">
+                            <div>
+                              <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wide mb-0.5">Statement (what you saw)</p>
+                              <p className="text-sm text-slate-700 bg-red-50 border-l-2 border-red-400 pl-3 py-1.5 rounded-r">
+                                <HighlightedText
+                                  text={item.statement}
+                                  fragment={item.replacedFragment}
+                                  className="bg-red-200 text-red-900 font-semibold rounded px-0.5 not-italic"
+                                />
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wide mb-0.5">Original passage</p>
+                              <p className="text-sm text-slate-700 bg-green-50 border-l-2 border-green-500 pl-3 py-1.5 rounded-r">
+                                <HighlightedText
+                                  text={item.passageSnippet}
+                                  fragment={item.originalFragment}
+                                  className="bg-green-200 text-green-900 font-semibold rounded px-0.5 not-italic"
+                                />
+                              </p>
+                            </div>
+                          </div>
+                          {item.distortionLabel && (
+                            <p className="text-xs text-slate-500">
+                              Trap: <span className="font-medium text-slate-600">{item.distortionLabel}</span>
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                            From the passage
+                          </p>
+                          <p className="text-sm text-slate-700 bg-amber-50/80 border-l-2 border-amber-400 pl-3 py-1.5 rounded-r">
+                            {item.passageSnippet}
+                          </p>
+                          {item.correctAnswerRaw === "false" && (
+                            <p className="text-xs text-slate-600">
+                              {item.distortionLabel
+                                ? <>Trap: <span className="font-medium text-slate-700">{item.distortionLabel}</span>.</>
+                                : "The statement changes or overstates what the passage says."}
+                            </p>
+                          )}
+                          {item.correctAnswerRaw === "true" && (
+                            <p className="text-xs text-slate-500">The statement is a paraphrase of this sentence.</p>
+                          )}
+                          {item.correctAnswerRaw === "cant_tell" && (
+                            <p className="text-xs text-slate-500">The passage doesn't contain enough information to confirm or deny the statement shown.</p>
+                          )}
+                        </>
+                      )}
                     </div>
                   )}
                 </div>

@@ -30,29 +30,49 @@ function splitSentences(text: string): string[] {
 // ───────── synonym paraphrasing ─────────
 
 const SYNONYM_MAP: [RegExp, string[]][] = [
-  [/\bimportant\b/gi, ["significant", "crucial", "essential"]],
-  [/\bshows\b/gi, ["demonstrates", "indicates", "reveals"]],
-  [/\bshown\b/gi, ["demonstrated", "indicated", "revealed"]],
-  [/\bhowever\b/gi, ["nevertheless", "nonetheless", "yet"]],
-  [/\bfrequently\b/gi, ["regularly", "commonly", "routinely"]],
-  [/\brapidly\b/gi, ["quickly", "swiftly", "at pace"]],
-  [/\bsignificant\b/gi, ["considerable", "substantial", "notable"]],
-  [/\bargue\b/gi, ["contend", "assert", "maintain"]],
-  [/\bargues\b/gi, ["contends", "asserts", "maintains"]],
-  [/\bincreasing\b/gi, ["growing", "rising", "escalating"]],
-  [/\bsevere\b/gi, ["serious", "acute", "critical"]],
-  [/\bessential\b/gi, ["vital", "crucial", "necessary"]],
-  [/\bconsequently\b/gi, ["as a result", "therefore", "thus"]],
-  [/\bfurthermore\b/gi, ["moreover", "additionally", "in addition"]],
-  [/\bbelieved\b/gi, ["thought", "considered", "regarded"]],
-  [/\bsuggests\b/gi, ["indicates", "implies", "points to"]],
-  [/\bsupport\b/gi, ["sustain", "uphold", "maintain"]],
-  [/\bcomplex\b/gi, ["intricate", "complicated", "multifaceted"]],
-  [/\brequires\b/gi, ["demands", "necessitates", "calls for"]],
-  [/\bcauses\b/gi, ["leads to", "results in", "triggers"]],
-  [/\bcaused\b/gi, ["triggered", "resulted in", "brought about"]],
-  [/\bwidely\b/gi, ["broadly", "generally", "extensively"]],
-  [/\bdifficult\b/gi, ["challenging", "hard", "demanding"]],
+  [/\bimportant\b/gi, ["significant", "crucial", "essential", "key"]],
+  [/\bshows\b/gi, ["demonstrates", "indicates", "reveals", "illustrates"]],
+  [/\bshown\b/gi, ["demonstrated", "indicated", "revealed", "established"]],
+  [/\bhowever\b/gi, ["nevertheless", "nonetheless", "yet", "that said"]],
+  [/\bfrequently\b/gi, ["regularly", "commonly", "routinely", "often"]],
+  [/\brapidly\b/gi, ["quickly", "swiftly", "at pace", "speedily"]],
+  [/\bsignificant\b/gi, ["considerable", "substantial", "notable", "meaningful"]],
+  [/\bargue\b/gi, ["contend", "assert", "maintain", "hold"]],
+  [/\bargues\b/gi, ["contends", "asserts", "maintains", "holds"]],
+  [/\bincreasing\b/gi, ["growing", "rising", "escalating", "mounting"]],
+  [/\bsevere\b/gi, ["serious", "acute", "critical", "grave"]],
+  [/\bessential\b/gi, ["vital", "crucial", "necessary", "indispensable"]],
+  [/\bconsequently\b/gi, ["as a result", "therefore", "thus", "hence"]],
+  [/\bfurthermore\b/gi, ["moreover", "additionally", "in addition", "beyond this"]],
+  [/\bbelieved\b/gi, ["thought", "considered", "regarded", "held"]],
+  [/\bsuggests\b/gi, ["indicates", "implies", "points to", "signals"]],
+  [/\bsupport\b/gi, ["sustain", "uphold", "maintain", "back"]],
+  [/\bcomplex\b/gi, ["intricate", "complicated", "multifaceted", "nuanced"]],
+  [/\brequires\b/gi, ["demands", "necessitates", "calls for", "entails"]],
+  [/\bcauses\b/gi, ["leads to", "results in", "triggers", "produces"]],
+  [/\bcaused\b/gi, ["triggered", "resulted in", "brought about", "produced"]],
+  [/\bwidely\b/gi, ["broadly", "generally", "extensively", "commonly"]],
+  [/\bdifficult\b/gi, ["challenging", "hard", "demanding", "problematic"]],
+  [/\ballow\b/gi, ["permit", "enable", "facilitate"]],
+  [/\ballows\b/gi, ["permits", "enables", "facilitates"]],
+  [/\bprimary\b/gi, ["main", "principal", "chief", "foremost"]],
+  [/\bobtain\b/gi, ["acquire", "gain", "secure"]],
+  [/\bultimately\b/gi, ["in the end", "finally", "at its core"]],
+  [/\bnumerous\b/gi, ["many", "a great number of", "a variety of"]],
+  [/\bvital\b/gi, ["essential", "critical", "indispensable"]],
+  [/\bfundamental\b/gi, ["core", "basic", "central", "foundational"]],
+  [/\bestablished\b/gi, ["shown", "confirmed", "demonstrated"]],
+  [/\bemphasise\b/gi, ["stress", "highlight", "underline"]],
+  [/\bemphasizes\b/gi, ["stresses", "highlights", "underlines"]],
+  [/\bassociated with\b/gi, ["linked to", "connected to", "related to"]],
+  [/\bcharacterised by\b/gi, ["defined by", "marked by", "distinguished by"]],
+  [/\bidentified\b/gi, ["recognised", "noted", "found"]],
+  [/\bprovide\b/gi, ["offer", "supply", "give"]],
+  [/\bprovides\b/gi, ["offers", "supplies", "gives"]],
+  [/\bnoted\b/gi, ["observed", "remarked", "pointed out"]],
+  [/\bprevious\b/gi, ["earlier", "prior", "past"]],
+  [/\bcurrently\b/gi, ["at present", "today", "at this time"]],
+  [/\bexamined\b/gi, ["investigated", "studied", "analysed"]],
 ];
 
 function paraphrase(sentence: string): string {
@@ -72,65 +92,112 @@ function paraphrase(sentence: string): string {
 
 // ───────── distortion strategies ─────────
 
-type DistortionResult = { text: string; applied: boolean };
+type DistortionResult = {
+  text: string;
+  applied: boolean;
+  label?: string;
+  originalFragment?: string;
+  replacedFragment?: string;
+};
 
 // 1. Qualifier → absolute
 function distortQualifierToAbsolute(s: string): DistortionResult {
-  const re = /\b(some|many|often|could|frequently|sometimes|usually|might|may|can)\b/gi;
+  const re = /\b(some|many|often|could|frequently|sometimes|usually|might|may|can|occasionally|typically|generally|tends to|tend to)\b/gi;
   if (!re.test(s)) return { text: s, applied: false };
+  let originalFragment = "";
+  let replacedFragment = "";
+  const text = s.replace(re, (match) => {
+    const replacements: Record<string, string> = {
+      some: "all", many: "all", often: "always", could: "will",
+      frequently: "always", sometimes: "always", usually: "always",
+      might: "will", may: "will", can: "will", occasionally: "always",
+      typically: "always", generally: "always", "tends to": "always",
+      "tend to": "always",
+    };
+    const lower = match.toLowerCase();
+    const rep = replacements[lower] ?? "all";
+    if (!originalFragment) {
+      originalFragment = match;
+      replacedFragment = match[0] === match[0].toUpperCase()
+        ? rep.charAt(0).toUpperCase() + rep.slice(1)
+        : rep;
+    }
+    return match[0] === match[0].toUpperCase() ? rep.charAt(0).toUpperCase() + rep.slice(1) : rep;
+  });
+  if (text === s) return { text: s, applied: false };
   return {
-    text: s.replace(re, (match) => {
-      const replacements: Record<string, string> = {
-        some: "all", many: "all", often: "always", could: "will",
-        frequently: "always", sometimes: "always", usually: "always",
-        might: "will", may: "will", can: "will",
-      };
-      const lower = match.toLowerCase();
-      const rep = replacements[lower] ?? "all";
-      return match[0] === match[0].toUpperCase() ? rep.charAt(0).toUpperCase() + rep.slice(1) : rep;
-    }), applied: true
+    text, applied: true,
+    label: `qualifier word changed to an absolute ("${originalFragment}" → "always"/"all"/"will")`,
+    originalFragment,
+    replacedFragment,
   };
 }
 
 // 2. Negation flip - remove or add "not"
 function distortNegation(s: string): DistortionResult {
-  if (/\b(not|never|no longer|cannot|can't)\b/i.test(s)) {
+  const negationMatch = s.match(/\b(cannot|can't|never|no longer|not)\b/i);
+  if (negationMatch) {
+    const originalFragment = negationMatch[0];
+    const replacements: Record<string, string> = {
+      cannot: "can", "can't": "can", never: "always", "no longer": "still", not: "",
+    };
+    const lower = originalFragment.toLowerCase();
+    const replacedFragment = replacements[lower] ?? "";
     const result = s
       .replace(/\bcannot\b/gi, "can")
       .replace(/\bcan't\b/gi, "can")
       .replace(/\bnever\b/gi, "always")
       .replace(/\bno longer\b/gi, "still")
       .replace(/\bnot\b/gi, "");
-    return { text: result.replace(/\s{2,}/g, " ").trim(), applied: true };
+    const cleaned = result.replace(/\s{2,}/g, " ").trim();
+    if (cleaned === s) return { text: s, applied: false };
+    return {
+      text: cleaned, applied: true,
+      label: 'negation removed (e.g. "not" or "never" stripped out)',
+      originalFragment,
+      replacedFragment,
+    };
   }
-  // Insert negation
+  // Insert negation after the first auxiliary verb
   const verbMatch = s.match(/\b(is|are|was|were|has|have|had|does|do|did|can|could|will|would|should)\b/i);
   if (verbMatch && verbMatch.index != null) {
     const idx = verbMatch.index + verbMatch[0].length;
     const result = s.slice(0, idx) + " not" + s.slice(idx);
-    return { text: result, applied: true };
+    return {
+      text: result, applied: true,
+      label: `negation inserted after "${verbMatch[0]}"`,
+      originalFragment: verbMatch[0],
+      replacedFragment: verbMatch[0] + " not",
+    };
   }
   return { text: s, applied: false };
 }
 
 // 3. Causal exaggeration
 function distortCausal(s: string): DistortionResult {
-  const causalPhrases: [RegExp, string][] = [
-    [/\bcontributed to\b/gi, "was the sole cause of"],
-    [/\bplayed a role in\b/gi, "was the sole cause of"],
-    [/\bhelped to\b/gi, "single-handedly"],
-    [/\binfluenced\b/gi, "completely determined"],
-    [/\bpartly\b/gi, "entirely"],
-    [/\bpartially\b/gi, "entirely"],
-    [/\blargely\b/gi, "entirely"],
-    [/\bmostly\b/gi, "entirely"],
-    [/\bone of the\b/gi, "the only"],
-    [/\ba major\b/gi, "the only"],
-    [/\ban important\b/gi, "the only"],
+  const causalPhrases: [RegExp, string, string][] = [
+    [/\bcontributed to\b/gi, "was the sole cause of", '"contributed to" → "was the sole cause of"'],
+    [/\bplayed a role in\b/gi, "was the sole cause of", '"played a role in" → "was the sole cause of"'],
+    [/\bhelped to\b/gi, "single-handedly", '"helped to" → "single-handedly"'],
+    [/\binfluenced\b/gi, "completely determined", '"influenced" → "completely determined"'],
+    [/\bpartly\b/gi, "entirely", '"partly" → "entirely"'],
+    [/\bpartially\b/gi, "entirely", '"partially" → "entirely"'],
+    [/\blargely\b/gi, "entirely", '"largely" → "entirely"'],
+    [/\bmostly\b/gi, "entirely", '"mostly" → "entirely"'],
+    [/\bone of the\b/gi, "the only", '"one of the" → "the only"'],
+    [/\ba major\b/gi, "the only", '"a major" → "the only"'],
+    [/\ban important\b/gi, "the only", '"an important" → "the only"'],
+    [/\bplayed a part in\b/gi, "was solely responsible for", '"played a part in" → "was solely responsible for"'],
   ];
-  for (const [re, rep] of causalPhrases) {
-    if (re.test(s)) {
-      return { text: s.replace(re, rep), applied: true };
+  for (const [re, rep, label] of causalPhrases) {
+    const m = s.match(re);
+    if (m) {
+      return {
+        text: s.replace(re, rep), applied: true,
+        label: `causal relationship exaggerated: ${label}`,
+        originalFragment: m[0],
+        replacedFragment: rep,
+      };
     }
   }
   return { text: s, applied: false };
@@ -138,20 +205,28 @@ function distortCausal(s: string): DistortionResult {
 
 // 4. Scope broadening
 function distortScope(s: string): DistortionResult {
-  const scopePhrases: [RegExp, string][] = [
-    [/\bin some\b/gi, "in all"],
-    [/\bcertain\b/gi, "every"],
-    [/\bmost\b/gi, "all"],
-    [/\bseveral\b/gi, "all"],
-    [/\ba few\b/gi, "all"],
-    [/\bspecific\b/gi, "universal"],
-    [/\bparticular\b/gi, "universal"],
-    [/\boccasionally\b/gi, "invariably"],
-    [/\brarely\b/gi, "commonly"],
+  const scopePhrases: [RegExp, string, string][] = [
+    [/\bin some\b/gi, "in all", '"in some" → "in all"'],
+    [/\bcertain\b/gi, "every", '"certain" → "every"'],
+    [/\bmost\b/gi, "all", '"most" → "all"'],
+    [/\bseveral\b/gi, "all", '"several" → "all"'],
+    [/\ba few\b/gi, "all", '"a few" → "all"'],
+    [/\bspecific\b/gi, "universal", '"specific" → "universal"'],
+    [/\bparticular\b/gi, "universal", '"particular" → "universal"'],
+    [/\boccasionally\b/gi, "invariably", '"occasionally" → "invariably"'],
+    [/\brarely\b/gi, "commonly", '"rarely" → "commonly"'],
+    [/\bin many\b/gi, "in all", '"in many" → "in all"'],
+    [/\boften\b/gi, "always", '"often" → "always"'],
   ];
-  for (const [re, rep] of scopePhrases) {
-    if (re.test(s)) {
-      return { text: s.replace(re, rep), applied: true };
+  for (const [re, rep, label] of scopePhrases) {
+    const m = s.match(re);
+    if (m) {
+      return {
+        text: s.replace(re, rep), applied: true,
+        label: `scope broadened: ${label}`,
+        originalFragment: m[0],
+        replacedFragment: rep,
+      };
     }
   }
   return { text: s, applied: false };
@@ -159,29 +234,38 @@ function distortScope(s: string): DistortionResult {
 
 // 5. Certainty injection
 function distortCertainty(s: string): DistortionResult {
-  const uncertainPhrases: [RegExp, string][] = [
-    [/\bit is (now )?widely believed\b/gi, "It is universally proven"],
-    [/\bscientists argue\b/gi, "Scientists have proven"],
-    [/\bresearch suggests\b/gi, "Research has conclusively proven"],
-    [/\bhistorians (have long )?debated\b/gi, "Historians unanimously agree"],
-    [/\bsome ethicists argue\b/gi, "All ethicists agree"],
-    [/\bcritics (of .+? )?argue\b/gi, "Everyone agrees"],
-    [/\bis thought to\b/gi, "is proven to"],
-    [/\bare thought to\b/gi, "are proven to"],
-    [/\bappears to be\b/gi, "is definitely"],
-    [/\bsuggests that\b/gi, "proves that"],
-    [/\bmay have\b/gi, "certainly had"],
-    [/\bmight be\b/gi, "is definitely"],
+  const uncertainPhrases: [RegExp, string, string][] = [
+    [/\bit is (now )?widely believed\b/gi, "It is universally proven", '"widely believed" → "universally proven"'],
+    [/\bscientists argue\b/gi, "Scientists have proven", '"scientists argue" → "scientists have proven"'],
+    [/\bresearch suggests\b/gi, "Research has conclusively proven", '"research suggests" → "research has conclusively proven"'],
+    [/\bhistorians (have long )?debated\b/gi, "Historians unanimously agree", '"historians debated" → "historians unanimously agree"'],
+    [/\bsome ethicists argue\b/gi, "All ethicists agree", '"some ethicists argue" → "all ethicists agree"'],
+    [/\bcritics (of .+? )?argue\b/gi, "Everyone agrees", '"critics argue" → "everyone agrees"'],
+    [/\bis thought to\b/gi, "is proven to", '"is thought to" → "is proven to"'],
+    [/\bare thought to\b/gi, "are proven to", '"are thought to" → "are proven to"'],
+    [/\bappears to be\b/gi, "is definitely", '"appears to be" → "is definitely"'],
+    [/\bsuggests that\b/gi, "proves that", '"suggests that" → "proves that"'],
+    [/\bmay have\b/gi, "certainly had", '"may have" → "certainly had"'],
+    [/\bmight be\b/gi, "is definitely", '"might be" → "is definitely"'],
+    [/\bsome scholars\b/gi, "All scholars agree", '"some scholars" → "all scholars agree"'],
+    [/\bsome argue\b/gi, "It is universally agreed", '"some argue" → "it is universally agreed"'],
+    [/\bhas been suggested\b/gi, "has been conclusively proven", '"has been suggested" → "has been conclusively proven"'],
   ];
-  for (const [re, rep] of uncertainPhrases) {
-    if (re.test(s)) {
-      return { text: s.replace(re, rep), applied: true };
+  for (const [re, rep, label] of uncertainPhrases) {
+    const m = s.match(re);
+    if (m) {
+      return {
+        text: s.replace(re, rep), applied: true,
+        label: `hedging language made absolute: ${label}`,
+        originalFragment: m[0],
+        replacedFragment: rep,
+      };
     }
   }
   return { text: s, applied: false };
 }
 
-// Apply first successful distortion
+// Apply first successful distortion (randomised order)
 const DISTORTION_FNS = [
   distortQualifierToAbsolute,
   distortNegation,
@@ -194,44 +278,46 @@ function applyDistortion(sentence: string): DistortionResult {
   const fns = shuffle(DISTORTION_FNS);
   for (const fn of fns) {
     const result = fn(sentence);
-    if (result.applied) return result;
+    // Verify the distortion actually changed the text
+    if (result.applied && result.text !== sentence) return result;
   }
   return { text: sentence, applied: false };
 }
 
 // ───────── "Can't Tell" question builder ─────────
-// Generate statements that sound plausible but aren't stated in the passage
+// Use the passage title to generate plausible-but-unverifiable statements
 
-const CANT_TELL_TEMPLATES = [
-  (topic: string) => `The author of this passage would personally recommend ${topic} as the best approach`,
-  (topic: string) => `The majority of the general public agrees with the position on ${topic} described in this passage`,
-  (topic: string) => `This passage was written by someone who has direct professional experience in ${topic}`,
-  (topic: string) => `Future developments in ${topic} will likely support the conclusions drawn in this passage`,
-  (topic: string) => `The information about ${topic} presented here is based on research conducted in the last five years`,
-  (topic: string) => `Those who disagree with the passage's position on ${topic} do so primarily for financial reasons`,
+const CANT_TELL_TITLE_TEMPLATES: ((title: string) => string)[] = [
+  (t) => `The author personally advocates for policy changes related to ${t}`,
+  (t) => `The majority of the general public supports the views on ${t} presented in this passage`,
+  (t) => `This passage was written in direct response to a real recent event involving ${t}`,
+  (t) => `Experts in the field of ${t} unanimously endorse the conclusions drawn in this passage`,
+  (t) => `The passage's perspective on ${t} represents the dominant view in academia`,
+  (t) => `The arguments about ${t} presented here have been peer-reviewed and widely accepted`,
+  (t) => `Those who disagree with this passage's stance on ${t} do so mainly for economic reasons`,
+  (t) => `The author has first-hand professional experience with the issues described regarding ${t}`,
+  (t) => `Further research into ${t} will ultimately confirm the claims made in this passage`,
+  (t) => `Government policy on ${t} has been directly influenced by arguments like those in this passage`,
 ];
 
-function extractTopic(sentence: string): string {
-  // Pull a noun phrase from the middle of the sentence
-  const words = sentence.split(/\s+/);
-  const start = Math.floor(words.length * 0.2);
-  const end = Math.min(start + 4, words.length);
-  return words
-    .slice(start, end)
-    .join(" ")
-    .replace(/[,.;:!?]/g, "")
-    .toLowerCase();
-}
-
-function buildCantTellQuestion(sentences: string[]): { displayedSentence: string; passageSnippet: string } | null {
+function buildCantTellQuestion(
+  sentences: string[],
+  passageTitle?: string
+): { displayedSentence: string; passageSnippet: string } | null {
   if (sentences.length < 3) return null;
-  const sentence = pick(sentences);
-  const topic = extractTopic(sentence);
-  if (topic.split(/\s+/).length < 2) return null;
-  const template = pick(CANT_TELL_TEMPLATES);
+  const snippet = pick(sentences);
+
+  // Use passage title when available — produces far more coherent Can't Tell statements
+  const topic = passageTitle
+    ? passageTitle.toLowerCase()
+    : null;
+
+  if (!topic) return null;
+
+  const template = pick(CANT_TELL_TITLE_TEMPLATES);
   return {
     displayedSentence: template(topic),
-    passageSnippet: sentence,
+    passageSnippet: snippet,
   };
 }
 
@@ -243,6 +329,9 @@ type Question = {
   displayedSentence: string;
   correctAnswer: CorrectAnswer;
   passageSnippet: string;
+  distortionLabel?: string;
+  originalFragment?: string;
+  replacedFragment?: string;
 };
 
 type AnswerChoice = "true" | "false" | "cant_tell" | null;
@@ -254,10 +343,14 @@ export type QuestionBreakdownItem = {
   userAnswer: "true" | "false" | "cant_tell";
   correctAnswerLabel: string;
   passageSnippet?: string;
+  distortionLabel?: string;
+  originalFragment?: string;
+  replacedFragment?: string;
 };
 
 type DistortionQuizProps = {
   passageText: string;
+  passageTitle?: string;
   onComplete: (correct: number, total: number, breakdown: QuestionBreakdownItem[]) => void;
   allowReRead?: boolean;
   questionCount?: number;
@@ -265,7 +358,7 @@ type DistortionQuizProps = {
   passageId: string;
 };
 
-function buildQuestions(passageText: string, count: number): Question[] {
+function buildQuestions(passageText: string, count: number, passageTitle?: string): Question[] {
   const trimmed = passageText.trim();
   if (trimmed.length === 0) return [];
 
@@ -279,7 +372,8 @@ function buildQuestions(passageText: string, count: number): Question[] {
 
   // Decide the mix: ~40% True (paraphrased), ~40% False (distorted), ~20% Can't Tell
   const numFalse = Math.max(1, Math.round(targetCount * 0.4));
-  const numCantTell = Math.max(0, Math.min(1, Math.round(targetCount * 0.2)));
+  // Only include Can't Tell if we have a passage title (otherwise they'd be incoherent)
+  const numCantTell = passageTitle ? Math.max(0, Math.min(1, Math.round(targetCount * 0.2))) : 0;
   const numTrue = Math.max(1, targetCount - numFalse - numCantTell);
 
   // Build FALSE questions (distorted)
@@ -291,6 +385,9 @@ function buildQuestions(passageText: string, count: number): Question[] {
         displayedSentence: result.text,
         correctAnswer: "false",
         passageSnippet: sentence,
+        distortionLabel: result.label,
+        originalFragment: result.originalFragment,
+        replacedFragment: result.replacedFragment,
       });
       usedIndices.add(i);
     }
@@ -302,11 +399,14 @@ function buildQuestions(passageText: string, count: number): Question[] {
       if (usedIndices.has(i)) continue;
       const sentence = shuffledSentences[i];
       const result = distortNegation(sentence);
-      if (result.applied) {
+      if (result.applied && result.text !== sentence) {
         questions.push({
           displayedSentence: result.text,
           correctAnswer: "false",
           passageSnippet: sentence,
+          distortionLabel: result.label,
+          originalFragment: result.originalFragment,
+          replacedFragment: result.replacedFragment,
         });
         usedIndices.add(i);
       }
@@ -326,9 +426,9 @@ function buildQuestions(passageText: string, count: number): Question[] {
     usedIndices.add(i);
   }
 
-  // Build CAN'T TELL question
+  // Build CAN'T TELL question (only when passage title available for coherent statement)
   if (numCantTell > 0) {
-    const cantTell = buildCantTellQuestion(allSentences);
+    const cantTell = buildCantTellQuestion(allSentences, passageTitle);
     if (cantTell) {
       questions.push({
         displayedSentence: cantTell.displayedSentence,
@@ -343,13 +443,14 @@ function buildQuestions(passageText: string, count: number): Question[] {
 
 export default function DistortionQuiz({
   passageText,
+  passageTitle,
   onComplete,
   allowReRead = true,
   questionCount = NUM_QUESTIONS,
   trainerType,
   passageId,
 }: DistortionQuizProps) {
-  const questions = useMemo(() => buildQuestions(passageText, questionCount), [passageText, questionCount]);
+  const questions = useMemo(() => buildQuestions(passageText, questionCount, passageTitle), [passageText, questionCount, passageTitle]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<AnswerChoice[]>(() =>
     Array(questions.length).fill(null)
@@ -389,6 +490,9 @@ export default function DistortionQuiz({
         userAnswer: a,
         correctAnswerLabel: ANSWER_LABELS[q.correctAnswer],
         passageSnippet: q.passageSnippet,
+        distortionLabel: q.distortionLabel,
+        originalFragment: q.originalFragment,
+        replacedFragment: q.replacedFragment,
       };
     });
     onComplete(correct, questions.length, breakdown);

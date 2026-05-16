@@ -188,8 +188,8 @@ function isValidTrainingType(s: string | null): s is TrainingType {
   return s === "speed_reading" || s === "rapid_recall" || s === "keyword_scanning" || s === "inference_trainer";
 }
 
-function pickPassageForDifficulty(level: TrainingDifficulty): Passage {
-  return pickNewRandomPassage(null, level);
+function pickPassageForDifficulty(level: TrainingDifficulty, cat?: string): Passage {
+  return pickNewRandomPassage(null, level, cat);
 }
 
 export default function VerbalReasoningPage() {
@@ -209,6 +209,7 @@ export default function VerbalReasoningPage() {
   const [keywordCount, setKeywordCount] = useState(6);
   const [questionCount] = useState(3);
   const [difficulty, setDifficulty] = useState<TrainingDifficulty>("medium");
+  const [category, setCategory] = useState<string>("all");
   const [suggestedWpm, setSuggestedWpm] = useState<number | null>(null);
   const [averageWpm, setAverageWpm] = useState<number | null>(null);
   const [guidedChunkingEnabled, setGuidedChunkingEnabled] = useState(false);
@@ -413,7 +414,7 @@ export default function VerbalReasoningPage() {
       difficulty,
       pathname: "/reader",
     });
-    const chosenPassage = pickPassageForDifficulty(difficulty);
+    const chosenPassage = pickPassageForDifficulty(difficulty, category);
     try {
       localStorage.setItem(WPM_STORAGE_KEY, String(wpm));
     } catch {
@@ -427,6 +428,7 @@ export default function VerbalReasoningPage() {
         wpm,
         questionCount,
         difficulty,
+        category,
         guidedChunkingEnabled,
         guidedChunkSize,
       },
@@ -439,13 +441,14 @@ export default function VerbalReasoningPage() {
       difficulty,
       pathname: "/train/rapid-recall",
     });
-    const chosenPassage = pickPassageForDifficulty(difficulty);
+    const chosenPassage = pickPassageForDifficulty(difficulty, category);
     navigate("/train/rapid-recall", {
       state: {
         trainingType: "rapid_recall" as const,
         passage: chosenPassage,
         timeLimitSeconds,
         difficulty,
+        category,
       },
     });
   };
@@ -456,13 +459,14 @@ export default function VerbalReasoningPage() {
       difficulty,
       pathname: "/train/keyword-scanning",
     });
-    const chosenPassage = pickPassageForDifficulty(difficulty);
+    const chosenPassage = pickPassageForDifficulty(difficulty, category);
     navigate("/train/keyword-scanning", {
       state: {
         trainingType: "keyword_scanning" as const,
         passage: chosenPassage,
         keywordCount,
         difficulty,
+        category,
       },
     });
   };
@@ -473,10 +477,12 @@ export default function VerbalReasoningPage() {
       difficulty,
       pathname: "/train/inference",
     });
-    const candidates = PASSAGES.filter((p) => PASSAGE_IDS_WITH_INFERENCE.includes(p.id));
-    const chosenPassage = candidates.length > 0
-      ? candidates[Math.floor(Math.random() * candidates.length)]
-      : PASSAGES[0];
+    const inferencePool = PASSAGES.filter((p) => PASSAGE_IDS_WITH_INFERENCE.includes(p.id));
+    const catFiltered = category !== "all"
+      ? inferencePool.filter((p) => p.category === category)
+      : inferencePool;
+    const candidates = catFiltered.length > 0 ? catFiltered : inferencePool;
+    const chosenPassage = candidates[Math.floor(Math.random() * candidates.length)];
     if (!chosenPassage) return;
     navigate("/train/inference", {
       state: {
@@ -635,6 +641,28 @@ export default function VerbalReasoningPage() {
                             }`}
                         >
                           {TRAINING_DIFFICULTY_LABELS[level]}
+                        </button>
+                      ))}
+                    </div>
+                  </fieldset>
+
+                  <fieldset>
+                    <legend className="text-sm font-medium text-foreground mb-2">
+                      Passage topic
+                    </legend>
+                    <div className="inline-flex flex-wrap gap-1.5">
+                      {(["all", "Ethics", "History", "Science"] as const).map((cat) => (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => setCategory(cat)}
+                          className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all border ${
+                            category === cat
+                              ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                              : "bg-secondary text-muted-foreground border-border hover:text-foreground"
+                          }`}
+                        >
+                          {cat === "all" ? "All topics" : cat}
                         </button>
                       ))}
                     </div>

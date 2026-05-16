@@ -30,6 +30,7 @@ type LocationState = {
   passage: Passage;
   timeLimitSeconds: number;
   difficulty?: TrainingDifficulty;
+  category?: string;
 };
 
 function RecallModeExplainer() {
@@ -50,11 +51,12 @@ export default function RapidRecallPage() {
   const state = location.state as LocationState | null;
   const initialTimeLimit = state?.timeLimitSeconds ?? 60;
   const difficulty: TrainingDifficulty = state?.difficulty ?? "medium";
+  const category: string = state?.category ?? "all";
 
   const [phase, setPhase] = useState<Phase>("reading");
   const [timeLimitSeconds, setTimeLimitSeconds] = useState(initialTimeLimit);
   const [passage, setPassage] = useState<Passage | null>(
-    () => state?.passage ?? pickNewRandomPassage(null, difficulty)
+    () => state?.passage ?? pickNewRandomPassage(null, difficulty, category)
   );
   const [secondsLeft, setSecondsLeft] = useState(initialTimeLimit);
   const [showMoreTimeModal, setShowMoreTimeModal] = useState(false);
@@ -331,6 +333,7 @@ export default function RapidRecallPage() {
             <RecallModeExplainer />
             <DistortionQuiz
               passageText={passageText}
+              passageTitle={passage.title}
               passageId={passage.id}
               trainerType="rapid_recall"
               onComplete={handleQuizComplete}
@@ -395,24 +398,41 @@ export default function RapidRecallPage() {
                       ? item.userAnswer === item.correctAnswerRaw
                       : (item.userAnswer === "true" && item.correctAnswer) ||
                         (item.userAnswer === "false" && !item.correctAnswer);
+                    const hasDiff =
+                      item.correctAnswerRaw === "false" &&
+                      !!item.originalFragment &&
+                      !!item.replacedFragment;
+
+                    function highlightIn(text: string, fragment: string, cls: string) {
+                      if (!fragment) return <>{text}</>;
+                      const idx = text.toLowerCase().indexOf(fragment.toLowerCase());
+                      if (idx === -1) return <>{text}</>;
+                      return (
+                        <>
+                          {text.slice(0, idx)}
+                          <mark className={cls}>{text.slice(idx, idx + fragment.length)}</mark>
+                          {text.slice(idx + fragment.length)}
+                        </>
+                      );
+                    }
+
                     const explanation = (() => {
+                      if (hasDiff) return null;
                       const snippet = item.passageSnippet;
                       if (item.correctAnswerRaw === "true") {
-                        if (snippet) {
-                          return `The passage stated that "${snippet}", which matches this statement, so the correct answer is True.`;
-                        }
-                        return "This statement matches what the passage says, so the correct answer is True.";
+                        return snippet
+                          ? `The passage stated: "${snippet}" — this statement is a paraphrase of that, so the correct answer is True.`
+                          : "This statement matches what the passage says, so the correct answer is True.";
                       }
                       if (item.correctAnswerRaw === "false") {
-                        if (snippet) {
-                          return `The passage stated that "${snippet}". The statement you saw changes the meaning (for example by exaggerating scope, cause, or certainty), so the correct answer is False.`;
-                        }
-                        return "This statement changes or overstates what the passage says, so the correct answer is False.";
+                        const distortDetail = item.distortionLabel ? ` Trap: ${item.distortionLabel}.` : "";
+                        return snippet
+                          ? `The passage stated: "${snippet}". The statement distorts this.${distortDetail} The correct answer is False.`
+                          : `This statement changes or overstates what the passage says.${distortDetail} The correct answer is False.`;
                       }
-                      if (snippet) {
-                        return `The passage only stated that "${snippet}". It doesn't fully support the extra claim in this statement, so the correct answer is Can't Tell.`;
-                      }
-                      return "The passage doesn't give enough information to decide, so the correct answer is Can't Tell.";
+                      return snippet
+                        ? `The passage only stated: "${snippet}". The statement goes beyond what the passage confirms. The correct answer is Can't Tell.`
+                        : "The passage doesn't give enough information to decide, so the correct answer is Can't Tell.";
                     })();
                     return (
                       <div
@@ -461,22 +481,35 @@ export default function RapidRecallPage() {
                             Correct answer: {item.correctAnswerLabel}
                           </p>
                         )}
-                        {explanation && (
-                          <div className="mt-2 pt-2 border-t border-slate-200/70">
-                            <p className="text-[11px] font-semibold text-slate-500 mb-0.5">
-                              Why the answer is {item.correctAnswerLabel}
-                            </p>
-                            <p className="text-xs text-slate-700 mb-1.5">
-                              {explanation}
-                            </p>
-                            {item.passageSnippet && (
+                        {(hasDiff || explanation) && (
+                          <div className="mt-2 pt-2 border-t border-slate-200/70 space-y-1.5">
+                            {hasDiff ? (
                               <>
-                                <p className="text-[11px] font-medium text-slate-500 mb-0.5">
-                                  From the passage
+                                <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">What changed</p>
+                                <div>
+                                  <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wide mb-0.5">Statement (what you saw)</p>
+                                  <p className="text-xs text-slate-700 bg-red-50 border-l-2 border-red-400 pl-2 py-1 rounded-r">
+                                    {highlightIn(item.statement, item.replacedFragment!, "bg-red-200 text-red-900 font-semibold rounded px-0.5 not-italic")}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wide mb-0.5">Original passage</p>
+                                  <p className="text-xs text-slate-700 bg-green-50 border-l-2 border-green-500 pl-2 py-1 rounded-r">
+                                    {highlightIn(item.passageSnippet!, item.originalFragment!, "bg-green-200 text-green-900 font-semibold rounded px-0.5 not-italic")}
+                                  </p>
+                                </div>
+                                {item.distortionLabel && (
+                                  <p className="text-[11px] text-slate-500">
+                                    Trap: <span className="font-medium text-slate-600">{item.distortionLabel}</span>
+                                  </p>
+                                )}
+                              </>
+                            ) : (
+                              <>
+                                <p className="text-[11px] font-semibold text-slate-500 mb-0.5">
+                                  Why the answer is {item.correctAnswerLabel}
                                 </p>
-                                <p className="text-xs text-slate-700">
-                                  {item.passageSnippet}
-                                </p>
+                                <p className="text-xs text-slate-700">{explanation}</p>
                               </>
                             )}
                           </div>
@@ -514,7 +547,7 @@ export default function RapidRecallPage() {
                         setOvertimeSeconds(0);
                         setReadingSeconds(null);
                         setPhase("reading");
-                        setPassage((current) => pickNewRandomPassage(current?.id, difficulty));
+                        setPassage((current) => pickNewRandomPassage(current?.id, difficulty, category));
                       }}
                       className="min-h-[44px] px-6 py-3 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
                     >
@@ -530,7 +563,7 @@ export default function RapidRecallPage() {
                         setOvertimeSeconds(0);
                         setReadingSeconds(null);
                       setPhase("reading");
-                      setPassage((current) => pickNewRandomPassage(current?.id, difficulty));
+                      setPassage((current) => pickNewRandomPassage(current?.id, difficulty, category));
                     }}
                     className={`min-h-[44px] px-6 py-3 font-medium rounded-lg transition-colors ${
                       canPushPace

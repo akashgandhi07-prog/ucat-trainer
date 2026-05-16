@@ -22,6 +22,10 @@ import DecisionMakingPage from "./pages/DecisionMakingPage";
 import StudyGuidesPage from "./pages/StudyGuidesPage";
 import SyllogismMicroPage from "./pages/SyllogismMicroPage";
 import SyllogismMacroPage from "./pages/SyllogismMacroPage";
+import SJTHubPage from "./pages/SJTHubPage";
+import SJTAppropriatenessPage from "./pages/SJTAppropriatenessPage";
+import SJTImportancePage from "./pages/SJTImportancePage";
+import SJTRankingPage from "./pages/SJTRankingPage";
 import StudyPlanPage from "./pages/planner/StudyPlanPage";
 import StudyPlanTodayPage from "./pages/planner/StudyPlanTodayPage";
 import StudyPlanPlanPage from "./pages/planner/StudyPlanPlanPage";
@@ -66,6 +70,10 @@ function App() {
                     <Route path="/study-guides" element={<StudyGuidesPage />} />
                     <Route path="/ucat-mental-maths-trainer" element={<MentalMathsPage />} />
                     <Route path="/ucat-syllogism-practice-macro-drills" element={<SyllogismMacroPage />} />
+                    <Route path="/ucat-sjt-practice" element={<SJTHubPage />} />
+                    <Route path="/ucat-sjt-appropriateness-trainer" element={<SJTAppropriatenessPage />} />
+                    <Route path="/ucat-sjt-importance-trainer" element={<SJTImportancePage />} />
+                    <Route path="/ucat-sjt-ranking-trainer" element={<SJTRankingPage />} />
 
                     <Route path="/verbal" element={<Navigate to="/ucat-verbal-reasoning-practice" replace />} />
                     <Route path="/quantitative" element={<Navigate to="/ucat-quantitative-reasoning-practice" replace />} />
