@@ -7,6 +7,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import {
   fetchSyllogismMacroBlock,
   fetchSyllogismMicroBatch,
+  isAbortError,
 } from "../../lib/syllogismApi";
 import { saveSyllogismSession } from "../../utils/syllogismStorage";
 import { trackEvent, setActiveTrainer, clearActiveTrainer } from "../../lib/analytics";
@@ -60,6 +61,7 @@ export function useSyllogismLogic(mode: SyllogismMode) {
   const justAnsweredIndexRef = useRef<number | null>(null);
   /** Macro: block ids already used this tab session (avoid immediate repeats). */
   const seenBlockIdsRef = useRef<string[]>([]);
+  const fetchAbortRef = useRef<AbortController | null>(null);
   /** Macro: mirror of userAnswers so finishSession always reads latest (avoids stale closure). */
   const userAnswersRef = useRef<(boolean | null)[]>(userAnswers);
 
@@ -120,12 +122,17 @@ export function useSyllogismLogic(mode: SyllogismMode) {
   };
 
   const fetchMicroQuestions = useCallback(async (count: number) => {
+    fetchAbortRef.current?.abort();
+    const controller = new AbortController();
+    fetchAbortRef.current = controller;
+
     setLoading(true);
     setError(null);
     setSessionFinished(false);
     setLastSummary(null);
     try {
-      const list = await fetchSyllogismMicroBatch(count);
+      const list = await fetchSyllogismMicroBatch(count, controller.signal);
+      if (controller.signal.aborted) return;
 
       if (list.length === 0) {
         setError(SEED_ERROR_MESSAGE);
@@ -139,22 +146,30 @@ export function useSyllogismLogic(mode: SyllogismMode) {
       setCurrentIndex(0);
       resetTiming();
     } catch (e) {
+      if (controller.signal.aborted || isAbortError(e)) return;
       console.error("Syllogism fetch error", e);
       setError(toErrorMessage(e));
       setQuestions([]);
       setUserAnswers([]);
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) {
+        setLoading(false);
+      }
     }
   }, []);
 
   const fetchMacroBlock = useCallback(async () => {
+    fetchAbortRef.current?.abort();
+    const controller = new AbortController();
+    fetchAbortRef.current = controller;
+
     setLoading(true);
     setError(null);
     setSessionFinished(false);
     setLastSummary(null);
     try {
-      const list = await fetchSyllogismMacroBlock(seenBlockIdsRef.current);
+      const list = await fetchSyllogismMacroBlock(seenBlockIdsRef.current, controller.signal);
+      if (controller.signal.aborted) return;
 
       if (list.length !== 5) {
         setError(SEED_ERROR_MESSAGE);
@@ -169,13 +184,22 @@ export function useSyllogismLogic(mode: SyllogismMode) {
       setCurrentIndex(0);
       resetTiming();
     } catch (e) {
+      if (controller.signal.aborted || isAbortError(e)) return;
       console.error("Syllogism macro fetch error", e);
       setError(toErrorMessage(e));
       setQuestions([]);
       setUserAnswers([]);
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) {
+        setLoading(false);
+      }
     }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      fetchAbortRef.current?.abort();
+    };
   }, []);
 
   const submitAnswer = useCallback(
