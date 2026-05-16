@@ -73,11 +73,8 @@ export default function SJTRatingQuiz({ question, onComplete, onProgress }: Prop
 
   function handleNext() {
     if (isLastItem) {
-      const lastItemScore =
-        selected && itemPhase === "feedback"
-          ? scoreItem(selected, item.correctRating, question.type)
-          : 0;
-      const total = scores.reduce<number>((sum, s) => sum + s, 0) + lastItemScore;
+      // Last item score is already in `scores` from handleConfirm; do not add twice.
+      const total = scores.reduce<number>((sum, s) => sum + s, 0);
       onComplete(total, question.items.length);
     } else {
       setItemIndex((i) => i + 1);

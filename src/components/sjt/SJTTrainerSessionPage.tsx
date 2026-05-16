@@ -82,7 +82,10 @@ export default function SJTTrainerSessionPage({
 
   const base = getSiteBaseUrl();
   const canonical = base ? `${base}${canonicalPath}` : undefined;
-  const sessionPct = sessionMax > 0 ? Math.round((sessionScore / sessionMax) * 100) : null;
+  const sessionPct =
+    sessionMax > 0
+      ? Math.min(100, Math.round((sessionScore / sessionMax) * 100))
+      : null;
 
   useEffect(() => {
     savedQuestionIdRef.current = null;
