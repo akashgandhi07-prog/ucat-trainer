@@ -22,6 +22,12 @@ export type TrainerFaqMap = Record<TrainerFaqKey, TrainerFaqItem[]>;
 export const trainerFaqs: TrainerFaqMap = {
   home: [
     {
+      id: "how-to-study-for-ucat",
+      question: "How do I study for the UCAT effectively?",
+      answer:
+        "The most effective way to study for the UCAT is to combine targeted skill-building with timed question practice and regular review. Start by understanding the format of each section, then use focused drills to develop core skills such as reading speed, mental maths and logical reasoning before layering in full-length mock practice. Many high-scoring students also follow a structured UCAT study plan to allocate revision time across sections and track their progress through logged mock scores. Aim to begin serious preparation at least eight weeks before your test date, practising little and often rather than leaving everything to a final cram in the week before the exam.",
+    },
+    {
       id: "what-is-ucat-trainer",
       question: "What is the UCAT Trainer and who is it for?",
       answer:

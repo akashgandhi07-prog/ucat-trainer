@@ -36,8 +36,8 @@ export default function HomePage() {
       className={`flex flex-col bg-background font-sans ${inAppShell ? "flex-1 min-h-0 overflow-y-auto" : "min-h-screen"}`}
     >
       <SEOHead
-        title="Free UCAT skills trainer (UK)"
-        description="Free UCAT skills trainer for UK applicants: drills, study plan and mock tracking from TheUKCATPeople. Verbal Reasoning, Decision Making, Quantitative Reasoning and Situational Judgement. Rated 5.0 on Trustpilot."
+        title="Free UCAT Practice Trainer (UK)"
+        description="Free UCAT practice for UK applicants: free questions, skill drills, study planning and mock score tracking from TheUKCATPeople. Verbal Reasoning, Decision Making and Quantitative Reasoning. Rated 5.0 on Trustpilot."
         canonicalUrl={canonicalUrl}
         imageUrl={ogImageUrl}
         imageAlt={ogImageAlt}

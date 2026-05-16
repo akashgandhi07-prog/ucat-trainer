@@ -103,15 +103,14 @@ export function LandingHero() {
     <section className="relative overflow-hidden border-b border-border bg-gradient-to-b from-primary/5 via-background to-background">
       <LandingContainer className="py-10 sm:py-16 text-center">
         <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-          Free UCAT skills trainer
+          Free UCAT practice and training
         </p>
         <h1 className="mt-3 text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight text-foreground max-w-3xl mx-auto">
           Train the skills behind a strong UCAT score.
         </h1>
         <p className="mt-4 text-base sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-          {LANDING_TRAINER_COUNT} focused drills for Verbal Reasoning, Decision Making, Quantitative
-          Reasoning and Situational Judgement. Open any trainer instantly. Sign in only when you want
-          progress saved.
+          {LANDING_TRAINER_COUNT} free UCAT practice drills for Verbal Reasoning, Decision Making and
+          Quantitative Reasoning. Open any trainer instantly. Sign in only when you want progress saved.
         </p>
 
         <LandingTrustStrip className="mt-8 justify-center" />
@@ -291,10 +290,10 @@ export function LandingHowItWorks() {
       <LandingContainer>
         <div className="max-w-2xl">
           <SectionEyebrow>How it fits together</SectionEyebrow>
-          <SectionTitle>Skills first, then your question bank</SectionTitle>
+          <SectionTitle>Skills first, then your UCAT question bank</SectionTitle>
           <SectionIntro>
-            The UCAT rewards speed and pattern recognition. This trainer builds those reflexes so full
-            mocks and third-party banks feel easier, not the other way around.
+            The UCAT rewards speed and pattern recognition. This free UCAT training builds those reflexes
+            so full mocks and third-party question banks feel easier, not the other way around.
           </SectionIntro>
         </div>
         <ol className="mt-10 grid gap-6 sm:grid-cols-3">
@@ -410,10 +409,11 @@ export function LandingDrillCatalog() {
       <LandingContainer>
         <div className="max-w-2xl">
           <SectionEyebrow>Every drill</SectionEyebrow>
-          <SectionTitle>All {LANDING_TRAINER_COUNT} skill trainers</SectionTitle>
+          <SectionTitle>All {LANDING_TRAINER_COUNT} free UCAT skill trainers</SectionTitle>
           <SectionIntro>
-            Each drill isolates one exam reflex. Stack a few minutes daily across sections and speed
-            compounds through the cycle.
+            Each drill isolates one exam reflex. All free UCAT practice questions and trainers are open
+            without registration. Stack a few minutes daily across sections and speed compounds through
+            the cycle.
           </SectionIntro>
         </div>
         <div className="mt-8 space-y-3">
@@ -443,7 +443,7 @@ export function LandingPlanning({ plannerOn }: { plannerOn: boolean }) {
       icon: LineChart,
       accent: "bg-rose-50 text-rose-600",
       title: "Mock scores",
-      desc: "Log Medify, official and other mock results in one place.",
+      desc: "Log free UCAT mock scores from Medify, official practice tests and other resources in one place.",
       cta: "Open mock tracker",
     },
   ];
@@ -527,10 +527,10 @@ export function LandingPaidSupport() {
       <LandingContainer>
         <div className="max-w-2xl">
           <SectionEyebrow>Optional paid support</SectionEyebrow>
-          <SectionTitle>Courses, tutoring and application packages</SectionTitle>
+          <SectionTitle>UCAT courses, coaching and application packages</SectionTitle>
           <SectionIntro>
-            The skills trainer stays free. When you want live teaching or end-to-end application help,
-            these are run by the same team behind TheUKCATPeople.
+            The skills trainer stays free. When you want live UCAT coaching, tutoring or end-to-end
+            application help, these are run by the same team behind TheUKCATPeople.
           </SectionIntro>
         </div>
 
@@ -693,8 +693,8 @@ export function LandingCredibility() {
           <SectionEyebrow>Why TheUKCATPeople</SectionEyebrow>
           <SectionTitle>Built for applicants, backed by experience</SectionTitle>
           <SectionIntro className="mx-auto">
-            The same team runs live UCAT courses, 1-1 tutoring and full application packages. This trainer
-            is the free skills layer we wish every student had before their first mock.
+            The same team runs live UCAT courses, 1-1 coaching and full application packages. This free
+            UCAT resource is the skills layer we wish every student had before their first mock.
           </SectionIntro>
         </div>
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -710,7 +710,7 @@ export function LandingCredibility() {
           ))}
         </div>
         <p className="mt-8 text-center text-sm text-muted-foreground max-w-xl mx-auto">
-          Need a human in the loop?{" "}
+          Need a UCAT coach or tutor?{" "}
           <a
             href={TUTORING_OFFER.href}
             className="font-medium text-primary hover:underline"
