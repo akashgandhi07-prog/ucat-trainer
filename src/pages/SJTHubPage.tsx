@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Scale, Star, ArrowUpDown, ExternalLink, ChevronRight, Users } from "lucide-react";
 import Header from "../components/layout/Header";
@@ -6,8 +7,10 @@ import SEOHead from "../components/seo/SEOHead";
 import UcatGuidesPanel from "../components/layout/UcatGuidesPanel";
 import TrainerFaqSection from "../components/seo/TrainerFaqSection";
 import SkillsSectionLayout, { SkillsSectionBlock } from "../components/layout/SkillsSectionLayout";
+import SJTPerformancePanel from "../components/sjt/SJTPerformancePanel";
 import { GMC_DOMAINS_LIST, GMP_MAIN_URL } from "../data/gmcDomains";
 import { trainerFaqs } from "../data/trainerFaqs";
+import { getSJTStats } from "../lib/sjtAnalytics";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 import { cn } from "../lib/cn";
 
@@ -45,15 +48,10 @@ const TRAINERS = [
 ] as const;
 
 
-const domainColors: Record<string, string> = {
-  blue: "bg-blue-500/10 text-blue-700 border-blue-200",
-  emerald: "bg-emerald-500/10 text-emerald-700 border-emerald-200",
-  amber: "bg-amber-500/10 text-amber-700 border-amber-200",
-  purple: "bg-purple-500/10 text-purple-700 border-purple-200",
-};
-
 export default function SJTHubPage() {
   const navigate = useNavigate();
+  const [performanceRefreshKey, setPerformanceRefreshKey] = useState(0);
+  const stats = useMemo(() => getSJTStats(), [performanceRefreshKey]);
   const base = getSiteBaseUrl();
   const canonical = base ? `${base}/ucat-sjt-practice` : undefined;
   const breadcrumbs =
@@ -79,7 +77,7 @@ export default function SJTHubPage() {
           title="Situational Judgement"
           description="The SJT tests your professional values and judgement against the standards expected of a doctor or dentist. Every question and rationale here is grounded in GMC Good Medical Practice."
           icon={Users}
-          accent="purple"
+          accent="primary"
           breadcrumbs={breadcrumbs}
         >
           <div className="space-y-8 sm:space-y-10">
@@ -117,6 +115,18 @@ export default function SJTHubPage() {
               </div>
             </SkillsSectionBlock>
 
+            {stats ? (
+              <SkillsSectionBlock
+                title="Your domain performance"
+                description="How you are scoring across the four GMC Good Medical Practice domains. Updates automatically as you practise across all SJT trainers."
+              >
+                <SJTPerformancePanel
+                  refreshKey={performanceRefreshKey}
+                  onClear={() => setPerformanceRefreshKey((key) => key + 1)}
+                />
+              </SkillsSectionBlock>
+            ) : null}
+
             <SkillsSectionBlock
               title="GMC Good Medical Practice: The Four Domains"
               description="Every SJT question maps to one of these four domains. Understanding the principles within each domain is more reliable than trying to memorise individual answers."
@@ -128,16 +138,13 @@ export default function SJTHubPage() {
                     href={domain.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={cn(
-                      "rounded-xl border p-4 hover:shadow-sm transition-shadow group",
-                      domainColors[domain.color]
-                    )}
+                    className="rounded-xl border border-border bg-card p-4 hover:border-primary/40 hover:shadow-sm transition-shadow group"
                   >
                     <div className="flex items-start justify-between gap-2 mb-2">
-                      <p className="text-sm font-semibold leading-snug">{domain.name}</p>
-                      <ExternalLink className="w-3.5 h-3.5 shrink-0 mt-0.5 opacity-60 group-hover:opacity-100 transition-opacity" aria-hidden />
+                      <p className="text-sm font-semibold leading-snug text-foreground">{domain.name}</p>
+                      <ExternalLink className="w-3.5 h-3.5 shrink-0 mt-0.5 text-muted-foreground group-hover:text-primary transition-colors" aria-hidden />
                     </div>
-                    <p className="text-xs leading-relaxed opacity-80">{domain.description}</p>
+                    <p className="text-xs leading-relaxed text-muted-foreground">{domain.description}</p>
                   </a>
                 ))}
               </div>
@@ -147,7 +154,7 @@ export default function SJTHubPage() {
                   href={GMP_MAIN_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline inline-flex items-center gap-0.5"
+                  className="text-primary hover:underline inline-flex items-center gap-0.5"
                 >
                   GMC Good Medical Practice
                   <ExternalLink className="w-3 h-3" aria-hidden />
@@ -159,9 +166,9 @@ export default function SJTHubPage() {
             <SkillsSectionBlock title="How SJT scoring works">
               <div className="rounded-xl border border-border bg-card p-5 space-y-3">
                 {[
-                  { label: "Full marks", color: "text-emerald-700", desc: "your rating or selection exactly matches the correct answer." },
-                  { label: "Partial credit", color: "text-amber-600", desc: "your rating is one step away from the correct answer (e.g. you chose Appropriate when Very Appropriate was correct)." },
-                  { label: "No credit", color: "text-red-600", desc: "your rating is two or more steps from correct, or you chose the wrong most/least option in a ranking question." },
+                  { label: "Full marks", color: "text-training-success", desc: "your rating or selection exactly matches the correct answer." },
+                  { label: "Partial credit", color: "text-warning", desc: "your rating is one step away from the correct answer (e.g. you chose Appropriate when Very Appropriate was correct)." },
+                  { label: "No credit", color: "text-destructive", desc: "your rating is two or more steps from correct, or you chose the wrong most/least option in a ranking question." },
                 ].map(({ label, color, desc }) => (
                   <div key={label} className="flex items-start gap-2 text-sm text-muted-foreground">
                     <span className={cn("font-semibold shrink-0", color)}>{label}</span>

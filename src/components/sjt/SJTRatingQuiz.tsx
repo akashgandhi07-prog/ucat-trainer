@@ -75,72 +75,70 @@ export default function SJTRatingQuiz({ question, onComplete }: Props) {
 
   const correctLabel = labelMap[item.correctRating];
   const userLabel = selected ? labelMap[selected] : null;
-  const progressPct = Math.round((itemIndex / question.items.length) * 100);
+  const progressPct = Math.round(((itemIndex + 1) / question.items.length) * 100);
 
   return (
-    <div className="lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start space-y-4 lg:space-y-0">
-
-      {/* Left col: Scenario stays fixed on desktop while items advance */}
-      <div className="lg:sticky lg:top-4">
-        <div className="rounded-xl border border-border bg-card shadow-sm p-5">
-          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Scenario</p>
-          <p className="text-sm text-foreground leading-relaxed">{question.stem}</p>
+    <div className="space-y-3">
+      <div>
+        <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
+          <span>Item {itemIndex + 1} of {question.items.length}</span>
+          <span>{question.items.length - itemIndex - 1} remaining</span>
+        </div>
+        <div className="h-1.5 rounded-full bg-border overflow-hidden">
+          <div
+            className="h-full rounded-full bg-primary transition-all duration-500"
+            style={{ width: `${progressPct}%` }}
+          />
         </div>
       </div>
 
-      {/* Right col: Progress + Item + Action */}
-      <div className="space-y-4">
-
-        {/* Progress */}
-        <div>
-          <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
-            <span>Item {itemIndex + 1} of {question.items.length}</span>
-            <span>{question.items.length - itemIndex - 1} remaining</span>
-          </div>
-          <div className="h-1.5 rounded-full bg-border overflow-hidden">
-            <div
-              className="h-full rounded-full bg-primary transition-all duration-500"
-              style={{ width: `${progressPct}%` }}
-            />
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.08fr)] lg:gap-5 xl:gap-6 lg:items-start space-y-3 lg:space-y-0">
+        <div className="lg:sticky lg:top-24">
+          <div className="rounded-xl border border-border bg-card shadow-sm p-4 sm:p-5">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Scenario</p>
+            <p className="text-sm text-foreground leading-relaxed lg:text-[15px]">{question.stem}</p>
           </div>
         </div>
 
+        <div className="space-y-3">
         {/* Item card */}
         <div className={cn(
-          "rounded-xl border p-5 space-y-4",
+          "rounded-xl border p-4 sm:p-5 space-y-4",
           itemPhase === "feedback"
             ? currentScore === 2
               ? "bg-training-success-muted border-training-success"
               : currentScore === 1
-              ? "bg-amber-50 border-amber-200"
+              ? "bg-warning-muted border-warning"
               : "bg-destructive-muted border-destructive"
             : "border-border bg-card shadow-sm"
         )}>
-          <div className="flex items-start gap-2">
-            {itemPhase === "feedback" && (
-              <span className="shrink-0 mt-0.5">
+          <div className="flex items-start gap-3">
+            <span className="shrink-0 mt-0.5 w-5">
+              {itemPhase === "feedback" && (
+                <>
                 {currentScore === 2 ? (
                   <CheckCircle2 className="w-5 h-5 text-training-success" aria-hidden />
                 ) : currentScore === 1 ? (
-                  <AlertCircle className="w-5 h-5 text-amber-500" aria-hidden />
+                  <AlertCircle className="w-5 h-5 text-warning" aria-hidden />
                 ) : (
                   <XCircle className="w-5 h-5 text-destructive" aria-hidden />
                 )}
-              </span>
-            )}
+                </>
+              )}
+            </span>
             <div className="flex-1">
               <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
                 {question.type === "appropriateness"
                   ? "How appropriate is this response?"
                   : "How important is this consideration?"}
               </p>
-              <p className="text-sm font-medium text-foreground leading-relaxed">{item.text}</p>
+              <p className="text-sm font-semibold text-foreground leading-relaxed lg:text-[15px]">{item.text}</p>
             </div>
           </div>
 
           {/* Rating buttons */}
           {itemPhase === "rating" && (
-            <div className="space-y-2">
+            <div className="grid gap-2 sm:grid-cols-2">
               {scale.map((r) => (
                 <button
                   key={r}
@@ -148,7 +146,7 @@ export default function SJTRatingQuiz({ question, onComplete }: Props) {
                   onClick={() => handleSelect(r)}
                   aria-pressed={selected === r}
                   className={cn(
-                    "w-full text-left px-4 py-3 rounded-xl border text-sm font-medium transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary",
+                    "w-full text-left px-4 py-3 rounded-xl border text-sm font-semibold transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary",
                     selected === r
                       ? "bg-primary text-primary-foreground border-primary shadow-sm"
                       : "bg-card border-border text-foreground hover:bg-secondary"
@@ -163,28 +161,28 @@ export default function SJTRatingQuiz({ question, onComplete }: Props) {
           {/* Feedback */}
           {itemPhase === "feedback" && selected && (
             <div className="space-y-3">
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="grid gap-2 text-xs text-muted-foreground sm:grid-cols-[auto_1fr] sm:items-center">
                 <span className={cn(
-                  "px-2.5 py-1 rounded-full text-xs font-semibold",
+                  "w-fit px-2.5 py-1 rounded-full font-semibold",
                   currentScore === 2
-                    ? "bg-green-100 text-green-800"
+                    ? "bg-training-success-muted text-training-success"
                     : currentScore === 1
-                    ? "bg-amber-100 text-amber-800"
-                    : "bg-red-100 text-red-800"
+                    ? "bg-warning-muted text-warning"
+                    : "bg-destructive-muted text-destructive"
                 )}>
                   {currentScore === 2 ? "Full marks" : currentScore === 1 ? "Partial credit" : "Incorrect"}
                 </span>
-                <span className="text-xs text-muted-foreground">
+                <span>
                   Your answer: <strong className="text-foreground">{userLabel}</strong>
                 </span>
                 {currentScore !== 2 && (
-                  <span className="text-xs text-muted-foreground">
+                  <span className="sm:col-start-2">
                     Correct: <strong className="text-foreground">{correctLabel}</strong>
                   </span>
                 )}
               </div>
 
-              <div className="rounded-lg bg-card border border-border p-4 space-y-3">
+              <div className="rounded-lg bg-card border border-border p-4 space-y-3 lg:max-h-[min(36vh,24rem)] lg:overflow-y-auto">
                 <div>
                   <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
                     Why {correctLabel} is correct
@@ -260,6 +258,7 @@ export default function SJTRatingQuiz({ question, onComplete }: Props) {
             <ChevronRight className="w-4 h-4" aria-hidden />
           </button>
         )}
+        </div>
       </div>
     </div>
   );

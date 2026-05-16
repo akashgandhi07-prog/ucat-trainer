@@ -8,8 +8,10 @@ import UcatGuidesPanel from "../layout/UcatGuidesPanel";
 import TrainerFaqSection from "../seo/TrainerFaqSection";
 import SJTDomainBadge from "./SJTDomainBadge";
 import SJTQuestionSkeleton from "./SJTQuestionSkeleton";
+import SJTPerformancePanel from "./SJTPerformancePanel";
 import { useSJTQuestionSession } from "../../hooks/useSJTQuestionSession";
 import { trainerFaqs } from "../../data/trainerFaqs";
+import { recordSJTAttempt } from "../../lib/sjtAnalytics";
 import { getSiteBaseUrl } from "../../lib/siteUrl";
 import { cn } from "../../lib/cn";
 import type { SJTQuestion, SJTQuestionType } from "../../types/sjt";
@@ -59,6 +61,7 @@ export default function SJTTrainerSessionPage({
   const [questionsAttempted, setQuestionsAttempted] = useState(0);
   const [lastScore, setLastScore] = useState<{ score: number; max: number } | null>(null);
   const [advancing, setAdvancing] = useState(false);
+  const [performanceRefreshKey, setPerformanceRefreshKey] = useState(0);
 
   const base = getSiteBaseUrl();
   const canonical = base ? `${base}${canonicalPath}` : undefined;
@@ -71,12 +74,22 @@ export default function SJTTrainerSessionPage({
   }, [phase, prefetchNext]);
 
   const handleComplete = useCallback((score: number, max: number) => {
+    if (question) {
+      recordSJTAttempt({
+        questionId: question.id,
+        domain: question.domain,
+        type: question.type,
+        score,
+        maxScore: max,
+      });
+    }
     setSessionScore((s) => s + score);
     setSessionMax((m) => m + max);
     setQuestionsAttempted((n) => n + 1);
     setLastScore({ score, max });
+    setPerformanceRefreshKey((key) => key + 1);
     setPhase("between");
-  }, []);
+  }, [question]);
 
   const handleNext = useCallback(async () => {
     setAdvancing(true);
@@ -104,10 +117,10 @@ export default function SJTTrainerSessionPage({
     <div className="flex flex-col min-h-screen bg-background">
       <SEOHead title={seoTitle} description={seoDescription} canonicalUrl={canonical} />
       <Header />
-      <main className="flex-1 py-8 px-4">
-        <div className="w-full max-w-4xl mx-auto">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600">
+      <main className="flex-1 py-5 sm:py-6 px-4">
+        <div className="w-full max-w-6xl mx-auto">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-xl bg-primary/10 text-primary">
               <Icon className="w-5 h-5" aria-hidden />
             </div>
             <div>
@@ -180,7 +193,7 @@ export default function SJTTrainerSessionPage({
                     lastScore.score === lastScore.max
                       ? "bg-training-success-muted border-training-success"
                       : lastScore.score >= lastScore.max * 0.6
-                        ? "bg-amber-50 border-amber-200"
+                        ? "bg-warning-muted border-warning"
                         : "bg-destructive-muted border-destructive",
                   )}
                 >
@@ -215,6 +228,15 @@ export default function SJTTrainerSessionPage({
                   <RotateCcw className="w-4 h-4" aria-hidden />
                   Reset session
                 </button>
+              </div>
+              <div className="pt-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                  Domain performance
+                </p>
+                <SJTPerformancePanel
+                  refreshKey={performanceRefreshKey}
+                  onClear={() => setPerformanceRefreshKey((key) => key + 1)}
+                />
               </div>
               <p className="text-center text-sm">
                 <Link to="/ucat-sjt-practice" className="text-muted-foreground hover:text-primary">
