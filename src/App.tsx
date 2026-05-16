@@ -1,4 +1,3 @@
-import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { Toaster } from "sonner";
@@ -36,10 +35,9 @@ import TutorOverviewPage from "./pages/tutor/TutorOverviewPage";
 import TutorInvitePage from "./pages/tutor/TutorInvitePage";
 import TutorStudentPage from "./pages/tutor/TutorStudentPage";
 import JoinInvitePage from "./pages/tutor/JoinInvitePage";
+import Dashboard from "./pages/Dashboard";
 import { PageViewTracker } from "./components/analytics/PageViewTracker";
 import { WindowScrollToTop } from "./components/layout/ScrollRestoration";
-
-const Dashboard = lazy(() => import("./pages/Dashboard"));
 
 function ConfigureRedirect() {
   const { search } = useLocation();
@@ -88,14 +86,7 @@ function App() {
                     <Route path="/configure" element={<ConfigureRedirect />} />
                     <Route path="/train/calculator" element={<CalculatorPage />} />
                     <Route path="/train/syllogism/micro" element={<SyllogismMicroPage />} />
-                    <Route
-                      path="/dashboard"
-                      element={
-                        <Suspense fallback={<div className="flex-1 flex items-center justify-center text-slate-600 p-8">Loading…</div>}>
-                          <Dashboard />
-                        </Suspense>
-                      }
-                    />
+                    <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/admin" element={<AdminPage />} />
 
                     <Route path="/study-plan" element={<StudyPlanPage />} />

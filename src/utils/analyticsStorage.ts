@@ -62,11 +62,11 @@ export const saveSession = async (session: Omit<GameSession, 'id' | 'date'>) => 
     return newSession;
 };
 
-/** Save a mental maths session to Supabase. wpm column stores average time per question in ms. */
+/** Save a mental maths session to Supabase. wpm column stores average time per question in ms. Returns true on success. */
 export async function saveMentalMathsSession(
   stats: MentalMathsSummaryStats,
   userId: string
-): Promise<void> {
+): Promise<boolean> {
   const difficulty = difficultyFromStageIndex(stats.stageIndex);
   const timeSeconds = Math.round((stats.avgTimeMs * stats.total) / 1000) || 1;
   const payload = {
@@ -81,9 +81,10 @@ export async function saveMentalMathsSession(
   const { error } = await supabase.from('sessions').insert(payload);
   if (error) {
     console.error("Failed to save mental maths session to Supabase:", error);
-  } else {
-    trackEvent("trainer_completed", { training_type: "mental_maths", difficulty });
+    return false;
   }
+  trackEvent("trainer_completed", { training_type: "mental_maths", difficulty });
+  return true;
 }
 
 export const getHistory = (): GameSession[] => {

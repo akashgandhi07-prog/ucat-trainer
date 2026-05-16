@@ -1155,24 +1155,6 @@ export default function Dashboard() {
                   ) : (
                     <div className="flex flex-wrap items-center gap-2">
                       <select
-                        value={ucatYear}
-                        onChange={(e) => setUcatYear(parseInt(e.target.value, 10))}
-                        className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
-                        aria-label="Exam year"
-                      >
-                        <option value={UCAT_EXAM_YEAR}>{UCAT_EXAM_YEAR}</option>
-                      </select>
-                      <select
-                        value={ucatMonth}
-                        onChange={(e) => setUcatMonth(parseInt(e.target.value, 10) as 7 | 8 | 9)}
-                        className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
-                        aria-label="Exam month"
-                      >
-                        <option value={7}>July</option>
-                        <option value={8}>August</option>
-                        <option value={9}>September</option>
-                      </select>
-                      <select
                         value={ucatDay}
                         onChange={(e) => setUcatDay(parseInt(e.target.value, 10))}
                         className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
@@ -1188,6 +1170,24 @@ export default function Dashboard() {
                             </option>
                           ));
                         })()}
+                      </select>
+                      <select
+                        value={ucatMonth}
+                        onChange={(e) => setUcatMonth(parseInt(e.target.value, 10) as 7 | 8 | 9)}
+                        className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+                        aria-label="Exam month"
+                      >
+                        <option value={7}>July</option>
+                        <option value={8}>August</option>
+                        <option value={9}>September</option>
+                      </select>
+                      <select
+                        value={ucatYear}
+                        onChange={(e) => setUcatYear(parseInt(e.target.value, 10))}
+                        className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+                        aria-label="Exam year"
+                      >
+                        <option value={UCAT_EXAM_YEAR}>{UCAT_EXAM_YEAR}</option>
                       </select>
                       <button
                         type="button"
@@ -1827,7 +1827,7 @@ export default function Dashboard() {
         </div>
         </div>
         <aside
-          className="shrink-0 w-full lg:w-[min(22rem,100%)] xl:w-96 lg:sticky lg:top-6 lg:self-start space-y-4"
+          className="shrink-0 w-full lg:w-72 lg:sticky lg:top-6 lg:self-start space-y-4"
           aria-label="Optional courses and tutoring"
         >
           <DashboardUpsellStack
@@ -1842,6 +1842,13 @@ export default function Dashboard() {
   };
 
   if (authLoading) {
+    if (inAppShell) {
+      return (
+        <div className="flex-1 flex items-center justify-center px-4">
+          <p className="text-slate-600">Loading your dashboard…</p>
+        </div>
+      );
+    }
     return (
       <div className="flex flex-col min-h-screen bg-slate-50">
         <a href="#main-content" className={skipLinkClass}>
@@ -1886,7 +1893,7 @@ export default function Dashboard() {
       <a href="#main-content" className={skipLinkClass}>
         Skip to main content
       </a>
-      <Header />
+      {!inAppShell && <Header />}
       <main
         id="main-content"
         className={cn(
@@ -1932,7 +1939,7 @@ export default function Dashboard() {
           </div>
         ) : null}
       </main>
-      <Footer />
+      {!inAppShell && <Footer />}
     </div>
   );
 }

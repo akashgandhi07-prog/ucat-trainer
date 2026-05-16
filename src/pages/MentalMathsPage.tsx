@@ -17,11 +17,13 @@ import TrainerFaqSection from "../components/seo/TrainerFaqSection";
 import UcatGuidesPanel from "../components/layout/UcatGuidesPanel";
 import { trainerFaqs } from "../data/trainerFaqs";
 import { getSiteBaseUrl } from "../lib/siteUrl";
+import { useToast } from "../contexts/ToastContext";
 
 const teaching = SKILL_TEACHING.mental_maths;
 
 export default function MentalMathsPage() {
   const { user } = useAuth();
+  const { showToast } = useToast();
 
   useEffect(() => {
     trackEvent("trainer_opened", {
@@ -47,7 +49,9 @@ export default function MentalMathsPage() {
     (stats: MentalMathsSummaryStats) => {
       clearActiveTrainer();
       if (user) {
-        saveMentalMathsSession(stats, user.id);
+        saveMentalMathsSession(stats, user.id).then((ok) => {
+          if (!ok) showToast("Couldn't save your session. Please check your connection.", { variant: "error" });
+        });
       } else {
         appendGuestSession({
           training_type: "mental_maths",
@@ -59,7 +63,7 @@ export default function MentalMathsPage() {
         });
       }
     },
-    [user]
+    [user, showToast]
   );
 
   return (
