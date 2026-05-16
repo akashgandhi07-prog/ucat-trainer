@@ -109,8 +109,9 @@ export function LandingHero() {
           Train the skills behind a strong UCAT score.
         </h1>
         <p className="mt-4 text-base sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-          {LANDING_TRAINER_COUNT} focused drills for Verbal Reasoning, Decision Making and Quantitative
-          Reasoning. Open any trainer instantly. Sign in only when you want progress saved.
+          {LANDING_TRAINER_COUNT} focused drills for Verbal Reasoning, Decision Making, Quantitative
+          Reasoning and Situational Judgement. Open any trainer instantly. Sign in only when you want
+          progress saved.
         </p>
 
         <LandingTrustStrip className="mt-8 justify-center" />
@@ -330,7 +331,12 @@ function DrillSectionAccordion({
     <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
       <button
         type="button"
-        className="flex w-full items-center gap-4 p-4 sm:p-5 text-left hover:bg-muted/30 transition-colors"
+        className={cn(
+          "flex w-full items-center gap-4 p-4 sm:p-5 text-left transition-colors",
+          open
+            ? "bg-muted border-b border-border hover:bg-muted/90"
+            : "bg-muted hover:bg-muted/90",
+        )}
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
       >
@@ -662,7 +668,7 @@ export function LandingCredibility() {
     {
       stat: String(LANDING_TRAINER_COUNT),
       label: "Skill trainers",
-      desc: "Focused drills across VR, DM and QR, free to open.",
+      desc: "Focused drills across VR, DM, QR and SJT, free to open.",
     },
     {
       stat: TRUSTPILOT_STATS.score,

@@ -81,11 +81,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
       {
         id: "app-002-a",
         text: "Continue addressing questions directly to Mr Eze and use Theo to translate the responses.",
-        correctRating: "very_appropriate",
+        correctRating: "appropriate",
         rationale:
-          "A patient with mental capacity must always be the primary participant in their own consultation. There is no indication Mr Eze lacks capacity, language is a communication barrier, not a capacity issue. Marcus should use Theo as a communication facilitator, not a substitute decision-maker. Continuing to direct questions at the patient respects his dignity and autonomy.",
+          "A patient with mental capacity should be the primary participant in their own consultation. There is no indication Mr Eze lacks capacity; language is a communication barrier, not a capacity issue. Using Theo to translate while directing questions at Mr Eze is reasonable. However, in this scenario Theo is already answering on his behalf, so continuing without resetting the dynamic is only partly effective.",
         whyNotAdjacent:
-          "There is no reason this should be merely 'Appropriate'. Addressing the patient directly is the GMP standard, not an optional extra.",
+          "It is not 'Very Appropriate' because it does not address Theo dominating the consultation. 'Inappropriate' would be too harsh, as directing questions at the patient with a translator is still broadly in line with GMP.",
       },
       {
         id: "app-002-b",
@@ -103,7 +103,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         rationale:
           "This response actively corrects the dynamic in a respectful, non-confrontational way. It preserves Mr Eze's autonomy, maintains the therapeutic relationship with the family, and sets a clear, professional boundary for how the consultation should proceed. This is an excellent demonstration of patient-centred communication.",
         whyNotAdjacent:
-          "This goes beyond 'Appropriate', it actively addresses a concerning dynamic rather than just tolerating it.",
+          "This is stronger than continuing without comment because it actively resets the dynamic in a respectful way, while keeping Theo involved as a translator.",
       },
       {
         id: "app-002-d",
@@ -133,11 +133,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
       {
         id: "app-003-a",
         text: "Accept the gift and inform her GP supervisor, following any local practice policy on gifts.",
-        correctRating: "very_appropriate",
+        correctRating: "appropriate",
         rationale:
           "A modest token of genuine gratitude from a patient after care has concluded is broadly acceptable under GMP, provided it is declared and handled in line with local policy. Informing her supervisor demonstrates transparency and professional integrity. The gift is small, the clinical relationship is complete, and Lena is not in a position to make clinical decisions that could be influenced by it.",
         whyNotAdjacent:
-          "This is not merely 'Appropriate', the combination of transparency, proportionality, and following proper process makes it the ideal response.",
+          "This is a sound, proportionate response. 'Very Appropriate' is slightly strong here; declining (app-003-b) is overcautious but not unreasonable for a student unsure of policy.",
         gmpRef: {
           label: "GMP · Trust and professionalism (gifts)",
           url: `${GMP_MAIN_URL}/trust-and-professionalism`,
@@ -279,11 +279,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
       {
         id: "imp-002-d",
         text: "Whether the registrar is aware of what procedures are typically taught at his university.",
-        correctRating: "minor_importance",
+        correctRating: "important",
         rationale:
-          "It is possible the registrar does not know that this technique is not part of Callum's curriculum. This is worth bearing in mind as context, the registrar may simply have assumed training has been given. However, this does not change what Callum should do: be honest about his competence level regardless of what the registrar may or may not know.",
+          "Whether the registrar knows what Callum has been trained to do matters for safe delegation and supervision. If the registrar assumes competence that is not there, the risk to the patient increases. This does not remove Callum's duty to disclose his limits, but supervisor awareness of training is an important consideration alongside his own honesty.",
         whyNotAdjacent:
-          "It is not 'Not Important at All', it gives useful context. But it is of minor importance because it does not alter Callum's duty to disclose.",
+          "It is more than 'Of Minor Importance' because it directly affects whether supervision and delegation are safe. It is not 'Very Important' because Callum must still disclose regardless of what the registrar assumes.",
       },
     ],
   },
@@ -532,12 +532,12 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     items: [
       {
         id: "app-005-a",
-        text: "After the ward round, check on the patient and speak to Sandra privately, acknowledge her concern and suggest she document it formally.",
-        correctRating: "very_appropriate",
+        text: "At the earliest safe opportunity, check on the patient, speak to Sandra privately to acknowledge her concern, and suggest she documents it formally.",
+        correctRating: "appropriate",
         rationale:
-          "This response takes Sandra's concern seriously as a potential patient safety issue and acts on it in a measured, appropriate way. Checking the patient directly is a reasonable step for a senior student. Encouraging Sandra to document her concern formally ensures it is on record and cannot simply be disregarded. GMP requires that concerns about patient safety are raised and, where dismissed, followed up through proper channels.",
+          "This response takes Sandra's concern seriously and acts in a measured way. Checking the patient and encouraging formal documentation are reasonable steps for a senior student. However, waiting until after the full ward round may delay action when deterioration is possible. GMP requires patient safety concerns to be followed up promptly.",
         whyNotAdjacent:
-          "This is 'Very Appropriate': it supports the colleague, acts on the safety concern, and works through proper channels without creating unnecessary conflict.",
+          "It is 'Appropriate' rather than 'Very Appropriate' because timing matters when a nurse has raised possible deterioration. 'Inappropriate' would be too harsh, as the steps themselves are sound.",
         gmpRef: {
           label: "GMP · Colleagues, culture and safety",
           url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
@@ -563,12 +563,12 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
       },
       {
         id: "app-005-d",
-        text: "Interrupt Mr Barratt during the ward round to suggest that Sandra's concern should be taken seriously.",
-        correctRating: "inappropriate",
+        text: "Politely ask Mr Barratt, during the ward round, to pause and reconsider Sandra's concern or arrange an immediate review of the patient.",
+        correctRating: "very_appropriate",
         rationale:
-          "Raising a patient safety concern publicly during a ward round, particularly when challenging a consultant, is likely to create conflict without improving outcomes. The underlying motivation is sound, but the approach is disproportionate and may make the working environment hostile without benefiting the patient.",
+          "When a nurse reports possible deterioration and is dismissed, prompt action matters. A polite, professional request to pause or review the patient addresses an immediate patient safety concern without ignoring Sandra. Students should not defer entirely to hierarchy when a patient may be at risk.",
         whyNotAdjacent:
-          "This is 'Inappropriate' rather than 'Very Inappropriate' because the instinct to act on a patient safety concern is professionally correct. The execution is the problem.",
+          "This is 'Very Appropriate' because the concern is acute and may need action before the ward round ends. 'Appropriate' would understate the urgency when deterioration is possible.",
       },
     ],
   },
@@ -1050,11 +1050,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
       {
         id: "app-014-b",
         text: "Make the call but tell Mrs Patel her results are 'mostly normal' and that the GP will follow up.",
-        correctRating: "appropriate",
+        correctRating: "inappropriate",
         rationale:
-          "Describing results as 'mostly normal' is less misleading than saying they are entirely fine, and mentioning follow-up preserves the possibility of appropriate action. This is better than pure false reassurance but still falls short of full honesty, and leaves Mrs Patel without the specific information she needs.",
+          "Describing results as 'mostly normal' when there is a potentially significant finding is still misleading. Mentioning follow-up is better than pure false reassurance, but Mrs Patel is not given accurate information about her health. GMP requires honest communication with patients.",
         whyNotAdjacent:
-          "This is 'Appropriate'. It avoids the most egregious deception but still falls short of complete honesty with the patient.",
+          "It is not 'Very Inappropriate' because it is less misleading than saying results are entirely fine. It is still 'Inappropriate' because partial reassurance without accuracy is not an acceptable substitute for honest discussion.",
       },
       {
         id: "app-014-c",
@@ -1218,11 +1218,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
       {
         id: "app-017-b",
         text: "Say nothing and trust that the GP will decide what to do with the information.",
-        correctRating: "appropriate",
+        correctRating: "inappropriate",
         rationale:
-          "The GP is the responsible clinician and will likely address this appropriately. However, Sofia has a role in actively contributing to good patient care, raising the clinical significance of the disclosure as a prompt, rather than remaining entirely passive, reflects better professional engagement.",
+          "The GP is the responsible clinician, but Sofia has observed clinically significant information before the GP has responded. Remaining entirely passive when a patient has stopped heart failure medication and asked for secrecy is not ideal. She should contribute to safe care, for example by prompting the GP after the consultation.",
         whyNotAdjacent:
-          "This is 'Appropriate'. Trusting the GP is not wrong, but being more active in flagging the concern is better practice.",
+          "It is not 'Very Inappropriate' because she is not promising confidentiality or blocking care herself. It is 'Inappropriate' because passivity is too weak when important clinical information may not yet be acted on.",
       },
       {
         id: "app-017-c",
@@ -1241,6 +1241,734 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
           "While the specialist does need to know, the manner of the communication matters. Telling Mr Hasan bluntly that his preferences will be overridden is unlikely to improve the therapeutic relationship and misses the opportunity to help him understand why sharing this information is in his best interest.",
         whyNotAdjacent:
           "This is 'Inappropriate'. The intent is correct but the approach is insensitive and unlikely to support good ongoing care.",
+      },
+    ],
+  },
+
+  {
+    id: "app-018",
+    type: "appropriateness",
+    domain: "knowledge_skills_development",
+    difficulty: "standard",
+    stem: `Harriet is a final-year medical student on an emergency department placement. A junior doctor asks her to take blood from a patient using an ultrasound-guided technique. Harriet has taken blood many times before, but she has only watched ultrasound-guided venepuncture once and has never performed it herself. The department is busy and the doctor says, "You'll be fine, just have a go while I sort something else out."`,
+    pivotInsight:
+      "Students must be honest about the limits of their competence. Being busy, flattered, or under pressure does not justify attempting a procedure they are not trained or supervised to perform.",
+    gmpRef: {
+      label: "GMP · Knowledge, skills and development",
+      url: `${GMP_MAIN_URL}/knowledge-skills-and-development`,
+    },
+    items: [
+      {
+        id: "app-018-a",
+        text: "Explain that she is confident with standard venepuncture but has not performed ultrasound-guided venepuncture before, and ask for direct supervision if she is to attempt it.",
+        correctRating: "very_appropriate",
+        rationale:
+          "This is very appropriate. Harriet is being honest about her current competence while also showing willingness to learn under appropriate supervision. This protects the patient and allows the junior doctor to decide whether Harriet should observe, assist, or perform the procedure with direct supervision.",
+        whyNotAdjacent:
+          "This is not merely 'Appropriate' because it directly addresses the key issue: safe practice within competence, with appropriate supervision.",
+        gmpRef: {
+          label: "GMP · Knowledge, skills and development",
+          url: `${GMP_MAIN_URL}/knowledge-skills-and-development`,
+        },
+      },
+      {
+        id: "app-018-b",
+        text: "Attempt the procedure because she has seen it done before and the department is very busy.",
+        correctRating: "very_inappropriate",
+        rationale:
+          "This is very inappropriate. Watching a procedure once is not the same as being competent to perform it. Attempting an unfamiliar technique without adequate supervision risks patient harm and misrepresents Harriet's ability.",
+        whyNotAdjacent:
+          "This is not just 'Inappropriate' because it involves proceeding outside her competence in a patient-facing procedure.",
+      },
+      {
+        id: "app-018-c",
+        text: "Ask whether another trained member of staff can perform the procedure if direct supervision is not available.",
+        correctRating: "appropriate",
+        rationale:
+          "This is appropriate. If direct supervision is unavailable, Harriet should not perform the procedure herself. Asking for someone appropriately trained to perform it is a practical way to protect patient safety while recognising the pressures in the department.",
+        whyNotAdjacent:
+          "This is not 'Very Appropriate' because disclosing limits and seeking supervision (app-018-a) is the stronger first response. It is better than refusing without explanation.",
+      },
+      {
+        id: "app-018-d",
+        text: "Decline to perform the procedure and leave without explaining why, as she is not competent to do it.",
+        correctRating: "inappropriate",
+        rationale:
+          "It is correct that Harriet should not perform a procedure outside her competence. However, leaving without explaining why is poor communication and does not help the team arrange safe care for the patient. She should clearly explain her lack of experience and ask for supervision or an alternative trained person.",
+        whyNotAdjacent:
+          "This is not 'Very Inappropriate' because the underlying refusal is correct. The problem is the poor communication and lack of practical support.",
+      },
+    ],
+  },
+
+  {
+    id: "app-019",
+    type: "appropriateness",
+    domain: "trust_professionalism",
+    difficulty: "foundation",
+    stem: `Nikhil is a medical student on a paediatric placement. At lunch, a friend asks why Nikhil was late. Nikhil replies in a busy hospital café, "There was a really sad safeguarding case on the ward involving a toddler from my street." He does not mention the child's name, but several staff members and visitors are nearby.`,
+    pivotInsight:
+      "Confidentiality is not limited to names. Details such as age, location, context, ward, and family situation can make a patient identifiable.",
+    gmpRef: {
+      label: "GMP · Trust and professionalism",
+      url: `${GMP_MAIN_URL}/trust-and-professionalism`,
+    },
+    items: [
+      {
+        id: "app-019-a",
+        text: "Stop discussing the case immediately and move away from the public area.",
+        correctRating: "very_appropriate",
+        rationale:
+          "This is very appropriate. Nikhil has disclosed enough contextual detail for there to be a confidentiality concern, so the immediate priority is to prevent any further disclosure in a public area.",
+        whyNotAdjacent:
+          "This is not merely 'Appropriate' because it deals with the immediate risk directly and promptly.",
+        gmpRef: {
+          label: "GMP · Trust and professionalism",
+          url: `${GMP_MAIN_URL}/trust-and-professionalism`,
+        },
+      },
+      {
+        id: "app-019-b",
+        text: "Continue the conversation because he has not used the child's name.",
+        correctRating: "very_inappropriate",
+        rationale:
+          "This is very inappropriate. A patient can be identifiable from contextual details even when their name is not used. Continuing the conversation in a public place would worsen the breach.",
+        whyNotAdjacent:
+          "This is not just 'Inappropriate' because it knowingly continues a confidentiality risk involving sensitive patient information.",
+      },
+      {
+        id: "app-019-c",
+        text: "Later reflect on the incident and ask his supervisor for advice about whether it needs to be reported.",
+        correctRating: "appropriate",
+        rationale:
+          "This is appropriate because Nikhil recognises that a possible confidentiality issue may have occurred and seeks senior guidance. However, it is not ideal as the only response because he must first stop the conversation immediately and prevent further disclosure.",
+        whyNotAdjacent:
+          "This is not 'Very Appropriate' in isolation because it is a follow-up action rather than the immediate step needed to protect confidentiality.",
+      },
+      {
+        id: "app-019-d",
+        text: "Tell his friend the rest of the story later by message instead, where fewer people can overhear.",
+        correctRating: "very_inappropriate",
+        rationale:
+          "This is very inappropriate. Moving the conversation to a private message does not make it acceptable, as the friend has no professional need to know the details. It also creates a written record of inappropriate disclosure.",
+        whyNotAdjacent:
+          "This is clearly 'Very Inappropriate' because it deliberately continues an unnecessary disclosure of sensitive patient information.",
+      },
+    ],
+  },
+
+  {
+    id: "app-020",
+    type: "appropriateness",
+    domain: "trust_professionalism",
+    difficulty: "standard",
+    stem: `Alina is a dental student. After a difficult procedure, her supervisor asks her to write in the notes that the patient was "fully comfortable throughout". Alina remembers that the patient winced several times and asked for a short break because of discomfort. The supervisor says, "It was nothing major, don't make the notes sound worse than they were."`,
+    pivotInsight:
+      "Clinical records must be accurate. Minimising or altering notes to protect a colleague, avoid criticism, or make care look smoother is dishonest.",
+    gmpRef: {
+      label: "GMP · Trust and professionalism",
+      url: `${GMP_MAIN_URL}/trust-and-professionalism`,
+    },
+    items: [
+      {
+        id: "app-020-a",
+        text: "Write an accurate note stating that the patient experienced some discomfort, a pause was taken, and the procedure then continued.",
+        correctRating: "very_appropriate",
+        rationale:
+          "This is very appropriate. Clinical notes should accurately reflect what happened. Recording that the patient experienced discomfort and that a pause was taken is factual and supports honest documentation.",
+        whyNotAdjacent:
+          "This is not merely 'Appropriate' because accurate record-keeping is the central professional issue in the scenario.",
+        gmpRef: {
+          label: "GMP · Trust and professionalism",
+          url: `${GMP_MAIN_URL}/trust-and-professionalism`,
+        },
+      },
+      {
+        id: "app-020-b",
+        text: "Use the supervisor's wording because the discomfort was not serious and the supervisor is responsible for the treatment.",
+        correctRating: "very_inappropriate",
+        rationale:
+          "This is very inappropriate. Alina should not knowingly enter misleading information into the clinical record, even if the supervisor believes the discomfort was minor.",
+        whyNotAdjacent:
+          "This is not just 'Inappropriate' because it involves knowingly creating an inaccurate clinical record.",
+      },
+      {
+        id: "app-020-c",
+        text: "Ask the supervisor whether they would be comfortable with a more factual note describing the brief discomfort and pause.",
+        correctRating: "appropriate",
+        rationale:
+          "This is appropriate because it challenges the suggested wording professionally and may allow the supervisor to reconsider. However, Alina must still ensure the final record is accurate even if the supervisor is uncomfortable with more factual wording.",
+        whyNotAdjacent:
+          "This is not 'Very Appropriate' because it still frames accuracy as something for the supervisor to approve, rather than as a non-negotiable requirement.",
+      },
+      {
+        id: "app-020-d",
+        text: "Refuse to write any notes at all so that she is not involved in the disagreement.",
+        correctRating: "inappropriate",
+        rationale:
+          "This is inappropriate. Alina is right not to write anything misleading, but refusing to contribute to the notes does not resolve the problem. She should ensure that the record is accurate or seek advice if she is being pressured to document something untrue.",
+        whyNotAdjacent:
+          "This is not 'Very Inappropriate' because the concern about misleading notes is valid. The problem is that the response is avoidant and incomplete.",
+      },
+    ],
+  },
+
+  {
+    id: "app-021",
+    type: "appropriateness",
+    domain: "patients_partnership_communication",
+    difficulty: "challenging",
+    stem: `Ethan is a dental student observing a consultation. A patient, Mrs Pavel, has capacity and is advised to have a tooth extracted because of recurrent infection. Mrs Pavel understands the recommendation but says she wants to delay treatment for two weeks because of an important family event. The supervising dentist looks frustrated and asks Ethan to "make her understand that this is a bad idea."`,
+    pivotInsight:
+      "A competent adult can decline or delay recommended treatment. The professional role is to ensure the decision is informed, not to pressure the patient into agreement.",
+    gmpRef: {
+      label: "GMP · Patients, partnership and communication",
+      url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
+    },
+    items: [
+      {
+        id: "app-021-a",
+        text: "Ask Mrs Pavel what worries her about having the extraction now, and check that she understands the risks of delaying treatment.",
+        correctRating: "appropriate",
+        rationale:
+          "This is appropriate. Ethan explores the patient's reasons and checks whether her decision is informed. It respects autonomy while ensuring she understands the possible consequences of delaying treatment.",
+        whyNotAdjacent:
+          "This is not 'Very Appropriate' because respecting a capacitous patient's wish to delay, once risks are understood (app-021-c), is the stronger response when she has already understood the recommendation.",
+      },
+      {
+        id: "app-021-b",
+        text: "Tell Mrs Pavel that the dentist is the expert and that she should follow the recommendation.",
+        correctRating: "inappropriate",
+        rationale:
+          "This is inappropriate. The dentist's recommendation is clinically relevant, but relying on authority does not properly address the patient's concerns or support informed decision-making.",
+        whyNotAdjacent:
+          "This is not 'Very Inappropriate' because the intention is to encourage recommended care. However, the method is paternalistic and not patient-centred.",
+      },
+      {
+        id: "app-021-c",
+        text: "Respect Mrs Pavel's decision if she understands the risks, and ensure the dentist is aware that she wishes to delay treatment.",
+        correctRating: "very_appropriate",
+        rationale:
+          "This is very appropriate. If Mrs Pavel has capacity and understands the consequences, her decision should be respected. Ensuring the dentist is aware supports appropriate documentation and follow-up.",
+        whyNotAdjacent:
+          "This is not merely 'Appropriate' because it directly applies the principle that a competent adult can decline or delay recommended treatment.",
+        gmpRef: {
+          label: "GMP · Patients, partnership and communication",
+          url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
+        },
+      },
+      {
+        id: "app-021-d",
+        text: "Warn Mrs Pavel that delaying the extraction will definitely cause a serious infection.",
+        correctRating: "very_inappropriate",
+        rationale:
+          "This is very inappropriate because it overstates certainty and may pressure the patient. Patients should be told realistic risks, not frightened with exaggerated or misleading statements.",
+        whyNotAdjacent:
+          "This is 'Very Inappropriate' because it is both misleading and coercive.",
+      },
+    ],
+  },
+
+  {
+    id: "app-022",
+    type: "appropriateness",
+    domain: "trust_professionalism",
+    difficulty: "standard",
+    stem: `Maya is a medical student observing a consultation. The patient tells the doctor that she is allergic to codeine. Maya notices that the doctor accidentally enters "no known drug allergies" into the electronic record. The doctor seems distracted because the clinic is running late.`,
+    pivotInsight:
+      "Potentially inaccurate clinical records that could affect patient safety should be clarified promptly and professionally. The student should not assume the doctor intended to enter the wrong information.",
+    gmpRef: {
+      label: "GMP · Trust and professionalism",
+      url: `${GMP_MAIN_URL}/trust-and-professionalism`,
+    },
+    items: [
+      {
+        id: "app-022-a",
+        text: "Politely ask the doctor to confirm whether the patient's codeine allergy should be recorded.",
+        correctRating: "very_appropriate",
+        rationale:
+          "This is very appropriate. Maya has noticed a possible documentation error that could affect patient safety. Asking the doctor to confirm the allergy is a respectful and direct way to clarify the issue without making accusations.",
+        whyNotAdjacent:
+          "This is not merely 'Appropriate' because it deals with a potentially important patient safety issue promptly and proportionately.",
+        gmpRef: {
+          label: "GMP · Trust and professionalism",
+          url: `${GMP_MAIN_URL}/trust-and-professionalism`,
+        },
+      },
+      {
+        id: "app-022-b",
+        text: "Ask the patient to repeat what she said about allergies.",
+        correctRating: "appropriate",
+        rationale:
+          "This is appropriate because it may clarify whether Maya heard the patient correctly. However, it is less direct than asking the doctor to check the record, and it may slightly disrupt the consultation.",
+        whyNotAdjacent:
+          "This is not 'Very Appropriate' because the issue is the discrepancy between what was said and what was entered. The doctor should be alerted to check the record.",
+      },
+      {
+        id: "app-022-c",
+        text: "Tell the patient privately after the consultation that the doctor entered the wrong allergy information.",
+        correctRating: "very_inappropriate",
+        rationale:
+          "This is very inappropriate. Maya should not tell the patient that the doctor made an error without first clarifying the situation with the doctor. This could undermine the doctor-patient relationship and may be based on an incomplete understanding.",
+        whyNotAdjacent:
+          "This is not merely 'Inappropriate' because it bypasses appropriate clarification and risks damaging trust unnecessarily.",
+      },
+      {
+        id: "app-022-d",
+        text: "Say nothing, as the doctor probably knows what they are doing.",
+        correctRating: "very_inappropriate",
+        rationale:
+          "This is very inappropriate. Maya has noticed a possible error in the medical record that could affect prescribing and patient safety. Hierarchy or assumptions about the doctor's knowledge should not prevent her from raising it appropriately.",
+        whyNotAdjacent:
+          "This is not just 'Inappropriate' because inaction could leave a clinically important allergy incorrectly recorded.",
+      },
+    ],
+  },
+
+  {
+    id: "app-023",
+    type: "appropriateness",
+    domain: "patients_partnership_communication",
+    difficulty: "foundation",
+    stem: `A dentist is carrying out a routine examination on an eight-year-old child, Adam. Halfway through the check-up, Adam becomes very upset, starts crying, and says he wants to go home. His parent looks embarrassed and says, "Just carry on, he always makes a fuss."`,
+    pivotInsight:
+      "A distressed child should be treated with patience and compassion. The dentist should not simply continue as normal when the child is clearly upset.",
+    gmpRef: {
+      label: "GMP · Patients, partnership and communication",
+      url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
+    },
+    items: [
+      {
+        id: "app-023-a",
+        text: "Pause the examination and try to calm Adam before deciding whether to continue.",
+        correctRating: "very_appropriate",
+        rationale:
+          "This is very appropriate. Adam is clearly distressed, and pausing gives him the chance to calm down and feel safe. It also allows the dentist to decide whether continuing would be in Adam's best interests.",
+        whyNotAdjacent:
+          "This is not merely 'Appropriate' because it directly responds to the child's distress before making any further decision.",
+        gmpRef: {
+          label: "GMP · Patients, partnership and communication",
+          url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
+        },
+      },
+      {
+        id: "app-023-b",
+        text: "Suggest booking another appointment if Adam remains too distressed after attempts to reassure him.",
+        correctRating: "very_appropriate",
+        rationale:
+          "This is very appropriate when attempts to reassure Adam have not worked. Rescheduling may avoid making the experience traumatic and may lead to better cooperation and care at a later appointment.",
+        whyNotAdjacent:
+          "This is very appropriate because it follows an attempt to reassure the child and prioritises his wellbeing rather than forcing the examination.",
+      },
+      {
+        id: "app-023-c",
+        text: "Carry on with the check-up because the parent has given permission.",
+        correctRating: "very_inappropriate",
+        rationale:
+          "This is very inappropriate. Parental permission does not justify continuing as normal when a child is visibly distressed. The dentist should act in the child's best interests and avoid causing unnecessary distress.",
+        whyNotAdjacent:
+          "This is not merely 'Inappropriate' because continuing despite significant distress could make the experience traumatic and damage trust.",
+      },
+      {
+        id: "app-023-d",
+        text: "Tell Adam that he is being silly and that the check-up will only take a few more minutes.",
+        correctRating: "very_inappropriate",
+        rationale:
+          "This is very inappropriate. Dismissing or belittling a frightened child is unkind and likely to worsen his distress. The dentist should respond with reassurance and patience.",
+        whyNotAdjacent:
+          "This is clearly 'Very Inappropriate' because it is both dismissive and likely to escalate the situation.",
+      },
+    ],
+  },
+
+  {
+    id: "app-024",
+    type: "appropriateness",
+    domain: "patients_partnership_communication",
+    difficulty: "standard",
+    stem: `Noah is a medical student helping at a GP reception desk. A social worker phones and asks whether a child has recently attended the surgery. The social worker explains that there are concerns about the child's home situation. Noah is aware that the surgery's confidentiality policy says this information cannot be shared without appropriate consent or a formal safeguarding/legal route.`,
+    pivotInsight:
+      "Confidential information should not be disclosed simply because the requester is from another agency. The response should protect confidentiality while signposting the proper route.",
+    gmpRef: {
+      label: "GMP · Patients, partnership and communication",
+      url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
+    },
+    items: [
+      {
+        id: "app-024-a",
+        text: "Explain that he cannot share that information without the appropriate consent or formal process, and advise the social worker to contact the practice manager or safeguarding lead through the proper route.",
+        correctRating: "very_appropriate",
+        rationale:
+          "This is very appropriate. Noah protects patient confidentiality, explains why he cannot disclose the information, and directs the caller towards the correct route for raising a safeguarding or information-sharing request.",
+        whyNotAdjacent:
+          "This is not merely 'Appropriate' because it both refuses inappropriate disclosure and gives a clear, constructive next step.",
+        gmpRef: {
+          label: "GMP · Patients, partnership and communication",
+          url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
+        },
+      },
+      {
+        id: "app-024-b",
+        text: "Say that he understands it is sensitive but he is unable to share the information at this point.",
+        correctRating: "appropriate",
+        rationale:
+          "This is appropriate because Noah does not disclose confidential information and acknowledges the sensitivity of the situation. However, it is not ideal because it does not clearly explain the policy or direct the social worker to the correct process.",
+        whyNotAdjacent:
+          "This is not 'Very Appropriate' because it lacks a clear explanation and does not provide a practical next step.",
+      },
+      {
+        id: "app-024-c",
+        text: "Say that he could lose his placement if he shared the information.",
+        correctRating: "inappropriate",
+        rationale:
+          "This is inappropriate. Although it reflects that breaching confidentiality is serious, it centres Noah's personal consequences rather than the patient's right to confidentiality and the correct information-sharing process.",
+        whyNotAdjacent:
+          "This is not 'Very Inappropriate' because it still refuses disclosure, but the reasoning given is professionally poor.",
+      },
+      {
+        id: "app-024-d",
+        text: "Check the child's record and tell the social worker whether the child has attended, as the request may relate to safeguarding.",
+        correctRating: "very_inappropriate",
+        rationale:
+          "This is very inappropriate. Noah should not disclose confidential information outside the proper process, even if the caller says the situation is sensitive. Safeguarding concerns should be handled through the correct route.",
+        whyNotAdjacent:
+          "This is clearly 'Very Inappropriate' because it breaches confidentiality without appropriate authority or process.",
+      },
+    ],
+  },
+
+  {
+    id: "app-025",
+    type: "appropriateness",
+    domain: "trust_professionalism",
+    difficulty: "standard",
+    stem: `Rohan is a dental student assisting with a procedure under supervision. While passing an instrument, he accidentally catches the patient's lip. There is no obvious bleeding, and the patient does not react because the area is numb from local anaesthetic. The practice policy says patients and supervisors must be informed of accidents during treatment.`,
+    pivotInsight:
+      "Honesty after incidents matters even if harm seems minor or unnoticed. Local policy requiring disclosure should be followed.",
+    gmpRef: {
+      label: "GMP · Trust and professionalism",
+      url: `${GMP_MAIN_URL}/trust-and-professionalism`,
+    },
+    items: [
+      {
+        id: "app-025-a",
+        text: "Tell his supervisor what happened and ensure the patient is informed in line with practice policy.",
+        correctRating: "very_appropriate",
+        rationale:
+          "This is very appropriate. The policy states that patients and supervisors must be informed of accidents. Rohan should be honest about what happened even if there is no obvious harm.",
+        whyNotAdjacent:
+          "This is not merely 'Appropriate' because it directly follows policy and supports honest, transparent care.",
+        gmpRef: {
+          label: "GMP · Trust and professionalism",
+          url: `${GMP_MAIN_URL}/trust-and-professionalism`,
+        },
+      },
+      {
+        id: "app-025-b",
+        text: "Ask the patient whether they are experiencing any discomfort.",
+        correctRating: "very_appropriate",
+        rationale:
+          "This is very appropriate. Although the area may be numb, the patient may still notice discomfort or later effects. Checking on the patient is a sensible and caring immediate step.",
+        whyNotAdjacent:
+          "This is not merely 'Appropriate' because it directly considers the patient's wellbeing after an incident.",
+      },
+      {
+        id: "app-025-c",
+        text: "Say nothing unless the patient later complains of pain.",
+        correctRating: "very_inappropriate",
+        rationale:
+          "This is very inappropriate. The patient may not feel pain until the anaesthetic wears off, and the policy requires disclosure. Waiting for the patient to complain is not honest or safe practice.",
+        whyNotAdjacent:
+          "This is clearly 'Very Inappropriate' because it ignores policy and fails to disclose an incident.",
+      },
+      {
+        id: "app-025-d",
+        text: "Privately record the incident in his own notes but avoid mentioning it to the patient or supervisor because no harm is visible.",
+        correctRating: "very_inappropriate",
+        rationale:
+          "This is very inappropriate. Keeping a private note does not meet the requirement to inform the patient and supervisor. The absence of visible harm does not justify non-disclosure.",
+        whyNotAdjacent:
+          "This is not merely 'Inappropriate' because it deliberately avoids the required disclosure process.",
+      },
+    ],
+  },
+
+  {
+    id: "app-026",
+    type: "appropriateness",
+    domain: "patients_partnership_communication",
+    difficulty: "standard",
+    stem: `Yasmin is a medical student in a clinic that is running 40 minutes late. A patient approaches her in the waiting area and complains in a raised voice that he has been waiting too long. He demands to be seen next. Other patients are watching, and Yasmin has been asked to collect notes for the current consultation.`,
+    pivotInsight:
+      "The response should avoid escalation, avoid making promises that may be unfair or impossible, and recognise the impact on other patients and the current consultation.",
+    gmpRef: {
+      label: "GMP · Patients, partnership and communication",
+      url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
+    },
+    items: [
+      {
+        id: "app-026-a",
+        text: "Acknowledge the patient's frustration, explain that she cannot promise he will be seen next, and say she will inform a member of staff that he is concerned.",
+        correctRating: "very_appropriate",
+        rationale:
+          "This is very appropriate. Yasmin acknowledges the patient's concern without making an unfair promise. Informing an appropriate member of staff is a practical way to seek help while avoiding escalation.",
+        whyNotAdjacent:
+          "This is not merely 'Appropriate' because it balances empathy, honesty, fairness to other patients, and practical action.",
+        gmpRef: {
+          label: "GMP · Patients, partnership and communication",
+          url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
+        },
+      },
+      {
+        id: "app-026-b",
+        text: "Tell the patient to calm down and agree that he will be seen next.",
+        correctRating: "very_inappropriate",
+        rationale:
+          "This is very inappropriate. Telling someone to calm down is likely to escalate the situation, and promising he will be seen next may be unfair to other patients and may not be within Yasmin's control.",
+        whyNotAdjacent:
+          "This is clearly 'Very Inappropriate' because it is both poor communication and an inappropriate promise.",
+      },
+      {
+        id: "app-026-c",
+        text: "Spend several minutes trying to investigate whether the clinic waiting time can be reduced.",
+        correctRating: "appropriate",
+        rationale:
+          "This is appropriate in intention because Yasmin is trying to help. However, it is not ideal because she has been asked to collect notes for the current consultation, and delaying that task may slow the clinic further.",
+        whyNotAdjacent:
+          "This is not 'Very Appropriate' because it may distract from the current consultation and worsen delays.",
+      },
+      {
+        id: "app-026-d",
+        text: "Ignore the patient because she is only a student and the clinic delay is not her responsibility.",
+        correctRating: "inappropriate",
+        rationale:
+          "This is inappropriate. Yasmin may not be responsible for the delay, but she should still respond politely and seek appropriate help rather than ignoring a patient who is distressed and disrupting the waiting area.",
+        whyNotAdjacent:
+          "This is not 'Very Inappropriate' because she is not personally responsible for the delay, but ignoring the patient is still poor communication.",
+      },
+    ],
+  },
+
+  {
+    id: "app-027",
+    type: "appropriateness",
+    domain: "patients_partnership_communication",
+    difficulty: "standard",
+    stem: `Cerys is a dental student on placement. Her supervisor is due to perform a minor procedure on a 13-year-old patient, Leo. Leo's father is present and says he is uncomfortable with Cerys assisting because she is a student and has not met Leo before. Cerys has been hoping to assist with this procedure for her learning log.`,
+    pivotInsight:
+      "The patient's and parent's concerns must come before the student's learning opportunity. The best response listens to the concern and gives the parent a genuine choice.",
+    gmpRef: {
+      label: "GMP · Patients, partnership and communication",
+      url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
+    },
+    items: [
+      {
+        id: "app-027-a",
+        text: "Ask Leo's father whether he would prefer another member of staff to assist instead.",
+        correctRating: "very_appropriate",
+        rationale:
+          "This is very appropriate. The father's concern should be listened to and taken seriously. Asking whether he would prefer someone else to assist gives him a genuine opportunity to express his preference about his child's care.",
+        whyNotAdjacent:
+          "This is not merely 'Appropriate' because it directly prioritises the patient and parent's concerns over the student's learning opportunity.",
+        gmpRef: {
+          label: "GMP · Patients, partnership and communication",
+          url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
+        },
+      },
+      {
+        id: "app-027-b",
+        text: "Ask her supervisor to reassure Leo's father that she will be closely supervised.",
+        correctRating: "appropriate",
+        rationale:
+          "This is appropriate because reassurance from the supervisor may help Leo's father understand Cerys's role and the safeguards in place. However, it is not ideal if it is used to pressure him into accepting Cerys's involvement despite his concerns.",
+        whyNotAdjacent:
+          "This is not 'Very Appropriate' because reassurance should not override the parent's expressed discomfort or make him feel pushed into agreement.",
+      },
+      {
+        id: "app-027-c",
+        text: "Explain to Leo's father that assisting would be a valuable learning opportunity for her.",
+        correctRating: "appropriate",
+        rationale:
+          "This is appropriate but not ideal. It may help explain why students are involved in care, but it risks putting Cerys's learning needs ahead of the patient and parent's concerns. It should not be used to place pressure on the family.",
+        whyNotAdjacent:
+          "This is not 'Very Appropriate' because the patient's and parent's interests should come before the student's learning opportunity.",
+      },
+      {
+        id: "app-027-d",
+        text: "Ask Leo directly whether he is happy for her to assist, despite his father's concerns.",
+        correctRating: "very_inappropriate",
+        rationale:
+          "This is very inappropriate. Although Leo's views matter, Cerys should not try to bypass or undermine the father's clearly expressed concern. The decision should be handled through the proper consent process with the supervisor.",
+        whyNotAdjacent:
+          "This is not merely 'Inappropriate' because it risks overstepping her role as a student and placing pressure on a child.",
+      },
+    ],
+  },
+
+  {
+    id: "app-028",
+    type: "appropriateness",
+    domain: "trust_professionalism",
+    difficulty: "standard",
+    stem: `Farah is a dental student helping at reception for a few minutes while the receptionist steps away. She notices that the receptionist has left a webpage open showing applications for jobs at other dental practices. Practice policy says work computers should not be used for personal browsing. Farah is unsure what to do.`,
+    pivotInsight:
+      "The response should be proportionate. A private, honest conversation may be better than immediate escalation where there is no immediate patient safety risk.",
+    gmpRef: {
+      label: "GMP · Trust and professionalism",
+      url: `${GMP_MAIN_URL}/trust-and-professionalism`,
+    },
+    items: [
+      {
+        id: "app-028-a",
+        text: "Speak to the receptionist privately and explain what she saw, asking whether everything is all right at work.",
+        correctRating: "very_appropriate",
+        rationale:
+          "This is very appropriate. Farah is being honest and direct while also giving the receptionist an opportunity to explain or raise any concerns about work. It is proportionate because there is no immediate patient safety risk.",
+        whyNotAdjacent:
+          "This is not merely 'Appropriate' because it combines honesty, compassion, and proportionate handling of a workplace issue.",
+        gmpRef: {
+          label: "GMP · Trust and professionalism",
+          url: `${GMP_MAIN_URL}/trust-and-professionalism`,
+        },
+      },
+      {
+        id: "app-028-b",
+        text: "Inform the practice manager immediately without speaking to the receptionist first.",
+        correctRating: "appropriate",
+        rationale:
+          "This is appropriate because the practice may need to know about possible misuse of a work computer. However, it may be more proportionate to speak to the receptionist first, as there is no immediate patient safety issue.",
+        whyNotAdjacent:
+          "This is not 'Very Appropriate' because immediate escalation may be premature before trying a direct, private conversation.",
+      },
+      {
+        id: "app-028-c",
+        text: "Ask the receptionist if he is looking for another job, without mentioning what she saw.",
+        correctRating: "inappropriate",
+        rationale:
+          "This is inappropriate. It is indirect and may make the receptionist uncomfortable or suspicious. If Farah is going to raise the issue, she should be straightforward about what she saw.",
+        whyNotAdjacent:
+          "This is not 'Very Inappropriate' because it is unlikely to cause serious harm, but it is not an open or helpful way to manage the situation.",
+      },
+      {
+        id: "app-028-d",
+        text: "Take a photo of the screen so she has proof if the receptionist denies it later.",
+        correctRating: "very_inappropriate",
+        rationale:
+          "This is very inappropriate. Taking a photo would be disproportionate and could create further confidentiality or privacy concerns. Farah should not start gathering evidence in this way.",
+        whyNotAdjacent:
+          "This is not merely 'Inappropriate' because it escalates the situation in a covert and unprofessional manner.",
+      },
+    ],
+  },
+
+  {
+    id: "app-029",
+    type: "appropriateness",
+    domain: "knowledge_skills_development",
+    difficulty: "foundation",
+    stem: `Oscar is a medical student who has just received feedback that his history-taking is too rushed and that patients sometimes feel interrupted. Oscar feels disappointed because he thought he was being efficient. His supervisor asks how he would like to respond to the feedback.`,
+    pivotInsight:
+      "Feedback should be approached as a chance to understand and improve. Asking for specific examples and reflecting is better than dismissing feedback or seeking reassurance that it is unfair.",
+    gmpRef: {
+      label: "GMP · Knowledge, skills and development",
+      url: `${GMP_MAIN_URL}/knowledge-skills-and-development`,
+    },
+    items: [
+      {
+        id: "app-029-a",
+        text: "Ask his supervisor for examples so he can understand when patients felt interrupted and how he could improve.",
+        correctRating: "very_appropriate",
+        rationale:
+          "This is very appropriate. Oscar is engaging constructively with feedback and seeking specific information that can help him improve his communication with patients.",
+        whyNotAdjacent:
+          "This is not merely 'Appropriate' because it directly supports reflection and targeted development.",
+        gmpRef: {
+          label: "GMP · Knowledge, skills and development",
+          url: `${GMP_MAIN_URL}/knowledge-skills-and-development`,
+        },
+      },
+      {
+        id: "app-029-b",
+        text: "Tell his supervisor that he is surprised by the feedback but will reflect on it.",
+        correctRating: "appropriate",
+        rationale:
+          "This is appropriate because Oscar acknowledges the feedback and remains open to reflection. However, it is less useful than asking for specific examples and practical ways to improve.",
+        whyNotAdjacent:
+          "This is not 'Very Appropriate' because it does not actively seek clarification or a development plan.",
+      },
+      {
+        id: "app-029-c",
+        text: "Ask other students whether they have also received unfair feedback from the same supervisor.",
+        correctRating: "inappropriate",
+        rationale:
+          "This is inappropriate. It shifts the focus away from Oscar's own development and assumes the feedback is unfair. Negative feedback is a normal part of training and should be considered constructively.",
+        whyNotAdjacent:
+          "This is not 'Very Inappropriate' because it may come from feeling upset, but it is not a helpful or professional response.",
+      },
+      {
+        id: "app-029-d",
+        text: "Say he would rather focus on the positive feedback because the criticism has upset him.",
+        correctRating: "very_inappropriate",
+        rationale:
+          "This is very inappropriate. Supervisors need to give honest feedback about strengths and areas for development. Refusing to discuss concerns about patient communication prevents Oscar from improving.",
+        whyNotAdjacent:
+          "This is not merely 'Inappropriate' because it rejects feedback that is directly relevant to patient care and professional development.",
+      },
+    ],
+  },
+
+  {
+    id: "app-030",
+    type: "appropriateness",
+    domain: "colleagues_culture_safety",
+    difficulty: "standard",
+    stem: `Sam is a medical student working on a ward. A receptionist is dealing with an angry visitor who is shouting about waiting times. The visitor slams his hand on the desk and other patients in the waiting area look frightened. The receptionist appears shaken.`,
+    pivotInsight:
+      "Threatening behaviour in a patient area affects staff safety and other patients. Routine work should not take priority over addressing immediate safety and welfare concerns.",
+    gmpRef: {
+      label: "GMP · Colleagues, culture and safety",
+      url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
+    },
+    items: [
+      {
+        id: "app-030-a",
+        text: "Seek help from an appropriate senior member of staff or security, while ensuring the receptionist is not left unsupported.",
+        correctRating: "very_appropriate",
+        rationale:
+          "This is very appropriate. The visitor's behaviour is threatening and is affecting the receptionist and others nearby. Sam should seek appropriate help and ensure the situation is managed safely.",
+        whyNotAdjacent:
+          "This is not merely 'Appropriate' because it responds promptly to a safety and welfare issue.",
+        gmpRef: {
+          label: "GMP · Colleagues, culture and safety",
+          url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
+        },
+      },
+      {
+        id: "app-030-b",
+        text: "Consider the impact of the visitor's behaviour on other patients in the waiting area.",
+        correctRating: "very_appropriate",
+        rationale:
+          "This is very appropriate. Other patients may feel threatened or distressed by the visitor's behaviour, so their safety and comfort should be considered when deciding how to respond.",
+        whyNotAdjacent:
+          "This is not merely 'Appropriate' because the behaviour is visibly affecting the wider waiting area.",
+      },
+      {
+        id: "app-030-c",
+        text: "Ignore the situation because Sam has clinical tasks to complete.",
+        correctRating: "very_inappropriate",
+        rationale:
+          "This is very inappropriate. A threatening situation involving staff and patients takes priority over routine tasks and should be addressed promptly.",
+        whyNotAdjacent:
+          "This is not just 'Inappropriate' because ignoring the situation may allow a safety risk to continue.",
+      },
+      {
+        id: "app-030-d",
+        text: "Avoid getting involved because the visitor may make a complaint.",
+        correctRating: "very_inappropriate",
+        rationale:
+          "This is very inappropriate. The possibility of a complaint should not prevent staff from responding to threatening or disruptive behaviour in line with policy.",
+        whyNotAdjacent:
+          "This is clearly 'Very Inappropriate' because fear of complaint is not a valid reason to ignore unsafe behaviour.",
       },
     ],
   },
@@ -2032,6 +2760,678 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     ],
   },
 
+  {
+    id: "imp-018",
+    type: "importance",
+    domain: "knowledge_skills_development",
+    difficulty: "standard",
+    stem: `Sameer is a dental student on placement. His supervisor asks him to use a newly introduced digital scanner to take impressions for a patient. Sameer has used traditional impression material many times but has only seen the digital scanner demonstrated once. The patient is anxious and wants the appointment finished quickly. Sameer is deciding how to respond.`,
+    pivotInsight:
+      "The key issue is whether Sameer can carry out the task safely and honestly within his competence. Patient pressure and personal embarrassment must not override safe supervision.",
+    gmpRef: {
+      label: "GMP · Knowledge, skills and development",
+      url: `${GMP_MAIN_URL}/knowledge-skills-and-development`,
+    },
+    items: [
+      {
+        id: "imp-018-a",
+        text: "That Sameer has never used the digital scanner on a patient before.",
+        correctRating: "very_important",
+        rationale:
+          "This is very important because it directly affects whether Sameer can carry out the task safely. He must communicate his lack of experience honestly so that his supervisor can decide whether he should observe, practise first, or use the scanner under direct supervision.",
+        whyNotAdjacent:
+          "This should not be rated merely 'Important'. Lack of experience with the specific tool is central to patient safety and safe supervision.",
+        gmpRef: {
+          label: "GMP · Knowledge, skills and development",
+          url: `${GMP_MAIN_URL}/knowledge-skills-and-development`,
+        },
+      },
+      {
+        id: "imp-018-b",
+        text: "That his supervisor may not know he has only seen the scanner demonstrated once.",
+        correctRating: "important",
+        rationale:
+          "This is important because both Sameer and his supervisor have responsibilities for patient safety. Sameer should discuss his experience and limitations so that they can agree a safe plan for learning and patient care.",
+        whyNotAdjacent:
+          "This is not 'Very Important' because the most central issue is Sameer's actual lack of experience. However, the supervisor's awareness is still important for safe delegation.",
+      },
+      {
+        id: "imp-018-c",
+        text: "That the patient is anxious and wants the appointment finished quickly.",
+        correctRating: "important",
+        rationale:
+          "This is important because the patient's anxiety should be acknowledged and managed sensitively. However, the patient's wish for speed does not justify Sameer working beyond his competence or failing to disclose his lack of experience.",
+        whyNotAdjacent:
+          "This is 'Important' rather than 'Very Important' because it affects communication and patient experience, but it does not override patient safety.",
+      },
+      {
+        id: "imp-018-d",
+        text: "That Sameer worries his supervisor may stop giving him practical opportunities if he admits he is unfamiliar with the scanner.",
+        correctRating: "minor_importance",
+        rationale:
+          "This is of minor importance. Sameer's learning opportunities matter, but they cannot take priority over patient safety. He can develop the skill through observation, simulation, or supervised practice.",
+        whyNotAdjacent:
+          "This is not 'Not Important at All' because learning opportunities are relevant to his training. However, it is only minor compared with safe practice and honest communication.",
+      },
+    ],
+  },
+
+  {
+    id: "imp-019",
+    type: "importance",
+    domain: "colleagues_culture_safety",
+    difficulty: "standard",
+    stem: `Leila is a dental student in clinic. She notices that another student, Ben, has repeatedly failed to clean down his workstation properly between patients. On one occasion, Leila sees used instruments left on the side while the next patient is being called in. Ben says he is rushing because he is behind schedule. Leila is deciding what to do.`,
+    pivotInsight:
+      "Infection control is a patient safety issue. Time pressure and colleague discomfort do not justify unsafe practice.",
+    gmpRef: {
+      label: "GMP · Colleagues, culture and safety",
+      url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
+    },
+    items: [
+      {
+        id: "imp-019-a",
+        text: "That patients could be exposed to avoidable infection risk.",
+        correctRating: "very_important",
+        rationale:
+          "This is very important. Poor cleaning and unsafe handling of used instruments between patients may expose patients to avoidable harm. Patient safety must take priority.",
+        whyNotAdjacent:
+          "This cannot be rated merely 'Important' because the risk is direct, immediate, and linked to patient safety.",
+        gmpRef: {
+          label: "GMP · Colleagues, culture and safety",
+          url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
+        },
+      },
+      {
+        id: "imp-019-b",
+        text: "That Ben is running behind schedule.",
+        correctRating: "minor_importance",
+        rationale:
+          "This is of minor importance. It may help explain why Ben is rushing and may be relevant to how he is supported, but it does not justify unsafe infection control practice.",
+        whyNotAdjacent:
+          "This is not 'Not Important at All' because workload pressure may help explain the behaviour. However, it is minor compared with patient safety.",
+      },
+      {
+        id: "imp-019-c",
+        text: "That raising the concern might make working with Ben awkward.",
+        correctRating: "not_important",
+        rationale:
+          "This is not important at all. Personal awkwardness should not prevent Leila from acting where patient safety may be compromised.",
+        whyNotAdjacent:
+          "This should not be rated 'Of Minor Importance' because awkwardness has no legitimate weight when patients may be exposed to harm.",
+      },
+      {
+        id: "imp-019-d",
+        text: "Whether this has happened more than once.",
+        correctRating: "important",
+        rationale:
+          "This is important. A repeated pattern suggests a more serious concern and may affect how the issue should be raised or escalated. However, even a single infection control breach still needs to be addressed.",
+        whyNotAdjacent:
+          "This is 'Important' rather than 'Very Important' because recurrence affects the seriousness of the pattern, but the immediate safety concern exists regardless.",
+      },
+    ],
+  },
+
+  {
+    id: "imp-020",
+    type: "importance",
+    domain: "patients_partnership_communication",
+    difficulty: "standard",
+    stem: `Ravi is a medical student observing a consultation. A patient, Ms Clarke, is offered a steroid injection for shoulder pain. The doctor explains the benefits but does not mention possible side effects. Ms Clarke says, "If you think it's best, I'll just have it." Ravi knows from teaching that patients should understand material risks and alternatives before agreeing to a procedure. He is deciding whether to say anything.`,
+    pivotInsight:
+      "Consent is not just agreement. Patients need relevant information about benefits, risks, alternatives, and the option of doing nothing in order to make an informed decision.",
+    gmpRef: {
+      label: "GMP · Patients, partnership and communication",
+      url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
+    },
+    items: [
+      {
+        id: "imp-020-a",
+        text: "That Ms Clarke may not have been told the relevant risks and alternatives.",
+        correctRating: "very_important",
+        rationale:
+          "This is very important. A patient's agreement is only meaningful if they have been given enough information to make an informed decision. If relevant risks and alternatives have not been discussed, Ravi should raise this appropriately.",
+        whyNotAdjacent:
+          "This cannot be rated merely 'Important' because it is the central consent issue in the scenario.",
+        gmpRef: {
+          label: "GMP · Patients, partnership and communication",
+          url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
+        },
+      },
+      {
+        id: "imp-020-b",
+        text: "That Ms Clarke appears willing to follow the doctor's recommendation.",
+        correctRating: "minor_importance",
+        rationale:
+          "This is of minor importance. Ms Clarke's trust in the doctor is relevant context, but it does not remove the need for proper consent. Willingness to proceed is not the same as informed agreement.",
+        whyNotAdjacent:
+          "This is not 'Important' because apparent willingness cannot compensate for missing information about risks and alternatives.",
+      },
+      {
+        id: "imp-020-c",
+        text: "That Ravi is only a student and the doctor is more clinically experienced.",
+        correctRating: "minor_importance",
+        rationale:
+          "This is of minor importance. Ravi should raise the issue respectfully and within his role, but being a student does not mean ignoring a possible consent issue.",
+        whyNotAdjacent:
+          "This is not 'Not Important at All' because hierarchy may affect how Ravi raises the issue. However, it must not prevent action.",
+      },
+      {
+        id: "imp-020-d",
+        text: "That interrupting the consultation may feel uncomfortable.",
+        correctRating: "minor_importance",
+        rationale:
+          "This is of minor importance. Ravi's discomfort should not prevent him from raising a possible consent issue, but it is relevant to how he does so. He should raise the point respectfully and at an appropriate moment.",
+        whyNotAdjacent:
+          "This is not 'Not Important at All' because the way a concern is raised during a consultation matters. However, it is only minor because discomfort must not prevent action.",
+      },
+    ],
+  },
+
+  {
+    id: "imp-021",
+    type: "importance",
+    domain: "trust_professionalism",
+    difficulty: "foundation",
+    stem: `Luca is a medical student. He realises on the way to placement that he has forgotten his student identification badge. The placement involves speaking to patients on a ward under supervision. Hospital policy says students must wear visible identification showing their name and student status. Luca is deciding what to do when he arrives.`,
+    pivotInsight:
+      "Patients must know who is involved in their care and whether that person is a student. Identification also protects safety and security.",
+    gmpRef: {
+      label: "GMP · Trust and professionalism",
+      url: `${GMP_MAIN_URL}/trust-and-professionalism`,
+    },
+    items: [
+      {
+        id: "imp-021-a",
+        text: "That patients should know he is a medical student and not a qualified doctor.",
+        correctRating: "very_important",
+        rationale:
+          "This is very important. Patients should understand who is involved in their care and whether that person is a student rather than a qualified clinician.",
+        whyNotAdjacent:
+          "This should not be rated merely 'Important' because it directly affects transparency, consent, and patient trust.",
+        gmpRef: {
+          label: "GMP · Trust and professionalism",
+          url: `${GMP_MAIN_URL}/trust-and-professionalism`,
+        },
+      },
+      {
+        id: "imp-021-b",
+        text: "That hospital policy requires identification to be worn on placement.",
+        correctRating: "very_important",
+        rationale:
+          "This is very important. If local policy requires identification during patient contact, Luca should follow the policy and inform the placement team rather than proceeding as normal.",
+        whyNotAdjacent:
+          "This is not merely 'Important' because the policy exists to protect patients, staff, and the public, and to ensure transparency.",
+      },
+      {
+        id: "imp-021-c",
+        text: "That Luca may miss a useful learning opportunity if he is not allowed onto the ward.",
+        correctRating: "minor_importance",
+        rationale:
+          "This is of minor importance. Learning opportunities are relevant to Luca's placement, but they cannot take priority over patient transparency, safety, and local policy.",
+        whyNotAdjacent:
+          "This is not 'Not Important at All' because his learning is relevant. However, it is only minor compared with identification and patient trust.",
+      },
+      {
+        id: "imp-021-d",
+        text: "That other students sometimes forget their badges too.",
+        correctRating: "not_important",
+        rationale:
+          "This is not important at all. Other students' behaviour does not justify ignoring policy or reducing transparency with patients.",
+        whyNotAdjacent:
+          "This should not be rated 'Of Minor Importance' because it has no legitimate bearing on what Luca should do.",
+      },
+    ],
+  },
+
+  {
+    id: "imp-022",
+    type: "importance",
+    domain: "trust_professionalism",
+    difficulty: "foundation",
+    stem: `Hannah is a dental student. Her friend Eva texts her in the morning to say she is skipping a compulsory teaching session and asks Hannah to sign the attendance register for her. Eva says she is exhausted and adds that other students have signed in for friends before without being caught. Hannah is deciding how to respond.`,
+    pivotInsight:
+      "Signing another student in is dishonest. Friendship, possible annoyance, and the fact that others do it do not justify academic dishonesty.",
+    gmpRef: {
+      label: "GMP · Trust and professionalism",
+      url: `${GMP_MAIN_URL}/trust-and-professionalism`,
+    },
+    items: [
+      {
+        id: "imp-022-a",
+        text: "That signing the register for Eva would be dishonest.",
+        correctRating: "very_important",
+        rationale:
+          "This is very important. Signing Eva in would create a false record of attendance and would be dishonest. Students are expected to act with honesty and integrity in their education and professional activities.",
+        whyNotAdjacent:
+          "This cannot be rated merely 'Important' because honesty is the central issue in the scenario.",
+        gmpRef: {
+          label: "GMP · Trust and professionalism",
+          url: `${GMP_MAIN_URL}/trust-and-professionalism`,
+        },
+      },
+      {
+        id: "imp-022-b",
+        text: "That Eva may be annoyed if Hannah refuses.",
+        correctRating: "not_important",
+        rationale:
+          "This is not important at all. Eva's possible annoyance does not justify dishonest conduct. Hannah should not allow friendship or fear of upsetting Eva to influence her decision.",
+        whyNotAdjacent:
+          "This should not be rated 'Of Minor Importance' because personal annoyance has no legitimate weight where dishonesty is being requested.",
+      },
+      {
+        id: "imp-022-c",
+        text: "That other students have signed in for friends before.",
+        correctRating: "not_important",
+        rationale:
+          "This is not important at all. The fact that other students may have acted dishonestly does not make it acceptable for Hannah to do the same.",
+        whyNotAdjacent:
+          "This is not 'Of Minor Importance' because other students' behaviour does not affect Hannah's professional responsibility.",
+      },
+      {
+        id: "imp-022-d",
+        text: "That Eva says she is exhausted.",
+        correctRating: "important",
+        rationale:
+          "This is important because Eva may need support if she is struggling with fatigue or wellbeing. However, it does not justify Hannah signing the register for her. Hannah can refuse the dishonest request while encouraging Eva to speak to the tutor or student support.",
+        whyNotAdjacent:
+          "This is 'Important' rather than 'Very Important' because it affects how Hannah should support Eva, but it does not change the need to refuse the dishonest request.",
+      },
+    ],
+  },
+
+  {
+    id: "imp-023",
+    type: "importance",
+    domain: "colleagues_culture_safety",
+    difficulty: "standard",
+    stem: `Oliver is a medical student on placement. He sees a poster in a staff area advertising a student debate. The poster includes a joke about patients from low-income backgrounds that Oliver feels could be offensive. He raises this with the team, but most people say they had not noticed anything wrong with it. Oliver is deciding what to do next.`,
+    pivotInsight:
+      "Potentially offensive material in a healthcare environment can affect patients, staff, inclusivity and trust, even if not everyone recognises the problem immediately.",
+    gmpRef: {
+      label: "GMP · Colleagues, culture and safety",
+      url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
+    },
+    items: [
+      {
+        id: "imp-023-a",
+        text: "That patients or staff who see the poster may find it offensive.",
+        correctRating: "very_important",
+        rationale:
+          "This is very important. A healthcare environment should be respectful and inclusive. If patients or staff may reasonably find the poster offensive, the concern should be taken seriously.",
+        whyNotAdjacent:
+          "This is not merely 'Important' because the potential impact is on patients, staff and the culture of the clinical environment.",
+        gmpRef: {
+          label: "GMP · Colleagues, culture and safety",
+          url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
+        },
+      },
+      {
+        id: "imp-023-b",
+        text: "That the poster may reflect badly on the clinic.",
+        correctRating: "very_important",
+        rationale:
+          "This is very important. The clinic's reputation depends partly on showing respect for all patients and communities. Offensive wording can undermine trust in the clinic.",
+        whyNotAdjacent:
+          "This should not be rated merely 'Important' because the concern relates to the clinic's respect for patients and the public.",
+      },
+      {
+        id: "imp-023-c",
+        text: "That Oliver personally feels uneasy about the poster.",
+        correctRating: "important",
+        rationale:
+          "This is important. Oliver's unease may indicate that the wording is inappropriate and may affect his ability to feel comfortable in the placement environment. However, the wider impact on patients and staff is more important.",
+        whyNotAdjacent:
+          "This is not 'Very Important' because Oliver's personal discomfort is not the only issue; the broader impact on others is more significant.",
+      },
+      {
+        id: "imp-023-d",
+        text: "That most staff members did not seem to find the poster offensive.",
+        correctRating: "minor_importance",
+        rationale:
+          "This is of minor importance. It provides context, but it does not mean the poster is acceptable. Other patients or staff may still find it offensive.",
+        whyNotAdjacent:
+          "This is not 'Not Important at All' because colleagues' views are relevant context. However, it is only minor because lack of concern from others does not remove the issue.",
+      },
+    ],
+  },
+
+  {
+    id: "imp-024",
+    type: "importance",
+    domain: "colleagues_culture_safety",
+    difficulty: "challenging",
+    stem: `Thomas is a medical student on placement with his friend, Max. Thomas suspects that Max has taken small quantities of prescription painkillers from the ward medication cupboard. When Thomas asks him about it, Max becomes tearful and says he has become dependent on the medication. Max begs Thomas not to tell anyone. Thomas is deciding how to respond.`,
+    pivotInsight:
+      "This is both a serious professional/safety issue and a wellbeing issue. The official-style response should not be judgemental, but the behaviour cannot simply be ignored.",
+    gmpRef: {
+      label: "GMP · Colleagues, culture and safety",
+      url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
+    },
+    items: [
+      {
+        id: "imp-024-a",
+        text: "That Max may need support for addiction or another underlying problem.",
+        correctRating: "very_important",
+        rationale:
+          "This is very important. Max's disclosure suggests he may need urgent support for addiction or another serious difficulty. Thomas should respond compassionately and help him access appropriate support.",
+        whyNotAdjacent:
+          "This is not merely 'Important' because understanding and supporting Max is central to managing the situation safely and humanely.",
+        gmpRef: {
+          label: "GMP · Colleagues, culture and safety",
+          url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
+        },
+      },
+      {
+        id: "imp-024-b",
+        text: "That prescription medicines may have been stolen from a clinical area.",
+        correctRating: "very_important",
+        rationale:
+          "This is very important. Taking prescription medicines from a clinical area is a serious concern involving safety, honesty, and professional conduct. It cannot simply be ignored.",
+        whyNotAdjacent:
+          "This cannot be rated lower than 'Very Important' because it is a serious breach with potential patient and professional safety implications.",
+      },
+      {
+        id: "imp-024-c",
+        text: "That Max is Thomas's close friend.",
+        correctRating: "not_important",
+        rationale:
+          "This is not important at all as a reason to ignore the issue. Thomas's friendship with Max should not prevent him from acting appropriately. He can be supportive without concealing serious misconduct or risk.",
+        whyNotAdjacent:
+          "This should not be rated 'Of Minor Importance' because personal loyalty cannot justify inaction in a serious safety and professionalism concern.",
+      },
+      {
+        id: "imp-024-d",
+        text: "That Max may become more distressed if Thomas raises the issue with someone appropriate.",
+        correctRating: "important",
+        rationale:
+          "This is important because Thomas should handle the conversation sensitively and avoid being judgemental. However, Max's possible distress does not mean the issue should be kept secret or unmanaged.",
+        whyNotAdjacent:
+          "This is not 'Very Important' because it affects how Thomas should act, rather than whether action is needed.",
+      },
+    ],
+  },
+
+  {
+    id: "imp-025",
+    type: "importance",
+    domain: "patients_partnership_communication",
+    difficulty: "challenging",
+    stem: `Sofia is a medical student in paediatrics. A six-year-old child has a worsening asthma attack and needs inhaled medication urgently. The child's father says he does not believe the inhaler is necessary and would prefer to try steam inhalation first. Sofia is deciding how to respond while waiting for the doctor to return.`,
+    pivotInsight:
+      "For a child, parental views are important, but urgent medical need and risk to the child are also very important. The response should inform and protect, not dismiss the parent.",
+    gmpRef: {
+      label: "GMP · Patients, partnership and communication",
+      url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
+    },
+    items: [
+      {
+        id: "imp-025-a",
+        text: "That the child is in need of urgent medical treatment.",
+        correctRating: "very_important",
+        rationale:
+          "This is very important. A worsening asthma attack can become life-threatening if not treated promptly. The child's immediate medical need must be central to Sofia's response.",
+        whyNotAdjacent:
+          "This cannot be rated merely 'Important' because the child's urgent health need is the key safety issue.",
+        gmpRef: {
+          label: "GMP · Patients, partnership and communication",
+          url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
+        },
+      },
+      {
+        id: "imp-025-b",
+        text: "That the father has the right to be involved in decisions about his child's care.",
+        correctRating: "very_important",
+        rationale:
+          "This is very important. As the child's parent, the father has an important role in decisions about his child's care. His views should be taken seriously and addressed respectfully.",
+        whyNotAdjacent:
+          "This should not be rated merely 'Important' because parental involvement is central in decisions about a young child's treatment.",
+      },
+      {
+        id: "imp-025-c",
+        text: "That the father may change his mind if the risk of delaying treatment is explained clearly.",
+        correctRating: "important",
+        rationale:
+          "This is important. The father may not understand the seriousness of the situation, and clear explanation may help him agree to the inhaler. However, this is not as central as the child's urgent need for treatment.",
+        whyNotAdjacent:
+          "This is 'Important' rather than 'Very Important' because it informs the communication approach but does not outweigh the child's urgent medical need.",
+      },
+      {
+        id: "imp-025-d",
+        text: "That Sofia personally disagrees with the father's preference for steam inhalation.",
+        correctRating: "minor_importance",
+        rationale:
+          "This is of minor importance. Sofia's personal disagreement is not the key issue; the important point is the child's clinical need and the need to explain the risks clearly and professionally.",
+        whyNotAdjacent:
+          "This is not 'Not Important at All' because Sofia's clinical understanding may alert her to the risk, but her personal disagreement is not the central consideration.",
+      },
+    ],
+  },
+
+  {
+    id: "imp-026",
+    type: "importance",
+    domain: "colleagues_culture_safety",
+    difficulty: "standard",
+    stem: `Jude is a medical student attending a compulsory seminar. Another student, Nadia, repeatedly interrupts the lecturer with irrelevant comments and laughs when the lecturer appears flustered. Several students look uncomfortable, and Jude is struggling to concentrate. Jude is deciding whether and how to respond.`,
+    pivotInsight:
+      "Disruptive behaviour affecting a teaching session matters because it affects everyone's learning and the lecturer's wellbeing. Personal relationships or fear of grading consequences should carry little or no weight.",
+    gmpRef: {
+      label: "GMP · Colleagues, culture and safety",
+      url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
+    },
+    items: [
+      {
+        id: "imp-026-a",
+        text: "The impact Nadia's behaviour is having on the opportunity for everyone to learn.",
+        correctRating: "very_important",
+        rationale:
+          "This is very important. Nadia's interruptions are affecting the learning environment for the whole group, not just Jude. This makes it a legitimate concern to address.",
+        whyNotAdjacent:
+          "This should not be rated merely 'Important' because the disruption is affecting the whole class's learning.",
+        gmpRef: {
+          label: "GMP · Colleagues, culture and safety",
+          url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
+        },
+      },
+      {
+        id: "imp-026-b",
+        text: "The impact Nadia's behaviour is having on the lecturer's emotional state.",
+        correctRating: "important",
+        rationale:
+          "This is important. The lecturer's distress may affect the session and should be considered. However, the wider impact on the learning environment for all students is the more central issue.",
+        whyNotAdjacent:
+          "This is not 'Very Important' because the lecturer's emotional state matters, but the main concern is the disruption to the whole group.",
+      },
+      {
+        id: "imp-026-c",
+        text: "Jude's existing friendship with Nadia.",
+        correctRating: "minor_importance",
+        rationale:
+          "This is of minor importance. Jude's response may affect his relationship with Nadia, but that should not prevent him from responding appropriately to behaviour that is disrupting others.",
+        whyNotAdjacent:
+          "This is not 'Not Important at All' because the relationship may affect how he raises the issue. However, it is only minor.",
+      },
+      {
+        id: "imp-026-d",
+        text: "Whether raising the issue could affect future grades from the lecturer.",
+        correctRating: "not_important",
+        rationale:
+          "This is not important at all. Jude's grades should not be affected by raising a concern appropriately, and this should not influence his response.",
+        whyNotAdjacent:
+          "This should not be rated 'Of Minor Importance' because fear about grades has no legitimate bearing on whether disruptive behaviour should be addressed.",
+      },
+    ],
+  },
+
+  {
+    id: "imp-027",
+    type: "importance",
+    domain: "trust_professionalism",
+    difficulty: "standard",
+    stem: `Tariq is a medical student revising in the anatomy room with classmates. He notices that a person he recognises from university, who is not a medical student, has entered using someone else's ID badge and is taking photographs of cadaveric material. Tariq knows unauthorised people are not allowed in the room and photographs are prohibited. He is deciding whether to report it.`,
+    pivotInsight:
+      "Unauthorised access and photography of cadaveric material is a serious breach of policy, security, dignity and trust. Friendship, ignorance, or the possibility someone else may report it should not matter.",
+    gmpRef: {
+      label: "GMP · Trust and professionalism",
+      url: `${GMP_MAIN_URL}/trust-and-professionalism`,
+    },
+    items: [
+      {
+        id: "imp-027-a",
+        text: "That the person used someone else's ID badge to enter a restricted area.",
+        correctRating: "very_important",
+        rationale:
+          "This is very important. Using another person's ID badge to enter a restricted area is a serious security and policy breach. Tariq should not ignore it.",
+        whyNotAdjacent:
+          "This cannot be rated merely 'Important' because the breach is deliberate and serious.",
+        gmpRef: {
+          label: "GMP · Trust and professionalism",
+          url: `${GMP_MAIN_URL}/trust-and-professionalism`,
+        },
+      },
+      {
+        id: "imp-027-b",
+        text: "That photographs are being taken of cadaveric material without permission.",
+        correctRating: "very_important",
+        rationale:
+          "This is very important. Taking photographs in this setting compromises dignity and breaches strict rules around the use of donated bodies for teaching.",
+        whyNotAdjacent:
+          "This is not merely 'Important' because it directly concerns dignity, consent, and professional standards.",
+      },
+      {
+        id: "imp-027-c",
+        text: "That Tariq knows the person socially.",
+        correctRating: "not_important",
+        rationale:
+          "This is not important at all. Tariq's social relationship with the person should not prevent him from reporting a serious breach of policy and dignity.",
+        whyNotAdjacent:
+          "This should not be rated 'Of Minor Importance' because personal relationship has no legitimate weight in deciding whether to report this.",
+      },
+      {
+        id: "imp-027-d",
+        text: "That other students have also noticed and may report it.",
+        correctRating: "not_important",
+        rationale:
+          "This is not important at all. Tariq has personally witnessed the incident and should not assume someone else will report it. Everyone has a responsibility to raise concerns about serious breaches.",
+        whyNotAdjacent:
+          "This is not 'Of Minor Importance' because the possibility of someone else reporting it does not remove Tariq's responsibility.",
+      },
+    ],
+  },
+
+  {
+    id: "imp-028",
+    type: "importance",
+    domain: "colleagues_culture_safety",
+    difficulty: "standard",
+    stem: `Eleni is a medical student. Her friend Marcus promised to help another student, Rosie, revise for an exam, but cancelled an hour before the session to go out with friends. Rosie is upset because she was relying on the help. Eleni knows why Marcus cancelled and is deciding whether to say anything to him.`,
+    pivotInsight:
+      "Students should support colleagues and give honest feedback about behaviour. Saying nothing may allow the behaviour and its impact to go unrecognised.",
+    gmpRef: {
+      label: "GMP · Colleagues, culture and safety",
+      url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
+    },
+    items: [
+      {
+        id: "imp-028-a",
+        text: "That Rosie was relying on Marcus's help for exam preparation.",
+        correctRating: "very_important",
+        rationale:
+          "This is very important. Marcus's cancellation affected Rosie at a time when she needed support. The impact on Rosie is central to whether Eleni should raise the issue.",
+        whyNotAdjacent:
+          "This should not be rated merely 'Important' because the behaviour has had a significant effect on a colleague's ability to access support.",
+        gmpRef: {
+          label: "GMP · Colleagues, culture and safety",
+          url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
+        },
+      },
+      {
+        id: "imp-028-b",
+        text: "That Marcus may not realise the impact of cancelling at short notice.",
+        correctRating: "important",
+        rationale:
+          "This is important. Speaking to Marcus may help him understand the effect of his behaviour and encourage him to repair the situation, such as by rescheduling.",
+        whyNotAdjacent:
+          "This is not 'Very Important' because it informs why speaking to Marcus could help, but the main issue is the impact on Rosie.",
+      },
+      {
+        id: "imp-028-c",
+        text: "That Eleni does not want Marcus to be annoyed with her.",
+        correctRating: "minor_importance",
+        rationale:
+          "This is of minor importance. Eleni's relationship with Marcus may affect how she raises the issue, but it should not stop her from giving honest and constructive feedback.",
+        whyNotAdjacent:
+          "This is not 'Not Important at All' because relationships can affect how feedback is delivered. However, it is only minor.",
+      },
+      {
+        id: "imp-028-d",
+        text: "That Marcus cancelled to go out with friends rather than for an unavoidable reason.",
+        correctRating: "important",
+        rationale:
+          "This is important because it affects how responsible Marcus was for the cancellation and whether he should be encouraged to put things right. However, Eleni should still approach the conversation constructively rather than judgementally.",
+        whyNotAdjacent:
+          "This is 'Important' rather than 'Very Important' because the main focus should be the impact and how Marcus can respond now.",
+      },
+    ],
+  },
+
+  {
+    id: "imp-029",
+    type: "importance",
+    domain: "trust_professionalism",
+    difficulty: "foundation",
+    stem: `Mina is a dental student due to attend a supervised clinic. On the way in, she realises she has lost her photo identification badge, which shows her name, course and year of study. Clinic policy says students must wear their badge during patient contact. Mina is deciding what to do.`,
+    pivotInsight:
+      "Identification matters for patient transparency, security and local policy. A lost badge should not simply be ignored.",
+    gmpRef: {
+      label: "GMP · Trust and professionalism",
+      url: `${GMP_MAIN_URL}/trust-and-professionalism`,
+    },
+    items: [
+      {
+        id: "imp-029-a",
+        text: "That patients should know Mina is a student and not a qualified dentist.",
+        correctRating: "very_important",
+        rationale:
+          "This is very important. Patients should understand who is involved in their care and whether that person is still in training.",
+        whyNotAdjacent:
+          "This should not be rated merely 'Important' because it directly affects transparency and patient trust.",
+        gmpRef: {
+          label: "GMP · Trust and professionalism",
+          url: `${GMP_MAIN_URL}/trust-and-professionalism`,
+        },
+      },
+      {
+        id: "imp-029-b",
+        text: "That the lost badge could be used by someone else to access the clinic.",
+        correctRating: "very_important",
+        rationale:
+          "This is very important. A lost identification badge may create a security risk if it is found and misused by someone else.",
+        whyNotAdjacent:
+          "This is not merely 'Important' because it has potential implications for safety and security.",
+      },
+      {
+        id: "imp-029-c",
+        text: "Whether her fellow students are aware of the situation.",
+        correctRating: "minor_importance",
+        rationale:
+          "This is of minor importance. Other students may help by informing the supervisor or being mindful that patients need to know Mina is a student. However, Mina remains responsible for reporting and managing the issue herself.",
+        whyNotAdjacent:
+          "This is not 'Not Important at All' because classmates may be able to assist practically. However, it is only minor.",
+      },
+      {
+        id: "imp-029-d",
+        text: "That the clinic session is important for her course performance.",
+        correctRating: "minor_importance",
+        rationale:
+          "This is of minor importance. Mina's learning and assessment matter, but they do not override patient transparency, clinic policy, or security concerns.",
+        whyNotAdjacent:
+          "This is not 'Not Important at All' because her placement matters. However, it is only minor compared with identification and safety.",
+      },
+    ],
+  },
+
   // ─────────────────────────────────────────────────────────────
   // RANKING (continued)
   // ─────────────────────────────────────────────────────────────
@@ -2272,10 +3672,10 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     items: [
       {
         id: "rank-010-a",
-        text: "Acknowledge Mrs Hemmings's concern, advise her not to mobilise until the teams have clarified the instruction, and escalate the discrepancy to the nursing team and both consultants' teams.",
+        text: "Acknowledge Mrs Hemmings's concern, ask her to wait until the team clarifies the advice urgently, and escalate the discrepancy to the nursing team and both consultants' teams.",
         rank: 1,
         rationale:
-          "Mrs Hemmings cannot safely follow two contradictory sets of instructions, and she should not be placed in the position of choosing between them. Pausing the conflicting action and immediately flagging it through the team is correct. GMP requires that patients receive consistent, coordinated clinical information.",
+          "Mrs Hemmings cannot safely follow two contradictory sets of instructions, and she should not be placed in the position of choosing between them. Asking her to wait while the team clarifies avoids her acting on conflicting advice, and prompt escalation is correct. A student should raise and coordinate, not give independent clinical instructions.",
       },
       {
         id: "rank-010-b",
@@ -2346,10 +3746,10 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     items: [
       {
         id: "rank-012-a",
-        text: "Explain to Dr Nakamura that he cannot legally prescribe as he is not yet qualified, and offer to prepare a draft prescription for Dr Nakamura to review and sign.",
+        text: "Explain to Dr Nakamura that he cannot legally prescribe as he is not yet qualified, and offer to prepare the discharge medication details for Dr Nakamura to review, prescribe, and sign.",
         rank: 1,
         rationale:
-          "Being clear that he cannot sign a prescription is the only legally and professionally correct response. GMP requires clinicians to practise within their legal authority. Preparing a draft for review is a genuinely helpful contribution that supports Dr Nakamura without Yusuf exceeding his authority. This is the ideal response: honest, professional, and constructive.",
+          "Being clear that he cannot sign a prescription is the legally and professionally correct response. GMP requires clinicians to practise within their legal authority. Preparing details for a qualified clinician to review and prescribe is a helpful contribution without Yusuf exceeding his authority. This is honest, professional, and constructive.",
       },
       {
         id: "rank-012-b",
@@ -2486,7 +3886,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     difficulty: "standard",
     stem: `Oliver is a medical student whose hospital ID badge was accidentally swapped with a fellow student's, which he only notices at the end of the day. His badge identifies him correctly but the badge he wore today displayed a different student's name and training level. During the day he introduced himself correctly to patients and staff, but at least two patients would have read his badge before he noticed the mix-up.`,
     pivotInsight:
-      "Patients have the right to know who is treating them. While the error was accidental, GMP's duty of candour requires it to be acknowledged and reported so that affected patients can be appropriately informed.",
+      "Patients have the right to know who is treating them. While the error was accidental, it should be reported and handled in line with local policy, especially where identification may have been unclear.",
     gmpRef: {
       label: "GMP · Trust and professionalism",
       url: `${GMP_MAIN_URL}/trust-and-professionalism`,
@@ -2494,10 +3894,10 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     items: [
       {
         id: "rank-016-a",
-        text: "Report the badge mix-up to his placement coordinator and, where affected patients can be identified, ensure they are appropriately informed.",
+        text: "Report the badge mix-up to his placement coordinator and follow local policy on whether any patients need to be informed.",
         rank: 1,
         rationale:
-          "GMP requires transparency when something has gone wrong. Patients who may have been misled about who they were speaking with have a right to know. Reporting the incident ensures it is on record, any affected patients can be contacted, and the mistake is not repeated. Even though the error was accidental, it must be acknowledged and handled appropriately.",
+          "Reporting the incident is the right professional response. Oliver introduced himself correctly, but patients may have relied on the badge. Local policy and the placement team can decide whether further action is needed. Transparency about errors is important even when harm is unlikely.",
       },
       {
         id: "rank-016-b",
@@ -2549,6 +3949,376 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         rank: 3,
         rationale:
           "This is the least appropriate response. The job of a clinician is to assess the patient in front of them, not to assume that everything important has been communicated at handover. Handover errors are a well-documented source of patient harm. Mr Voss's observation chart shows a pattern that cannot be dismissed. Assuming someone else has already noticed is how patients deteriorate without intervention.",
+      },
+    ],
+  },
+
+  {
+    id: "rank-018",
+    type: "ranking",
+    domain: "patients_partnership_communication",
+    difficulty: "standard",
+    stem: `Meera is a medical student sitting in with a GP. A patient, Mr Lang, has been prescribed a new blood pressure medication. The GP explains the medication quickly and then leaves to take an urgent call, asking Meera to give Mr Lang the printed information leaflet. Mr Lang looks worried and says, "I don't really understand why I need this. I don't like taking tablets."`,
+    pivotInsight:
+      "Giving information is not enough. The patient needs an opportunity to understand, ask questions, and make an informed decision. A student should help within competence and involve the GP where needed.",
+    gmpRef: {
+      label: "GMP · Patients, partnership and communication",
+      url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
+    },
+    items: [
+      {
+        id: "rank-018-a",
+        text: "Acknowledge Mr Lang's concerns, ask what he is worried about, explain what she can within her competence, and tell the GP that Mr Lang has further questions before deciding.",
+        rank: 1,
+        rationale:
+          "This is the most appropriate response. It acknowledges the patient's concerns, explores what he does not understand, keeps Meera within her competence, and ensures the GP is aware that the patient needs further discussion before making a decision.",
+      },
+      {
+        id: "rank-018-b",
+        text: "Give Mr Lang the leaflet and advise him to read it at home, as the GP has already explained the medication.",
+        rank: 2,
+        rationale:
+          "This is less appropriate but still offers some support. Written information may be useful, but it does not properly address the fact that Mr Lang is currently confused and worried. He needs an opportunity to ask questions and understand the medication before deciding.",
+      },
+      {
+        id: "rank-018-c",
+        text: "Tell Mr Lang that he should take the medication because the GP would not prescribe it unless it was necessary.",
+        rank: 3,
+        rationale:
+          "This is the least appropriate response. It relies on the GP's authority rather than addressing the patient's concerns. Patients should be supported to understand and participate in decisions, not pressured into agreement.",
+      },
+    ],
+  },
+
+  {
+    id: "rank-019",
+    type: "ranking",
+    domain: "colleagues_culture_safety",
+    difficulty: "challenging",
+    stem: `Owen is a medical student on a surgical ward. A nurse tells the foundation doctor that a post-operative patient has become increasingly drowsy and has a low respiratory rate after receiving pain relief. The foundation doctor says, "I'm sure she's just tired after surgery," and continues writing discharge summaries. The nurse looks worried and says she has already tried to raise this twice.`,
+    pivotInsight:
+      "Possible clinical deterioration is an urgent patient safety issue. A student should not ignore a nurse's concern simply because a doctor has dismissed it.",
+    gmpRef: {
+      label: "GMP · Colleagues, culture and safety",
+      url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
+    },
+    items: [
+      {
+        id: "rank-019-a",
+        text: "Support the nurse in escalating the concern immediately to another appropriate clinician or senior member of the team.",
+        rank: 1,
+        rationale:
+          "This is the most appropriate response. The patient may be deteriorating and the concern has already been dismissed more than once. Owen should help ensure the patient is reviewed promptly by someone able to assess and manage the situation.",
+      },
+      {
+        id: "rank-019-b",
+        text: "Ask the foundation doctor politely whether they could review the patient before continuing the discharge summaries.",
+        rank: 2,
+        rationale:
+          "This is appropriate because it raises the concern directly and respectfully. However, because the concern has already been raised twice and may be urgent, escalation to another appropriate clinician is a stronger response if there is ongoing delay or dismissal.",
+      },
+      {
+        id: "rank-019-c",
+        text: "Assume the foundation doctor has made a clinical judgement and say nothing further.",
+        rank: 3,
+        rationale:
+          "This is the least appropriate response. Owen has heard a clear patient safety concern. Student status and hierarchy do not remove the responsibility to act when a patient may be at risk.",
+      },
+    ],
+  },
+
+  {
+    id: "rank-020",
+    type: "ranking",
+    domain: "trust_professionalism",
+    difficulty: "standard",
+    stem: `Clara is a medical student. Her friend Jamie asks to copy her completed reflective portfolio because he has fallen behind and says he will "change the wording enough that nobody notices". Jamie says he has been struggling with family problems and is worried he will fail the placement if he submits late.`,
+    pivotInsight:
+      "The response must combine honesty with support. Compassion for a struggling colleague does not justify academic dishonesty or falsifying professional reflection.",
+    gmpRef: {
+      label: "GMP · Trust and professionalism",
+      url: `${GMP_MAIN_URL}/trust-and-professionalism`,
+    },
+    items: [
+      {
+        id: "rank-020-a",
+        text: "Speak with Jamie to understand why he has fallen behind, decline to let him copy the portfolio, and encourage him to contact his supervisor or student support honestly.",
+        rank: 1,
+        rationale:
+          "This is the most appropriate response. Clara is honest and does not participate in academic dishonesty, but she is also supportive and non-judgemental. Understanding Jamie's circumstances may help him access appropriate support and resolve the problem properly.",
+      },
+      {
+        id: "rank-020-b",
+        text: "Decline to share the portfolio and tell Jamie he needs to sort it out himself.",
+        rank: 2,
+        rationale:
+          "Refusing to allow copying is correct. However, this response is less appropriate than offering support or signposting Jamie to help, particularly as he has described personal difficulties.",
+      },
+      {
+        id: "rank-020-c",
+        text: "Share the portfolio as long as Jamie promises to rewrite it in his own words.",
+        rank: 3,
+        rationale:
+          "This is the least appropriate response. It facilitates academic dishonesty and undermines the purpose of reflective practice. Rewording copied reflection does not make it honest or professional.",
+      },
+    ],
+  },
+
+  {
+    id: "rank-021",
+    type: "ranking",
+    domain: "colleagues_culture_safety",
+    difficulty: "standard",
+    stem: `Priya is a dental student. During a clinic, she hears a senior student speak sharply to a nervous patient, saying, "If you keep moving, this will be your fault." The patient becomes tearful and stops asking questions. The senior student later says the patient was being difficult and that Priya should not make a fuss.`,
+    pivotInsight:
+      "Poor communication that intimidates a patient affects dignity, trust, and safety. The response should support the patient and raise the concern proportionately.",
+    gmpRef: {
+      label: "GMP · Colleagues, culture and safety",
+      url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
+    },
+    items: [
+      {
+        id: "rank-021-a",
+        text: "Check that the patient is all right, and raise the incident with the clinical supervisor after the consultation.",
+        rank: 1,
+        rationale:
+          "This is the most appropriate response. It supports the patient and ensures the behaviour is raised with someone responsible for supervision. This is proportionate because the comment affected the patient during care.",
+      },
+      {
+        id: "rank-021-b",
+        text: "Speak privately to the senior student afterwards and explain that the comment seemed to upset the patient.",
+        rank: 2,
+        rationale:
+          "This is reasonable and may help the senior student reflect. However, because the behaviour affected a patient during care, raising it only with the student may not be sufficient.",
+      },
+      {
+        id: "rank-021-c",
+        text: "Say nothing because the senior student has more clinical experience and may know how best to manage nervous patients.",
+        rank: 3,
+        rationale:
+          "This is the least appropriate response. Experience does not justify intimidating or blaming a patient. Saying nothing fails to address the patient's distress and allows poor communication to go unchallenged.",
+      },
+    ],
+  },
+
+  {
+    id: "rank-022",
+    type: "ranking",
+    domain: "colleagues_culture_safety",
+    difficulty: "standard",
+    stem: `Aisha is leading a group project with three other medical students. Two members of the group, Leo and Imran, start arguing during a meeting about which section should be prioritised. The argument becomes heated, and the other students look uncomfortable. The project deadline is the next day.`,
+    pivotInsight:
+      "Good leadership means turning conflict into a constructive discussion and finding a practical way forward, rather than dismissing concerns or allowing the conflict to continue.",
+    gmpRef: {
+      label: "GMP · Colleagues, culture and safety",
+      url: `${GMP_MAIN_URL}/colleagues-culture-and-safety`,
+    },
+    items: [
+      {
+        id: "rank-022-a",
+        text: "Facilitate a focused discussion so the group can agree which section to prioritise and how to complete the remaining work.",
+        rank: 1,
+        rationale:
+          "This is the most appropriate response. Aisha acknowledges the disagreement and turns it into a constructive discussion with a practical aim. This supports teamwork and helps the group make progress.",
+      },
+      {
+        id: "rank-022-b",
+        text: "Ask Leo and Imran to explain their concerns briefly, then help the group decide on a plan.",
+        rank: 2,
+        rationale:
+          "This is appropriate and supportive, but slightly less strong than rank 1 because it focuses first on the two students rather than immediately facilitating a whole-group solution. It is still a reasonable response.",
+      },
+      {
+        id: "rank-022-c",
+        text: "Tell Leo and Imran to stop discussing their disagreement because the group has more important things to do.",
+        rank: 3,
+        rationale:
+          "This is the least appropriate response. It dismisses their concerns and may make them feel alienated. It also fails to resolve the disagreement that is distracting the group.",
+      },
+    ],
+  },
+
+  {
+    id: "rank-023",
+    type: "ranking",
+    domain: "patients_partnership_communication",
+    difficulty: "foundation",
+    stem: `Ella is a medical student in the emergency department. She is about to collect a patient with a minor wrist injury from the waiting room when she notices a young child crying and calling for his father. The child appears lost and no parent or guardian is nearby.`,
+    pivotInsight:
+      "A lost and distressed child needs immediate reassurance and help. A patient with a minor injury may be asked to wait briefly while the child is made safe.",
+    gmpRef: {
+      label: "GMP · Patients, partnership and communication",
+      url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
+    },
+    items: [
+      {
+        id: "rank-023-a",
+        text: "Tell the patient with the wrist injury that she will return shortly, then comfort the child and seek help to locate his parent.",
+        rank: 1,
+        rationale:
+          "This is the most appropriate response. The patient with the wrist injury is not described as being in immediate danger, while the lost child is distressed and potentially vulnerable. Ella should reassure the patient briefly and then help the child.",
+      },
+      {
+        id: "rank-023-b",
+        text: "Ask people nearby whether they have seen the child's father.",
+        rank: 2,
+        rationale:
+          "This is useful and may help locate the parent, but it would be better first to comfort the child and ensure he is safe while help is sought.",
+      },
+      {
+        id: "rank-023-c",
+        text: "Distract the child with toys and leave him in the play area while she continues with the wrist injury patient.",
+        rank: 3,
+        rationale:
+          "This is the least appropriate response. It does not resolve the situation or ensure the child is supervised and safe. Ella should not leave a lost and distressed child unattended.",
+      },
+    ],
+  },
+
+  {
+    id: "rank-024",
+    type: "ranking",
+    domain: "knowledge_skills_development",
+    difficulty: "standard",
+    stem: `Nadia is a first-year medical student. Her supervisor tells her that several patients and nurses have found her communication style abrupt. Nadia is surprised and feels the feedback is unfair because she believes she has been efficient rather than rude.`,
+    pivotInsight:
+      "Feedback should be treated as an opportunity to understand and improve. Dismissing feedback or looking for reassurance from others is less helpful.",
+    gmpRef: {
+      label: "GMP · Knowledge, skills and development",
+      url: `${GMP_MAIN_URL}/knowledge-skills-and-development`,
+    },
+    items: [
+      {
+        id: "rank-024-a",
+        text: "Ask her supervisor for specific examples so she can understand the concern and work on her communication.",
+        rank: 1,
+        rationale:
+          "This is the most appropriate response. Asking for specific examples helps Nadia understand how her behaviour is perceived and gives her a practical basis for improving her communication.",
+      },
+      {
+        id: "rank-024-b",
+        text: "Tell her supervisor she is surprised by the feedback but will reflect on it and try to improve.",
+        rank: 2,
+        rationale:
+          "This is appropriate because Nadia acknowledges the feedback and shows willingness to reflect. However, it is less helpful than asking for specific examples, which would allow more targeted development.",
+      },
+      {
+        id: "rank-024-c",
+        text: "Ask other students whether they have also received unfair feedback from the same supervisor.",
+        rank: 3,
+        rationale:
+          "This is the least appropriate response. It shifts the focus away from Nadia's own development and assumes the feedback may be unfair rather than trying to understand and learn from it.",
+      },
+    ],
+  },
+
+  {
+    id: "rank-025",
+    type: "ranking",
+    domain: "knowledge_skills_development",
+    difficulty: "standard",
+    stem: `Priya is working with another medical student, Laila, on a shared presentation. Laila has missed several planning meetings and says she is struggling to balance the project with caring responsibilities at home. The deadline is approaching and Priya is worried they will not finish in time.`,
+    pivotInsight:
+      "The official-style approach is to be non-judgemental, understand the difficulty, and look for a practical arrangement that allows the work to be completed.",
+    gmpRef: {
+      label: "GMP · Knowledge, skills and development",
+      url: `${GMP_MAIN_URL}/knowledge-skills-and-development`,
+    },
+    items: [
+      {
+        id: "rank-025-a",
+        text: "Ask Laila whether there is a more suitable way for them to divide the work and complete the project together.",
+        rank: 1,
+        rationale:
+          "This is the most appropriate response. It recognises that Laila may have genuine difficulties and focuses on finding a practical, non-judgemental solution that helps both students complete the project.",
+      },
+      {
+        id: "rank-025-b",
+        text: "Tell Laila that Priya understands caring responsibilities can be difficult and ask whether she needs support.",
+        rank: 2,
+        rationale:
+          "This is supportive and empathetic, but it is slightly less appropriate than rank 1 because it does not directly create a practical plan for completing the project.",
+      },
+      {
+        id: "rank-025-c",
+        text: "Tell Laila that her absences are affecting the project and that this is unfair to Priya.",
+        rank: 3,
+        rationale:
+          "This is the least appropriate response. Although the absences are affecting the project, this wording is likely to make Laila feel judged and does not explore the reasons or offer a practical solution.",
+      },
+    ],
+  },
+
+  {
+    id: "rank-026",
+    type: "ranking",
+    domain: "patients_partnership_communication",
+    difficulty: "challenging",
+    stem: `Amelia is a medical student seeing a long-term patient with a minor chronic condition. Recently, the patient has been attending more frequently with vague symptoms and asking for sick notes. Amelia suspects there may be emotional distress linked to work, but she is also worried the patient may be exaggerating symptoms.`,
+    pivotInsight:
+      "The best response is non-judgemental and curious. Accusing a patient of pretending to be ill is highly damaging to trust.",
+    gmpRef: {
+      label: "GMP · Patients, partnership and communication",
+      url: `${GMP_MAIN_URL}/patients-partnership-and-communication`,
+    },
+    items: [
+      {
+        id: "rank-026-a",
+        text: "Ask the patient how he has been feeling generally and whether anything at work has been affecting his wellbeing.",
+        rank: 1,
+        rationale:
+          "This is the most appropriate response. It is empathetic, non-judgemental and may uncover emotional or work-related difficulties contributing to the repeated attendances.",
+      },
+      {
+        id: "rank-026-b",
+        text: "Discuss her observations with the supervising doctor so the patient's situation can be considered more holistically.",
+        rank: 2,
+        rationale:
+          "This is appropriate because Amelia should involve the supervising doctor and think holistically. However, it is slightly less direct than first exploring the patient's wellbeing in a sensitive way if she is involved in the consultation.",
+      },
+      {
+        id: "rank-026-c",
+        text: "Tell the patient that she does not believe he is genuinely unwell.",
+        rank: 3,
+        rationale:
+          "This is the least appropriate response. It is judgemental and likely to damage the clinician-patient relationship. There may be emotional, social, or medically unexplained reasons for the presentations.",
+      },
+    ],
+  },
+
+  {
+    id: "rank-027",
+    type: "ranking",
+    domain: "trust_professionalism",
+    difficulty: "standard",
+    stem: `Daniel is a dental student. His friend Noor asks him to help with a piece of coursework because English is not her first language. Daniel later realises that Noor has copied parts of his previous work into her assignment. Noor says she panicked and asks Daniel not to tell anyone because she is already struggling financially and academically.`,
+    pivotInsight:
+      "Copying work is not acceptable, but the official-style first response should be honest, supportive, and curious about the reasons, rather than simply abandoning the colleague.",
+    gmpRef: {
+      label: "GMP · Trust and professionalism",
+      url: `${GMP_MAIN_URL}/trust-and-professionalism`,
+    },
+    items: [
+      {
+        id: "rank-027-a",
+        text: "Speak to Noor to understand why she copied the work, make clear that copying is not acceptable, and encourage her to seek academic support.",
+        rank: 1,
+        rationale:
+          "This is the most appropriate response. Daniel addresses the dishonesty directly while also trying to understand the reasons and guide Noor towards appropriate support.",
+      },
+      {
+        id: "rank-027-b",
+        text: "Offer to help Noor understand the topic in future, but tell her she must not copy his work.",
+        rank: 2,
+        rationale:
+          "This is appropriate because it sets a clear boundary and offers legitimate support. However, it is slightly less complete than rank 1 because it does not explore why Noor felt the need to copy or signpost formal support.",
+      },
+      {
+        id: "rank-027-c",
+        text: "Refuse to help Noor with any work again.",
+        rank: 3,
+        rationale:
+          "This is the least appropriate response. Although Daniel should not allow copying, simply refusing any future help is unhelpful and misses the chance to support Noor appropriately.",
       },
     ],
   },

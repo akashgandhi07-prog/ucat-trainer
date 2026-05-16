@@ -29,7 +29,7 @@ export default function HomePage() {
   const ogImageUrl = base ? `${base}/og-trainer.png` : undefined;
   const breadcrumbs = base ? [{ name: "Home", url: `${base}/` }] : undefined;
   const ogImageAlt =
-    "Free UCAT Skills Trainer for Verbal Reasoning, Decision Making, and Quantitative Reasoning practice";
+    "Free UCAT Skills Trainer for Verbal Reasoning, Decision Making, Quantitative Reasoning and Situational Judgement practice";
 
   return (
     <div
@@ -37,7 +37,7 @@ export default function HomePage() {
     >
       <SEOHead
         title="Free UCAT skills trainer (UK)"
-        description="Free UCAT skills trainer for UK applicants: drills, study plan and mock tracking from TheUKCATPeople. Verbal Reasoning, Decision Making and Quantitative Reasoning. Rated 5.0 on Trustpilot."
+        description="Free UCAT skills trainer for UK applicants: drills, study plan and mock tracking from TheUKCATPeople. Verbal Reasoning, Decision Making, Quantitative Reasoning and Situational Judgement. Rated 5.0 on Trustpilot."
         canonicalUrl={canonicalUrl}
         imageUrl={ogImageUrl}
         imageAlt={ogImageAlt}

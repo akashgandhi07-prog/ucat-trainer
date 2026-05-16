@@ -31,7 +31,7 @@ export const LANDING_TRAINER_SECTION_META: Record<
   sjt: {
     label: "Situational Judgement",
     hubHref: "/ucat-sjt-practice",
-    summary: "Appropriateness rating, importance rating and ranking — all grounded in GMC Good Medical Practice.",
+    summary: "Appropriateness rating, importance rating and ranking, all grounded in GMC Good Medical Practice.",
   },
 };
 

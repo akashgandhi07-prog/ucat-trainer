@@ -66,7 +66,7 @@ export default function SkillsSectionLayout({
               {headerExtra ? <div className="mt-2 space-y-1">{headerExtra}</div> : null}
               <p
                 className={cn(
-                  "text-sm sm:text-base text-muted-foreground leading-relaxed max-w-2xl",
+                  "text-sm sm:text-base text-muted-foreground leading-relaxed",
                   headerExtra ? "mt-2" : "mt-1.5",
                 )}
               >
