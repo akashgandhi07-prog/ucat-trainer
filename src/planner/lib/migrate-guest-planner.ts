@@ -127,11 +127,14 @@ export async function migrateGuestPlannerToCloud(studentId: string): Promise<{
     if (error) throw new Error(error.message)
   }
 
-  await supabase.from('plan_members').insert({
+  const { error: memberErr } = await supabase.from('plan_members').insert({
     plan_id: planId,
     user_id: studentId,
     role: 'student',
   })
+  if (memberErr) {
+    console.error('[migrateGuestPlannerToCloud] plan_members insert failed', memberErr.message)
+  }
 
   clearGuestPlanner()
   invalidateActivePlanCache(studentId)
