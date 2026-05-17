@@ -1547,7 +1547,7 @@ export default function AdminPage() {
         {questionFeedback.length > 0 && (
           <section className="mb-10">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
-              <h2 className="text-lg font-semibold text-slate-900">Question feedback (DM & VR)</h2>
+              <h2 className="text-lg font-semibold text-slate-900">Question feedback (DM, VR & SJT)</h2>
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
@@ -1566,7 +1566,7 @@ export default function AdminPage() {
               </div>
             </div>
             <p className="mb-3 text-sm text-slate-600">
-              Per-question reports from Decision Making syllogisms and Verbal Reasoning trainers. Use this to find
+              Per-question reports from Decision Making, Verbal Reasoning, and SJT trainers. Use this to find
               confusing or flawed items.
             </p>
             <div className="mb-4 bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">

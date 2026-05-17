@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CheckCircle2, XCircle, AlertCircle, ExternalLink, ChevronRight } from "lucide-react";
 import type { SJTRatingQuestion, SJTRating, SJTQuizProgress } from "../../types/sjt";
+import QuestionFeedbackModal from "../feedback/QuestionFeedbackModal";
 import {
   APPROPRIATENESS_RATINGS,
   IMPORTANCE_RATINGS,
@@ -41,6 +42,7 @@ export default function SJTRatingQuiz({ question, onComplete, onProgress }: Prop
   const [itemPhase, setItemPhase] = useState<ItemPhase>("rating");
   const [selected, setSelected] = useState<SJTRating | null>(null);
   const [scores, setScores] = useState<(0 | 0.5 | 1)[]>([]);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const scale = getRatingScale(question.type);
   const labelMap = getLabelMap(question.type);
@@ -225,6 +227,17 @@ export default function SJTRatingQuiz({ question, onComplete, onProgress }: Prop
                       </a>
                     </div>
                   )}
+
+                  <div className="border-t border-border pt-3">
+                    <button
+                      type="button"
+                      onClick={() => setFeedbackOpen(true)}
+                      className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/80"
+                    >
+                      <span aria-hidden>🚩</span>
+                      Report this question
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -273,6 +286,18 @@ export default function SJTRatingQuiz({ question, onComplete, onProgress }: Prop
           )}
         </div>
       </div>
+
+      <QuestionFeedbackModal
+        isOpen={feedbackOpen}
+        onClose={() => setFeedbackOpen(false)}
+        context={{
+          trainerType: "sjt_appropriateness",
+          questionKind: "sjt_rating",
+          questionIdentifier: `sjt:${question.id}:${item.id}`,
+          passageId: null,
+          sessionId: null,
+        }}
+      />
     </div>
   );
 }

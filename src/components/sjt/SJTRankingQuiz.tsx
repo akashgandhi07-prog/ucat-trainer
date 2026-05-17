@@ -3,6 +3,7 @@ import { CheckCircle2, XCircle, ExternalLink, ChevronRight } from "lucide-react"
 import type { SJTRankingQuestion, RankingAnswer } from "../../types/sjt";
 import { cn } from "../../lib/cn";
 import type { SJTQuizProgress } from "../../types/sjt";
+import QuestionFeedbackModal from "../feedback/QuestionFeedbackModal";
 
 type Phase = "answering" | "results";
 
@@ -21,6 +22,8 @@ function getRankLabel(rank: 1 | 2 | 3): string {
 export default function SJTRankingQuiz({ question, onComplete, onProgress }: Props) {
   const [phase, setPhase] = useState<Phase>("answering");
   const [answer, setAnswer] = useState<RankingAnswer>({ most: null, least: null });
+  const [reportingItemId, setReportingItemId] = useState<string | null>(null);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const mostItem = question.items.find((i) => i.rank === 1)!;
   const leastItem = question.items.find((i) => i.rank === 3)!;
@@ -157,6 +160,16 @@ export default function SJTRankingQuiz({ question, onComplete, onProgress }: Pro
                           GMC Good Medical Practice: {item.gmpRef.label}
                         </a>
                       )}
+                      <div className="mt-2 pt-2 border-t border-border">
+                        <button
+                          type="button"
+                          onClick={() => { setReportingItemId(item.id); setFeedbackOpen(true); }}
+                          className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/80"
+                        >
+                          <span aria-hidden>🚩</span>
+                          Report this question
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -259,6 +272,19 @@ export default function SJTRankingQuiz({ question, onComplete, onProgress }: Pro
           </>
         )}
       </div>
+      <QuestionFeedbackModal
+        isOpen={feedbackOpen}
+        onClose={() => { setFeedbackOpen(false); setReportingItemId(null); }}
+        context={{
+          trainerType: "sjt_ranking",
+          questionKind: "sjt_ranking",
+          questionIdentifier: reportingItemId
+            ? `sjt:${question.id}:${reportingItemId}`
+            : `sjt:${question.id}`,
+          passageId: null,
+          sessionId: null,
+        }}
+      />
     </div>
   );
 }
