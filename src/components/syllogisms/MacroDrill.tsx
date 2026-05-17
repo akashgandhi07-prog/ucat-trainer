@@ -33,6 +33,7 @@ export default function MacroDrill() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [reportingQuestionId, setReportingQuestionId] = useState<string | null>(null);
 
   const answeredCount =
     questions.length > 0
@@ -283,6 +284,14 @@ export default function MacroDrill() {
                             </span>
                           </p>
                           <p className="text-slate-600 mt-0.5 leading-relaxed">{q.explanation}</p>
+                          <button
+                            type="button"
+                            onClick={() => { setReportingQuestionId(q.id); setFeedbackOpen(true); }}
+                            className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white/60 px-2.5 py-0.5 text-xs font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                          >
+                            <span aria-hidden>🚩</span>
+                            Report
+                          </button>
                         </div>
                       )}
                     </li>
@@ -377,11 +386,13 @@ export default function MacroDrill() {
           {questions.length > 0 && (
             <QuestionFeedbackModal
               isOpen={feedbackOpen}
-              onClose={() => setFeedbackOpen(false)}
+              onClose={() => { setFeedbackOpen(false); setReportingQuestionId(null); }}
               context={{
                 trainerType: "syllogism_macro",
                 questionKind: "dm_syllogism",
-                questionIdentifier: `syllogism_block:${questions[0].macro_block_id}`,
+                questionIdentifier: reportingQuestionId
+                  ? `syllogism:${reportingQuestionId}`
+                  : `syllogism_block:${questions[0].macro_block_id}`,
                 passageId: null,
                 sessionId: null,
               }}

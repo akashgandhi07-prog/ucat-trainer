@@ -385,6 +385,9 @@ export default function AdminPage() {
   const [feedbackView, setFeedbackView] = useState<FeedbackView>("active");
   const [feedbackUpdatingIds, setFeedbackUpdatingIds] = useState<Set<string>>(new Set());
   const [questionFeedback, setQuestionFeedback] = useState<QuestionFeedbackRow[]>([]);
+  const [expandedQF, setExpandedQF] = useState<Set<string>>(new Set());
+  const [qfDismissing, setQfDismissing] = useState<Set<string>>(new Set());
+  const [qfDeleting, setQfDeleting] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   type UserSortKey = keyof AdminUserRow | "accuracy";
@@ -637,6 +640,76 @@ export default function AdminPage() {
   }
 
   const isFeedbackUpdating = (id: string): boolean => feedbackUpdatingIds.has(id);
+
+  const handleDismissQuestionFeedback = async (questionIdentifier: string) => {
+    setQfDismissing((prev) => new Set(prev).add(questionIdentifier));
+    const { error: delErr } = await supabase
+      .from("question_feedback")
+      .delete()
+      .eq("question_identifier", questionIdentifier);
+    if (delErr) {
+      dashboardLog.warn("Admin question feedback dismiss failed", {
+        message: delErr.message,
+        code: delErr.code,
+      });
+    } else {
+      setQuestionFeedback((prev) =>
+        prev.filter((r) => r.question_identifier !== questionIdentifier)
+      );
+      setExpandedQF((prev) => {
+        const next = new Set(prev);
+        next.delete(questionIdentifier);
+        return next;
+      });
+    }
+    setQfDismissing((prev) => {
+      const next = new Set(prev);
+      next.delete(questionIdentifier);
+      return next;
+    });
+  };
+
+  const handleDeleteQuestion = async (
+    questionKind: string,
+    questionIdentifier: string
+  ) => {
+    const isSyllogism = questionKind === "dm_syllogism";
+    if (!isSyllogism) return;
+    // Extract ID from identifiers like "syllogism:abc123" or "syllogism_block:abc123"
+    const parts = questionIdentifier.split(":");
+    const rawId = parts.length >= 2 ? parts.slice(1).join(":") : null;
+    if (!rawId) return;
+    setQfDeleting((prev) => new Set(prev).add(questionIdentifier));
+    const { error: delErr } = await supabase
+      .from("syllogisms")
+      .delete()
+      .eq("id", rawId);
+    if (delErr) {
+      dashboardLog.warn("Admin delete syllogism question failed", {
+        message: delErr.message,
+        code: delErr.code,
+      });
+    } else {
+      // Also remove the feedback reports for this question
+      await supabase
+        .from("question_feedback")
+        .delete()
+        .eq("question_identifier", questionIdentifier);
+      setQuestionFeedback((prev) =>
+        prev.filter((r) => r.question_identifier !== questionIdentifier)
+      );
+      setExpandedQF((prev) => {
+        const next = new Set(prev);
+        next.delete(questionIdentifier);
+        return next;
+      });
+    }
+    setQfDeleting((prev) => {
+      const next = new Set(prev);
+      next.delete(questionIdentifier);
+      return next;
+    });
+  };
 
   const handleArchiveToggle = async (id: string, shouldArchive: boolean) => {
     setFeedbackUpdatingIds((prev) => {
@@ -1541,6 +1614,10 @@ export default function AdminPage() {
                 const aggregates = Array.from(aggregatesMap.values()).sort(
                   (a, b) => b.total - a.total
                 );
+                const individualReports = (identifier: string) =>
+                  questionFeedback.filter(
+                    (r) => r.question_identifier === identifier
+                  );
                 return (
                   <table className="w-full text-sm min-w-[800px]">
                     <thead>
@@ -1550,9 +1627,6 @@ export default function AdminPage() {
                         </th>
                         <th className="px-3 py-2 text-left font-medium text-slate-700">
                           Question ID
-                        </th>
-                        <th className="px-3 py-2 text-left font-medium text-slate-700">
-                          Passage ID
                         </th>
                         <th className="px-3 py-2 text-right font-medium text-slate-700">
                           Reports
@@ -1564,54 +1638,113 @@ export default function AdminPage() {
                           Unclear
                         </th>
                         <th className="px-3 py-2 text-right font-medium text-slate-700">
-                          Too hard
-                        </th>
-                        <th className="px-3 py-2 text-right font-medium text-slate-700">
-                          Too easy
-                        </th>
-                        <th className="px-3 py-2 text-right font-medium text-slate-700">
-                          Typos
-                        </th>
-                        <th className="px-3 py-2 text-right font-medium text-slate-700">
                           Last reported
+                        </th>
+                        <th className="px-3 py-2 text-right font-medium text-slate-700">
+                          Actions
                         </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {aggregates.map((row) => (
-                        <tr key={`${row.trainer_type}:${row.question_identifier}`} className="border-b border-slate-100 hover:bg-slate-50">
-                          <td className="px-3 py-2 text-slate-700 whitespace-nowrap">
-                            {row.trainer_type.replace(/_/g, " ")}
-                          </td>
-                          <td className="px-3 py-2 text-slate-800 font-mono text-xs">
-                            {row.question_identifier}
-                          </td>
-                          <td className="px-3 py-2 text-slate-700 text-xs">
-                            {row.passage_id ?? "-"}
-                          </td>
-                          <td className="px-3 py-2 text-right font-semibold text-slate-900">
-                            {row.total}
-                          </td>
-                          <td className="px-3 py-2 text-right text-slate-800">
-                            {row.issues.wrong_answer || "-"}
-                          </td>
-                          <td className="px-3 py-2 text-right text-slate-800">
-                            {row.issues.unclear_wording || "-"}
-                          </td>
-                          <td className="px-3 py-2 text-right text-slate-800">
-                            {row.issues.too_hard || "-"}
-                          </td>
-                          <td className="px-3 py-2 text-right text-slate-800">
-                            {row.issues.too_easy || "-"}
-                          </td>
-                          <td className="px-3 py-2 text-right text-slate-800">
-                            {row.issues.typo || "-"}
-                          </td>
-                          <td className="px-3 py-2 text-right text-slate-700 whitespace-nowrap">
-                            {new Date(row.last_created_at).toLocaleString()}
-                          </td>
-                        </tr>
-                      ))}
+                      {aggregates.map((row) => {
+                        const key = `${row.trainer_type}::${row.question_identifier}`;
+                        const isExpanded = expandedQF.has(row.question_identifier);
+                        const isDismissing = qfDismissing.has(row.question_identifier);
+                        const isDeleting = qfDeleting.has(row.question_identifier);
+                        const isSyllogism = row.question_kind === "dm_syllogism";
+                        const reports = individualReports(row.question_identifier);
+                        return (
+                          <>
+                            <tr key={key} className="border-b border-slate-100 hover:bg-slate-50">
+                              <td className="px-3 py-2 text-slate-700 whitespace-nowrap">
+                                {row.trainer_type.replace(/_/g, " ")}
+                              </td>
+                              <td className="px-3 py-2">
+                                <p className="text-slate-800 font-mono text-xs">{row.question_identifier}</p>
+                                {row.passage_id && (
+                                  <p className="text-slate-500 text-xs">Passage: {row.passage_id}</p>
+                                )}
+                              </td>
+                              <td className="px-3 py-2 text-right font-semibold text-slate-900">
+                                {row.total}
+                              </td>
+                              <td className="px-3 py-2 text-right text-slate-800">
+                                {row.issues.wrong_answer || "-"}
+                              </td>
+                              <td className="px-3 py-2 text-right text-slate-800">
+                                {row.issues.unclear_wording || "-"}
+                              </td>
+                              <td className="px-3 py-2 text-right text-slate-700 whitespace-nowrap">
+                                {new Date(row.last_created_at).toLocaleDateString()}
+                              </td>
+                              <td className="px-3 py-2 text-right">
+                                <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setExpandedQF((prev) => {
+                                        const next = new Set(prev);
+                                        isExpanded ? next.delete(row.question_identifier) : next.add(row.question_identifier);
+                                        return next;
+                                      })
+                                    }
+                                    className="inline-flex items-center px-2 py-1 rounded text-xs font-medium border border-slate-200 text-slate-700 hover:bg-slate-50"
+                                  >
+                                    {isExpanded ? "Hide" : "View"}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDismissQuestionFeedback(row.question_identifier)}
+                                    disabled={isDismissing || isDeleting}
+                                    className="inline-flex items-center px-2 py-1 rounded text-xs font-medium border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                  >
+                                    {isDismissing ? "Dismissing…" : "Dismiss all"}
+                                  </button>
+                                  {isSyllogism && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        if (!window.confirm(`Delete this question from the question bank? This cannot be undone.\n\n${row.question_identifier}`)) return;
+                                        handleDeleteQuestion(row.question_kind, row.question_identifier);
+                                      }}
+                                      disabled={isDismissing || isDeleting}
+                                      className="inline-flex items-center px-2 py-1 rounded text-xs font-medium border border-red-200 text-red-700 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                      {isDeleting ? "Deleting…" : "Delete question"}
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                            {isExpanded && (
+                              <tr key={`${key}--expanded`} className="bg-slate-50 border-b border-slate-200">
+                                <td colSpan={7} className="px-4 py-3">
+                                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
+                                    Individual reports ({reports.length})
+                                  </p>
+                                  {reports.length === 0 ? (
+                                    <p className="text-xs text-slate-500">No reports found.</p>
+                                  ) : (
+                                    <ul className="space-y-1.5">
+                                      {reports.map((rep) => (
+                                        <li key={rep.id} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700">
+                                          <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-medium mr-2">
+                                            {rep.issue_type.replace(/_/g, " ")}
+                                          </span>
+                                          {rep.comment && <span className="text-slate-800">{rep.comment}</span>}
+                                          <span className="ml-2 text-slate-400">
+                                            {new Date(rep.created_at).toLocaleString()}
+                                          </span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  )}
+                                </td>
+                              </tr>
+                            )}
+                          </>
+                        );
+                      })}
                     </tbody>
                   </table>
                 );

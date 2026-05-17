@@ -1,16 +1,23 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { UCAT_EXAM_WINDOW_END_ISO, UCAT_EXAM_WINDOW_START_ISO, clampToUcatExamWindow } from '@/lib/ucatExamWindow'
+import { toISODate } from '@/lib/utils'
+import type { TimeAwayPeriod } from '@/types'
 
 interface SettingsViewProps {
   planId: string
   examDate: string
   examTime: string | null
   ucatSen: boolean
+  timeAwayPeriods: TimeAwayPeriod[]
+}
+
+function formatRange(p: { start: string; end: string }): string {
+  const fmt = (d: string) => new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+  return p.start === p.end ? fmt(p.start) : `${fmt(p.start)} – ${fmt(p.end)}`
 }
 
 export function SettingsView({
@@ -18,17 +25,26 @@ export function SettingsView({
   examDate: initialDate,
   examTime: initialTime,
   ucatSen: initialUcatSen,
+  timeAwayPeriods: initialTimeAway,
 }: SettingsViewProps) {
-  const [examDate, setExamDate] = useState(() => clampToUcatExamWindow(initialDate))
+  const [examDate, setExamDate] = useState(initialDate)
   const [examTime, setExamTime] = useState(initialTime ?? '')
   const [ucatSen, setUcatSen] = useState(initialUcatSen)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    setExamDate(clampToUcatExamWindow(initialDate))
-  }, [initialDate])
+  // Time-away state
+  const [timeAway, setTimeAway] = useState<TimeAwayPeriod[]>(initialTimeAway)
+  const [taStart, setTaStart] = useState('')
+  const [taEnd, setTaEnd] = useState('')
+  const [taLabel, setTaLabel] = useState('')
+  const [taKind, setTaKind] = useState<'busy' | 'holiday'>('busy')
+  const [taSaving, setTaSaving] = useState(false)
+  const [taSaved, setTaSaved] = useState(false)
+  const [taError, setTaError] = useState('')
+
+  const today = toISODate(new Date())
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
@@ -57,6 +73,48 @@ export function SettingsView({
     }
   }
 
+  async function saveTimeAway(updated: TimeAwayPeriod[], regenerate = false) {
+    setTaSaving(true)
+    setTaSaved(false)
+    setTaError('')
+    try {
+      const today = toISODate(new Date())
+      const res = await fetch('/api/plans/time-away', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          planId,
+          periods: updated,
+          regenerateFromDate: regenerate ? today : undefined,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Failed to save')
+      setTimeAway(updated)
+      setTaSaved(true)
+      setTimeout(() => setTaSaved(false), 3000)
+    } catch (e: unknown) {
+      setTaError(e instanceof Error ? e.message : 'Something went wrong')
+    } finally {
+      setTaSaving(false)
+    }
+  }
+
+  function addTimeAway() {
+    if (!taStart || !taEnd || taEnd < taStart) return
+    const updated: TimeAwayPeriod[] = [
+      ...timeAway,
+      { start: taStart, end: taEnd, kind: taKind, label: taLabel || undefined },
+    ].sort((a, b) => a.start.localeCompare(b.start))
+    setTaStart(''); setTaEnd(''); setTaLabel('')
+    saveTimeAway(updated, true)
+  }
+
+  function removeTimeAway(i: number) {
+    const updated = timeAway.filter((_, idx) => idx !== i)
+    saveTimeAway(updated, true)
+  }
+
   return (
     <div className="p-6 md:p-10 max-w-2xl mx-auto space-y-8">
       <div>
@@ -78,12 +136,8 @@ export function SettingsView({
               label="Exam date"
               type="date"
               value={examDate}
-              min={UCAT_EXAM_WINDOW_START_ISO}
-              max={UCAT_EXAM_WINDOW_END_ISO}
-              hint="Official UCAT running period: 13 July to 24 September 2026."
-              onChange={e =>
-                setExamDate(e.target.value ? clampToUcatExamWindow(e.target.value) : '')
-              }
+              min={today}
+              onChange={e => setExamDate(e.target.value)}
               required
             />
             <div>
@@ -128,6 +182,114 @@ export function SettingsView({
               </Button>
             </div>
           </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Time away</CardTitle>
+          <CardDescription>
+            Add holidays, festivals, or anything else that affects your availability before your exam.
+            Saving will automatically regenerate your plan from today.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Add period form */}
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-3">
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setTaKind('busy')}
+                className={`flex-1 rounded-lg border-2 py-2 text-sm font-medium transition-all ${
+                  taKind === 'busy'
+                    ? 'border-red-400 bg-red-50 text-red-700'
+                    : 'border-slate-200 text-slate-500 hover:border-slate-400'
+                }`}
+              >
+                Fully unavailable
+              </button>
+              <button
+                type="button"
+                onClick={() => setTaKind('holiday')}
+                className={`flex-1 rounded-lg border-2 py-2 text-sm font-medium transition-all ${
+                  taKind === 'holiday'
+                    ? 'border-green-400 bg-green-50 text-green-700'
+                    : 'border-slate-200 text-slate-500 hover:border-slate-400'
+                }`}
+              >
+                Holiday (more time)
+              </button>
+            </div>
+            <p className="text-xs text-slate-500">
+              {taKind === 'busy'
+                ? 'No sessions — trips, festivals, commitments.'
+                : 'Free day hours applied — school holidays, time off.'}
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-xs text-slate-500 mb-1 block">Start</label>
+                <input type="date" value={taStart} min={toISODate(new Date())} max={examDate}
+                  onChange={e => setTaStart(e.target.value)}
+                  className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="text-xs text-slate-500 mb-1 block">End</label>
+                <input type="date" value={taEnd} min={taStart || toISODate(new Date())} max={examDate}
+                  onChange={e => setTaEnd(e.target.value)}
+                  className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <input type="text"
+                placeholder={taKind === 'busy' ? 'Label (e.g. Festival)' : 'Label (e.g. Summer holidays)'}
+                value={taLabel}
+                onChange={e => setTaLabel(e.target.value)}
+                className="flex-1 h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <Button
+                onClick={addTimeAway}
+                disabled={!taStart || !taEnd || taEnd < taStart || taSaving}
+                loading={taSaving}
+                variant="outline"
+              >
+                Add & save
+              </Button>
+            </div>
+          </div>
+
+          {/* Existing periods */}
+          {timeAway.length > 0 ? (
+            <div className="space-y-2">
+              {timeAway.map((p, i) => {
+                const isHoliday = p.kind === 'holiday'
+                return (
+                  <div key={i} className={`flex items-center justify-between rounded-lg border px-4 py-2.5 ${
+                    isHoliday ? 'border-green-200 bg-green-50' : 'border-red-100 bg-red-50'
+                  }`}>
+                    <div>
+                      <span className={`text-xs font-semibold uppercase tracking-wide mr-2 ${isHoliday ? 'text-green-600' : 'text-red-400'}`}>
+                        {isHoliday ? 'Holiday' : 'Blocked'}
+                      </span>
+                      <span className={`text-sm font-medium ${isHoliday ? 'text-green-800' : 'text-red-800'}`}>
+                        {p.label || (isHoliday ? 'Holiday' : 'Unavailable')}
+                      </span>
+                      <span className={`text-xs ml-2 ${isHoliday ? 'text-green-600' : 'text-red-500'}`}>{formatRange(p)}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeTimeAway(i)}
+                      disabled={taSaving}
+                      className={`text-lg leading-none ml-3 transition-colors ${isHoliday ? 'text-green-400 hover:text-red-500' : 'text-red-300 hover:text-red-600'}`}
+                    >×</button>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-slate-500 text-center py-3">No time away periods added yet.</p>
+          )}
+
+          {taError && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{taError}</p>}
+          {taSaved && <p className="text-sm text-green-700 bg-green-50 rounded-lg px-3 py-2">✓ Time away updated and plan regenerated.</p>}
         </CardContent>
       </Card>
 
