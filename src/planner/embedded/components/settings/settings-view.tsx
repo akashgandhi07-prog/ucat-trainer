@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toISODate } from '@/lib/utils'
+import { UCAT_EXAM_WINDOW_END_ISO, UCAT_EXAM_WINDOW_START_ISO } from '../../../../lib/ucatExamWindow'
 import type { TimeAwayPeriod } from '@/types'
 
 interface SettingsViewProps {
@@ -136,8 +137,10 @@ export function SettingsView({
               label="Exam date"
               type="date"
               value={examDate}
-              min={today}
+              min={UCAT_EXAM_WINDOW_START_ISO}
+              max={UCAT_EXAM_WINDOW_END_ISO}
               onChange={e => setExamDate(e.target.value)}
+              hint="Official UCAT sittings: 13 Jul – 24 Sep 2026"
               required
             />
             <div>
