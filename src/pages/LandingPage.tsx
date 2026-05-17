@@ -62,7 +62,7 @@ export default function HomePage() {
         <LandingPaidSupport />
         <LandingReviews />
         <LandingCredibility />
-        <section className="py-10 sm:py-12 border-t border-border">
+        <section className="py-10 sm:py-12 border-b border-border">
           <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
             <UcatGuidesPanel embedded context="home" />
           </div>

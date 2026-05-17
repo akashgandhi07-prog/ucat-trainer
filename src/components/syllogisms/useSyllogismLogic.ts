@@ -64,6 +64,10 @@ export function useSyllogismLogic(mode: SyllogismMode) {
   const fetchAbortRef = useRef<AbortController | null>(null);
   /** Macro: mirror of userAnswers so finishSession always reads latest (avoids stale closure). */
   const userAnswersRef = useRef<(boolean | null)[]>(userAnswers);
+  /** For pagehide/unmount autosave — avoids double-save if both fire. */
+  const savedOnExitRef = useRef(false);
+  const sessionFinishedRef = useRef(false);
+  const finishSessionRef = useRef<() => Promise<SyllogismSessionSummary | null>>(() => Promise.resolve(null));
 
   const isMicro = mode === "micro";
   const isMacro = mode === "macro";
@@ -71,6 +75,11 @@ export function useSyllogismLogic(mode: SyllogismMode) {
   useEffect(() => {
     userAnswersRef.current = userAnswers;
   }, [userAnswers]);
+
+  useEffect(() => {
+    sessionFinishedRef.current = sessionFinished;
+    if (sessionFinished) savedOnExitRef.current = true; // already saved, suppress exit save
+  }, [sessionFinished]);
 
   const recordDecisionTime = useCallback(() => {
     const now = Date.now();
@@ -130,6 +139,7 @@ export function useSyllogismLogic(mode: SyllogismMode) {
     setError(null);
     setSessionFinished(false);
     setLastSummary(null);
+    savedOnExitRef.current = false;
     try {
       const list = await fetchSyllogismMicroBatch(count, controller.signal);
       if (controller.signal.aborted) return;
@@ -167,6 +177,7 @@ export function useSyllogismLogic(mode: SyllogismMode) {
     setError(null);
     setSessionFinished(false);
     setLastSummary(null);
+    savedOnExitRef.current = false;
     try {
       const list = await fetchSyllogismMacroBlock(seenBlockIdsRef.current, controller.signal);
       if (controller.signal.aborted) return;
@@ -201,6 +212,24 @@ export function useSyllogismLogic(mode: SyllogismMode) {
       fetchAbortRef.current?.abort();
     };
   }, []);
+
+  // Autosave partial progress on tab close or SPA navigation away.
+  // pagehide covers actual tab/window close; cleanup covers React Router navigation.
+  useEffect(() => {
+    const saveOnExit = () => {
+      if (savedOnExitRef.current) return;
+      const answeredCount = userAnswersRef.current.filter((a) => a !== null).length;
+      if (answeredCount === 0) return;
+      savedOnExitRef.current = true;
+      void finishSessionRef.current();
+    };
+
+    window.addEventListener("pagehide", saveOnExit);
+    return () => {
+      window.removeEventListener("pagehide", saveOnExit);
+      saveOnExit(); // covers SPA navigation (component unmounts without pagehide)
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- intentionally reads via refs
 
   const submitAnswer = useCallback(
     (answer: boolean) => {
@@ -262,10 +291,13 @@ export function useSyllogismLogic(mode: SyllogismMode) {
     if (questions.length === 0 || sessionFinished) return null;
 
     const answers = userAnswersRef.current;
+    const answeredCount = answers.filter((a) => a !== null).length;
+    if (answeredCount === 0) return null;
+
     const correct = questions.filter(
       (q, i) => answers[i] === q.is_correct
     ).length;
-    const total = questions.length;
+    const total = answeredCount;
     const times = decisionTimes;
     const avgTime =
       times.length > 0
@@ -329,6 +361,11 @@ export function useSyllogismLogic(mode: SyllogismMode) {
       setCurrentIndex((i) => i + 1);
     }
   }, [isMicro, questions.length, currentIndex, userAnswers, finishSession]);
+
+  // Keep finishSessionRef pointing at the latest callback (avoids stale closure in exit handler).
+  useEffect(() => {
+    finishSessionRef.current = finishSession;
+  }, [finishSession]);
 
   /** Macro: get latest answers (ref) so validation before submit uses current state. */
   const getLatestUserAnswers = useCallback(() => userAnswersRef.current, []);

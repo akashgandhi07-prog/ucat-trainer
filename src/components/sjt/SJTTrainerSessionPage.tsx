@@ -13,6 +13,7 @@ import { useSJTQuestionSession } from "../../hooks/useSJTQuestionSession";
 import { useAuth } from "../../hooks/useAuth";
 import { trainerFaqs } from "../../data/trainerFaqs";
 import { recordSJTAttempt } from "../../lib/sjtAnalytics";
+import { persistSJTSession } from "../../lib/sjtSessionStorage";
 import { getSiteBaseUrl } from "../../lib/siteUrl";
 import { cn } from "../../lib/cn";
 import type { SJTQuestion, SJTQuestionType, SJTQuizProgress } from "../../types/sjt";
@@ -116,6 +117,16 @@ export default function SJTTrainerSessionPage({
       score: progress.partialScore,
       maxScore,
     });
+    void persistSJTSession(userIdRef.current, {
+      question_id: q.id,
+      question_type: q.type,
+      domain: q.domain,
+      score: progress.partialScore,
+      max_score: maxScore,
+      items_attempted: progress.itemsAttempted,
+      items_total: maxScore,
+      completed: false,
+    });
   }, []);
 
   useEffect(() => {
@@ -144,6 +155,16 @@ export default function SJTTrainerSessionPage({
           type: question.type,
           score,
           maxScore: max,
+        });
+        void persistSJTSession(user?.id ?? null, {
+          question_id: question.id,
+          question_type: question.type,
+          domain: question.domain,
+          score,
+          max_score: max,
+          items_attempted: max,
+          items_total: max,
+          completed: true,
         });
       }
       setSessionScore((s) => s + score);

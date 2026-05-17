@@ -133,7 +133,7 @@ export async function migrateGuestPlannerToCloud(studentId: string): Promise<{
     role: 'student',
   })
   if (memberErr) {
-    console.error('[migrateGuestPlannerToCloud] plan_members insert failed', memberErr.message)
+    throw new Error(`plan_members insert failed: ${memberErr.message}`)
   }
 
   clearGuestPlanner()

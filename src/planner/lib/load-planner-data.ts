@@ -40,16 +40,23 @@ export function invalidateActivePlanCache(studentId?: string): void {
 }
 
 async function fetchActivePlanUncached(studentId: string): Promise<DBPlan | null> {
-  const { data, error } = await supabase
-    .from('plans')
-    .select('*')
-    .eq('student_id', studentId)
-    .eq('status', 'active')
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-  if (error) throw new Error(error.message)
-  return data as DBPlan | null
+  const controller = new AbortController()
+  const timer = window.setTimeout(() => controller.abort(), 8000)
+  try {
+    const { data, error } = await supabase
+      .from('plans')
+      .select('*')
+      .eq('student_id', studentId)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .abortSignal(controller.signal)
+      .maybeSingle()
+    if (error) throw new Error(error.message)
+    return data as DBPlan | null
+  } finally {
+    window.clearTimeout(timer)
+  }
 }
 
 export async function fetchActivePlan(studentId: string): Promise<DBPlan | null> {

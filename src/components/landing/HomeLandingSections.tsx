@@ -23,6 +23,7 @@ import {
   getActiveCourses,
   getPackageForStream,
   PACKAGE_LINKS,
+  STRATEGY_CALL_URL,
   TUTORING_OFFER,
   TRUSTPILOT_URL,
   type UcatOneDayCourse,
@@ -109,8 +110,9 @@ export function LandingHero() {
           Train the skills behind a strong UCAT score.
         </h1>
         <p className="mt-4 text-base sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-          {LANDING_TRAINER_COUNT} free UCAT practice drills for Verbal Reasoning, Decision Making and
-          Quantitative Reasoning. Open any trainer instantly. Sign in only when you want progress saved.
+          {LANDING_TRAINER_COUNT} free UCAT practice drills for Verbal Reasoning, Decision Making,
+          Quantitative Reasoning and Situational Judgement. Open any trainer instantly. Sign in only when
+          you want progress saved.
         </p>
 
         <LandingTrustStrip className="mt-8 justify-center" />
@@ -128,6 +130,15 @@ export function LandingHero() {
             className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-border bg-card px-6 py-3 text-sm font-semibold text-foreground hover:border-primary/40 hover:bg-muted/50 transition-colors"
           >
             See every drill
+          </a>
+          <a
+            href={STRATEGY_CALL_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition-colors"
+          >
+            Free strategy call
+            <ArrowUpRight className="h-4 w-4" aria-hidden />
           </a>
         </div>
       </LandingContainer>
@@ -217,45 +228,45 @@ export function LandingSectionHub({ onVerbal, onDecision, onQuant, onSjt }: Sect
   ] as const;
 
   return (
-    <section className="py-12 sm:py-16">
+    <section className="py-12 sm:py-16 bg-slate-900">
       <LandingContainer>
         <div className="text-center max-w-2xl mx-auto">
-          <SectionEyebrow>UCAT sections</SectionEyebrow>
-          <SectionTitle>Pick a section to open the hub</SectionTitle>
-          <SectionIntro>
-            Each hub groups every drill for that subtest. Start anywhere: your first session can take
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">UCAT sections</p>
+          <h2 className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-white">Pick a section to open the hub</h2>
+          <p className="mt-2 text-sm sm:text-base text-slate-400 max-w-2xl mx-auto">
+            Each hub groups every drill for that subtest. Start anywhere — your first session can take
             under two minutes.
-          </SectionIntro>
+          </p>
         </div>
-        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           {cards.map(({ onClick, icon: Icon, accent, title, desc, label }) => (
             <button
               key={title}
               type="button"
               onClick={onClick}
-              className="group relative flex items-start gap-4 rounded-xl border border-border bg-card p-4 text-left shadow-sm transition-all hover:border-primary/50 hover:shadow-md md:flex-col md:items-center md:rounded-2xl md:p-8 md:text-center"
+              className="group relative flex items-start gap-4 rounded-xl border border-white/10 bg-white/5 p-4 text-left transition-all hover:border-white/25 hover:bg-white/10 md:flex-col md:items-center md:rounded-2xl md:p-6 md:text-center"
             >
               <div
                 className={cn(
-                  "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-105 md:h-auto md:w-auto md:rounded-full md:p-3 md:group-hover:scale-110",
+                  "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-105 md:h-auto md:w-auto md:rounded-full md:p-3 md:group-hover:scale-110",
                   accent,
                 )}
               >
-                <Icon className="h-6 w-6 md:h-9 md:w-9" aria-hidden />
+                <Icon className="h-5 w-5 md:h-8 md:w-8" aria-hidden />
               </div>
               <div className="min-w-0 flex-1 md:flex md:flex-col md:items-center">
                 <div className="flex items-start justify-between gap-3 md:block">
-                  <h3 className="text-lg font-bold leading-snug text-foreground transition-colors group-hover:text-primary md:mt-4 md:text-xl">
+                  <h3 className="text-base font-bold leading-snug text-white md:mt-3 md:text-lg">
                     {title}
                   </h3>
-                  <span className="shrink-0 rounded-full bg-muted px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground md:absolute md:right-4 md:top-4 md:bg-transparent md:p-0">
+                  <span className="shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400 md:hidden">
                     {label}
                   </span>
                 </div>
-                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground md:mt-2">{desc}</p>
-                <span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary md:mt-4">
+                <p className="mt-1 text-xs leading-relaxed text-slate-400 md:mt-1.5 md:text-sm">{desc}</p>
+                <span className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-slate-300 md:mt-3 md:text-sm">
                   Open hub
-                  <ArrowRight className="h-4 w-4 transition-opacity md:opacity-0 md:group-hover:opacity-100" aria-hidden />
+                  <ArrowRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden />
                 </span>
               </div>
             </button>
@@ -286,30 +297,26 @@ export function LandingHowItWorks() {
   ];
 
   return (
-    <section className="py-12 sm:py-16 bg-muted/40 border-y border-border">
+    <section className="py-10 sm:py-14 border-b border-border">
       <LandingContainer>
-        <div className="max-w-2xl">
+        <div className="max-w-xl">
           <SectionEyebrow>How it fits together</SectionEyebrow>
           <SectionTitle>Skills first, then your UCAT question bank</SectionTitle>
           <SectionIntro>
-            The UCAT rewards speed and pattern recognition. This free UCAT training builds those reflexes
-            so full mocks and third-party question banks feel easier, not the other way around.
+            The UCAT rewards speed and pattern recognition. These drills build those reflexes so full
+            mocks feel easier, not the other way around.
           </SectionIntro>
         </div>
-        <ol className="mt-10 grid gap-6 sm:grid-cols-3">
-          {steps.map(({ icon: Icon, title, body }, index) => (
-            <li
-              key={title}
-              className="relative rounded-2xl border border-border bg-card p-6 shadow-sm"
-            >
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <Icon className="h-5 w-5" aria-hidden />
-              </span>
-              <p className="mt-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Step {index + 1}
-              </p>
-              <h3 className="mt-1 text-lg font-semibold text-foreground">{title}</h3>
-              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{body}</p>
+        <ol className="mt-10 grid gap-8 sm:grid-cols-3 sm:gap-6">
+          {steps.map(({ title, body }, index) => (
+            <li key={title} className="flex gap-4 sm:flex-col sm:gap-0">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold text-base sm:mb-5">
+                {index + 1}
+              </div>
+              <div className="sm:flex-1">
+                <h3 className="text-base font-semibold text-foreground sm:text-lg">{title}</h3>
+                <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">{body}</p>
+              </div>
             </li>
           ))}
         </ol>
@@ -405,7 +412,7 @@ function DrillSectionAccordion({
 
 export function LandingDrillCatalog() {
   return (
-    <section id="all-trainers" className="py-12 sm:py-16 scroll-mt-20">
+    <section id="all-trainers" className="py-10 sm:py-14 scroll-mt-20 bg-muted/30 border-b border-border">
       <LandingContainer>
         <div className="max-w-2xl">
           <SectionEyebrow>Every drill</SectionEyebrow>
@@ -449,7 +456,7 @@ export function LandingPlanning({ plannerOn }: { plannerOn: boolean }) {
   ];
 
   return (
-    <section className="py-12 sm:py-16 bg-muted/40 border-y border-border">
+    <section className="py-10 sm:py-14 border-b border-border">
       <LandingContainer>
         <div className="max-w-2xl">
           <SectionEyebrow>Planning and progress</SectionEyebrow>
@@ -523,7 +530,7 @@ export function LandingPaidSupport() {
   const genericPackage = getPackageForStream(null);
 
   return (
-    <section className="py-12 sm:py-16 border-t border-border">
+    <section className="py-10 sm:py-14 bg-muted/30 border-b border-border">
       <LandingContainer>
         <div className="max-w-2xl">
           <SectionEyebrow>Optional paid support</SectionEyebrow>
@@ -617,30 +624,30 @@ export function LandingPaidSupport() {
 
 export function LandingReviews() {
   return (
-    <section className="py-12 sm:py-16 bg-muted/40 border-y border-border">
+    <section className="py-12 sm:py-16 bg-slate-900">
       <LandingContainer>
         <div className="text-center max-w-2xl mx-auto">
-          <SectionEyebrow>Reviews</SectionEyebrow>
-          <SectionTitle>What students say on Trustpilot</SectionTitle>
-          <div className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm sm:text-base text-muted-foreground">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Reviews</p>
+          <h2 className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-white">What students say on Trustpilot</h2>
+          <div className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm sm:text-base text-slate-400">
             <span className="inline-flex items-center gap-2.5">
               <TrustStars className="shrink-0" />
-              <span className="font-semibold text-foreground">{TRUSTPILOT_STATS.ratedLabel}</span>
+              <span className="font-semibold text-white">{TRUSTPILOT_STATS.ratedLabel}</span>
             </span>
-            <span className="text-muted-foreground">· {TRUSTPILOT_STATS.label}</span>
+            <span>· {TRUSTPILOT_STATS.label}</span>
           </div>
         </div>
         <div className="mt-10 grid gap-4 sm:grid-cols-1 lg:grid-cols-3">
           {LANDING_TRUSTPILOT_REVIEWS.map((snippet) => (
             <blockquote
               key={`${snippet.author}-${snippet.dateLabel}`}
-              className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-sm"
+              className="flex flex-col rounded-2xl border border-white/10 bg-white/5 p-5"
             >
               <TrustStars className="mb-3" />
-              <p className="text-sm text-foreground leading-relaxed flex-1">
+              <p className="text-sm text-slate-200 leading-relaxed flex-1">
                 &ldquo;{snippet.quote}&rdquo;
               </p>
-              <footer className="mt-3 text-xs text-muted-foreground">
+              <footer className="mt-3 text-xs text-slate-500">
                 {snippet.author}
                 {snippet.dateLabel ? ` · ${snippet.dateLabel}` : ""}
               </footer>
@@ -650,7 +657,7 @@ export function LandingReviews() {
         <p className="mt-8 text-center">
           <a
             href={TRUSTPILOT_URL}
-            className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
+            className="inline-flex items-center gap-1 text-sm font-semibold text-slate-300 hover:text-white transition-colors"
             {...EXTERNAL}
           >
             Read verified reviews on Trustpilot
@@ -664,70 +671,50 @@ export function LandingReviews() {
 
 export function LandingCredibility() {
   const stats = [
-    {
-      stat: "10,000+",
-      label: "Students supported",
-      desc: "Over 14 years helping UK medical and dental applicants.",
-    },
-    {
-      stat: String(LANDING_TRAINER_COUNT),
-      label: "Skill trainers",
-      desc: "Focused drills across VR, DM, QR and SJT, free to open.",
-    },
-    {
-      stat: TRUSTPILOT_STATS.score,
-      label: "Trustpilot rating",
-      desc: `${TRUSTPILOT_STATS.label} from verified public reviews.`,
-    },
-    {
-      stat: "Evidence",
-      label: "Based methods",
-      desc: "Built on speed-reading and retrieval-practice research we teach on courses.",
-    },
+    { stat: "10,000+", label: "Students supported" },
+    { stat: String(LANDING_TRAINER_COUNT), label: "Free skill trainers" },
+    { stat: TRUSTPILOT_STATS.score, label: "Trustpilot rating" },
+    { stat: "14+", label: "Years teaching UCAT" },
   ];
 
   return (
-    <section className="py-12 sm:py-16">
+    <section className="py-8 sm:py-10 border-b border-border">
       <LandingContainer>
-        <div className="text-center max-w-2xl mx-auto">
-          <SectionEyebrow>Why TheUKCATPeople</SectionEyebrow>
-          <SectionTitle>Built for applicants, backed by experience</SectionTitle>
-          <SectionIntro className="mx-auto">
-            The same team runs live UCAT courses, 1-1 coaching and full application packages. This free
-            UCAT resource is the skills layer we wish every student had before their first mock.
-          </SectionIntro>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground shrink-0">
+            Why TheUKCATPeople
+          </p>
+          <dl className="grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-4 sm:gap-x-10 sm:flex-1">
+            {stats.map(({ stat, label }) => (
+              <div key={label} className="text-center sm:text-left">
+                <dt className="text-xl sm:text-2xl font-bold text-foreground">{stat}</dt>
+                <dd className="mt-0.5 text-xs sm:text-sm text-muted-foreground">{label}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {stats.map(({ stat, label, desc }) => (
-            <div
-              key={label}
-              className="rounded-2xl border border-border bg-card p-5 shadow-sm text-center sm:text-left"
-            >
-              <p className="text-2xl font-bold text-foreground">{stat}</p>
-              <p className="text-sm font-semibold text-foreground mt-0.5">{label}</p>
-              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{desc}</p>
-            </div>
-          ))}
-        </div>
-        <p className="mt-8 text-center text-sm text-muted-foreground max-w-xl mx-auto">
-          Need a UCAT coach or tutor?{" "}
+        <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-3">
           <a
-            href={TUTORING_OFFER.href}
-            className="font-medium text-primary hover:underline"
-            {...EXTERNAL}
+            href={STRATEGY_CALL_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition-colors"
           >
-            Book 1-1 UCAT tutoring
-          </a>{" "}
-          or explore our{" "}
-          <a
-            href={genericPackageHref()}
-            className="font-medium text-primary hover:underline"
-            {...EXTERNAL}
-          >
-            ultimate packages
+            Book a free strategy call
+            <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
           </a>
-          .
-        </p>
+          <p className="text-sm text-muted-foreground">
+            Not sure what you need? We&apos;ll help. Or explore{" "}
+            <a href={TUTORING_OFFER.href} className="font-medium text-primary hover:underline" {...EXTERNAL}>
+              1-1 tutoring
+            </a>
+            {" "}and{" "}
+            <a href={genericPackageHref()} className="font-medium text-primary hover:underline" {...EXTERNAL}>
+              application packages
+            </a>
+            .
+          </p>
+        </div>
       </LandingContainer>
     </section>
   );

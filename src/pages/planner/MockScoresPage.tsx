@@ -20,6 +20,9 @@ function CloudMockScoresView() {
     let cancelled = false
     setData(null)
     setLoadError(false)
+    const timer = window.setTimeout(() => {
+      if (!cancelled) setLoadError(true)
+    }, 12000)
     void import('../../planner/lib/load-planner-data').then(async ({ ensureActivePlanForMocks, loadMockScores }) => {
       const plan = await ensureActivePlanForMocks(user.id)
       if (cancelled) return
@@ -27,9 +30,12 @@ function CloudMockScoresView() {
       if (!cancelled) setData(loaded as Record<string, unknown>)
     }).catch(() => {
       if (!cancelled) setLoadError(true)
+    }).finally(() => {
+      window.clearTimeout(timer)
     })
     return () => {
       cancelled = true
+      window.clearTimeout(timer)
     }
   }, [user, refreshTick])
 

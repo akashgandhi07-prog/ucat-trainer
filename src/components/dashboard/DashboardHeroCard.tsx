@@ -6,6 +6,7 @@ interface DashboardHeroCardProps {
   totalSessions: number;
   uniqueDaysInLast7: number;
   onSetExamDate?: () => void;
+  onEditExamDate?: () => void;
 }
 
 function getDaysUntilExam(examDateISO: string | null): number | null {
@@ -134,6 +135,7 @@ export default function DashboardHeroCard({
   totalSessions,
   uniqueDaysInLast7,
   onSetExamDate,
+  onEditExamDate,
 }: DashboardHeroCardProps) {
   const daysUntilExam = getDaysUntilExam(examDateISO);
   const enc = getEncouragement({
@@ -176,12 +178,20 @@ export default function DashboardHeroCard({
               </span>
             )}
             {daysUntilExam != null ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border border-slate-200 bg-slate-50 text-slate-700">
-                <span>
-                  {daysUntilExam === 0
-                    ? "Exam today"
-                    : `${daysUntilExam}d to exam`}
+              <span className="inline-flex items-center gap-1.5 rounded-full text-sm font-medium border border-slate-200 bg-slate-50 text-slate-700 overflow-hidden">
+                <span className="px-3 py-1.5">
+                  {daysUntilExam === 0 ? "Exam today" : `${daysUntilExam}d to exam`}
                 </span>
+                {onEditExamDate && (
+                  <button
+                    type="button"
+                    onClick={onEditExamDate}
+                    className="px-2 py-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors border-l border-slate-200 text-xs"
+                    aria-label="Edit exam date"
+                  >
+                    Edit
+                  </button>
+                )}
               </span>
             ) : onSetExamDate ? (
               <button

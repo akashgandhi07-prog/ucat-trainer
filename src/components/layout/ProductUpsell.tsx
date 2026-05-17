@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { ArrowUpRight, GraduationCap, Sparkles, X } from "lucide-react";
+import { ArrowUpRight, CalendarCheck, GraduationCap, Sparkles, X } from "lucide-react";
 import { trackEvent } from "../../lib/analytics";
 import { useAuth } from "../../hooks/useAuth";
 import type { Stream } from "../../lib/profileApi";
 import {
   COURSE_COPY,
+  STRATEGY_CALL_URL,
   TUTORING_COPY,
   TUTORING_OFFER,
   TRUSTPILOT_URL,
@@ -461,7 +462,7 @@ function OfferCard({
   offer,
   placement,
   stream,
-  firstName,
+  firstName: _firstName,
   accuracy,
   compact = false,
   className,
@@ -529,7 +530,7 @@ function OfferCard({
       {offer === "tutoring" ? (
         <>
           <p className={cn("font-semibold text-foreground", compact ? "text-sm leading-snug" : "text-sm")}>
-            {personalizeUpsellText(firstName, compact ? TUTORING_OFFER.sidebarTitle : TUTORING_OFFER.headline)}
+            {compact ? TUTORING_OFFER.sidebarTitle : TUTORING_OFFER.headline}
           </p>
           <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
             {compact ? TUTORING_OFFER.sidebarSub : tutoringSubline}
@@ -551,7 +552,7 @@ function OfferCard({
       {offer === "package" && pkg ? (
         <>
           <p className={cn("font-semibold text-foreground", compact ? "text-sm leading-snug" : "text-sm")}>
-            {personalizeUpsellText(firstName, pkg.headline)}
+            {pkg.headline}
           </p>
           <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{pkg.subline}</p>
           {!compact ? <TrustpilotQuote offer="package" className="mt-2" /> : null}
@@ -837,6 +838,7 @@ export function ProductUpsellSidebar({
 
   return (
     <div className="mx-3 mb-3 mt-auto space-y-2 border-t border-white/10 pt-3 shrink-0" aria-label="Optional paid support">
+      <StrategyCallBanner variant="sidebar" />
       {course ? (
         <div className="rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 border border-amber-400/25 p-3">
           <UpsellLink
@@ -949,12 +951,12 @@ export function DashboardUpsellStack({
 }) {
   const course = getNextUpcomingCourse();
   const courseDismissed = course != null && isUpsellDismissed("dashboard_hero", course.id);
-  const pkg = getPackageForStream(stream ?? null);
-  const showPackageCard = pkg.stream != null || !course || courseDismissed;
+  const showCourse = course != null && !courseDismissed;
+  const showPackageCard = showCourse;
 
   return (
     <div className={cn(rail ? "space-y-3" : "space-y-4 mb-8")}>
-      {course && !courseDismissed ? (
+      {showCourse ? (
         <ProductUpsell
           variant={rail ? "aside" : "hero"}
           offer="course"
@@ -991,6 +993,94 @@ export function DashboardUpsellStack({
           firstName={firstName}
         />
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * "Book a free strategy call" CTA — used across sidebar, footer, landing, dashboard.
+ * variant="sidebar"  → compact dark tile (fits inside the app sidebar)
+ * variant="card"     → light bordered card for page content areas
+ * variant="inline"   → single sentence with a link
+ */
+export function StrategyCallBanner({
+  variant = "card",
+  className,
+}: {
+  variant?: "sidebar" | "card" | "inline";
+  className?: string;
+}) {
+  const handleClick = () =>
+    trackEvent("strategy_call_click", { placement: variant });
+
+  if (variant === "inline") {
+    return (
+      <p className={cn("text-center text-sm text-muted-foreground", className)}>
+        Not sure where to start?{" "}
+        <a
+          href={STRATEGY_CALL_URL}
+          className="font-medium text-primary hover:underline"
+          {...EXTERNAL}
+          onClick={handleClick}
+        >
+          Book a free strategy call
+        </a>{" "}
+        — we&apos;ll help you pick the right programme.
+      </p>
+    );
+  }
+
+  if (variant === "sidebar") {
+    return (
+      <a
+        href={STRATEGY_CALL_URL}
+        {...EXTERNAL}
+        className={cn(
+          "flex items-center gap-2.5 rounded-xl bg-emerald-500/20 border border-emerald-400/30 px-3 py-2.5",
+          "hover:bg-emerald-500/30 transition-colors",
+          className,
+        )}
+        onClick={handleClick}
+      >
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-400/25 text-emerald-200">
+          <CalendarCheck className="h-3.5 w-3.5" aria-hidden />
+        </span>
+        <div className="min-w-0">
+          <p className="text-xs font-semibold text-white leading-tight">Free strategy call</p>
+          <p className="text-[10px] text-emerald-200/80 leading-tight">Discuss your options with a doctor</p>
+        </div>
+      </a>
+    );
+  }
+
+  // card variant
+  return (
+    <div
+      className={cn(
+        "rounded-xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm",
+        className,
+      )}
+    >
+      <div className="flex items-start gap-3">
+        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+          <CalendarCheck className="h-4 w-4" aria-hidden />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-emerald-900">Book a free strategy call</p>
+          <p className="mt-0.5 text-xs leading-relaxed text-emerald-800/80">
+            Speak with a doctor, dentist or vet about the right programme, course or package for you.
+          </p>
+          <a
+            href={STRATEGY_CALL_URL}
+            className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-900 hover:underline"
+            {...EXTERNAL}
+            onClick={handleClick}
+          >
+            Book your free call
+            <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
+          </a>
+        </div>
+      </div>
     </div>
   );
 }

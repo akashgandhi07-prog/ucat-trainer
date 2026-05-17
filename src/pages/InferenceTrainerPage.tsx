@@ -86,6 +86,18 @@ export default function InferenceTrainerPage() {
   const startTimeRef = useRef<number>(Date.now());
   const { user } = useAuth();
 
+  // Captures latest values for use in pagehide/unmount handlers (avoids stale closures).
+  const latestRef = useRef({
+    runningCorrect,
+    runningTotal,
+    phase,
+    elapsedSeconds,
+    user,
+    difficulty,
+    passageId: passage?.id ?? null,
+  });
+  const savedOnExitRef = useRef(false);
+
   const questions: InferenceQuestion[] =
     passage != null
       ? getInferenceQuestionsForPassage(passage.id, passage.text)
@@ -98,6 +110,55 @@ export default function InferenceTrainerPage() {
       mountedRef.current = false;
     };
   }, []);
+
+  // Keep latestRef current on every render so the exit handler always reads fresh values.
+  latestRef.current = {
+    runningCorrect,
+    runningTotal,
+    phase,
+    elapsedSeconds,
+    user,
+    difficulty,
+    passageId: passage?.id ?? null,
+  };
+
+  // Autosave running progress on tab close or SPA navigation away (e.g. back to hub).
+  // Only fires when in the active phase with at least one completed passage.
+  useEffect(() => {
+    const saveOnExit = () => {
+      if (savedOnExitRef.current) return;
+      const { phase: p, runningTotal: total, runningCorrect: correct, elapsedSeconds: elapsed, user: u, difficulty: diff, passageId } = latestRef.current;
+      if (p !== "active" || total <= 0) return;
+      savedOnExitRef.current = true;
+      if (u) {
+        void supabase.from("sessions").insert({
+          user_id: u.id,
+          training_type: "inference_trainer" as const,
+          difficulty: diff,
+          wpm: null,
+          correct,
+          total,
+          passage_id: passageId,
+          time_seconds: elapsed,
+        });
+      } else {
+        appendGuestSession({
+          training_type: "inference_trainer",
+          difficulty: diff,
+          wpm: null,
+          correct,
+          total,
+          time_seconds: elapsed,
+        });
+      }
+    };
+
+    window.addEventListener("pagehide", saveOnExit);
+    return () => {
+      window.removeEventListener("pagehide", saveOnExit);
+      saveOnExit(); // covers SPA navigation (component unmounts without pagehide)
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- intentionally reads via latestRef
 
   useEffect(() => {
     if (phase === "active") {

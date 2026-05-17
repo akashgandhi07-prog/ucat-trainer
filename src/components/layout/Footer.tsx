@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useBugReportModal } from "../../contexts/BugReportContext";
 import { useAppShell } from "../../contexts/AppShellContext";
-import { PACKAGE_LINKS, getNextCourseUrl } from "../../lib/productUpsell";
+import { PACKAGE_LINKS, STRATEGY_CALL_URL, getNextCourseUrl } from "../../lib/productUpsell";
 import TutoringUpsell from "./TutoringUpsell";
 
 const externalLinkProps = { target: "_blank" as const, rel: "noopener noreferrer" };
@@ -28,6 +28,16 @@ export default function Footer() {
             Feedback
           </button>
         </nav>
+        <div className="flex justify-center mb-4">
+          <a
+            href={STRATEGY_CALL_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors shadow-sm"
+          >
+            📞 Book a free strategy call
+          </a>
+        </div>
         <nav className="flex justify-center items-center gap-x-4 gap-y-1 text-sm text-slate-500 mb-3 flex-wrap" aria-label="Application support">
           {getNextCourseUrl() ? (
             <a href={getNextCourseUrl()!} className="hover:text-slate-700 transition-colors font-medium" {...externalLinkProps}>

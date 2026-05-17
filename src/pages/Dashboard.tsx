@@ -27,7 +27,7 @@ import { PASSAGES } from "../data/passages";
 import SEOHead from "../components/seo/SEOHead";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
-import ProductUpsell, { DashboardUpsellStack } from "../components/layout/ProductUpsell";
+import ProductUpsell, { DashboardUpsellStack, StrategyCallBanner } from "../components/layout/ProductUpsell";
 import {
   getUpsellProfileContext,
   hasActiveCourseUpsells,
@@ -41,13 +41,14 @@ import {
 import { getGuestSessions } from "../lib/guestSessions";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 import { trackEvent } from "../lib/analytics";
-import { upsertProfile, type Stream } from "../lib/profileApi";
+import { upsertProfile } from "../lib/profileApi";
 import type { SessionRow } from "../types/session";
 import type { SyllogismSession } from "../types/syllogisms";
 import type { SJTSessionsRow } from "../types/sjt";
 import { SJT_QUESTION_TYPE_LABELS } from "../types/sjt";
 import { formatSJTSessionScore, getGuestSJTSessions } from "../lib/sjtSessionStorage";
 import SyllogismAnalytics from "../components/dashboard/SyllogismAnalytics";
+import SJTAnalytics from "../components/dashboard/SJTAnalytics";
 import UnifiedProductHub from "../components/dashboard/UnifiedProductHub";
 import DashboardHeroCard from "../components/dashboard/DashboardHeroCard";
 import LatestMockCard from "../components/dashboard/LatestMockCard";
@@ -168,22 +169,19 @@ export default function Dashboard() {
   const [ucatSaveStatus, setUcatSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [ucatEditing, setUcatEditing] = useState(false);
 
-  // Target stream edit (Clinical Record)
-  const STREAM_OPTIONS: { value: Stream; label: string }[] = [
-    { value: "Medicine", label: "Medicine" },
-    { value: "Dentistry", label: "Dentistry" },
-    { value: "Veterinary Medicine", label: "Veterinary Medicine" },
-    { value: "Other", label: "Other" },
-    { value: "Undecided", label: "Undecided" },
-  ];
-  const [streamEditing, setStreamEditing] = useState(false);
-  const [streamEditValue, setStreamEditValue] = useState<Stream>("Medicine");
-  const [streamSaveStatus, setStreamSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
-
-  useEffect(() => {
-    if (streamEditing && profile?.stream) setStreamEditValue(profile.stream);
-    else if (!streamEditing) setStreamEditValue(profile?.stream ?? "Medicine");
-  }, [streamEditing, profile?.stream]);
+  type DashboardTab = "vr" | "dm" | "qr" | "sjt";
+  const DASHBOARD_TAB_KEY = "ucat-dashboard-tab";
+  const isValidTab = (v: unknown): v is DashboardTab => v === "vr" || v === "dm" || v === "qr" || v === "sjt";
+  const [activeTab, setActiveTab] = useState<DashboardTab>(() => {
+    try {
+      const s = localStorage.getItem(DASHBOARD_TAB_KEY);
+      if (isValidTab(s)) return s;
+    } catch { /* ignore */ }
+    return "vr";
+  });
+  const [showAllActivity, setShowAllActivity] = useState(false);
+  const [showExamDateEditor, setShowExamDateEditor] = useState(false);
+  const hasSetSmartDefault = useRef(false);
 
   const UCAT_MONTH_NAMES: Record<number, string> = {
     7: "July",
@@ -479,10 +477,36 @@ export default function Dashboard() {
     [byType.mental_maths],
   );
 
-  const scrollToExamDate = useCallback(() => {
-    document.getElementById("dashboard-exam-date")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  const openExamDateEditor = useCallback(() => {
+    setShowExamDateEditor(true);
     setUcatEditing(true);
   }, []);
+
+  const handleTabChange = useCallback((tab: DashboardTab) => {
+    setActiveTab(tab);
+    try { localStorage.setItem(DASHBOARD_TAB_KEY, tab); } catch { /* ignore */ }
+  }, [DASHBOARD_TAB_KEY]);
+
+  // On first data load, if no stored preference, auto-select the tab with the most recent session.
+  useEffect(() => {
+    if (loading || hasSetSmartDefault.current) return;
+    try {
+      const stored = localStorage.getItem(DASHBOARD_TAB_KEY);
+      if (isValidTab(stored)) { hasSetSmartDefault.current = true; return; }
+    } catch { /* ignore */ }
+    const vrSessions = [...byType.speed_reading, ...byType.rapid_recall, ...byType.keyword_scanning, ...byType.inference_trainer];
+    const qrSessions = [...byType.calculator, ...byType.mental_maths];
+    const candidates: { tab: DashboardTab; date: string }[] = [];
+    if (vrSessions.length > 0) candidates.push({ tab: "vr", date: vrSessions[vrSessions.length - 1].created_at });
+    if (qrSessions.length > 0) candidates.push({ tab: "qr", date: qrSessions[qrSessions.length - 1].created_at });
+    if (syllogismSessions.length > 0) candidates.push({ tab: "dm", date: syllogismSessions[syllogismSessions.length - 1].created_at });
+    if (sjtSessions.length > 0) candidates.push({ tab: "sjt", date: sjtSessions[sjtSessions.length - 1].created_at });
+    if (candidates.length > 0) {
+      const best = candidates.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+      setActiveTab(best.tab);
+    }
+    hasSetSmartDefault.current = true;
+  }, [loading, byType, syllogismSessions, sjtSessions, DASHBOARD_TAB_KEY]);
 
   const speedReadingSessions = byType.speed_reading;
   const lastSpeedSession = speedReadingSessions[speedReadingSessions.length - 1];
@@ -815,15 +839,6 @@ export default function Dashboard() {
     user?.email ||
     null;
   const greetingName = displayName || "Future Clinician";
-  const streamLabel = profile?.stream ?? "-";
-  const lastCheckUp =
-    sessions.length > 0
-      ? new Date(sessions[sessions.length - 1].created_at).toLocaleDateString(undefined, {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      })
-      : "-";
 
   const today = useMemo(() => {
     const d = new Date();
@@ -1038,798 +1053,942 @@ export default function Dashboard() {
       );
     }
 
+    const hasAnySessions =
+      sessions.length > 0 || syllogismSessions.length > 0 || sjtSessions.length > 0;
+
+    const vrCount = byType.speed_reading.length + byType.rapid_recall.length + byType.keyword_scanning.length + byType.inference_trainer.length;
+    const dmCount = syllogismSessions.length;
+    const qrCount = byType.calculator.length + byType.mental_maths.length;
+    const sjtCount = sjtSessions.length;
+
+    const TABS: { id: DashboardTab; label: string; shortLabel: string; count: number; path: string }[] = [
+      { id: "vr", label: "Verbal Reasoning", shortLabel: "Verbal", count: vrCount, path: "/ucat-verbal-reasoning-practice" },
+      { id: "dm", label: "Decision Making", shortLabel: "Decision", count: dmCount, path: "/ucat-decision-making-practice" },
+      { id: "qr", label: "Quantitative", shortLabel: "Quant", count: qrCount, path: "/ucat-quantitative-reasoning-practice" },
+      { id: "sjt", label: "Situational Judgement", shortLabel: "SJT", count: sjtCount, path: "/ucat-sjt-practice" },
+    ];
+
     return (
       <div className="flex flex-col lg:flex-row lg:items-start gap-8 lg:gap-10">
         <div className="min-w-0 flex-1 space-y-4">
-        <DashboardHeroCard
-          name={greetingName}
-          streak={streak}
-          lastPracticedDaysAgo={lastPracticedDaysAgo}
-          examDateISO={profile?.ucat_exam_date ?? null}
-          totalSessions={sessions.length + syllogismSessions.length + sjtSessions.length}
-          uniqueDaysInLast7={uniqueDaysInLast7}
-          onSetExamDate={scrollToExamDate}
-        />
-        {user && <TodayPlanStrip userId={user.id} />}
-        {user && <LatestMockCard userId={user.id} />}
-        <div className="space-y-8 pt-2">
-        {isPlannerIntegrated() ? <UnifiedProductHub /> : null}
-        <section className="mb-8">
-          <div className="bg-white rounded-xl border-2 border-slate-300 shadow-sm overflow-hidden">
-            <div className="bg-slate-100 border-b border-slate-300 px-4 py-2">
-              <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
-                Clinical Record
-              </h2>
-            </div>
-            <div className="p-4 space-y-3 font-mono text-sm">
-              <div className="flex justify-between gap-4 border-b border-slate-100 pb-2">
-                <span className="text-slate-500">Candidate Name:</span>
-                <span className="text-slate-900 font-medium">{greetingName}</span>
-              </div>
-              <div className="flex justify-between gap-4 border-b border-slate-100 pb-2 items-center">
-                <span className="text-slate-500">Target Stream:</span>
-                {streamEditing ? (
-                  <div className="flex flex-wrap items-center gap-2">
-                    <select
-                      value={streamEditValue}
-                      onChange={(e) => setStreamEditValue(e.target.value as Stream)}
-                      className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
-                      aria-label="Target stream"
-                    >
-                      {STREAM_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                      ))}
-                    </select>
-                    <button
-                      type="button"
-                      disabled={streamSaveStatus === "saving"}
-                      onClick={async () => {
-                        if (!user || !profile) return;
-                        setStreamSaveStatus("saving");
-                        const { ok } = await upsertProfile(user.id, profile.full_name ?? null, streamEditValue);
-                        if (ok) {
-                          setStreamSaveStatus("saved");
-                          setStreamEditing(false);
-                          await refetchProfile();
-                          setTimeout(() => setStreamSaveStatus("idle"), 2000);
-                        } else {
-                          setStreamSaveStatus("error");
-                          setTimeout(() => setStreamSaveStatus("idle"), 3000);
-                        }
-                      }}
-                      className="min-h-[32px] rounded bg-slate-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-600 disabled:opacity-60"
-                    >
-                      {streamSaveStatus === "saving" ? "Saving…" : streamSaveStatus === "saved" ? "Saved" : streamSaveStatus === "error" ? "Error" : "Save"}
-                    </button>
-                    {profile?.stream && (
-                      <button
-                        type="button"
-                        onClick={() => setStreamEditing(false)}
-                        className="min-h-[32px] rounded border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
-                      >
-                        Cancel
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <span className="text-slate-900 font-medium">{streamLabel}</span>
-                    <button
-                      type="button"
-                      onClick={() => setStreamEditing(true)}
-                      className="min-h-[32px] rounded border border-slate-300 bg-white px-2 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:border-slate-400"
-                    >
-                      Edit
-                    </button>
-                  </div>
+
+          {/* ── Hero ── */}
+          <DashboardHeroCard
+            name={greetingName}
+            streak={streak}
+            lastPracticedDaysAgo={lastPracticedDaysAgo}
+            examDateISO={profile?.ucat_exam_date ?? null}
+            totalSessions={sessions.length + syllogismSessions.length + sjtSessions.length}
+            uniqueDaysInLast7={uniqueDaysInLast7}
+            onSetExamDate={openExamDateEditor}
+            onEditExamDate={openExamDateEditor}
+          />
+
+          {/* ── Inline exam date editor ── */}
+          {user && (showExamDateEditor || !profile?.ucat_exam_date) && (
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <div>
+                  <p className="text-sm font-semibold text-slate-800">UCAT exam date</p>
+                  <p className="text-xs text-slate-400 mt-0.5">Official sittings · 13 July to 24 September {UCAT_EXAM_YEAR}</p>
+                </div>
+                {profile?.ucat_exam_date && showExamDateEditor && (
+                  <button
+                    type="button"
+                    onClick={() => { setShowExamDateEditor(false); setUcatEditing(false); }}
+                    className="text-xs text-slate-500 hover:text-slate-700 transition-colors"
+                  >
+                    Cancel
+                  </button>
                 )}
               </div>
-              <div className="flex justify-between gap-4">
-                <span className="text-slate-500">Last Check-up:</span>
-                <span className="text-slate-900 font-medium">{lastCheckUp}</span>
-              </div>
-              {user && (
-                <div id="dashboard-exam-date" className="border-t border-slate-200 pt-3 mt-3">
-                  <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <span className="text-slate-500">UCAT exam date:</span>
-                    <span className="text-xs text-slate-400">
-                      Official sittings · 13 July to 24 September {UCAT_EXAM_YEAR}
-                    </span>
+              {profile?.ucat_exam_date && !ucatEditing ? (
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="inline-flex items-center gap-2 rounded-lg bg-slate-50 border border-slate-200 px-3 py-2">
+                    <span className="text-slate-800 font-medium">{formatUcatDate(profile.ucat_exam_date)}</span>
+                    <span className="text-emerald-600 text-xs font-medium">Saved</span>
                   </div>
-                  {profile?.ucat_exam_date && !ucatEditing ? (
-                    <div className="flex flex-wrap items-center gap-3 flex-1">
-                      <div className="inline-flex items-center gap-2 rounded-lg bg-slate-50 border border-slate-200 px-3 py-2">
-                        <span className="text-slate-800 font-medium" aria-label="Saved exam date">
-                          {formatUcatDate(profile.ucat_exam_date)}
-                        </span>
-                        <span className="text-emerald-600 text-xs font-medium">Saved</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setUcatEditing(true)}
-                        className="min-h-[36px] rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-colors"
-                      >
-                        Edit
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex flex-wrap items-center gap-2">
-                      <select
-                        value={ucatDay}
-                        onChange={(e) => setUcatDay(parseInt(e.target.value, 10))}
-                        className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
-                        aria-label="Exam day"
-                      >
-                        {(() => {
-                          const range = ucatExamDayRangeInMonth(ucatMonth);
-                          const min = range?.minDay ?? 1;
-                          const max = range?.maxDay ?? 31;
-                          return Array.from({ length: max - min + 1 }, (_, i) => i + min).map((d) => (
-                            <option key={d} value={d}>
-                              {d}
-                            </option>
-                          ));
-                        })()}
-                      </select>
-                      <select
-                        value={ucatMonth}
-                        onChange={(e) => setUcatMonth(parseInt(e.target.value, 10) as 7 | 8 | 9)}
-                        className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
-                        aria-label="Exam month"
-                      >
-                        <option value={7}>July</option>
-                        <option value={8}>August</option>
-                        <option value={9}>September</option>
-                      </select>
-                      <select
-                        value={ucatYear}
-                        onChange={(e) => setUcatYear(parseInt(e.target.value, 10))}
-                        className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
-                        aria-label="Exam year"
-                      >
-                        <option value={UCAT_EXAM_YEAR}>{UCAT_EXAM_YEAR}</option>
-                      </select>
-                      <button
-                        type="button"
-                        disabled={ucatSaveStatus === "saving"}
-                        onClick={async () => {
-                          if (!user || !profile) return;
-                          setUcatSaveStatus("saving");
-                          const range = ucatExamDayRangeInMonth(ucatMonth);
-                          if (!range) {
-                            setUcatSaveStatus("error");
-                            setTimeout(() => setUcatSaveStatus("idle"), 3000);
-                            return;
-                          }
-                          const day = Math.min(Math.max(ucatDay, range.minDay), range.maxDay);
-                          const iso = `${ucatYear}-${String(ucatMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-                          const { ok } = await upsertProfile(user.id, profile.full_name ?? null, profile.stream ?? null, { ucatExamDate: iso });
-                          if (ok) {
-                            setUcatSaveStatus("saved");
-                            setUcatEditing(false);
-                            await refetchProfile();
-                            setTimeout(() => setUcatSaveStatus("idle"), 2000);
-                          } else {
-                            setUcatSaveStatus("error");
-                            setTimeout(() => setUcatSaveStatus("idle"), 3000);
-                          }
-                        }}
-                        className="ml-1 min-h-[32px] rounded bg-slate-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-600 disabled:opacity-60"
-                      >
-                        {ucatSaveStatus === "saving" ? "Saving…" : ucatSaveStatus === "saved" ? "Saved" : ucatSaveStatus === "error" ? "Error" : "Save"}
-                      </button>
-                      {profile?.ucat_exam_date && (
-                        <button
-                          type="button"
-                          onClick={() => setUcatEditing(false)}
-                          className="min-h-[32px] rounded border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
-                        >
-                          Cancel
-                        </button>
-                      )}
-                    </div>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => setUcatEditing(true)}
+                    className="min-h-[36px] rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-colors"
+                  >
+                    Edit
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-wrap items-center gap-2">
+                  <select
+                    value={ucatDay}
+                    onChange={(e) => setUcatDay(parseInt(e.target.value, 10))}
+                    className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+                    aria-label="Exam day"
+                  >
+                    {(() => {
+                      const range = ucatExamDayRangeInMonth(ucatMonth);
+                      const min = range?.minDay ?? 1;
+                      const max = range?.maxDay ?? 31;
+                      return Array.from({ length: max - min + 1 }, (_, i) => i + min).map((d) => (
+                        <option key={d} value={d}>{d}</option>
+                      ));
+                    })()}
+                  </select>
+                  <select
+                    value={ucatMonth}
+                    onChange={(e) => setUcatMonth(parseInt(e.target.value, 10) as 7 | 8 | 9)}
+                    className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+                    aria-label="Exam month"
+                  >
+                    <option value={7}>July</option>
+                    <option value={8}>August</option>
+                    <option value={9}>September</option>
+                  </select>
+                  <select
+                    value={ucatYear}
+                    onChange={(e) => setUcatYear(parseInt(e.target.value, 10))}
+                    className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+                    aria-label="Exam year"
+                  >
+                    <option value={UCAT_EXAM_YEAR}>{UCAT_EXAM_YEAR}</option>
+                  </select>
+                  <button
+                    type="button"
+                    disabled={ucatSaveStatus === "saving"}
+                    onClick={async () => {
+                      if (!user || !profile) return;
+                      setUcatSaveStatus("saving");
+                      const range = ucatExamDayRangeInMonth(ucatMonth);
+                      if (!range) {
+                        setUcatSaveStatus("error");
+                        setTimeout(() => setUcatSaveStatus("idle"), 3000);
+                        return;
+                      }
+                      const day = Math.min(Math.max(ucatDay, range.minDay), range.maxDay);
+                      const iso = `${ucatYear}-${String(ucatMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                      const { ok } = await upsertProfile(user.id, profile.full_name ?? null, profile.stream ?? null, { ucatExamDate: iso });
+                      if (ok) {
+                        setUcatSaveStatus("saved");
+                        setUcatEditing(false);
+                        setShowExamDateEditor(false);
+                        await refetchProfile();
+                        setTimeout(() => setUcatSaveStatus("idle"), 2000);
+                      } else {
+                        setUcatSaveStatus("error");
+                        setTimeout(() => setUcatSaveStatus("idle"), 3000);
+                      }
+                    }}
+                    className="ml-1 min-h-[32px] rounded bg-slate-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-600 disabled:opacity-60"
+                  >
+                    {ucatSaveStatus === "saving" ? "Saving…" : ucatSaveStatus === "saved" ? "Saved" : ucatSaveStatus === "error" ? "Error" : "Save"}
+                  </button>
                 </div>
               )}
             </div>
-          </div>
-        </section>
+          )}
 
-        {sessions.length === 0 && syllogismSessions.length === 0 && sjtSessions.length === 0 ? (
-          <section className="mb-10">
+          {/* ── Plan / mock strips ── */}
+          {user && <TodayPlanStrip userId={user.id} />}
+          {user && <LatestMockCard userId={user.id} />}
+          {isPlannerIntegrated() ? <UnifiedProductHub /> : null}
+
+          {/* ── Week at a glance ── */}
+          <WeekSummaryCard
+            sessions={sessions}
+            syllogismSessions={syllogismSessions}
+            sjtSessions={sjtSessions}
+          />
+
+          {/* ── Recent activity (prominent, near top) ── */}
+          {recentActivity.length > 0 && (
+            <section>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-base font-semibold text-slate-900">Recent activity</h2>
+                {recentActivity.length > 10 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllActivity((v) => !v)}
+                    className="text-sm text-primary font-medium hover:text-primary/80 transition-colors"
+                  >
+                    {showAllActivity ? "Show less" : `View all ${recentActivity.length} sessions`}
+                  </button>
+                )}
+              </div>
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table
+                    className="w-full text-sm"
+                    role="table"
+                    aria-label="Recent training sessions"
+                  >
+                    <thead>
+                      <tr className="border-b border-slate-200 bg-slate-50">
+                        <th scope="col" className="text-left px-4 py-3 font-medium text-slate-600">
+                          Date
+                        </th>
+                        <th scope="col" className="text-left px-4 py-3 font-medium text-slate-600">
+                          Trainer
+                        </th>
+                        <th
+                          scope="col"
+                          className="text-left px-4 py-3 font-medium text-slate-600 hidden sm:table-cell"
+                        >
+                          Time
+                        </th>
+                        <th scope="col" className="text-left px-4 py-3 font-medium text-slate-600">
+                          Score
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(showAllActivity ? recentActivity : recentActivity.slice(0, 10)).map((item) => (
+                        <tr
+                          key={item.id}
+                          className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50"
+                        >
+                          <td className="px-4 py-3 text-slate-600 text-xs whitespace-nowrap">
+                            {new Date(item.created_at).toLocaleDateString(undefined, {
+                              day: "numeric",
+                              month: "short",
+                            })}
+                          </td>
+                          <td className="px-4 py-3 text-slate-900 font-medium">{item.label}</td>
+                          <td className="px-4 py-3 text-slate-600 hidden sm:table-cell">
+                            {item.timeDisplay}
+                          </td>
+                          <td className="px-4 py-3 text-slate-900">{item.scoreDisplay}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* ── Subject deep-dives (tabbed) ── */}
+          {!hasAnySessions ? (
             <div className="bg-slate-100 border border-slate-200 rounded-xl p-6 text-center">
               <p className="text-slate-700 font-medium mb-4">
                 No sessions yet. Pick any trainer from the home page to get started.
               </p>
               <Link
                 to="/"
-                  className="inline-flex min-h-[44px] items-center justify-center px-6 py-3 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
+                className="inline-flex min-h-[44px] items-center justify-center px-6 py-3 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
               >
                 Explore trainers
               </Link>
             </div>
-          </section>
-        ) : (
-          <>
-            <section className="mb-10">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">
-                {TRAINING_TYPE_LABELS.speed_reading}
-              </h2>
-              {speedWpmCount > 0 && (
-                <div className="bg-gradient-to-br from-blue-50 to-slate-50 rounded-xl border border-blue-100 p-4 mb-4">
-                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">
-                    How you compare
-                  </p>
-                  <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <span className="text-2xl font-bold text-slate-900">{averageWpm} WPM</span>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {getWpmTierLabel(getWpmTier(averageWpm))}
-                    </span>
-                  </div>
-                  <p className="text-sm text-slate-600">
-                    {getWpmComparisonCopy(averageWpm)}
-                  </p>
-                  <p className="text-xs text-slate-500 mt-2">
-                    Most users read between {WPM_BENCHMARK.typicalMin}-{WPM_BENCHMARK.typicalMax} WPM. 400+ is strong.
-                  </p>
-                </div>
-              )}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                  <p className="text-sm font-medium text-slate-500">Your typical WPM</p>
-                  <p className="text-slate-500 text-xs mb-1">Average from your history</p>
-                  <p className="text-3xl font-bold text-slate-900">{averageWpm}</p>
-                  <StatDelta delta={wpmDelta.delta} direction={wpmDelta.direction} unit=" WPM" />
-                </div>
-                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                  <p className="text-sm font-medium text-slate-500">Best WPM</p>
-                  <p className="text-3xl font-bold text-slate-900">{bestWpm}</p>
-                </div>
-                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                  <p className="text-sm font-medium text-slate-500">Best comprehension</p>
-                  <p className="text-3xl font-bold text-slate-900">{speedReadingAccuracy}%</p>
-                </div>
-              </div>
-              {lastPassageTitle != null && (
-                <p className="text-sm text-slate-500 mb-2">
-                  Last passage: {lastPassageTitle}
-                </p>
-              )}
-              <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-                <h3 className="text-base font-medium text-slate-900 mb-4">
-                  WPM over time
-                </h3>
-                {chartData.length === 0 ? (
-                  <p className="text-slate-500 py-8 text-center">
-                    Complete a Speed Reading session to see your WPM.
-                  </p>
-                ) : (
-                  <>
-                    <div className="h-64 sm:h-72 min-h-[200px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                          <XAxis
-                            dataKey="displayDate"
-                            tick={{ fontSize: 12, fill: "#64748b" }}
-                            stroke="#94a3b8"
-                          />
-                          <YAxis
-                            tick={{ fontSize: 12, fill: "#64748b" }}
-                            stroke="#94a3b8"
-                            domain={["auto", "auto"]}
-                          />
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: "#fff",
-                              border: "1px solid #e2e8f0",
-                              borderRadius: "8px",
-                            }}
-                            labelFormatter={(_, payload) =>
-                              payload?.[0]?.payload?.displayDate ?? ""
-                            }
-                            formatter={(value: number | undefined) => [`${value ?? 0} WPM`, "WPM"]}
-                          />
-                          <ReferenceLine
-                            y={WPM_TARGET}
-                            stroke="#dc2626"
-                            strokeDasharray="4 4"
-                            label={{ value: "Target", position: "right", fill: "#dc2626" }}
-                          />
-                          {personalTargetWpm != null &&
-                            personalTargetWpm !== WPM_TARGET && (
-                              <ReferenceLine
-                                y={personalTargetWpm}
-                                stroke="#0ea5e9"
-                                strokeDasharray="2 2"
-                                label={{
-                                  value: "Your target",
-                                  position: "right",
-                                  fill: "#0ea5e9",
-                                }}
-                              />
-                            )}
-                          <Line
-                            type="monotone"
-                            dataKey="wpm"
-                            stroke="#2563eb"
-                            strokeWidth={2}
-                            dot={{ fill: "#2563eb", r: 4 }}
-                            activeDot={{ r: 6 }}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                    <p className="text-slate-600 text-sm mt-3 text-center">
-                      You&apos;re{" "}
-                      {Math.min(
-                        100,
-                        Math.round((averageWpm / WPM_TARGET) * 100)
-                      )}
-                      % of the way to {WPM_TARGET} WPM.
-                    </p>
-                    <form
-                      className="mt-3 flex flex-col items-center gap-2 text-xs text-slate-600"
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        const raw = targetWpmInput.trim();
-                        if (raw === "") {
-                          localStorage.removeItem(TARGET_WPM_STORAGE_KEY);
-                          setPersonalTargetWpm(null);
-                          setTargetWpmInput("");
-                          setTargetWpmError(null);
-                          return;
-                        }
-                        const n = Number.parseInt(raw, 10);
-                        if (!Number.isFinite(n) || n < 200 || n > 900) {
-                          setTargetWpmError("Please enter a value between 200 and 900 WPM, or leave blank to clear.");
-                          return;
-                        }
-                        localStorage.setItem(TARGET_WPM_STORAGE_KEY, String(n));
-                        setPersonalTargetWpm(n);
-                        setTargetWpmError(null);
-                      }}
-                    >
-                      <div className="flex flex-wrap items-center justify-center gap-2">
-                        <label htmlFor="target-wpm-input" className="sr-only">
-                          Set personal target WPM
-                        </label>
-                        <span>Your personal target:</span>
-                        <input
-                          id="target-wpm-input"
-                          type="number"
-                          min={200}
-                          max={900}
-                          value={targetWpmInput}
-                          onChange={(e) => {
-                            setTargetWpmInput(e.target.value);
-                            if (targetWpmError) setTargetWpmError(null);
-                          }}
-                          className="w-20 rounded-md border border-slate-300 px-2 py-1 text-center text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          inputMode="numeric"
-                          pattern="[0-9]*"
-                        />
-                        <span>WPM</span>
-                        <button
-                          type="submit"
-                          className="inline-flex items-center justify-center rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-blue-600 hover:bg-slate-50"
-                        >
-                          Save
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            localStorage.removeItem(TARGET_WPM_STORAGE_KEY);
-                            setPersonalTargetWpm(null);
-                            setTargetWpmInput("");
-                            setTargetWpmError(null);
-                          }}
-                          className="inline-flex items-center justify-center rounded-md border border-slate-200 px-2 py-1 text-xs font-medium text-slate-500 hover:bg-slate-50"
-                        >
-                          Clear
-                        </button>
-                      </div>
-                      {targetWpmError && (
-                        <p className="mt-1 text-[11px] text-red-600 text-center max-w-md">
-                          {targetWpmError}
-                        </p>
-                      )}
-                    </form>
-                  </>
-                )}
-              </div>
-              {renderAccuracyChart(speedAccuracyChart, "Comprehension accuracy over time")}
-              {renderDifficultyBreakdown(speedDifficultyBreakdown)}
-            </section>
-
-            <section className="mb-10">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">
-                {TRAINING_TYPE_LABELS.rapid_recall}
-              </h2>
-              {rapidRecallSessions.length === 0 ? (
-                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                  <p className="text-slate-500">No Rapid Recall sessions yet.</p>
-                </div>
-              ) : (
-                <>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                      <p className="text-sm font-medium text-slate-500">Average score</p>
-                      <p className="text-2xl font-bold text-slate-900">{rapidRecallAvg}%</p>
-                      <StatDelta delta={rapidAccDelta.delta} direction={rapidAccDelta.direction} unit="%" />
-                    </div>
-                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                      <p className="text-sm font-medium text-slate-500">Best score</p>
-                      <p className="text-2xl font-bold text-slate-900">{rapidBestScore}%</p>
-                    </div>
-                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                      <p className="text-sm font-medium text-slate-500">Avg reading time</p>
-                      <p className="text-2xl font-bold text-slate-900">{rapidAvgTime != null ? `${rapidAvgTime}s` : "-"}</p>
-                    </div>
-                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                      <p className="text-sm font-medium text-slate-500">Best time</p>
-                      <p className="text-2xl font-bold text-slate-900">{rapidBestTime != null ? `${rapidBestTime}s` : "-"}</p>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-3 text-sm text-slate-600 mb-4">
-                    <span>{rapidRecallSessions.length} session{rapidRecallSessions.length !== 1 ? "s" : ""}</span>
-                    {rapidLastSession && <span>Last session: {rapidLastSession}</span>}
-                  </div>
-                  {renderAccuracyChart(rapidAccuracyChart, "Recall accuracy over time")}
-                  <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm mt-4">
-                    {renderDifficultyBreakdown(rapidDifficultyBreakdown)}
-                  </div>
-                </>
-              )}
-            </section>
-
-            <section className="mb-10">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">
-                {TRAINING_TYPE_LABELS.keyword_scanning}
-              </h2>
-              {keywordSessions.length === 0 ? (
-                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                  <p className="text-slate-500">No Keyword Scanning sessions yet.</p>
-                </div>
-              ) : (
-                <>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                      <p className="text-sm font-medium text-slate-500">Average accuracy</p>
-                      <p className="text-2xl font-bold text-slate-900">{keywordAvg}%</p>
-                      <StatDelta delta={keywordAccDelta.delta} direction={keywordAccDelta.direction} unit="%" />
-                    </div>
-                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                      <p className="text-sm font-medium text-slate-500">Best accuracy</p>
-                      <p className="text-2xl font-bold text-slate-900">{keywordBestAccuracy}%</p>
-                    </div>
-                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                      <p className="text-sm font-medium text-slate-500">Avg scan time</p>
-                      <p className="text-2xl font-bold text-slate-900">{averageScanTimeSeconds != null ? `${averageScanTimeSeconds}s` : "-"}</p>
-                    </div>
-                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                      <p className="text-sm font-medium text-slate-500">Best time</p>
-                      <p className="text-2xl font-bold text-slate-900">{keywordBestTime != null ? `${keywordBestTime}s` : "-"}</p>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-3 text-sm text-slate-600 mb-4">
-                    <span>{keywordSessions.length} session{keywordSessions.length !== 1 ? "s" : ""}</span>
-                    {keywordLastSession && <span>Last session: {keywordLastSession}</span>}
-                  </div>
-                  {renderAccuracyChart(keywordAccuracyChart, "Scanning accuracy over time")}
-                  <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm mt-4">
-                    {renderDifficultyBreakdown(keywordDifficultyBreakdown)}
-                  </div>
-                </>
-              )}
-            </section>
-
-            <section className="mb-10">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">
-                {TRAINING_TYPE_LABELS.inference_trainer}
-              </h2>
-              {inferenceSessions.length === 0 ? (
-                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                  <p className="text-slate-500">No Inference Trainer sessions yet. Practice identifying evidence that supports inferences.</p>
-                  <Link
-                    to="/train/inference"
-                  className="inline-flex mt-4 px-4 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
+          ) : (
+            <div>
+              {/* Tab nav */}
+              <div className="flex gap-1 p-1 bg-slate-100 rounded-xl mb-4 overflow-x-auto">
+                {TABS.map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => handleTabChange(tab.id)}
+                    className={cn(
+                      "flex-1 min-w-0 rounded-lg px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap",
+                      activeTab === tab.id
+                        ? "bg-white text-slate-900 shadow-sm"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-white/60",
+                    )}
                   >
-                    Go to Inference Trainer
-                  </Link>
-                </div>
-              ) : (
-                <>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                      <p className="text-sm font-medium text-slate-500">Average accuracy</p>
-                      <p className="text-2xl font-bold text-slate-900">{inferenceAvg}%</p>
-                      <StatDelta delta={inferenceAccDelta.delta} direction={inferenceAccDelta.direction} unit="%" />
-                    </div>
-                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                      <p className="text-sm font-medium text-slate-500">Best accuracy</p>
-                      <p className="text-2xl font-bold text-slate-900">{inferenceBestAccuracy}%</p>
-                    </div>
-                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                      <p className="text-sm font-medium text-slate-500">Sessions</p>
-                      <p className="text-2xl font-bold text-slate-900">{inferenceSessions.length}</p>
-                    </div>
-                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                      <p className="text-sm font-medium text-slate-500">Last session</p>
-                      <p className="text-lg font-bold text-slate-900">{inferenceLastSession ?? "-"}</p>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-3 text-sm text-slate-600 mb-4">
-                    <span>{inferenceSessions.length} session{inferenceSessions.length !== 1 ? "s" : ""}</span>
-                    {inferenceLastSession && <span>Last: {inferenceLastSession}</span>}
+                    <span className="hidden sm:inline">{tab.label}</span>
+                    <span className="sm:hidden">{tab.shortLabel}</span>
+                    {tab.count > 0 && (
+                      <span className={cn(
+                        "ml-1.5 inline-flex items-center justify-center rounded-full text-[10px] font-semibold px-1.5 py-0.5 leading-none",
+                        activeTab === tab.id
+                          ? "bg-slate-200 text-slate-700"
+                          : "bg-slate-300/60 text-slate-500",
+                      )}>
+                        {tab.count}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              {/* VR: Speed Reading · Rapid Recall · Keyword Scanning · Inference */}
+              {activeTab === "vr" && (
+                <div className="space-y-8">
+                  <div className="flex items-center justify-between -mb-4">
+                    <h2 className="text-base font-semibold text-slate-700">Verbal Reasoning</h2>
                     <Link
-                      to="/train/inference"
-                      className="text-indigo-600 font-medium hover:underline"
+                      to="/ucat-verbal-reasoning-practice"
+                      className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
                     >
-                      Practice again →
+                      Practice now →
                     </Link>
                   </div>
-                  {renderAccuracyChart(inferenceAccuracyChart, "Accuracy over time")}
-                  <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm mt-4">
-                    {renderDifficultyBreakdown(inferenceDifficultyBreakdown)}
-                  </div>
-                </>
-              )}
-            </section>
-
-            <section className="mb-10">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">
-                {TRAINING_TYPE_LABELS.calculator}
-              </h2>
-
-              {calculatorSessions.length === 0 ? (
-                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                  <p className="text-slate-500">No Calculator sessions yet. Start the Calculator Trainer to track your speed.</p>
-                  <Link
-                    to="/train/calculator"
-                  className="inline-flex mt-4 px-4 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
-                  >
-                    Go to Calculator
-                  </Link>
-                </div>
-              ) : (
-                <>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                      <p className="text-sm font-medium text-slate-500">Your Average KPS</p>
-                      <p className="text-3xl font-bold text-slate-900">{calculatorAvgKps}</p>
-                      <StatDelta delta={calcKpsDelta.delta} direction={calcKpsDelta.direction} unit=" KPS" />
-                    </div>
-                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                      <p className="text-sm font-medium text-slate-500">Best KPS</p>
-                      <p className="text-3xl font-bold text-slate-900">{calculatorBestKps}</p>
-                    </div>
-                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                      <p className="text-sm font-medium text-slate-500">Avg Accuracy</p>
-                      <p className="text-3xl font-bold text-slate-900">{calculatorAvgAccuracy}%</p>
-                    </div>
-                  </div>
-
-                  {/* Drill Breakdown */}
-                  <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm mb-4">
-                    <h3 className="text-sm font-medium text-slate-900 mb-3">Performance by Mode</h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      {Object.entries(calculatorDrillBreakdown).map(([mode, stats]) => (
-                        <div key={mode} className="bg-slate-50 p-3 rounded-lg text-center">
-                          <p className="text-xs font-bold text-slate-600 uppercase mb-1">{mode === 'fingerTwister' ? 'Twister' : mode}</p>
-                          <p className="text-lg font-bold text-slate-900">{stats.avgKps} <span className="text-xs font-normal text-slate-500">KPS</span></p>
-                          <p className="text-xs text-slate-500">{stats.avgAccuracy}% Acc ({stats.count})</p>
+                  <section>
+                    <h2 className="text-lg font-semibold text-slate-900 mb-4">
+                      {TRAINING_TYPE_LABELS.speed_reading}
+                    </h2>
+                    {speedWpmCount > 0 && (
+                      <div className="bg-gradient-to-br from-blue-50 to-slate-50 rounded-xl border border-blue-100 p-4 mb-4">
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">
+                          How you compare
+                        </p>
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                          <span className="text-2xl font-bold text-slate-900">{averageWpm} WPM</span>
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {getWpmTierLabel(getWpmTier(averageWpm))}
+                          </span>
                         </div>
-                      ))}
+                        <p className="text-sm text-slate-600">{getWpmComparisonCopy(averageWpm)}</p>
+                        <p className="text-xs text-slate-500 mt-2">
+                          Most users read between {WPM_BENCHMARK.typicalMin}-
+                          {WPM_BENCHMARK.typicalMax} WPM. 400+ is strong.
+                        </p>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                      <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                        <p className="text-sm font-medium text-slate-500">Your typical WPM</p>
+                        <p className="text-slate-500 text-xs mb-1">Average from your history</p>
+                        <p className="text-3xl font-bold text-slate-900">{averageWpm}</p>
+                        <StatDelta delta={wpmDelta.delta} direction={wpmDelta.direction} unit=" WPM" />
+                      </div>
+                      <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                        <p className="text-sm font-medium text-slate-500">Best WPM</p>
+                        <p className="text-3xl font-bold text-slate-900">{bestWpm}</p>
+                      </div>
+                      <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                        <p className="text-sm font-medium text-slate-500">Best comprehension</p>
+                        <p className="text-3xl font-bold text-slate-900">{speedReadingAccuracy}%</p>
+                      </div>
                     </div>
-                  </div>
-
-                  <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-                    <h3 className="text-base font-medium text-slate-900 mb-4">
-                      KPS Progress
-                    </h3>
-                    <div className="h-64 sm:h-72 min-h-[200px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={calculatorChartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                          <XAxis
-                            dataKey="displayDate"
-                            tick={{ fontSize: 12, fill: "#64748b" }}
-                            stroke="#94a3b8"
-                          />
-                          <YAxis
-                            tick={{ fontSize: 12, fill: "#64748b" }}
-                            stroke="#94a3b8"
-                            domain={["auto", "auto"]}
-                          />
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: "#fff",
-                              border: "1px solid #e2e8f0",
-                              borderRadius: "8px",
+                    {lastPassageTitle != null && (
+                      <p className="text-sm text-slate-500 mb-2">Last passage: {lastPassageTitle}</p>
+                    )}
+                    <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+                      <h3 className="text-base font-medium text-slate-900 mb-4">WPM over time</h3>
+                      {chartData.length === 0 ? (
+                        <p className="text-slate-500 py-8 text-center">
+                          Complete a Speed Reading session to see your WPM.
+                        </p>
+                      ) : (
+                        <>
+                          <div className="h-64 sm:h-72 min-h-[200px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <LineChart
+                                data={chartData}
+                                margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
+                              >
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                <XAxis
+                                  dataKey="displayDate"
+                                  tick={{ fontSize: 12, fill: "#64748b" }}
+                                  stroke="#94a3b8"
+                                />
+                                <YAxis
+                                  tick={{ fontSize: 12, fill: "#64748b" }}
+                                  stroke="#94a3b8"
+                                  domain={["auto", "auto"]}
+                                />
+                                <Tooltip
+                                  contentStyle={{
+                                    backgroundColor: "#fff",
+                                    border: "1px solid #e2e8f0",
+                                    borderRadius: "8px",
+                                  }}
+                                  labelFormatter={(_, payload) =>
+                                    payload?.[0]?.payload?.displayDate ?? ""
+                                  }
+                                  formatter={(value: number | undefined) => [
+                                    `${value ?? 0} WPM`,
+                                    "WPM",
+                                  ]}
+                                />
+                                <ReferenceLine
+                                  y={WPM_TARGET}
+                                  stroke="#dc2626"
+                                  strokeDasharray="4 4"
+                                  label={{
+                                    value: "Target",
+                                    position: "right",
+                                    fill: "#dc2626",
+                                  }}
+                                />
+                                {personalTargetWpm != null &&
+                                  personalTargetWpm !== WPM_TARGET && (
+                                    <ReferenceLine
+                                      y={personalTargetWpm}
+                                      stroke="#0ea5e9"
+                                      strokeDasharray="2 2"
+                                      label={{
+                                        value: "Your target",
+                                        position: "right",
+                                        fill: "#0ea5e9",
+                                      }}
+                                    />
+                                  )}
+                                <Line
+                                  type="monotone"
+                                  dataKey="wpm"
+                                  stroke="#2563eb"
+                                  strokeWidth={2}
+                                  dot={{ fill: "#2563eb", r: 4 }}
+                                  activeDot={{ r: 6 }}
+                                />
+                              </LineChart>
+                            </ResponsiveContainer>
+                          </div>
+                          <p className="text-slate-600 text-sm mt-3 text-center">
+                            You&apos;re{" "}
+                            {Math.min(100, Math.round((averageWpm / WPM_TARGET) * 100))}% of the
+                            way to {WPM_TARGET} WPM.
+                          </p>
+                          <form
+                            className="mt-3 flex flex-col items-center gap-2 text-xs text-slate-600"
+                            onSubmit={(e) => {
+                              e.preventDefault();
+                              const raw = targetWpmInput.trim();
+                              if (raw === "") {
+                                localStorage.removeItem(TARGET_WPM_STORAGE_KEY);
+                                setPersonalTargetWpm(null);
+                                setTargetWpmInput("");
+                                setTargetWpmError(null);
+                                return;
+                              }
+                              const n = Number.parseInt(raw, 10);
+                              if (!Number.isFinite(n) || n < 200 || n > 900) {
+                                setTargetWpmError(
+                                  "Please enter a value between 200 and 900 WPM, or leave blank to clear.",
+                                );
+                                return;
+                              }
+                              localStorage.setItem(TARGET_WPM_STORAGE_KEY, String(n));
+                              setPersonalTargetWpm(n);
+                              setTargetWpmError(null);
                             }}
-                            labelFormatter={(_, payload) =>
-                              payload?.[0]?.payload?.displayDate ?? ""
-                            }
-                            formatter={(value: number | undefined) => [`${value ?? 0} KPS`, "Speed"]}
-                          />
-                          <Line
-                            type="monotone"
-                            dataKey="wpm"
-                            stroke="#4f46e5"
-                            strokeWidth={2}
-                            dot={{ fill: "#4f46e5", r: 4 }}
-                            activeDot={{ r: 6 }}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
+                          >
+                            <div className="flex flex-wrap items-center justify-center gap-2">
+                              <label htmlFor="target-wpm-input" className="sr-only">
+                                Set personal target WPM
+                              </label>
+                              <span>Your personal target:</span>
+                              <input
+                                id="target-wpm-input"
+                                type="number"
+                                min={200}
+                                max={900}
+                                value={targetWpmInput}
+                                onChange={(e) => {
+                                  setTargetWpmInput(e.target.value);
+                                  if (targetWpmError) setTargetWpmError(null);
+                                }}
+                                className="w-20 rounded-md border border-slate-300 px-2 py-1 text-center text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                              />
+                              <span>WPM</span>
+                              <button
+                                type="submit"
+                                className="inline-flex items-center justify-center rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-blue-600 hover:bg-slate-50"
+                              >
+                                Save
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  localStorage.removeItem(TARGET_WPM_STORAGE_KEY);
+                                  setPersonalTargetWpm(null);
+                                  setTargetWpmInput("");
+                                  setTargetWpmError(null);
+                                }}
+                                className="inline-flex items-center justify-center rounded-md border border-slate-200 px-2 py-1 text-xs font-medium text-slate-500 hover:bg-slate-50"
+                              >
+                                Clear
+                              </button>
+                            </div>
+                            {targetWpmError && (
+                              <p className="mt-1 text-[11px] text-red-600 text-center max-w-md">
+                                {targetWpmError}
+                              </p>
+                            )}
+                          </form>
+                        </>
+                      )}
                     </div>
-                  </div>
-                </>
-              )}
-            </section>
+                    {renderAccuracyChart(speedAccuracyChart, "Comprehension accuracy over time")}
+                    {renderDifficultyBreakdown(speedDifficultyBreakdown)}
+                  </section>
 
-            <section className="mt-10">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">
-                {TRAINING_TYPE_LABELS.mental_maths}
-              </h2>
-              {mentalMathsSessions.length === 0 ? (
-                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                  <p className="text-slate-500">No Mental Maths sessions yet. Build speed and estimation without the calculator.</p>
-                  <Link
-                    to="/train/mentalMaths"
-                  className="inline-flex mt-4 px-4 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
-                  >
-                    Go to Mental Maths Trainer
-                  </Link>
+                  <section>
+                    <h2 className="text-lg font-semibold text-slate-900 mb-4">
+                      {TRAINING_TYPE_LABELS.rapid_recall}
+                    </h2>
+                    {rapidRecallSessions.length === 0 ? (
+                      <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                        <p className="text-slate-500">No Rapid Recall sessions yet.</p>
+                        <Link
+                          to="/ucat-verbal-reasoning-practice"
+                          className="inline-flex mt-4 px-4 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
+                        >
+                          Start Rapid Recall →
+                        </Link>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                            <p className="text-sm font-medium text-slate-500">Average score</p>
+                            <p className="text-2xl font-bold text-slate-900">{rapidRecallAvg}%</p>
+                            <StatDelta
+                              delta={rapidAccDelta.delta}
+                              direction={rapidAccDelta.direction}
+                              unit="%"
+                            />
+                          </div>
+                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                            <p className="text-sm font-medium text-slate-500">Best score</p>
+                            <p className="text-2xl font-bold text-slate-900">{rapidBestScore}%</p>
+                          </div>
+                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                            <p className="text-sm font-medium text-slate-500">Avg reading time</p>
+                            <p className="text-2xl font-bold text-slate-900">
+                              {rapidAvgTime != null ? `${rapidAvgTime}s` : "-"}
+                            </p>
+                          </div>
+                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                            <p className="text-sm font-medium text-slate-500">Best time</p>
+                            <p className="text-2xl font-bold text-slate-900">
+                              {rapidBestTime != null ? `${rapidBestTime}s` : "-"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-3 text-sm text-slate-600 mb-4">
+                          <span>
+                            {rapidRecallSessions.length} session
+                            {rapidRecallSessions.length !== 1 ? "s" : ""}
+                          </span>
+                          {rapidLastSession && <span>Last session: {rapidLastSession}</span>}
+                        </div>
+                        {renderAccuracyChart(rapidAccuracyChart, "Recall accuracy over time")}
+                        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm mt-4">
+                          {renderDifficultyBreakdown(rapidDifficultyBreakdown)}
+                        </div>
+                      </>
+                    )}
+                  </section>
+
+                  <section>
+                    <h2 className="text-lg font-semibold text-slate-900 mb-4">
+                      {TRAINING_TYPE_LABELS.keyword_scanning}
+                    </h2>
+                    {keywordSessions.length === 0 ? (
+                      <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                        <p className="text-slate-500">No Keyword Scanning sessions yet.</p>
+                        <Link
+                          to="/ucat-verbal-reasoning-practice"
+                          className="inline-flex mt-4 px-4 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
+                        >
+                          Start Keyword Scanning →
+                        </Link>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                            <p className="text-sm font-medium text-slate-500">Average accuracy</p>
+                            <p className="text-2xl font-bold text-slate-900">{keywordAvg}%</p>
+                            <StatDelta
+                              delta={keywordAccDelta.delta}
+                              direction={keywordAccDelta.direction}
+                              unit="%"
+                            />
+                          </div>
+                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                            <p className="text-sm font-medium text-slate-500">Best accuracy</p>
+                            <p className="text-2xl font-bold text-slate-900">
+                              {keywordBestAccuracy}%
+                            </p>
+                          </div>
+                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                            <p className="text-sm font-medium text-slate-500">Avg scan time</p>
+                            <p className="text-2xl font-bold text-slate-900">
+                              {averageScanTimeSeconds != null ? `${averageScanTimeSeconds}s` : "-"}
+                            </p>
+                          </div>
+                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                            <p className="text-sm font-medium text-slate-500">Best time</p>
+                            <p className="text-2xl font-bold text-slate-900">
+                              {keywordBestTime != null ? `${keywordBestTime}s` : "-"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-3 text-sm text-slate-600 mb-4">
+                          <span>
+                            {keywordSessions.length} session
+                            {keywordSessions.length !== 1 ? "s" : ""}
+                          </span>
+                          {keywordLastSession && <span>Last session: {keywordLastSession}</span>}
+                        </div>
+                        {renderAccuracyChart(keywordAccuracyChart, "Scanning accuracy over time")}
+                        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm mt-4">
+                          {renderDifficultyBreakdown(keywordDifficultyBreakdown)}
+                        </div>
+                      </>
+                    )}
+                  </section>
+
+                  <section>
+                    <h2 className="text-lg font-semibold text-slate-900 mb-4">
+                      {TRAINING_TYPE_LABELS.inference_trainer}
+                    </h2>
+                    {inferenceSessions.length === 0 ? (
+                      <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                        <p className="text-slate-500">
+                          No Inference Trainer sessions yet. Practice identifying evidence that
+                          supports inferences.
+                        </p>
+                        <Link
+                          to="/train/inference"
+                          className="inline-flex mt-4 px-4 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
+                        >
+                          Go to Inference Trainer
+                        </Link>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                            <p className="text-sm font-medium text-slate-500">Average accuracy</p>
+                            <p className="text-2xl font-bold text-slate-900">{inferenceAvg}%</p>
+                            <StatDelta
+                              delta={inferenceAccDelta.delta}
+                              direction={inferenceAccDelta.direction}
+                              unit="%"
+                            />
+                          </div>
+                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                            <p className="text-sm font-medium text-slate-500">Best accuracy</p>
+                            <p className="text-2xl font-bold text-slate-900">
+                              {inferenceBestAccuracy}%
+                            </p>
+                          </div>
+                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                            <p className="text-sm font-medium text-slate-500">Sessions</p>
+                            <p className="text-2xl font-bold text-slate-900">
+                              {inferenceSessions.length}
+                            </p>
+                          </div>
+                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                            <p className="text-sm font-medium text-slate-500">Last session</p>
+                            <p className="text-lg font-bold text-slate-900">
+                              {inferenceLastSession ?? "-"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-3 text-sm text-slate-600 mb-4">
+                          <span>
+                            {inferenceSessions.length} session
+                            {inferenceSessions.length !== 1 ? "s" : ""}
+                          </span>
+                          {inferenceLastSession && <span>Last: {inferenceLastSession}</span>}
+                          <Link
+                            to="/train/inference"
+                            className="text-indigo-600 font-medium hover:underline"
+                          >
+                            Practice again →
+                          </Link>
+                        </div>
+                        {renderAccuracyChart(inferenceAccuracyChart, "Accuracy over time")}
+                        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm mt-4">
+                          {renderDifficultyBreakdown(inferenceDifficultyBreakdown)}
+                        </div>
+                      </>
+                    )}
+                  </section>
                 </div>
-              ) : (
-                <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                      <p className="text-sm font-medium text-slate-500">Avg accuracy</p>
-                      <p className="text-3xl font-bold text-slate-900">{mentalMathsAvgAccuracy}%</p>
-                    </div>
-                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                      <p className="text-sm font-medium text-slate-500">Avg time per question</p>
-                      <p className="text-3xl font-bold text-slate-900">
-                        {mentalMathsAvgTimeMs != null ? `${(mentalMathsAvgTimeMs / 1000).toFixed(1)}s` : "-"}
-                      </p>
-                      <StatDelta
-                        delta={
-                          mentalMathsTimeDelta.delta != null
-                            ? Math.round(mentalMathsTimeDelta.delta / 1000)
-                            : null
-                        }
-                        direction={mentalMathsTimeDelta.direction}
-                        invertGood
-                        unit="s"
-                      />
-                    </div>
-                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                      <p className="text-sm font-medium text-slate-500">Sessions</p>
-                      <p className="text-3xl font-bold text-slate-900">{mentalMathsSessions.length}</p>
-                    </div>
-                    <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                      <p className="text-sm font-medium text-slate-500">Latest stage</p>
-                      <p className="text-2xl font-bold text-slate-900">
-                        {mentalMathsSessions.length > 0 && mentalMathsSessions[mentalMathsSessions.length - 1]?.difficulty
-                          ? String(mentalMathsSessions[mentalMathsSessions.length - 1].difficulty).replace("stage_", "Stage ")
-                          : "-"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-                    <h3 className="text-base font-medium text-slate-900 mb-4">
-                      Avg time per question (last 10 sessions)
-                    </h3>
-                    <div className="h-64 sm:h-72 min-h-[200px]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={mentalMathsChartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                          <XAxis
-                            dataKey="displayDate"
-                            tick={{ fontSize: 12, fill: "#64748b" }}
-                            stroke="#94a3b8"
-                          />
-                          <YAxis
-                            tick={{ fontSize: 12, fill: "#64748b" }}
-                            stroke="#94a3b8"
-                            domain={["auto", "auto"]}
-                            tickFormatter={(v) => `${(v / 1000).toFixed(0)}s`}
-                          />
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: "#fff",
-                              border: "1px solid #e2e8f0",
-                              borderRadius: "8px",
-                            }}
-                            labelFormatter={(_, payload) =>
-                              payload?.[0]?.payload?.displayDate ?? ""
-                            }
-                            formatter={(value: number | undefined) =>
-                              [`${((value ?? 0) / 1000).toFixed(1)}s`, "Avg time"]
-                            }
-                          />
-                          <Line
-                            type="monotone"
-                            dataKey="wpm"
-                            stroke="#7c3aed"
-                            strokeWidth={2}
-                            dot={{ fill: "#7c3aed", r: 4 }}
-                            activeDot={{ r: 6 }}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-                </>
               )}
-            </section>
 
-            <section className="mt-10">
-              <WeekSummaryCard
-                sessions={sessions}
-                syllogismSessions={syllogismSessions}
-                sjtSessions={sjtSessions}
-              />
-            </section>
-
-            <section className="mt-10">
-              <SyllogismAnalytics sessions={syllogismSessions} />
-            </section>
-
-            {recentActivity.length > 0 && (
-              <section className="mt-10">
-                <h2 className="text-lg font-semibold text-slate-900 mb-4">Recent activity</h2>
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm" role="table" aria-label="Recent training sessions">
-                      <thead>
-                        <tr className="border-b border-slate-200 bg-slate-50">
-                          <th scope="col" className="text-left px-4 py-3 font-medium text-slate-600">Date & time</th>
-                          <th scope="col" className="text-left px-4 py-3 font-medium text-slate-600">Trainer</th>
-                          <th scope="col" className="text-left px-4 py-3 font-medium text-slate-600">Time</th>
-                          <th scope="col" className="text-left px-4 py-3 font-medium text-slate-600">Score</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {recentActivity.map((item) => (
-                          <tr key={item.id} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50">
-                            <td className="px-4 py-3 text-slate-700 whitespace-nowrap">
-                              {new Date(item.created_at).toLocaleString(undefined, {
-                                day: "numeric",
-                                month: "short",
-                                year: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                            </td>
-                            <td className="px-4 py-3 text-slate-900 font-medium">
-                              {item.label}
-                            </td>
-                            <td className="px-4 py-3 text-slate-700">
-                              {item.timeDisplay}
-                            </td>
-                            <td className="px-4 py-3 text-slate-900">
-                              {item.scoreDisplay}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+              {/* DM: Syllogisms */}
+              {activeTab === "dm" && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-base font-semibold text-slate-700">Decision Making</h2>
+                    <Link
+                      to="/ucat-decision-making-practice"
+                      className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                    >
+                      Practice now →
+                    </Link>
                   </div>
+                  <SyllogismAnalytics sessions={syllogismSessions} />
                 </div>
-              </section>
-            )}
-          </>
-        )}
+              )}
+
+              {/* QR: Calculator · Mental Maths */}
+              {activeTab === "qr" && (
+                <div className="space-y-8">
+                  <div className="flex items-center justify-between -mb-4">
+                    <h2 className="text-base font-semibold text-slate-700">Quantitative Reasoning</h2>
+                    <Link
+                      to="/ucat-quantitative-reasoning-practice"
+                      className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                    >
+                      Practice now →
+                    </Link>
+                  </div>
+                  <section>
+                    <h2 className="text-lg font-semibold text-slate-900 mb-4">
+                      {TRAINING_TYPE_LABELS.calculator}
+                    </h2>
+                    {calculatorSessions.length === 0 ? (
+                      <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                        <p className="text-slate-500">
+                          No Calculator sessions yet. Start the Calculator Trainer to track your
+                          speed.
+                        </p>
+                        <Link
+                          to="/train/calculator"
+                          className="inline-flex mt-4 px-4 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
+                        >
+                          Go to Calculator
+                        </Link>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                            <p className="text-sm font-medium text-slate-500">Your Average KPS</p>
+                            <p className="text-3xl font-bold text-slate-900">{calculatorAvgKps}</p>
+                            <StatDelta
+                              delta={calcKpsDelta.delta}
+                              direction={calcKpsDelta.direction}
+                              unit=" KPS"
+                            />
+                          </div>
+                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                            <p className="text-sm font-medium text-slate-500">Best KPS</p>
+                            <p className="text-3xl font-bold text-slate-900">{calculatorBestKps}</p>
+                          </div>
+                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                            <p className="text-sm font-medium text-slate-500">Avg Accuracy</p>
+                            <p className="text-3xl font-bold text-slate-900">
+                              {calculatorAvgAccuracy}%
+                            </p>
+                          </div>
+                        </div>
+                        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm mb-4">
+                          <h3 className="text-sm font-medium text-slate-900 mb-3">
+                            Performance by Mode
+                          </h3>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            {Object.entries(calculatorDrillBreakdown).map(([mode, stats]) => (
+                              <div key={mode} className="bg-slate-50 p-3 rounded-lg text-center">
+                                <p className="text-xs font-bold text-slate-600 uppercase mb-1">
+                                  {mode === "fingerTwister" ? "Twister" : mode}
+                                </p>
+                                <p className="text-lg font-bold text-slate-900">
+                                  {stats.avgKps}{" "}
+                                  <span className="text-xs font-normal text-slate-500">KPS</span>
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                  {stats.avgAccuracy}% Acc ({stats.count})
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+                          <h3 className="text-base font-medium text-slate-900 mb-4">KPS Progress</h3>
+                          <div className="h-64 sm:h-72 min-h-[200px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <LineChart
+                                data={calculatorChartData}
+                                margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
+                              >
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                <XAxis
+                                  dataKey="displayDate"
+                                  tick={{ fontSize: 12, fill: "#64748b" }}
+                                  stroke="#94a3b8"
+                                />
+                                <YAxis
+                                  tick={{ fontSize: 12, fill: "#64748b" }}
+                                  stroke="#94a3b8"
+                                  domain={["auto", "auto"]}
+                                />
+                                <Tooltip
+                                  contentStyle={{
+                                    backgroundColor: "#fff",
+                                    border: "1px solid #e2e8f0",
+                                    borderRadius: "8px",
+                                  }}
+                                  labelFormatter={(_, payload) =>
+                                    payload?.[0]?.payload?.displayDate ?? ""
+                                  }
+                                  formatter={(value: number | undefined) => [
+                                    `${value ?? 0} KPS`,
+                                    "Speed",
+                                  ]}
+                                />
+                                <Line
+                                  type="monotone"
+                                  dataKey="wpm"
+                                  stroke="#4f46e5"
+                                  strokeWidth={2}
+                                  dot={{ fill: "#4f46e5", r: 4 }}
+                                  activeDot={{ r: 6 }}
+                                />
+                              </LineChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </section>
+
+                  <section>
+                    <h2 className="text-lg font-semibold text-slate-900 mb-4">
+                      {TRAINING_TYPE_LABELS.mental_maths}
+                    </h2>
+                    {mentalMathsSessions.length === 0 ? (
+                      <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                        <p className="text-slate-500">
+                          No Mental Maths sessions yet. Build speed and estimation without the
+                          calculator.
+                        </p>
+                        <Link
+                          to="/train/mentalMaths"
+                          className="inline-flex mt-4 px-4 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
+                        >
+                          Go to Mental Maths Trainer
+                        </Link>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                            <p className="text-sm font-medium text-slate-500">Avg accuracy</p>
+                            <p className="text-3xl font-bold text-slate-900">
+                              {mentalMathsAvgAccuracy}%
+                            </p>
+                          </div>
+                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                            <p className="text-sm font-medium text-slate-500">
+                              Avg time per question
+                            </p>
+                            <p className="text-3xl font-bold text-slate-900">
+                              {mentalMathsAvgTimeMs != null
+                                ? `${(mentalMathsAvgTimeMs / 1000).toFixed(1)}s`
+                                : "-"}
+                            </p>
+                            <StatDelta
+                              delta={
+                                mentalMathsTimeDelta.delta != null
+                                  ? Math.round(mentalMathsTimeDelta.delta / 1000)
+                                  : null
+                              }
+                              direction={mentalMathsTimeDelta.direction}
+                              invertGood
+                              unit="s"
+                            />
+                          </div>
+                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                            <p className="text-sm font-medium text-slate-500">Sessions</p>
+                            <p className="text-3xl font-bold text-slate-900">
+                              {mentalMathsSessions.length}
+                            </p>
+                          </div>
+                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                            <p className="text-sm font-medium text-slate-500">Latest stage</p>
+                            <p className="text-2xl font-bold text-slate-900">
+                              {mentalMathsSessions.length > 0 &&
+                              mentalMathsSessions[mentalMathsSessions.length - 1]?.difficulty
+                                ? String(
+                                    mentalMathsSessions[mentalMathsSessions.length - 1].difficulty,
+                                  ).replace("stage_", "Stage ")
+                                : "-"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+                          <h3 className="text-base font-medium text-slate-900 mb-4">
+                            Avg time per question (last 10 sessions)
+                          </h3>
+                          <div className="h-64 sm:h-72 min-h-[200px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <LineChart
+                                data={mentalMathsChartData}
+                                margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
+                              >
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                <XAxis
+                                  dataKey="displayDate"
+                                  tick={{ fontSize: 12, fill: "#64748b" }}
+                                  stroke="#94a3b8"
+                                />
+                                <YAxis
+                                  tick={{ fontSize: 12, fill: "#64748b" }}
+                                  stroke="#94a3b8"
+                                  domain={["auto", "auto"]}
+                                  tickFormatter={(v) => `${(v / 1000).toFixed(0)}s`}
+                                />
+                                <Tooltip
+                                  contentStyle={{
+                                    backgroundColor: "#fff",
+                                    border: "1px solid #e2e8f0",
+                                    borderRadius: "8px",
+                                  }}
+                                  labelFormatter={(_, payload) =>
+                                    payload?.[0]?.payload?.displayDate ?? ""
+                                  }
+                                  formatter={(value: number | undefined) => [
+                                    `${((value ?? 0) / 1000).toFixed(1)}s`,
+                                    "Avg time",
+                                  ]}
+                                />
+                                <Line
+                                  type="monotone"
+                                  dataKey="wpm"
+                                  stroke="#7c3aed"
+                                  strokeWidth={2}
+                                  dot={{ fill: "#7c3aed", r: 4 }}
+                                  activeDot={{ r: 6 }}
+                                />
+                              </LineChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </section>
+                </div>
+              )}
+
+              {/* SJT: score, type breakdown, domain breakdown */}
+              {activeTab === "sjt" && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-base font-semibold text-slate-700">Situational Judgement</h2>
+                    <Link
+                      to="/ucat-sjt-practice"
+                      className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                    >
+                      Practice now →
+                    </Link>
+                  </div>
+                  <SJTAnalytics sessions={sjtSessions} />
+                </div>
+              )}
+            </div>
+          )}
         </div>
-        </div>
+
         <aside
           className="shrink-0 w-full lg:w-72 lg:sticky lg:top-6 lg:self-start space-y-4"
           aria-label="Optional courses and tutoring"
         >
+          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
+            Boost your prep
+          </h2>
+          <StrategyCallBanner variant="card" />
           <DashboardUpsellStack
             rail
             stream={profile?.stream ?? null}
@@ -1884,8 +2043,8 @@ export default function Dashboard() {
       )}
     >
       <SEOHead
-        title="UCAT Verbal Reasoning Dashboard & Analytics"
-        description="Track your reading speed (WPM) and accuracy for the UCAT medical entrance exam. Free trainer for UK medical students."
+        title="UCAT Practice Dashboard & Analytics"
+        description="Track your UCAT practice progress across Verbal Reasoning, Decision Making, Quantitative Reasoning and Situational Judgement. Free trainer for UK medical applicants."
         canonicalUrl={dashboardCanonical}
         breadcrumbs={breadcrumbs}
         noindex
@@ -1907,7 +2066,11 @@ export default function Dashboard() {
         <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">
-              {user ? "Dashboard" : "Your reading dashboard"}
+              {user
+                ? profile?.full_name?.trim().split(" ")[0]
+                  ? `${profile.full_name.trim().split(" ")[0]}'s dashboard`
+                  : "Your dashboard"
+                : "Your UCAT dashboard"}
             </h1>
             {!user && (
               <p className="text-sm text-slate-600 mt-1">

@@ -5,7 +5,7 @@ import {
   isMocksOnlyPlaceholderPlan,
 } from '../lib/load-planner-data'
 
-const LOAD_TIMEOUT_MS = 25_000
+const LOAD_TIMEOUT_MS = 12_000
 
 export type CloudPlannerLoadState<T> =
   | { status: 'loading'; data: T | null }

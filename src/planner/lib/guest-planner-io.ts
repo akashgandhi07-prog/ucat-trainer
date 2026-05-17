@@ -38,12 +38,7 @@ export function clearGuestPlanner(): void {
 }
 
 function generateSlug(): string {
-  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
-  let result = ''
-  for (let i = 0; i < 10; i++) {
-    result += chars[Math.floor(Math.random() * chars.length)]
-  }
-  return result
+  return crypto.randomUUID().replace(/-/g, '').slice(0, 10)
 }
 
 export { generateSlug }

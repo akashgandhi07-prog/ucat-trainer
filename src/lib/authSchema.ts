@@ -18,6 +18,7 @@ const baseAuthSchema = z.object({
   lastName: z.string().optional(),
   stream: streamEnum.optional(),
   entryYear: z.string().optional(),
+  emailMarketingOptIn: z.boolean().optional(),
 });
 
 export function getAuthSchema(mode: AuthModalMode) {

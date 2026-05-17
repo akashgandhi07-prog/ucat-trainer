@@ -5,6 +5,7 @@
 import type { Stream } from "./profileApi";
 
 export const UCAT_TUTORING_URL = "https://www.theukcatpeople.co.uk/ucat-tutoring";
+export const STRATEGY_CALL_URL = "https://www.theukcatpeople.co.uk/free-strategy-consultation";
 export const TRUSTPILOT_URL = "https://www.trustpilot.com/review/www.theukcatpeople.co.uk";
 
 export type UpsellOffer = "course" | "tutoring" | "package";

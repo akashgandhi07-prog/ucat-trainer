@@ -67,6 +67,7 @@ function getResetRedirectUrl(): string {
 
 export default function AuthModal({ isOpen, onClose, initialMode = "login" }: AuthModalProps) {
   const [mode, setMode] = useState<Mode>(initialMode);
+  const [registerStep, setRegisterStep] = useState(1);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
 
@@ -75,6 +76,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
     if (isOpen) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: reset modal tab when opened
       setMode(initialMode);
+      setRegisterStep(1);
       trackEvent("auth_modal_opened", { trigger: initialMode });
     }
   }, [isOpen, initialMode]);
@@ -83,6 +85,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
     register,
     control,
     handleSubmit: rhfHandleSubmit,
+    trigger,
     reset,
     formState: { errors },
   } = useForm<AuthFormData>({
@@ -96,6 +99,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
       lastName: "",
       stream: "Medicine",
       entryYear: "2026",
+      emailMarketingOptIn: true,
     },
   });
 
@@ -163,7 +167,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
           last_name: lastName,
           stream: data.stream!,
           entry_year: data.entryYear!,
-          email_marketing_opt_in: true,
+          email_marketing_opt_in: data.emailMarketingOptIn ?? false,
         },
       },
     });
@@ -212,16 +216,30 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
       lastName: "",
       stream: "Medicine",
       entryYear: "2026",
+      emailMarketingOptIn: true,
     });
     setStatus("idle");
     setMessage("");
     setMode("login");
+    setRegisterStep(1);
     onClose();
   }, [onClose, reset]);
 
+  async function handleNextStep() {
+    if (status === "loading") return;
+    const valid = await trigger(["firstName", "lastName", "stream", "entryYear"]);
+    if (valid) setRegisterStep(2);
+  }
+
   const isForgot = mode === "forgot";
   const isRegister = mode === "register";
-  const title = isForgot ? "Reset password" : isRegister ? "Create an account" : "Sign in";
+
+  const title = isForgot
+    ? "Reset password"
+    : isRegister
+    ? registerStep === 1 ? "About you" : "Create your account"
+    : "Sign in";
+
   const submitLabel =
     status === "loading" ? "Please wait…" : isForgot ? "Send reset link" : isRegister ? "Create account" : "Sign in";
 
@@ -237,9 +255,18 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
           aria-labelledby="auth-modal-title"
         >
           <div className="flex items-center justify-between mb-4">
-            <Dialog.Title id="auth-modal-title" className="text-lg font-semibold text-slate-900">
-              {title}
-            </Dialog.Title>
+            <div>
+              <Dialog.Title id="auth-modal-title" className="text-lg font-semibold text-slate-900">
+                {title}
+              </Dialog.Title>
+              {isRegister && (
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <div className={`h-1.5 w-8 rounded-full transition-colors ${registerStep >= 1 ? "bg-primary" : "bg-slate-200"}`} />
+                  <div className={`h-1.5 w-8 rounded-full transition-colors ${registerStep >= 2 ? "bg-primary" : "bg-slate-200"}`} />
+                  <span className="text-xs text-slate-400 ml-1">Step {registerStep} of 2</span>
+                </div>
+              )}
+            </div>
             <Dialog.Close asChild>
               <button
                 type="button"
@@ -250,13 +277,16 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
               </button>
             </Dialog.Close>
           </div>
+
         <form onSubmit={rhfHandleSubmit(onSubmit)} className="space-y-4">
-          {isRegister && (
+
+          {/* ── Register step 1: personal info ─────────────────────── */}
+          {isRegister && registerStep === 1 && (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label htmlFor="auth-first-name" className="block text-sm font-medium text-slate-700 mb-1">
-                    First Name<span className="text-red-500"> *</span>
+                    First name <span className="text-red-500">*</span>
                   </label>
                   <input
                     id="auth-first-name"
@@ -264,7 +294,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
                     placeholder="First name"
                     className={inputClass}
                     autoComplete="given-name"
-                    disabled={status === "loading"}
+                    autoFocus
                     {...register("firstName")}
                   />
                   {errors.firstName && (
@@ -273,7 +303,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
                 </div>
                 <div>
                   <label htmlFor="auth-last-name" className="block text-sm font-medium text-slate-700 mb-1">
-                    Last Name<span className="text-red-500"> *</span>
+                    Last name <span className="text-red-500">*</span>
                   </label>
                   <input
                     id="auth-last-name"
@@ -281,7 +311,6 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
                     placeholder="Last name"
                     className={inputClass}
                     autoComplete="family-name"
-                    disabled={status === "loading"}
                     {...register("lastName")}
                   />
                   {errors.lastName && (
@@ -291,22 +320,15 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
               </div>
               <div>
                 <label htmlFor="auth-subject" className="block text-sm font-medium text-slate-700 mb-1">
-                  Subject<span className="text-red-500"> *</span>
+                  What are you applying for? <span className="text-red-500">*</span>
                 </label>
                 <Controller
                   name="stream"
                   control={control}
                   render={({ field }) => (
-                    <select
-                      id="auth-subject"
-                      className={inputClass + " text-sm bg-white"}
-                      disabled={status === "loading"}
-                      {...field}
-                    >
+                    <select id="auth-subject" className={inputClass + " text-sm bg-white"} {...field}>
                       {STREAM_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
                       ))}
                     </select>
                   )}
@@ -317,22 +339,15 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
               </div>
               <div>
                 <label htmlFor="auth-entry-year" className="block text-sm font-medium text-slate-700 mb-1">
-                  Entry Year<span className="text-red-500"> *</span>
+                  Entry year <span className="text-red-500">*</span>
                 </label>
                 <Controller
                   name="entryYear"
                   control={control}
                   render={({ field }) => (
-                    <select
-                      id="auth-entry-year"
-                      className={inputClass + " text-sm bg-white"}
-                      disabled={status === "loading"}
-                      {...field}
-                    >
+                    <select id="auth-entry-year" className={inputClass + " text-sm bg-white"} {...field}>
                       {ENTRY_YEAR_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
                       ))}
                     </select>
                   )}
@@ -341,137 +356,186 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
                   <p className="mt-1 text-sm text-red-600">{errors.entryYear.message}</p>
                 )}
               </div>
+              <button
+                type="button"
+                onClick={handleNextStep}
+                disabled={status === "loading"}
+                className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 font-medium disabled:opacity-50"
+              >
+                Next →
+              </button>
             </>
           )}
 
-          <div>
-            <label htmlFor="auth-email" className="block text-sm font-medium text-slate-700 mb-1">
-              Email
-            </label>
-            <input
-              id="auth-email"
-              type="email"
-              placeholder="you@example.com"
-              className={inputClass}
-              autoComplete="email"
-              disabled={status === "loading"}
-              {...register("email")}
-            />
-            {errors.email && (
-              <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-            )}
-          </div>
-
-          {!isForgot && (
+          {/* ── Register step 2: account credentials ───────────────── */}
+          {isRegister && registerStep === 2 && (
             <>
               <div>
+                <label htmlFor="auth-email" className="block text-sm font-medium text-slate-700 mb-1">
+                  Email <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="auth-email"
+                  type="email"
+                  placeholder="you@example.com"
+                  className={inputClass}
+                  autoComplete="email"
+                  autoFocus
+                  disabled={status === "loading"}
+                  {...register("email")}
+                />
+                {errors.email && (
+                  <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+                )}
+              </div>
+              <div>
                 <label htmlFor="auth-password" className="block text-sm font-medium text-slate-700 mb-1">
-                  Password{isRegister ? " *" : ""}
+                  Password <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="auth-password"
                   type="password"
-                  placeholder={isRegister ? "Choose a strong password" : "Your password"}
+                  placeholder="Choose a strong password"
                   className={inputClass}
-                  autoComplete={isRegister ? "new-password" : "current-password"}
+                  autoComplete="new-password"
                   disabled={status === "loading"}
                   {...register("password")}
                 />
                 {errors.password && (
                   <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
                 )}
-                {isRegister && (
-                  <p className="mt-1 text-xs text-slate-500">{getPasswordRequirementHint()}</p>
+                <p className="mt-1 text-xs text-slate-500">{getPasswordRequirementHint()}</p>
+              </div>
+              <div>
+                <label htmlFor="auth-confirm-password" className="block text-sm font-medium text-slate-700 mb-1">
+                  Confirm password <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="auth-confirm-password"
+                  type="password"
+                  placeholder="Confirm password"
+                  className={inputClass}
+                  autoComplete="new-password"
+                  disabled={status === "loading"}
+                  {...register("confirmPassword")}
+                />
+                {errors.confirmPassword && (
+                  <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>
                 )}
               </div>
-              {isRegister && (
-                <div>
-                  <label htmlFor="auth-confirm-password" className="block text-sm font-medium text-slate-700 mb-1">
-                    Confirm password *
-                  </label>
-                  <input
-                    id="auth-confirm-password"
-                    type="password"
-                    placeholder="Confirm password"
-                    className={inputClass}
-                    autoComplete="new-password"
-                    disabled={status === "loading"}
-                    {...register("confirmPassword")}
-                  />
-                  {errors.confirmPassword && (
-                    <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>
-                  )}
-                </div>
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-border accent-primary"
+                  {...register("emailMarketingOptIn")}
+                />
+                <span className="text-[11px] leading-snug text-slate-500">
+                  Send me UCAT tips, course updates and revision advice from TheUKCATPeople. You can unsubscribe at any time.
+                </span>
+              </label>
+              {message && (
+                <p className={`text-sm ${status === "error" ? "text-destructive" : "text-training-success"}`}>{message}</p>
               )}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setRegisterStep(1); setStatus("idle"); setMessage(""); }}
+                  className="flex-1 px-4 py-2 border border-border text-foreground rounded-lg hover:bg-secondary"
+                >
+                  ← Back
+                </button>
+                <button
+                  type="submit"
+                  disabled={status === "loading"}
+                  className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {submitLabel}
+                </button>
+              </div>
             </>
           )}
 
-          {isRegister && (
-            <p className="text-[11px] leading-snug text-slate-500">
-              By creating an account, you agree that TheUKCATPeople may email you UCAT tips, relevant course
-              information and occasional marketing updates. You can unsubscribe at any time via the link in each email.
-            </p>
+          {/* ── Login / forgot password ─────────────────────────────── */}
+          {!isRegister && (
+            <>
+              <div>
+                <label htmlFor="auth-email" className="block text-sm font-medium text-slate-700 mb-1">
+                  Email
+                </label>
+                <input
+                  id="auth-email"
+                  type="email"
+                  placeholder="you@example.com"
+                  className={inputClass}
+                  autoComplete="email"
+                  disabled={status === "loading"}
+                  {...register("email")}
+                />
+                {errors.email && (
+                  <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+                )}
+              </div>
+              {!isForgot && (
+                <div>
+                  <label htmlFor="auth-password" className="block text-sm font-medium text-slate-700 mb-1">
+                    Password
+                  </label>
+                  <input
+                    id="auth-password"
+                    type="password"
+                    placeholder="Your password"
+                    className={inputClass}
+                    autoComplete="current-password"
+                    disabled={status === "loading"}
+                    {...register("password")}
+                  />
+                  {errors.password && (
+                    <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+                  )}
+                </div>
+              )}
+              {message && (
+                <p className={`text-sm ${status === "error" ? "text-destructive" : "text-training-success"}`}>{message}</p>
+              )}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="flex-1 px-4 py-2 border border-border text-foreground rounded-lg hover:bg-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={status === "loading"}
+                  className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {submitLabel}
+                </button>
+              </div>
+            </>
           )}
-
-          {message && (
-            <p className={`text-sm ${status === "error" ? "text-destructive" : "text-training-success"}`}>{message}</p>
-          )}
-
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={handleClose}
-              className="flex-1 px-4 py-2 border border-border text-foreground rounded-lg hover:bg-secondary"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={status === "loading"}
-              className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50"
-            >
-              {submitLabel}
-            </button>
-          </div>
 
           <p className="text-center text-sm text-slate-500">
             {isForgot ? (
-              <>
-                <button
-                  type="button"
-                  onClick={() => setMode("login")}
-                  className="text-primary hover:underline font-medium"
-                >
-                  Back to sign in
-                </button>
-              </>
+              <button type="button" onClick={() => setMode("login")} className="text-primary hover:underline font-medium">
+                Back to sign in
+              </button>
             ) : mode === "login" ? (
               <>
-                <button
-                  type="button"
-                  onClick={() => setMode("forgot")}
-                  className="text-primary hover:underline font-medium"
-                >
+                <button type="button" onClick={() => setMode("forgot")} className="text-primary hover:underline font-medium">
                   Forgot password?
                 </button>
                 {" · "}
                 Don&apos;t have an account?{" "}
-                <button
-                  type="button"
-                  onClick={() => setMode("register")}
-                  className="text-primary hover:underline font-medium"
-                >
+                <button type="button" onClick={() => { setMode("register"); setRegisterStep(1); }} className="text-primary hover:underline font-medium">
                   Create one
                 </button>
               </>
             ) : (
               <>
                 Already have an account?{" "}
-                <button
-                  type="button"
-                  onClick={() => setMode("login")}
-                  className="text-primary hover:underline font-medium"
-                >
+                <button type="button" onClick={() => { setMode("login"); setRegisterStep(1); }} className="text-primary hover:underline font-medium">
                   Sign in
                 </button>
               </>
