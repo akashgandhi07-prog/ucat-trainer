@@ -189,7 +189,7 @@ export function MockScoresView({
     if (trimmedTotal !== '') {
       const n = Number(trimmedTotal)
       if (!Number.isInteger(n) || n < 900 || n > 2700) {
-        setTargetError('Combined total must be 900–2700.')
+        setTargetError('Combined total must be 900-2700.')
         return
       }
       mockTargetTotal = n
@@ -197,7 +197,7 @@ export function MockScoresView({
     if (trimmedSjt !== '') {
       const n = Number(trimmedSjt)
       if (!Number.isInteger(n) || n < 1 || n > 4) {
-        setTargetError('SJT band must be 1–4.')
+        setTargetError('SJT band must be 1-4.')
         return
       }
       mockTargetSjtBand = n
@@ -445,7 +445,7 @@ export function MockScoresView({
               >
                 UCAT score calculator
               </a>{' '}
-              (scaled 300–900 per section) before logging.
+              (scaled 300-900 per section) before logging.
             </span>
             <span className="hidden sm:inline">
               If you only have raw marks, use the{' '}
@@ -457,7 +457,7 @@ export function MockScoresView({
               >
                 UCAT score calculator
               </a>
-              {' at The UKCAT People to convert them to scaled scores (300–900 per section) before logging.'}
+              {' at The UKCAT People to convert them to scaled scores (300-900 per section) before logging.'}
             </span>
           </div>
         </div>
@@ -523,21 +523,21 @@ export function MockScoresView({
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   <Input
-                    label="VR (300–900)"
+                    label="VR (300-900)"
                     type="number" min={300} max={900} step={10}
                     placeholder="e.g. 650"
                     value={form.vr}
                     onChange={e => setForm(f => ({ ...f, vr: e.target.value }))}
                   />
                   <Input
-                    label="DM (300–900)"
+                    label="DM (300-900)"
                     type="number" min={300} max={900} step={10}
                     placeholder="e.g. 650"
                     value={form.dm}
                     onChange={e => setForm(f => ({ ...f, dm: e.target.value }))}
                   />
                   <Input
-                    label="QR (300–900)"
+                    label="QR (300-900)"
                     type="number" min={300} max={900} step={10}
                     placeholder="e.g. 650"
                     value={form.qr}
@@ -639,87 +639,96 @@ export function MockScoresView({
       {/* Summary stats */}
       {tabStats && (
         <Card className="border-slate-200">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">
-              Summary · {activeTab === 'full' ? 'full' : 'mini'} mocks
-            </CardTitle>
-            <p className="text-sm text-slate-500 font-normal mt-0.5">
-              From {tabStats.count} logged {tabStats.count === 1 ? 'mock' : 'mocks'}.
-            </p>
+          <CardHeader className="pb-2">
+            <div className="flex items-baseline justify-between gap-2">
+              <CardTitle className="text-base">
+                {activeTab === 'full' ? 'Full mock' : 'Mini mock'} summary
+              </CardTitle>
+              <span className="text-xs text-slate-400 shrink-0">
+                {tabStats.count} {tabStats.count === 1 ? 'mock' : 'mocks'}
+              </span>
+            </div>
           </CardHeader>
-          <CardContent className="pt-0">
-            <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-4">
-              {/* Combined total only shown when all entries have all 3 sections (i.e. full mocks) */}
-              {tabStats.avgTotal != null && (
-                <div>
-                  <dt className="text-xs font-medium text-slate-500">Avg combined (VR+DM+QR)</dt>
-                  <dd className="text-lg font-semibold tabular-nums text-slate-900 mt-0.5">
-                    {tabStats.avgTotal}
-                    <span className="text-xs font-normal text-slate-400 ml-1">/ 2700</span>
-                  </dd>
-                </div>
-              )}
-              {tabStats.bestTotal != null && (
-                <div>
-                  <dt className="text-xs font-medium text-slate-500">Best combined</dt>
-                  <dd className="text-lg font-semibold tabular-nums text-slate-900 mt-0.5">
-                    {tabStats.bestTotal}
-                    <span className="text-xs font-normal text-slate-400 ml-1">/ 2700</span>
-                  </dd>
-                </div>
-              )}
-              {tabStats.avgVr != null && (
-                <div>
-                  <dt className="text-xs font-medium text-slate-500">Avg VR</dt>
-                  <dd className="text-lg font-semibold tabular-nums text-slate-900 mt-0.5">
-                    {tabStats.avgVr}
-                    <span className="text-xs font-normal text-slate-400 ml-1">/ 900</span>
-                  </dd>
-                </div>
-              )}
-              {tabStats.avgDm != null && (
-                <div>
-                  <dt className="text-xs font-medium text-slate-500">Avg DM</dt>
-                  <dd className="text-lg font-semibold tabular-nums text-slate-900 mt-0.5">
-                    {tabStats.avgDm}
-                    <span className="text-xs font-normal text-slate-400 ml-1">/ 900</span>
-                  </dd>
-                </div>
-              )}
-              {tabStats.avgQr != null && (
-                <div>
-                  <dt className="text-xs font-medium text-slate-500">Avg QR</dt>
-                  <dd className="text-lg font-semibold tabular-nums text-slate-900 mt-0.5">
-                    {tabStats.avgQr}
-                    <span className="text-xs font-normal text-slate-400 ml-1">/ 900</span>
-                  </dd>
-                </div>
-              )}
-              {tabStats.bestSjt != null &&
-                (tabStats.latestSjt != null && tabStats.latestSjt !== tabStats.bestSjt ? (
-                  <>
+          <CardContent className="pt-0 space-y-4">
+            {/* Combined totals row */}
+            {(tabStats.avgTotal != null || tabStats.bestTotal != null) && (
+              <div className="grid grid-cols-2 gap-3">
+                {tabStats.avgTotal != null && (
+                  <div className="bg-slate-50 rounded-lg p-3">
+                    <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wide mb-1">Avg combined</p>
+                    <p className="text-2xl font-bold tabular-nums text-slate-900 leading-none">
+                      {tabStats.avgTotal}
+                      <span className="text-sm font-normal text-slate-400 ml-1">/ 2700</span>
+                    </p>
+                  </div>
+                )}
+                {tabStats.bestTotal != null && (
+                  <div className="bg-slate-50 rounded-lg p-3">
+                    <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wide mb-1">Best combined</p>
+                    <p className="text-2xl font-bold tabular-nums text-slate-900 leading-none">
+                      {tabStats.bestTotal}
+                      <span className="text-sm font-normal text-slate-400 ml-1">/ 2700</span>
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+            {/* Per-section row */}
+            {(tabStats.avgVr != null || tabStats.avgDm != null || tabStats.avgQr != null || tabStats.bestSjt != null) && (
+              <dl className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3 border-t border-slate-100 pt-4">
+                {tabStats.avgVr != null && (
+                  <div>
+                    <dt className="text-[11px] font-medium text-slate-400 uppercase tracking-wide">VR avg</dt>
+                    <dd className="text-xl font-semibold tabular-nums text-slate-900 mt-0.5 leading-none">
+                      {tabStats.avgVr}
+                      <span className="text-xs font-normal text-slate-400 ml-0.5">/ 900</span>
+                    </dd>
+                  </div>
+                )}
+                {tabStats.avgDm != null && (
+                  <div>
+                    <dt className="text-[11px] font-medium text-slate-400 uppercase tracking-wide">DM avg</dt>
+                    <dd className="text-xl font-semibold tabular-nums text-slate-900 mt-0.5 leading-none">
+                      {tabStats.avgDm}
+                      <span className="text-xs font-normal text-slate-400 ml-0.5">/ 900</span>
+                    </dd>
+                  </div>
+                )}
+                {tabStats.avgQr != null && (
+                  <div>
+                    <dt className="text-[11px] font-medium text-slate-400 uppercase tracking-wide">QR avg</dt>
+                    <dd className="text-xl font-semibold tabular-nums text-slate-900 mt-0.5 leading-none">
+                      {tabStats.avgQr}
+                      <span className="text-xs font-normal text-slate-400 ml-0.5">/ 900</span>
+                    </dd>
+                  </div>
+                )}
+                {tabStats.bestSjt != null &&
+                  (tabStats.latestSjt != null && tabStats.latestSjt !== tabStats.bestSjt ? (
+                    <>
+                      <div>
+                        <dt className="text-[11px] font-medium text-slate-400 uppercase tracking-wide">SJT best</dt>
+                        <dd className="text-xl font-semibold text-slate-900 mt-0.5 leading-none">
+                          Band {tabStats.bestSjt}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-[11px] font-medium text-slate-400 uppercase tracking-wide">SJT latest</dt>
+                        <dd className="text-xl font-semibold text-slate-900 mt-0.5 leading-none">
+                          Band {tabStats.latestSjt}
+                        </dd>
+                      </div>
+                    </>
+                  ) : (
                     <div>
-                      <dt className="text-xs font-medium text-slate-500">Best SJT</dt>
-                      <dd className="text-lg font-semibold tabular-nums text-slate-900 mt-0.5">
+                      <dt className="text-[11px] font-medium text-slate-400 uppercase tracking-wide">SJT band</dt>
+                      <dd className="text-xl font-semibold text-slate-900 mt-0.5 leading-none">
                         Band {tabStats.bestSjt}
                       </dd>
                     </div>
-                    <div>
-                      <dt className="text-xs font-medium text-slate-500">Latest SJT</dt>
-                      <dd className="text-lg font-semibold tabular-nums text-slate-900 mt-0.5">
-                        Band {tabStats.latestSjt}
-                      </dd>
-                    </div>
-                  </>
-                ) : (
-                  <div>
-                    <dt className="text-xs font-medium text-slate-500">SJT</dt>
-                    <dd className="text-lg font-semibold tabular-nums text-slate-900 mt-0.5">
-                      Band {tabStats.bestSjt}
-                    </dd>
-                  </div>
-                ))}
-            </dl>
+                  ))}
+              </dl>
+            )}
           </CardContent>
         </Card>
       )}

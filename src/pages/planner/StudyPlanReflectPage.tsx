@@ -11,6 +11,7 @@ import PlannerLoading from '../../planner/components/PlannerLoading'
 
 function CloudReflectView() {
   const { user } = useAuth()
+  const userId = user?.id
   const refreshTick = useCloudPlannerRefresh()
   const [data, setData] = useState<Record<string, unknown> | null>(null)
   const [missingPlan, setMissingPlan] = useState(false)
@@ -18,7 +19,7 @@ function CloudReflectView() {
   const [retryKey, setRetryKey] = useState(0)
 
   useEffect(() => {
-    if (!user) return
+    if (!userId) return
     let cancelled = false
     setData(null)
     setLoadError(false)
@@ -26,7 +27,7 @@ function CloudReflectView() {
       if (!cancelled) setLoadError(true)
     }, 12000)
     void import('../../planner/lib/load-planner-data').then(async ({ fetchActivePlan, loadReflect, isMocksOnlyPlaceholderPlan }) => {
-      const plan = await fetchActivePlan(user.id)
+      const plan = await fetchActivePlan(userId)
       if (cancelled) return
       if (!plan || isMocksOnlyPlaceholderPlan(plan)) {
         setMissingPlan(true)
@@ -44,7 +45,7 @@ function CloudReflectView() {
       cancelled = true
       window.clearTimeout(timer)
     }
-  }, [user, refreshTick, retryKey])
+  }, [userId, refreshTick, retryKey])
 
   if (missingPlan) return <Navigate to="/study-plan" replace />
   if (loadError) return <PlannerLoadError message="Could not load your reflections. Check your connection and try again." onRetry={() => setRetryKey((k) => k + 1)} />

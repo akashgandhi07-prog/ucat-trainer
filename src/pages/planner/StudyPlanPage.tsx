@@ -43,9 +43,10 @@ export default function StudyPlanPage() {
     [user, profile],
   )
 
+  const userId = user?.id
   useEffect(() => {
     if (authLoading) return
-    if (!user) {
+    if (!userId) {
       setCloudReady(false)
       return
     }
@@ -55,7 +56,7 @@ export default function StudyPlanPage() {
     }, 25_000)
     import('../../planner/lib/load-planner-data')
       .then(({ fetchActivePlan, isMocksOnlyPlaceholderPlan }) =>
-        fetchActivePlan(user.id).then((plan) => {
+        fetchActivePlan(userId).then((plan) => {
           if (!cancelled) setCloudReady(!!plan && !isMocksOnlyPlaceholderPlan(plan))
         }),
       )
@@ -69,7 +70,7 @@ export default function StudyPlanPage() {
       cancelled = true
       window.clearTimeout(timer)
     }
-  }, [user, authLoading])
+  }, [userId, authLoading])
 
   if (authLoading || (user && cloudReady === null)) {
     return (

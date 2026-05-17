@@ -79,6 +79,8 @@ type RecentActivityItem = {
   label: string;
   timeDisplay: string;
   scoreDisplay: string;
+  scorePercent?: number | null; // raw 0-100 value used for aggregation
+  count?: number;               // set when multiple same-day sessions are merged
 };
 
 type DifficultyStats = {
@@ -182,6 +184,7 @@ export default function Dashboard() {
   const [showAllActivity, setShowAllActivity] = useState(false);
   const [showExamDateEditor, setShowExamDateEditor] = useState(false);
   const hasSetSmartDefault = useRef(false);
+  const userId = user?.id;
 
   const UCAT_MONTH_NAMES: Record<number, string> = {
     7: "July",
@@ -249,12 +252,12 @@ export default function Dashboard() {
   }, [user, loading, error, sessions.length, syllogismSessions.length, sjtSessions.length]);
   // Reset so a fresh load (e.g. after re-login) logs again
   useEffect(() => {
-    if (!user) hasLoggedReady.current = false;
-  }, [user]);
+    if (!userId) hasLoggedReady.current = false;
+  }, [userId]);
 
 
   useEffect(() => {
-    if (!user) {
+    if (!userId) {
       setLoading(false);
       setError(null);
       setSessions([]);
@@ -264,24 +267,25 @@ export default function Dashboard() {
     let cancelled = false;
     let attempt = 0;
     let timeoutId: number | null = null;
+    let activeAbortController: AbortController | null = null;
 
     const fetchSessions = async () => {
       if (cancelled) return;
-      dashboardLog.info("Fetching sessions", { userId: user.id, attempt: attempt + 1 });
+      dashboardLog.info("Fetching sessions", { userId, attempt: attempt + 1 });
 
-      // Create AbortController for timeout
       const abortController = new AbortController();
-      const FETCH_TIMEOUT_MS = 10000; // 10 seconds
+      activeAbortController = abortController;
+      const FETCH_TIMEOUT_MS = 10000;
 
       timeoutId = window.setTimeout(() => {
         abortController.abort();
-        dashboardLog.warn("Session fetch timed out", { userId: user.id, attempt: attempt + 1 });
+        dashboardLog.warn("Session fetch timed out", { userId, attempt: attempt + 1 });
       }, FETCH_TIMEOUT_MS);
 
       const { data, error: err } = await supabase
         .from("sessions")
         .select("id, user_id, training_type, difficulty, wpm, correct, total, created_at, passage_id, time_seconds")
-        .eq("user_id", user.id)
+        .eq("user_id", userId)
         .order("created_at", { ascending: true })
         .abortSignal(abortController.signal);
 
@@ -289,6 +293,7 @@ export default function Dashboard() {
         clearTimeout(timeoutId);
         timeoutId = null;
       }
+      activeAbortController = null;
 
       if (cancelled) return;
 
@@ -314,7 +319,7 @@ export default function Dashboard() {
       }
 
       const rows = (data as SessionRow[]) ?? [];
-      dashboardLog.info("Sessions loaded", { userId: user.id, count: rows.length });
+      dashboardLog.info("Sessions loaded", { userId, count: rows.length });
       if (cancelled) return;
       setSessions(rows);
       setError(null);
@@ -326,12 +331,14 @@ export default function Dashboard() {
       cancelled = true;
       if (timeoutId !== null) {
         clearTimeout(timeoutId);
+        timeoutId = null;
       }
+      activeAbortController?.abort();
     };
-  }, [user]);
+  }, [userId]);
 
   useEffect(() => {
-    if (!user) {
+    if (!userId) {
       setSyllogismSessions([]);
       return;
     }
@@ -339,7 +346,7 @@ export default function Dashboard() {
     supabase
       .from("syllogism_sessions")
       .select("id, user_id, mode, score, total_questions, average_time_per_decision, categorical_accuracy, relative_accuracy, majority_accuracy, complex_accuracy, created_at")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .order("created_at", { ascending: true })
       .then(({ data, error }) => {
         if (cancelled) return;
@@ -353,10 +360,10 @@ export default function Dashboard() {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [userId]);
 
   useEffect(() => {
-    if (!user) {
+    if (!userId) {
       setSjtSessions([]);
       return;
     }
@@ -366,7 +373,7 @@ export default function Dashboard() {
       .select(
         "id, user_id, question_id, question_type, domain, score, max_score, items_attempted, items_total, completed, created_at",
       )
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .order("created_at", { ascending: true })
       .then(({ data, error: err }) => {
         if (cancelled) return;
@@ -380,10 +387,10 @@ export default function Dashboard() {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [userId]);
 
   useEffect(() => {
-    if (user) {
+    if (userId) {
       setGuestSummary(null);
       return;
     }
@@ -426,7 +433,7 @@ export default function Dashboard() {
       authenticated: false,
       guest_session_count: guestSessions.length + guestSjt.length,
     });
-  }, [user]);
+  }, [userId]);
 
   const byType = useMemo(() => {
     const m: Record<TrainingType, SessionRow[]> = {
@@ -506,6 +513,7 @@ export default function Dashboard() {
       setActiveTab(best.tab);
     }
     hasSetSmartDefault.current = true;
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- isValidTab is a pure inline predicate; adding it would cause infinite re-runs
   }, [loading, byType, syllogismSessions, sjtSessions, DASHBOARD_TAB_KEY]);
 
   const speedReadingSessions = byType.speed_reading;
@@ -758,33 +766,79 @@ export default function Dashboard() {
   const recentActivity = useMemo((): RecentActivityItem[] => {
     const fromSessions: RecentActivityItem[] = sessions.map((s) => {
       const type = getTrainingType(s);
+      const pct = s.total > 0 ? Math.round((s.correct / s.total) * 100) : null;
+      const hasPercentScore = ["rapid_recall", "keyword_scanning", "inference_trainer", "mental_maths", "calculator"].includes(type);
       return {
         id: s.id,
         created_at: s.created_at,
         label: TRAINING_TYPE_LABELS[type],
-        timeDisplay:
-          s.time_seconds != null && s.time_seconds > 0 ? `${s.time_seconds}s` : "-",
+        timeDisplay: s.time_seconds != null && s.time_seconds > 0 ? `${s.time_seconds}s` : "-",
         scoreDisplay: formatSessionScore(s),
+        scorePercent: hasPercentScore ? pct : null,
       };
     });
-    const fromSyllogism: RecentActivityItem[] = syllogismSessions.map((s) => ({
-      id: `syllogism-${s.id}`,
-      created_at: s.created_at,
-      label: s.mode === "macro" ? "Decision Making (Macro)" : "Decision Making (Micro)",
-      timeDisplay: s.average_time_per_decision > 0 ? `${Math.round(s.average_time_per_decision * s.total_questions)}s` : "-",
-      scoreDisplay: s.mode === "macro" ? `${s.score} pts` : `${s.score} / ${s.total_questions} correct`,
-    }));
-    const fromSjt: RecentActivityItem[] = sjtSessions.map((s) => ({
-      id: `sjt-${s.id}`,
-      created_at: s.created_at,
-      label: SJT_QUESTION_TYPE_LABELS[s.question_type],
-      timeDisplay: s.completed ? "-" : `${s.items_attempted}/${s.items_total} items`,
-      scoreDisplay: formatSJTSessionScore(s),
-    }));
+    const fromSyllogism: RecentActivityItem[] = syllogismSessions.map((s) => {
+      const microPct = s.mode === "micro" && s.total_questions > 0
+        ? Math.round((s.score / s.total_questions) * 100)
+        : null;
+      return {
+        id: `syllogism-${s.id}`,
+        created_at: s.created_at,
+        label: s.mode === "macro" ? "Decision Making (Macro)" : "Decision Making (Micro)",
+        timeDisplay: s.average_time_per_decision > 0 ? `${Math.round(s.average_time_per_decision * s.total_questions)}s` : "-",
+        scoreDisplay: s.mode === "macro" ? `${s.score} pts` : `${s.score} / ${s.total_questions} correct`,
+        scorePercent: microPct,
+      };
+    });
+    const fromSjt: RecentActivityItem[] = sjtSessions.map((s) => {
+      const pct = s.max_score > 0 ? Math.round((s.score / s.max_score) * 100) : null;
+      return {
+        id: `sjt-${s.id}`,
+        created_at: s.created_at,
+        label: SJT_QUESTION_TYPE_LABELS[s.question_type],
+        timeDisplay: s.completed ? "-" : `${s.items_attempted}/${s.items_total} items`,
+        scoreDisplay: formatSJTSessionScore(s),
+        scorePercent: s.completed ? pct : null,
+      };
+    });
+
+    // Sort most-recent first
     const merged = [...fromSessions, ...fromSyllogism, ...fromSjt].sort(
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
-    return merged.slice(0, 30);
+
+    // Aggregate same-day same-trainer runs into one row
+    const groups = new Map<string, RecentActivityItem[]>();
+    const groupOrder: string[] = [];
+    for (const item of merged) {
+      const day = item.created_at.slice(0, 10);
+      const key = `${day}__${item.label}`;
+      if (!groups.has(key)) {
+        groups.set(key, []);
+        groupOrder.push(key);
+      }
+      groups.get(key)!.push(item);
+    }
+
+    const aggregated = groupOrder.map((key) => {
+      const items = groups.get(key)!;
+      if (items.length === 1) return items[0];
+      const scores = items.map((i) => i.scorePercent).filter((s): s is number => s != null);
+      const avgScore = scores.length > 0
+        ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+        : null;
+      return {
+        id: items[0].id,
+        created_at: items[0].created_at,
+        label: items[0].label,
+        timeDisplay: "-",
+        scoreDisplay: avgScore != null ? `avg ${avgScore}%` : "-",
+        scorePercent: avgScore,
+        count: items.length,
+      } satisfies RecentActivityItem;
+    });
+
+    return aggregated.slice(0, 30);
   }, [sessions, syllogismSessions, sjtSessions]);
 
   // Shared difficulty breakdown renderer
@@ -1153,9 +1207,9 @@ export default function Dashboard() {
                   </select>
                   <button
                     type="button"
-                    disabled={ucatSaveStatus === "saving"}
+                    disabled={!user || ucatSaveStatus === "saving"}
                     onClick={async () => {
-                      if (!user || !profile) return;
+                      if (!user) return;
                       setUcatSaveStatus("saving");
                       const range = ucatExamDayRangeInMonth(ucatMonth);
                       if (!range) {
@@ -1165,7 +1219,7 @@ export default function Dashboard() {
                       }
                       const day = Math.min(Math.max(ucatDay, range.minDay), range.maxDay);
                       const iso = `${ucatYear}-${String(ucatMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-                      const { ok } = await upsertProfile(user.id, profile.full_name ?? null, profile.stream ?? null, { ucatExamDate: iso });
+                      const { ok } = await upsertProfile(user.id, profile?.full_name ?? null, profile?.stream ?? null, { ucatExamDate: iso });
                       if (ok) {
                         setUcatSaveStatus("saved");
                         setUcatEditing(false);
@@ -1179,7 +1233,7 @@ export default function Dashboard() {
                     }}
                     className="ml-1 min-h-[32px] rounded bg-slate-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-600 disabled:opacity-60"
                   >
-                    {ucatSaveStatus === "saving" ? "Saving…" : ucatSaveStatus === "saved" ? "Saved" : ucatSaveStatus === "error" ? "Error" : "Save"}
+                    {ucatSaveStatus === "saving" ? "Saving…" : ucatSaveStatus === "saved" ? "Saved" : ucatSaveStatus === "error" ? "Error - try again" : "Save"}
                   </button>
                 </div>
               )}
@@ -1251,7 +1305,14 @@ export default function Dashboard() {
                               month: "short",
                             })}
                           </td>
-                          <td className="px-4 py-3 text-slate-900 font-medium">{item.label}</td>
+                          <td className="px-4 py-3 text-slate-900 font-medium">
+                            <span>{item.label}</span>
+                            {item.count != null && item.count > 1 && (
+                              <span className="ml-2 inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
+                                ×{item.count}
+                              </span>
+                            )}
+                          </td>
                           <td className="px-4 py-3 text-slate-600 hidden sm:table-cell">
                             {item.timeDisplay}
                           </td>
@@ -1313,19 +1374,18 @@ export default function Dashboard() {
               {/* VR: Speed Reading · Rapid Recall · Keyword Scanning · Inference */}
               {activeTab === "vr" && (
                 <div className="space-y-8">
-                  <div className="flex items-center justify-between -mb-4">
-                    <h2 className="text-base font-semibold text-slate-700">Verbal Reasoning</h2>
-                    <Link
-                      to="/ucat-verbal-reasoning-practice"
-                      className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-                    >
-                      Practice now →
-                    </Link>
-                  </div>
                   <section>
-                    <h2 className="text-lg font-semibold text-slate-900 mb-4">
-                      {TRAINING_TYPE_LABELS.speed_reading}
-                    </h2>
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-lg font-semibold text-slate-900">
+                        {TRAINING_TYPE_LABELS.speed_reading}
+                      </h2>
+                      <Link
+                        to="/ucat-verbal-reasoning-practice"
+                        className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                      >
+                        Practice now →
+                      </Link>
+                    </div>
                     {speedWpmCount > 0 && (
                       <div className="bg-gradient-to-br from-blue-50 to-slate-50 rounded-xl border border-blue-100 p-4 mb-4">
                         <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">

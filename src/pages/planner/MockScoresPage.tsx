@@ -11,12 +11,13 @@ import MockScoresPageShell from '../../planner/components/MockScoresPageShell'
 
 function CloudMockScoresView() {
   const { user } = useAuth()
+  const userId = user?.id
   const refreshTick = useCloudPlannerRefresh()
   const [data, setData] = useState<Record<string, unknown> | null>(null)
   const [loadError, setLoadError] = useState(false)
 
   useEffect(() => {
-    if (!user) return
+    if (!userId) return
     let cancelled = false
     setData(null)
     setLoadError(false)
@@ -24,7 +25,7 @@ function CloudMockScoresView() {
       if (!cancelled) setLoadError(true)
     }, 12000)
     void import('../../planner/lib/load-planner-data').then(async ({ ensureActivePlanForMocks, loadMockScores }) => {
-      const plan = await ensureActivePlanForMocks(user.id)
+      const plan = await ensureActivePlanForMocks(userId)
       if (cancelled) return
       const loaded = await loadMockScores(plan)
       if (!cancelled) setData(loaded as Record<string, unknown>)
@@ -37,7 +38,7 @@ function CloudMockScoresView() {
       cancelled = true
       window.clearTimeout(timer)
     }
-  }, [user, refreshTick])
+  }, [userId, refreshTick])
 
   if (loadError) {
     if (hasGuestPlanner()) {
