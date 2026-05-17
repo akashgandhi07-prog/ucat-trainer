@@ -3,22 +3,16 @@
 import { useState, useEffect } from 'react'
 import { BookOpen, Timer } from 'lucide-react'
 import { useRouter } from '@/lib/app-navigation'
-import { OnboardingState, DateRange, CurrentSituation, SchoolYear } from '@/types'
+import { OnboardingState, TimeAwayPeriod, CurrentSituation, SchoolYear } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Slider } from '@/components/ui/slider'
 import { createClient } from '@/lib/supabase/client'
 import { parseDate, toISODate, weeksUntil, DAY_NAMES_FULL } from '@/lib/utils'
-import {
-  UCAT_EXAM_WINDOW_END_ISO,
-  UCAT_EXAM_WINDOW_START_ISO,
-  clampToUcatExamWindow,
-} from '@/lib/ucatExamWindow'
 import { buildGuestPlannerFromOnboarding } from '@/lib/build-guest-plan'
 import { getGuestPlanner, saveGuestPlanner } from '@/lib/guest-planner-store'
 import { createPlanFromOnboarding } from '@/lib/create-plan-from-onboarding'
-import { isMocksOnlyPlaceholderPlan } from '../../../lib/load-planner-data'
 import { cn } from '../../../../lib/cn'
 import { APP_CONTENT_X } from '../../../../lib/appContentLayout'
 import { PlannerOnboardingAside } from '../../../../components/layout/ProductUpsell'
@@ -53,9 +47,8 @@ const INITIAL_STATE: OnboardingState = {
   confidence: { vr: 3, dm: 3, qr: 3, sjt: 3 },
   schoolDayHours: 2,
   weekendHours: 4,
-  holidayPeriods: [],
+  timeAwayPeriods: [],
   restDays: [],
-  busyPeriods: [],
   ucatSen: false,
 }
 
@@ -82,7 +75,7 @@ export default function OnboardingClient({
     setState((s) => ({
       ...s,
       fullName: s.fullName || name || '',
-      examDate: s.examDate || (exam ? clampToUcatExamWindow(exam) : null),
+      examDate: s.examDate || exam || null,
     }))
   }, [profilePrefill?.fullName, profilePrefill?.examDate])
 
@@ -97,14 +90,12 @@ export default function OnboardingClient({
     sb.auth.getUser().then(({ data: { user } }) => {
       if (!user) return
       sb.from('plans')
-        .select('id, exam_date')
+        .select('id')
         .eq('student_id', user.id)
         .eq('status', 'active')
         .limit(1)
         .maybeSingle()
-        .then(({ data }) => {
-          if (data && !isMocksOnlyPlaceholderPlan(data)) router.replace('/dashboard')
-        })
+        .then(({ data }) => { if (data) router.replace('/dashboard') })
     })
   }, [router])
 
@@ -337,8 +328,7 @@ function Step2({ state, onUpdate }: StepProps) {
                 schoolYear: value === 'school' ? (state.schoolYear ?? null) : null,
                 // Reset hours to sensible defaults per situation
                 schoolDayHours: value === 'graduated_working' ? 1.5 : 2,
-                weekendHours: value === 'gap_year' || value === 'graduated_free' ? 4 : 4,
-                holidayPeriods: value === 'school' ? state.holidayPeriods : [],
+                weekendHours: 4,
               })}
               className={choiceCardClass(state.currentSituation === value)}
             >
@@ -377,20 +367,15 @@ function Step2({ state, onUpdate }: StepProps) {
 // ─── Step 3: Exam date & time ─────────────────────────────────────────────────
 
 function Step3({ state, onUpdate, warning }: StepProps & { warning: boolean }) {
+  const today = toISODate(new Date())
   return (
     <div className="space-y-4">
       <Input
         label="UCAT exam date"
         type="date"
         value={state.examDate ?? ''}
-        min={UCAT_EXAM_WINDOW_START_ISO}
-        max={UCAT_EXAM_WINDOW_END_ISO}
-        hint="Official sittings only: 13 July to 24 September 2026."
-        onChange={e =>
-          onUpdate({
-            examDate: e.target.value ? clampToUcatExamWindow(e.target.value) : null,
-          })
-        }
+        min={today}
+        onChange={e => onUpdate({ examDate: e.target.value || null })}
       />
       <div>
         <label className="text-sm font-medium text-foreground mb-1.5 block">
@@ -462,12 +447,14 @@ function Step4({ state, onUpdate }: StepProps) {
   )
 }
 
-// --- Step 5: Study hours - framing adapts to situation ---
+// ─── Step 5: Study hours (all student types) ─────────────────────────────────
 
 function Step5({ state, onUpdate }: StepProps) {
   const sit = state.currentSituation
+  const isFlexible = sit === 'gap_year' || sit === 'graduated_free'
+  const isWorking = sit === 'graduated_working'
 
-  if (sit === 'gap_year' || sit === 'graduated_free') {
+  if (isFlexible) {
     return (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">
@@ -480,13 +467,13 @@ function Step5({ state, onUpdate }: StepProps) {
           onChange={h => onUpdate({ schoolDayHours: h, weekendHours: h })}
         />
         <p className="text-xs text-muted-foreground">
-          We'll start at about half this and ramp up each week. Pick an ambitious max.
+          We'll start at about half this and ramp up each week. Pick an ambitious max — you can always lower it later.
         </p>
       </div>
     )
   }
 
-  if (sit === 'graduated_working') {
+  if (isWorking) {
     return (
       <div className="space-y-6">
         <div>
@@ -518,24 +505,7 @@ function Step5({ state, onUpdate }: StepProps) {
     )
   }
 
-  // Default: school student
-  return (
-    <SchoolHoursStep state={state} onUpdate={onUpdate} />
-  )
-}
-
-function SchoolHoursStep({ state, onUpdate }: StepProps) {
-  const [rangeStart, setRangeStart] = useState('')
-  const [rangeEnd, setRangeEnd] = useState('')
-  const [rangeLabel, setRangeLabel] = useState('')
-  const today = toISODate(new Date())
-
-  function addHoliday() {
-    if (!rangeStart || !rangeEnd || rangeEnd < rangeStart) return
-    onUpdate({ holidayPeriods: [...state.holidayPeriods, { start: rangeStart, end: rangeEnd, label: rangeLabel || undefined }] })
-    setRangeStart(''); setRangeEnd(''); setRangeLabel('')
-  }
-
+  // School student
   return (
     <div className="space-y-6">
       <div>
@@ -549,7 +519,6 @@ function SchoolHoursStep({ state, onUpdate }: StepProps) {
           onChange={h => onUpdate({ schoolDayHours: h })}
         />
       </div>
-
       <div>
         <label className="text-sm font-semibold text-foreground mb-3 block">
           On a really good weekend day or during holidays, what's the maximum you could study?
@@ -564,58 +533,127 @@ function SchoolHoursStep({ state, onUpdate }: StepProps) {
           We'll start at about half this and ramp up each week. Pick something ambitious.
         </p>
       </div>
-
-      <div>
-        <label className="text-sm font-semibold text-foreground mb-2 block">
-          When are your school holidays? <span className="font-normal text-muted-foreground">(optional)</span>
-        </label>
-        <p className="text-xs text-muted-foreground mb-3">
-          We'll apply the higher daily hours during these periods automatically.
-        </p>
-        <div className="rounded-lg border border-border bg-muted p-4 space-y-3">
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Start</label>
-              <input type="date" value={rangeStart} min={today} max={state.examDate ?? undefined}
-                onChange={e => setRangeStart(e.target.value)}
-                className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">End</label>
-              <input type="date" value={rangeEnd} min={rangeStart || today} max={state.examDate ?? undefined}
-                onChange={e => setRangeEnd(e.target.value)}
-                className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <input type="text" placeholder="Label (e.g. Summer holidays)" value={rangeLabel}
-              onChange={e => setRangeLabel(e.target.value)}
-              className="flex-1 h-9 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-            <Button onClick={addHoliday} disabled={!rangeStart || !rangeEnd || rangeEnd < rangeStart} variant="outline">Add</Button>
-          </div>
-        </div>
-        {state.holidayPeriods.length > 0 && (
-          <div className="mt-3 space-y-2">
-            {state.holidayPeriods.map((p, i) => (
-              <div key={i} className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 px-4 py-2.5">
-                <div>
-                  <span className="text-sm font-medium text-green-800">{p.label || 'School holiday'}</span>
-                  <span className="text-xs text-green-600 ml-2">{formatRange(p)}</span>
-                </div>
-                <button type="button" onClick={() => onUpdate({ holidayPeriods: state.holidayPeriods.filter((_, idx) => idx !== i) })}
-                  className="text-green-400 hover:text-red-500 transition-colors text-lg leading-none ml-3">×</button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
     </div>
   )
 }
 
-// ─── Step 6: Rest days ────────────────────────────────────────────────────────
+// ─── Step 6: Time away (unified for all student types) ────────────────────────
 
 function Step6({ state, onUpdate }: StepProps) {
+  const [rangeStart, setRangeStart] = useState('')
+  const [rangeEnd, setRangeEnd] = useState('')
+  const [rangeLabel, setRangeLabel] = useState('')
+  const [kind, setKind] = useState<'holiday' | 'busy'>('busy')
+  const today = toISODate(new Date())
+
+  function addPeriod() {
+    if (!rangeStart || !rangeEnd || rangeEnd < rangeStart) return
+    const period: TimeAwayPeriod = { start: rangeStart, end: rangeEnd, kind, label: rangeLabel || undefined }
+    onUpdate({ timeAwayPeriods: [...state.timeAwayPeriods, period] })
+    setRangeStart(''); setRangeEnd(''); setRangeLabel('')
+  }
+
+  function remove(i: number) {
+    onUpdate({ timeAwayPeriods: state.timeAwayPeriods.filter((_, idx) => idx !== i) })
+  }
+
+  return (
+    <div className="space-y-5">
+      <p className="text-sm text-muted-foreground">
+        Add any time away between now and your exam — school holidays, family trips, festivals, anything. We'll use these to schedule study intelligently around them.
+      </p>
+
+      <div className="rounded-lg border border-border bg-muted p-4 space-y-3">
+        {/* Kind toggle */}
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setKind('busy')}
+            className={`flex-1 rounded-lg border-2 py-2 text-sm font-medium transition-all ${
+              kind === 'busy'
+                ? 'border-red-400 bg-red-50 text-red-700'
+                : 'border-border text-muted-foreground hover:border-muted-foreground/40'
+            }`}
+          >
+            Fully unavailable
+          </button>
+          <button
+            type="button"
+            onClick={() => setKind('holiday')}
+            className={`flex-1 rounded-lg border-2 py-2 text-sm font-medium transition-all ${
+              kind === 'holiday'
+                ? 'border-green-400 bg-green-50 text-green-700'
+                : 'border-border text-muted-foreground hover:border-muted-foreground/40'
+            }`}
+          >
+            Holiday (more study time)
+          </button>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {kind === 'busy'
+            ? 'No sessions scheduled — perfect for festivals, family trips, or anything where you genuinely can\'t study.'
+            : 'Treated as a free day: higher daily hours applied — ideal for school holidays when you have more time.'}
+        </p>
+
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">Start</label>
+            <input type="date" value={rangeStart} min={today} max={state.examDate ?? undefined}
+              onChange={e => setRangeStart(e.target.value)}
+              className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">End</label>
+            <input type="date" value={rangeEnd} min={rangeStart || today} max={state.examDate ?? undefined}
+              onChange={e => setRangeEnd(e.target.value)}
+              className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <input type="text"
+            placeholder={kind === 'busy' ? 'Label (e.g. Family holiday)' : 'Label (e.g. Summer holidays)'}
+            value={rangeLabel}
+            onChange={e => setRangeLabel(e.target.value)}
+            className="flex-1 h-9 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+          <Button onClick={addPeriod} disabled={!rangeStart || !rangeEnd || rangeEnd < rangeStart} variant="outline">Add</Button>
+        </div>
+      </div>
+
+      {state.timeAwayPeriods.length > 0 ? (
+        <div className="space-y-2">
+          {state.timeAwayPeriods.map((p, i) => {
+            const isHoliday = p.kind === 'holiday'
+            return (
+              <div key={i} className={`flex items-center justify-between rounded-lg border px-4 py-2.5 ${
+                isHoliday ? 'border-green-200 bg-green-50' : 'border-red-100 bg-red-50'
+              }`}>
+                <div>
+                  <span className={`text-xs font-semibold uppercase tracking-wide mr-2 ${isHoliday ? 'text-green-600' : 'text-red-400'}`}>
+                    {isHoliday ? 'Holiday' : 'Blocked'}
+                  </span>
+                  <span className={`text-sm font-medium ${isHoliday ? 'text-green-800' : 'text-red-800'}`}>
+                    {p.label || (isHoliday ? 'School holiday' : 'Unavailable')}
+                  </span>
+                  <span className={`text-xs ml-2 ${isHoliday ? 'text-green-600' : 'text-red-500'}`}>{formatRange(p)}</span>
+                </div>
+                <button type="button" onClick={() => remove(i)}
+                  className={`text-lg leading-none ml-3 transition-colors ${isHoliday ? 'text-green-400 hover:text-red-500' : 'text-red-300 hover:text-red-600'}`}>×</button>
+              </div>
+            )
+          })}
+        </div>
+      ) : (
+        <p className="text-center text-sm text-muted-foreground py-4">
+          Nothing added yet — you can also manage time away from your plan once it's created.
+        </p>
+      )}
+    </div>
+  )
+}
+
+// ─── Step 7: Rest days ────────────────────────────────────────────────────────
+
+function Step7({ state, onUpdate }: StepProps) {
   function toggle(day: number) {
     const updated = state.restDays.includes(day)
       ? state.restDays.filter(d => d !== day)
@@ -649,69 +687,6 @@ function Step6({ state, onUpdate }: StepProps) {
           ? 'No rest days selected: sessions may be scheduled any day.'
           : `${state.restDays.length} day${state.restDays.length > 1 ? 's' : ''} always kept free.`}
       </p>
-    </div>
-  )
-}
-
-// ─── Step 7: Busy periods ─────────────────────────────────────────────────────
-
-function Step7({ state, onUpdate }: StepProps) {
-  const [rangeStart, setRangeStart] = useState('')
-  const [rangeEnd, setRangeEnd] = useState('')
-  const [rangeLabel, setRangeLabel] = useState('')
-  const today = toISODate(new Date())
-
-  function addPeriod() {
-    if (!rangeStart || !rangeEnd || rangeEnd < rangeStart) return
-    onUpdate({ busyPeriods: [...state.busyPeriods, { start: rangeStart, end: rangeEnd, label: rangeLabel || undefined }] })
-    setRangeStart(''); setRangeEnd(''); setRangeLabel('')
-  }
-
-  return (
-    <div className="space-y-5">
-      <p className="text-sm text-muted-foreground">
-        Any periods where you're completely unavailable: trips, exams, commitments? These will be blocked out. You can also adjust this from your plan later.
-      </p>
-      <div className="rounded-lg border border-border bg-muted p-4 space-y-3">
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <label className="text-xs text-muted-foreground mb-1 block">Start</label>
-            <input type="date" value={rangeStart} min={today} max={state.examDate ?? undefined}
-              onChange={e => setRangeStart(e.target.value)}
-              className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground mb-1 block">End</label>
-            <input type="date" value={rangeEnd} min={rangeStart || today} max={state.examDate ?? undefined}
-              onChange={e => setRangeEnd(e.target.value)}
-              className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <input type="text" placeholder="Label (e.g. Family holiday)" value={rangeLabel}
-            onChange={e => setRangeLabel(e.target.value)}
-            className="flex-1 h-9 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-          <Button onClick={addPeriod} disabled={!rangeStart || !rangeEnd || rangeEnd < rangeStart} variant="outline">Add</Button>
-        </div>
-      </div>
-      {state.busyPeriods.length > 0 ? (
-        <div className="space-y-2">
-          {state.busyPeriods.map((p, i) => (
-            <div key={i} className="flex items-center justify-between rounded-lg border border-red-100 bg-red-50 px-4 py-2.5">
-              <div>
-                <span className="text-sm font-medium text-red-800">{p.label || 'Unavailable'}</span>
-                <span className="text-xs text-red-500 ml-2">{formatRange(p)}</span>
-              </div>
-              <button type="button" onClick={() => onUpdate({ busyPeriods: state.busyPeriods.filter((_, idx) => idx !== i) })}
-                className="text-red-300 hover:text-red-600 transition-colors text-lg leading-none ml-3">×</button>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p className="text-center text-sm text-muted-foreground py-4">
-          No blocked periods: you can skip this and adjust from your plan later.
-        </p>
-      )}
     </div>
   )
 }
@@ -752,7 +727,7 @@ type StepProps = {
   onUpdate: (p: Partial<OnboardingState>) => void
 }
 
-function formatRange(p: DateRange): string {
+function formatRange(p: { start: string; end: string }): string {
   const fmt = (d: string) => parseDate(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
   return p.start === p.end ? fmt(p.start) : `${fmt(p.start)} - ${fmt(p.end)}`
 }
@@ -763,8 +738,8 @@ const STEP_TITLES = [
   'When is your exam?',
   'How confident are you in each section?',
   'How much can you study?',
+  'Any time away before your exam?',
   'Any guaranteed rest days?',
-  'Any periods you\'re unavailable?',
 ]
 
 const STEP_DESCRIPTIONS = [
@@ -773,8 +748,8 @@ const STEP_DESCRIPTIONS = [
   'We\'ll build your plan backwards from your exam date.',
   'Weaker sections get more sessions allocated. You can adjust these later.',
   'We\'ll ramp up from about half your max, so be ambitious.',
+  'Optional: add holidays, trips, festivals — anything that affects your availability.',
   'Optional: skip if you\'re happy to study any day of the week.',
-  'Optional: add holidays or commitments where you can\'t study at all.',
 ]
 
 function canAdvance(step: number, state: OnboardingState): boolean {

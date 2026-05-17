@@ -1,13 +1,8 @@
 import type { OnboardingState } from '../embedded/types'
-import { ensureProfileForUser } from '../embedded/lib/ensure-profile'
 import { generateFullPlan, planToDBRows, type PlanInputs } from '../embedded/lib/plan-engine'
 import { PLAN_TIMETABLE_TABLE } from '../embedded/lib/planner-db-tables'
 import { generateSlug, parseDate, toISODate } from '../embedded/lib/utils'
 import { supabase } from '../../lib/supabase'
-import {
-  isWithinUcatExamWindow,
-  normaliseExamDateIso,
-} from '../../lib/ucatExamWindow'
 import { invalidateActivePlanCache } from './load-planner-data'
 
 export type CreatePlanFromOnboardingInput = {
@@ -24,24 +19,12 @@ export async function createPlanFromOnboarding({
     throw new Error('Incomplete onboarding')
   }
 
-  const examIso = normaliseExamDateIso(state.examDate)
-  if (!examIso || !isWithinUcatExamWindow(examIso)) {
-    throw new Error(
-      'Exam date must be within the official UCAT sitting dates for this cycle.',
-    )
-  }
-
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Sign in required to save your plan to the cloud')
 
-  try {
-    await ensureProfileForUser(supabase, user)
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Could not set up your profile'
-    throw new Error(msg)
-  }
-
-  const examDate = parseDate(examIso)
+  const examDate = parseDate(state.examDate)
+  const holidayPeriods = state.timeAwayPeriods.filter(p => p.kind === 'holiday')
+  const busyPeriods = state.timeAwayPeriods.filter(p => p.kind === 'busy')
   const inputs: PlanInputs = {
     planId: '',
     examDate,
@@ -49,9 +32,9 @@ export async function createPlanFromOnboarding({
     confidence: state.confidence,
     schoolDayHours: state.schoolDayHours,
     weekendHours: state.weekendHours,
-    holidayPeriods: state.holidayPeriods,
+    holidayPeriods,
     restDays: state.restDays,
-    busyPeriods: state.busyPeriods,
+    busyPeriods,
     ucatSen: state.ucatSen,
   }
 
@@ -94,7 +77,7 @@ export async function createPlanFromOnboarding({
       rest_days: state.restDays,
       school_day_hours: state.schoolDayHours,
       weekend_hours: state.weekendHours,
-      holiday_periods: state.holidayPeriods,
+      holiday_periods: holidayPeriods,
       ucat_sen: state.ucatSen,
     })
     .select()

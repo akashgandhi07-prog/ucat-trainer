@@ -217,6 +217,14 @@ export default function MicroDrill() {
                         <p className="text-sm text-slate-700">
                           {current.explanation}
                         </p>
+                        <button
+                          type="button"
+                          onClick={() => setFeedbackOpen(true)}
+                          className="mt-2 inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                        >
+                          <span aria-hidden>🚩</span>
+                          Report this question
+                        </button>
                       </div>
                       <button
                         type="button"

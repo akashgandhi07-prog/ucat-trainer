@@ -10,6 +10,9 @@ export async function createPlanFromOnboarding({
   state,
   inviteToken,
 }: CreatePlanFromOnboardingInput): Promise<void> {
+  const holidayPeriods = state.timeAwayPeriods.filter(p => p.kind === 'holiday')
+  const busyPeriods = state.timeAwayPeriods.filter(p => p.kind === 'busy')
+
   const response = await fetch('/api/plans/create', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -22,9 +25,9 @@ export async function createPlanFromOnboarding({
       schoolYear: state.schoolYear,
       schoolDayHours: state.schoolDayHours,
       weekendHours: state.weekendHours,
-      holidayPeriods: state.holidayPeriods,
+      holidayPeriods,
       restDays: state.restDays,
-      busyPeriods: state.busyPeriods,
+      busyPeriods,
       ucatSen: state.ucatSen,
       inviteToken,
     }),

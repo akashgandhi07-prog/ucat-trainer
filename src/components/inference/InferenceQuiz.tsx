@@ -268,6 +268,14 @@ export default function InferenceQuiz({
                     : "Incorrect"}
                 </p>
                 <p className="text-sm text-slate-700">{feedback.explanation}</p>
+                <button
+                  type="button"
+                  onClick={() => setFeedbackOpen(true)}
+                  className="mt-2 inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white/60 px-3 py-1 text-xs font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                >
+                  <span aria-hidden>🚩</span>
+                  Report this question
+                </button>
                 {(feedback.result === "incorrect" || feedback.result === "skipped" || feedback.result === "partial") && (
                   <div className="mt-3 pt-3 border-t border-slate-200">
                     <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">

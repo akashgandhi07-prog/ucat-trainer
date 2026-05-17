@@ -1,11 +1,7 @@
-import type { OnboardingState } from '@/types'
+import type { OnboardingState, DateRange } from '@/types'
 import type { GuestPlannerBundle } from '@/lib/guest-planner-store'
 import { generateFullPlan, planToDBRows, type PlanInputs } from '@/lib/plan-engine'
 import { generateSlug, parseDate, toISODate } from '@/lib/utils'
-import {
-  isWithinUcatExamWindow,
-  normaliseExamDateIso,
-} from '@/lib/ucatExamWindow'
 import type { DBPlan, DBPlanDay, DBPlanWeek, DBSession } from '@/types'
 
 function stamp<T extends Record<string, unknown>>(row: T, now: string): T & { created_at: string; updated_at: string } {
@@ -18,16 +14,12 @@ export function buildGuestPlannerFromOnboarding(state: OnboardingState): GuestPl
     throw new Error('Incomplete onboarding')
   }
 
-  const examIso = normaliseExamDateIso(state.examDate)
-  if (!examIso || !isWithinUcatExamWindow(examIso)) {
-    throw new Error(
-      'Exam date must be within the official UCAT sitting dates for this cycle.',
-    )
-  }
-
   const planId = crypto.randomUUID()
   const now = new Date().toISOString()
-  const examDate = parseDate(examIso)
+  const examDate = parseDate(state.examDate)
+
+  const holidayPeriods: DateRange[] = state.timeAwayPeriods.filter(p => p.kind === 'holiday')
+  const busyPeriods: DateRange[] = state.timeAwayPeriods.filter(p => p.kind === 'busy')
 
   const inputs: PlanInputs = {
     planId,
@@ -36,9 +28,9 @@ export function buildGuestPlannerFromOnboarding(state: OnboardingState): GuestPl
     confidence: state.confidence,
     schoolDayHours: state.schoolDayHours,
     weekendHours: state.weekendHours,
-    holidayPeriods: state.holidayPeriods,
+    holidayPeriods,
     restDays: state.restDays,
-    busyPeriods: state.busyPeriods,
+    busyPeriods,
     ucatSen: state.ucatSen,
   }
 
@@ -56,7 +48,7 @@ export function buildGuestPlannerFromOnboarding(state: OnboardingState): GuestPl
     school_year: state.schoolYear,
     school_day_hours: state.schoolDayHours,
     weekend_hours: state.weekendHours,
-    holiday_periods: state.holidayPeriods,
+    holiday_periods: holidayPeriods,
     has_prior_experience: state.hasPriorExperience,
     confidence_vr: state.confidence.vr,
     confidence_dm: state.confidence.dm,
