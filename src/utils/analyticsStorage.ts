@@ -43,7 +43,6 @@ export const saveSession = async (session: Omit<GameSession, 'id' | 'date'>) => 
                 correct: session.correctQuestions || 0,
                 total: session.totalQuestions || 0,
                 time_seconds: timeSeconds,
-                difficulty: session.mode,
             };
             try {
                 await withRetry(async () => {
@@ -69,7 +68,6 @@ export const saveSession = async (session: Omit<GameSession, 'id' | 'date'>) => 
                 correct: session.correctQuestions || 0,
                 total: session.totalQuestions || 0,
                 time_seconds: session.timeTaken ? parseInt(session.timeTaken, 10) : 60,
-                difficulty: session.mode,
             });
         }
     } catch (err) {

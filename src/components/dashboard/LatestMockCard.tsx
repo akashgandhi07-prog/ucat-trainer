@@ -59,7 +59,7 @@ function timeAgo(iso: string): string {
 }
 
 /** Trend across last ≥3 mocks of same type: compare latest total vs average of prior two. */
-function trendSignal(latest: MockScore, sameType: MockScore[]): "up" | "down" | "flat" | null {
+function trendSignal(_latest: MockScore, sameType: MockScore[]): "up" | "down" | "flat" | null {
   // sameType is [latest, prev1, prev2, ...] desc
   if (sameType.length < 3) return null;
   const total = (s: MockScore) => {
