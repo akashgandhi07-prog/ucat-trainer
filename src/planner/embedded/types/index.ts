@@ -35,6 +35,13 @@ export interface DateRange {
   end: string     // ISO date
   label?: string  // e.g. "Half term", "Family holiday"
 }
+
+/** 'holiday' = reduced hours (weekend rate); 'busy' = fully blocked */
+export type TimeAwayKind = 'holiday' | 'busy'
+
+export interface TimeAwayPeriod extends DateRange {
+  kind: TimeAwayKind
+}
 export type DifficultyRating = 1 | 2 | 3   // 1=too hard, 2=about right, 3=too easy
 
 // ─── Database row types ───────────────────────────────────────────────────────
@@ -199,11 +206,10 @@ export interface OnboardingState {
   // Step 5: Study hours (framing depends on situation)
   schoolDayHours: number           // busy-day max hours (school day / work day)
   weekendHours: number             // free-day max hours (weekend / day off / all days for gap/free)
-  holidayPeriods: DateRange[]      // school holiday date ranges (school students only)
-  // Step 6: Rest days
+  // Step 6: Time away (holidays with reduced hours + fully blocked busy periods)
+  timeAwayPeriods: TimeAwayPeriod[]
+  // Step 7: Rest days
   restDays: number[]               // 0=Sun … 6=Sat (optional, no defaults)
-  // Step 7: Busy periods
-  busyPeriods: DateRange[]         // fully unavailable date ranges
   /** UCATSEN (extra time); full mocks in the plan become 2h30 */
   ucatSen: boolean
 }

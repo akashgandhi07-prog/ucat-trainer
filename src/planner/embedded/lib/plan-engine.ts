@@ -98,9 +98,13 @@ function practiceWeaknessBucket(st: SessionType): WeaknessSection | null {
 // ─── Phase determination ──────────────────────────────────────────────────────
 
 export function getPhase(weeksUntilExam: number, hasPriorExperience: boolean): Phase {
-  if (weeksUntilExam <= 1) return 'final_week'
-  if (weeksUntilExam <= 5) return 'full_mock'
-  if (weeksUntilExam <= 6) return 'mini_mock'
+  // Final 3 weeks: maximum intensity, 4 full mocks/week, ~6h/day
+  if (weeksUntilExam <= 3) return 'final_week'
+  // Weeks 4-6 out: 3 full mocks/week
+  if (weeksUntilExam <= 6) return 'full_mock'
+  // Weeks 7-10 out: 2 mocks/week, transitioning from mini to full mocks
+  if (weeksUntilExam <= 10) return 'mini_mock'
+  // Earlier: timed section practice (experienced) or untimed foundations (beginners)
   return hasPriorExperience ? 'timed' : 'foundations'
 }
 
@@ -162,28 +166,54 @@ function roundPlannerHours(h: number): number {
 }
 
 /**
- * Target timed mock sessions (each full or mini mock counts once) per week, stepped down
- * further from the exam. Short overall plans cap the target so weeks stay achievable.
+ * Target timed mock sessions per week, scaled by both phase and available hours.
+ *
+ * The key insight: a student doing 6h/day can fit 5–6 mocks/week in the final
+ * weeks; a student doing 3h/day can fit fewer. Rather than hard-coding a fixed
+ * count, we compute how many mock+reflection blocks physically fit in the week's
+ * available time, then apply a generous phase ceiling so mocks can't run away in
+ * early weeks even if hours are high.
+ *
+ * Phase ceilings (upper bounds — time is the real constraint):
+ *   ≤3 weeks out  → up to 6 full mocks/wk  (final_week: one per day is fine)
+ *   ≤6 weeks out  → up to 5 full mocks/wk  (full_mock: 4–5 for high-hours students)
+ *   ≤10 weeks out → up to 3 mocks/wk       (mini_mock: 2–3 per week)
+ *   earlier       → 1 mini-mock/wk          (timed/foundations; overridden to 0 for first 2 foundation weeks)
  */
-export function weeklyMockTarget(weeksRemaining: number, totalWeeks: number): number {
+export function weeklyMockTarget(
+  weeksRemaining: number,
+  totalWeeks: number,
+  weeklyAvailableMinutes: number,
+  ucatSen: boolean,
+): number {
   if (weeksRemaining <= 0) return 0
-  let ideal: number
-  if (weeksRemaining <= 3) {
-    ideal = 4
-  } else if (weeksRemaining <= 7) {
-    ideal = 3
-  } else if (weeksRemaining <= 12) {
-    ideal = 2
-  } else {
-    ideal = totalWeeks >= 18 ? 1 : 2
-  }
-  if (totalWeeks <= 6) {
-    ideal = Math.min(ideal, 3)
-  }
-  if (totalWeeks <= 4) {
-    ideal = Math.min(ideal, 2)
-  }
-  return Math.max(1, ideal)
+
+  const fullBlock = (ucatSen ? 150 : 120) + 120   // full mock + 2h reflection
+  const miniBlock = 60 + 120                        // mini mock + 2h reflection (180 min)
+
+  // Use the block size appropriate for the phase
+  const blockSize = weeksRemaining <= 6 ? fullBlock : miniBlock
+
+  // How many mock sessions can physically fit in the available weekly time?
+  // Cap at 6 so there's always at least one guaranteed rest/pure-practice day.
+  const fitsByTime = Math.min(6, Math.floor(weeklyAvailableMinutes / blockSize))
+
+  // Generous phase ceilings — time is the binding constraint for high-hours students;
+  // these ceilings only matter for very-low-hours students where fitsByTime exceeds
+  // what makes educational sense for that phase.
+  let phaseCeiling: number
+  if (weeksRemaining <= 3) phaseCeiling = 6       // final sprint: up to daily mocks
+  else if (weeksRemaining <= 6) phaseCeiling = 5  // 4–5 for students with 5+ h/day
+  else if (weeksRemaining <= 10) phaseCeiling = 3 // 2–3 per week in mini_mock phase
+  else phaseCeiling = 1                            // timed/foundations: 1 mini-mock/wk
+
+  let ideal = Math.min(phaseCeiling, fitsByTime)
+
+  // Cap for very short plans so individual weeks stay achievable
+  if (totalWeeks <= 6) ideal = Math.min(ideal, 4)
+  if (totalWeeks <= 4) ideal = Math.min(ideal, 3)
+
+  return ideal
 }
 
 /**
@@ -216,12 +246,15 @@ export function hoursForDate(
 
   /**
    * Final three weeks (21-day window before the exam, excluding exam day): ramp every day
-   * toward the learner's outline (capped at 6h). Fixes term weekdays sitting at baseline
-   * school hours (e.g. 2h) on the day before the exam.
+   * from the student's current weekday baseline toward 6 h/day. We deliberately push past
+   * the student's stated weekend max — the exam is near and intensity must rise. A student
+   * who said "4 h weekends" will see the plan climb to 6 h here so the mock count is
+   * achievable (each full mock + reflection block needs ~4 h).
    */
   if (daysUntilExam >= 1 && daysUntilExam <= 21) {
     const low = Math.max(2, schoolDayMax)
-    const high = Math.min(6, Math.max(weekendMax, schoolDayMax))
+    // Always ramp toward at least 6 h, even if the student's stated max is lower
+    const high = Math.max(6, weekendMax, schoolDayMax)
     const t = (21 - daysUntilExam) / 20
     return roundPlannerHours(low + t * (high - low))
   }
@@ -349,27 +382,27 @@ export function planDaySessions(
   const sessions: SessionType[] = []
   let remaining = availableMinutes
   const fullMock = fullMockMinutes(ucatSen)
-  const dow = _dayOfWeek
-  /** Weekends, final three weeks, or whenever the weekly mock target is 3+ (needs weekdays too). */
-  const preferMockDay =
-    dow === 0 || dow === 6 || daysUntilExamCal <= 21 || weeklyMockCap >= 3
+  const fullMockBlock = fullMock + REFLECTION_AFTER_MOCK_MIN
+  const miniBlock = SESSION_DURATIONS.mini_mock + REFLECTION_AFTER_MOCK_MIN
 
+  // ── Final 3 weeks: 4 full mocks/week ────────────────────────────────────────
   if (phase === 'final_week') {
-    const fullMockBlock = fullMock + REFLECTION_AFTER_MOCK_MIN
-    if (remaining >= fullMockBlock) {
+    if (weekMockCount < weeklyMockCap && remaining >= fullMockBlock) {
       sessions.push('full_mock')
       remaining -= fullMock
       sessions.push('reflection')
       remaining -= REFLECTION_AFTER_MOCK_MIN
+      // Use any leftover time for targeted practice
+      const weak = weakestPracticeSection(weights)
+      if (remaining >= SESSION_DURATIONS[weak]) sessions.push(weak)
       return { sessions }
     }
-    return planPracticeSessions(
-      remaining, weights, true, tracker, currentDayIndex, confidence,
-    )
+    // Non-mock days: high-intensity timed practice
+    return planPracticeSessions(remaining, weights, true, tracker, currentDayIndex, confidence)
   }
 
+  // ── Weeks 4-6 out: 3 full mocks/week ────────────────────────────────────────
   if (phase === 'full_mock') {
-    const fullMockBlock = fullMock + REFLECTION_AFTER_MOCK_MIN
     if (weekMockCount < weeklyMockCap && remaining >= fullMockBlock) {
       sessions.push('full_mock')
       remaining -= fullMock
@@ -382,40 +415,37 @@ export function planDaySessions(
     return planPracticeSessions(remaining, weights, true, tracker, currentDayIndex, confidence)
   }
 
+  // ── Weeks 7-10 out: 2 mocks/week, mini→full transition ──────────────────────
   if (phase === 'mini_mock') {
-    const miniBlock = SESSION_DURATIONS.mini_mock + REFLECTION_AFTER_MOCK_MIN
-    if (weekMockCount < weeklyMockCap && remaining >= miniBlock) {
-      sessions.push('mini_mock')
-      remaining -= SESSION_DURATIONS.mini_mock
-      sessions.push('reflection')
-      remaining -= REFLECTION_AFTER_MOCK_MIN
-      const weak = weakestPracticeSection(weights)
-      if (remaining >= SESSION_DURATIONS[weak]) sessions.push(weak)
-      return { sessions }
+    if (weekMockCount < weeklyMockCap) {
+      // Move to full mocks in the back half of this phase (≤8 weeks remaining)
+      // so students arrive at full_mock phase already experienced with full tests
+      if (weeksRemainingForWeek <= 8 && remaining >= fullMockBlock) {
+        sessions.push('full_mock')
+        remaining -= fullMock
+        sessions.push('reflection')
+        remaining -= REFLECTION_AFTER_MOCK_MIN
+        const weak = weakestPracticeSection(weights)
+        if (remaining >= SESSION_DURATIONS[weak]) sessions.push(weak)
+        return { sessions }
+      }
+      if (remaining >= miniBlock) {
+        sessions.push('mini_mock')
+        remaining -= SESSION_DURATIONS.mini_mock
+        sessions.push('reflection')
+        remaining -= REFLECTION_AFTER_MOCK_MIN
+        const weak = weakestPracticeSection(weights)
+        if (remaining >= SESSION_DURATIONS[weak]) sessions.push(weak)
+        return { sessions }
+      }
     }
     return planPracticeSessions(remaining, weights, true, tracker, currentDayIndex, confidence)
   }
 
-  const miniBlock = SESSION_DURATIONS.mini_mock + REFLECTION_AFTER_MOCK_MIN
-  const fullMockBlockEarly = fullMock + REFLECTION_AFTER_MOCK_MIN
-  const wantFull =
-    weeksRemainingForWeek <= 5 ||
-    (phase === 'timed' && weeksRemainingForWeek <= 8 && daysUntilExamCal <= 21)
-  if (
-    (phase === 'foundations' || phase === 'timed') &&
-    weekMockCount < weeklyMockCap &&
-    preferMockDay &&
-    remaining >= miniBlock
-  ) {
-    if (wantFull && remaining >= fullMockBlockEarly) {
-      sessions.push('full_mock')
-      remaining -= fullMock
-      sessions.push('reflection')
-      remaining -= REFLECTION_AFTER_MOCK_MIN
-      const weak = weakestPracticeSection(weights)
-      if (remaining >= SESSION_DURATIONS[weak]) sessions.push(weak)
-      return { sessions }
-    }
+  // ── Timed / foundations: 1 mini-mock per week (0 for foundations first 2 weeks)
+  // No preferMockDay gating — rely on remaining >= miniBlock (3h) to naturally
+  // land mocks on high-capacity days (weekends / holidays).
+  if (weekMockCount < weeklyMockCap && remaining >= miniBlock) {
     sessions.push('mini_mock')
     remaining -= SESSION_DURATIONS.mini_mock
     sessions.push('reflection')
@@ -550,7 +580,22 @@ export function generateFullPlan(inputs: PlanInputs): GeneratedPlan {
 
     const rationaleCtx: PlannerRationaleContext = { ...baseRationaleCtx, phase }
 
-    const weeklyMockCap = weeklyMockTarget(weeksRemaining, totalWeeks)
+    // Pre-compute total available study minutes for this week so we can size the mock
+    // count to what the student can actually fit given their hours.
+    let weeklyAvailableMinutes = 0
+    for (let i = 0; i < 7; i++) {
+      const d = addDays(weekStart, i)
+      if (d > examDate) break
+      const ds = toISODate(d)
+      if (restDays.includes(d.getDay()) || busyDates.has(ds)) continue
+      const h = hoursForDate(d, examDate, planStart, schoolDayHours, weekendHours, holidayPeriods, w + 1, totalWeeks)
+      weeklyAvailableMinutes += Math.round(h * 60)
+    }
+
+    const weeklyMockCap = weeklyMockTarget(weeksRemaining, totalWeeks, weeklyAvailableMinutes, ucatSen)
+    // First two weeks for true beginners: pure untimed foundations, no mocks at all.
+    // Once they've built some confidence (week 3+), 1 mini-mock per week begins.
+    const effectiveMockCap = (phase === 'foundations' && w < 2) ? 0 : weeklyMockCap
 
     for (let i = 0; i < 7; i++) {
       const date = addDays(weekStart, i)
@@ -584,7 +629,7 @@ export function generateFullPlan(inputs: PlanInputs): GeneratedPlan {
           phase,
           weights,
           weekMockCount,
-          weeklyMockCap,
+          effectiveMockCap,
           isFinalWeek,
           dow,
           isExamDay,

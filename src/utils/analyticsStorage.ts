@@ -1,5 +1,8 @@
 import { supabase } from '../lib/supabase';
 import { trackEvent } from '../lib/analytics';
+import { withRetry } from '../lib/retry';
+import { supabaseLog } from '../lib/logger';
+import { appendGuestSession } from '../lib/guestSessions';
 import type { MentalMathsSummaryStats } from '../hooks/useMentalMathsLogic';
 import { difficultyFromStageIndex } from '../components/mentalMaths/mentalMathsStages';
 
@@ -28,35 +31,50 @@ export const saveSession = async (session: Omit<GameSession, 'id' | 'date'>) => 
     const updatedHistory = [newSession, ...history].slice(0, 50);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedHistory));
 
-    // Persist to Supabase if user is logged in
+    // Persist to Supabase if logged in, otherwise add to guest_sessions for the dashboard
     try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-            const timeSeconds = session.timeTaken ? parseInt(session.timeTaken, 10) : 60; // Default or parse "60s"
-
-            const { error } = await supabase.from('sessions').insert({
+            const timeSeconds = session.timeTaken ? parseInt(session.timeTaken, 10) : 60;
+            const payload = {
                 user_id: user.id,
-                training_type: 'calculator',
-                wpm: session.kps, // Mapping KPS to wpm column for consistency
+                training_type: 'calculator' as const,
+                wpm: session.kps,
                 correct: session.correctQuestions || 0,
                 total: session.totalQuestions || 0,
                 time_seconds: timeSeconds,
-                difficulty: session.mode, // Storing drill mode in difficulty column
-                created_at: newSession.date,
-                // created_at is automatic in DB usually, but we can enforce client time or let DB handle it. 
-                // Let's rely on DB default or if needed pass it. 
-                // Actually 'created_at' in the table might be sufficient. 
-                // Let's pass it to match local session time exactly.
-            });
-
-            if (error) {
-                console.error("Failed to save calculator session to Supabase:", error);
-            } else {
+                difficulty: session.mode,
+            };
+            try {
+                await withRetry(async () => {
+                    const { error } = await supabase.from('sessions').insert(payload);
+                    if (error) throw error;
+                });
+                supabaseLog.info("calculator_session_saved", {
+                    userId: user.id,
+                    mode: session.mode,
+                    kps: session.kps,
+                    correct: payload.correct,
+                    total: payload.total,
+                });
                 trackEvent("trainer_completed", { training_type: "calculator", mode: session.mode });
+            } catch (err) {
+                const message = err instanceof Error ? err.message : String(err);
+                supabaseLog.error("calculator_session_save_failed", { message, userId: user.id });
             }
+        } else {
+            appendGuestSession({
+                training_type: 'calculator',
+                wpm: session.kps,
+                correct: session.correctQuestions || 0,
+                total: session.totalQuestions || 0,
+                time_seconds: session.timeTaken ? parseInt(session.timeTaken, 10) : 60,
+                difficulty: session.mode,
+            });
         }
     } catch (err) {
-        console.error("Error saving calculator session:", err);
+        const message = err instanceof Error ? err.message : String(err);
+        supabaseLog.error("calculator_session_auth_check_failed", { message });
     }
 
     return newSession;
@@ -78,13 +96,24 @@ export async function saveMentalMathsSession(
     total: stats.total,
     time_seconds: timeSeconds,
   };
-  const { error } = await supabase.from('sessions').insert(payload);
-  if (error) {
-    console.error("Failed to save mental maths session to Supabase:", error);
+  try {
+    await withRetry(async () => {
+      const { error } = await supabase.from('sessions').insert(payload);
+      if (error) throw error;
+    });
+    supabaseLog.info("mental_maths_session_saved", {
+      userId,
+      difficulty,
+      correct: stats.correct,
+      total: stats.total,
+    });
+    trackEvent("trainer_completed", { training_type: "mental_maths", difficulty });
+    return true;
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    supabaseLog.error("mental_maths_session_save_failed", { message, userId });
     return false;
   }
-  trackEvent("trainer_completed", { training_type: "mental_maths", difficulty });
-  return true;
 }
 
 export const getHistory = (): GameSession[] => {

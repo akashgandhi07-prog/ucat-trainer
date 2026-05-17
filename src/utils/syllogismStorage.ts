@@ -53,7 +53,7 @@ export async function saveSyllogismSession(
     return { saved: true };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error("Failed to save syllogism session:", err);
+    supabaseLog.error("syllogism_session_save_failed", { message });
     return { saved: false, error: message };
   }
 }
