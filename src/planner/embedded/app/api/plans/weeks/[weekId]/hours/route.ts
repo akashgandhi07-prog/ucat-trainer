@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { requireStudentOrTutorPlan } from '@/lib/api-plan-guard'
 import { regenerateFutureWeeks } from '@/lib/db'
 
 export async function POST(
@@ -18,10 +19,13 @@ export async function POST(
     const { data: week } = await sb.from('plan_weeks').select('plan_id, week_number').eq('id', weekId).maybeSingle()
     if (!week) return NextResponse.json({ error: 'Week not found' }, { status: 404 })
 
-    const { data: plan } = await sb.from('plans').select('student_id').eq('id', week.plan_id).maybeSingle()
-    if (!plan || plan.student_id !== user.id) return NextResponse.json({ error: 'Not allowed' }, { status: 403 })
+    const gate = await requireStudentOrTutorPlan(sb, week.plan_id, user.id)
+    if (!gate.ok) {
+      const msg = gate.status === 404 ? 'Plan not found' : 'Not allowed to update this plan'
+      return NextResponse.json({ error: msg }, { status: gate.status })
+    }
 
-    if (customHours !== null && (customHours < 0.5 || customHours > 12)) {
+    if (customHours !== null && (!Number.isFinite(customHours) || customHours < 0.5 || customHours > 12)) {
       return NextResponse.json({ error: 'Hours must be between 0.5 and 12' }, { status: 400 })
     }
 

@@ -19,6 +19,10 @@ export async function POST(request: Request) {
     if (!planId || !dayDate) {
       return NextResponse.json({ error: 'planId and dayDate are required' }, { status: 400 })
     }
+    // Validate ISO date format
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dayDate) || isNaN(Date.parse(dayDate))) {
+      return NextResponse.json({ error: 'dayDate must be a valid ISO date (YYYY-MM-DD)' }, { status: 400 })
+    }
 
     const gate = await requireStudentOrTutorPlan(sb, planId, user.id)
     if (!gate.ok) {

@@ -46,6 +46,7 @@ export async function POST(
           student_id: gate.studentId,
           minutes_completed: minutes,
           perceived_effort: perceivedEffort,
+          completed_at: new Date().toISOString(),
         },
         { onConflict: 'session_id,student_id' },
       )
