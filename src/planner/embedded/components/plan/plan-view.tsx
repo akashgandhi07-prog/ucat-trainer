@@ -146,10 +146,13 @@ function DayEditPopover({
 function WeekHoursEditor({
   weekId,
   currentHours,
+  planDefaultHours,
   onDone,
 }: {
   weekId: string
   currentHours: number
+  /** Plan-level default so we can offer a reset option */
+  planDefaultHours: number
   onDone: () => void
 }) {
   const router = useRouter()
@@ -157,19 +160,14 @@ function WeekHoursEditor({
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
 
-  async function save() {
-    const h = Number(value)
-    if (!Number.isFinite(h) || h < 0.5 || h > 12) {
-      setErr('Enter a value between 0.5 and 12')
-      return
-    }
+  async function post(customHours: number | null) {
     setBusy(true)
     setErr('')
     try {
       const res = await fetch(`/api/plans/weeks/${weekId}/hours`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ customHours: h }),
+        body: JSON.stringify({ customHours }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Failed')
@@ -182,34 +180,57 @@ function WeekHoursEditor({
     }
   }
 
+  async function save() {
+    const h = Number(value)
+    if (!Number.isFinite(h) || h < 0.5 || h > 12) {
+      setErr('Enter a value between 0.5 and 12')
+      return
+    }
+    await post(h)
+  }
+
+  const isCustom = currentHours !== planDefaultHours
+
   return (
-    <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
-      <input
-        type="number"
-        min={0.5}
-        max={12}
-        step={0.5}
-        value={value}
-        onChange={e => setValue(e.target.value)}
-        autoFocus
-        className="w-16 h-7 rounded-md border border-slate-300 px-1.5 text-xs text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
-      <span className="text-xs text-slate-400">h/day</span>
-      <button
-        type="button"
-        onClick={save}
-        disabled={busy}
-        className="text-xs bg-blue-600 text-white px-2 py-1 rounded-md hover:bg-blue-700 disabled:opacity-50"
-      >
-        {busy ? '…' : '✓'}
-      </button>
-      <button
-        type="button"
-        onClick={onDone}
-        className="text-xs text-slate-400 hover:text-slate-600 px-1 py-1"
-      >
-        ✕
-      </button>
+    <div className="flex flex-col items-end gap-0.5" onClick={e => e.stopPropagation()}>
+      <div className="flex items-center gap-1.5">
+        <input
+          type="number"
+          min={0.5}
+          max={12}
+          step={0.5}
+          value={value}
+          onChange={e => setValue(e.target.value)}
+          autoFocus
+          className="w-16 h-7 rounded-md border border-slate-300 px-1.5 text-xs text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <span className="text-xs text-slate-400">h/day</span>
+        <button
+          type="button"
+          onClick={save}
+          disabled={busy}
+          className="text-xs bg-blue-600 text-white px-2 py-1 rounded-md hover:bg-blue-700 disabled:opacity-50"
+        >
+          {busy ? '…' : '✓'}
+        </button>
+        <button
+          type="button"
+          onClick={onDone}
+          className="text-xs text-slate-400 hover:text-slate-600 px-1 py-1"
+        >
+          ✕
+        </button>
+      </div>
+      {isCustom && (
+        <button
+          type="button"
+          onClick={() => post(null)}
+          disabled={busy}
+          className="text-xs text-slate-400 hover:text-slate-600 underline underline-offset-2 disabled:opacity-50"
+        >
+          Reset to plan default ({planDefaultHours}h)
+        </button>
+      )}
       {err && <span className="text-xs text-red-600">{err}</span>}
     </div>
   )
@@ -349,6 +370,7 @@ export function PlanView({ plan, planWeeks, planDays, sessions, canEdit, readOnl
                       <WeekHoursEditor
                         weekId={week.id}
                         currentHours={week.default_hours}
+                        planDefaultHours={plan.school_day_hours}
                         onDone={() => setEditingWeekHours(null)}
                       />
                     ) : (

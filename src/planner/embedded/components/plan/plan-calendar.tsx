@@ -166,6 +166,7 @@ function DayDetailModal({
   examDate,
   todayDate,
   readOnly,
+  planRestDays,
   extraStudyBySection,
   planSchoolDayHours,
   planWeekendHours,
@@ -182,6 +183,8 @@ function DayDetailModal({
   examDate: string
   todayDate: string
   readOnly?: boolean
+  /** Day-of-week indices (0=Sun…6=Sat) that are structural rest days in the plan */
+  planRestDays: number[]
   extraStudyBySection: ExtraStudyBySection
   planSchoolDayHours: number
   planWeekendHours: number
@@ -196,6 +199,8 @@ function DayDetailModal({
   const isPastOrToday = dateStr <= todayDate
   const isFutureDay = dateStr > todayDate
   const isRest = override ? override.isRest : (dayRecord?.is_rest ?? false)
+  /** True when this day is a recurring rest day from the plan's rest_days setting (not a user-created block) */
+  const isStructuralRestDay = planRestDays.includes(date.getDay())
   const activeSessions = sessions.filter(s => s.session_type !== 'rest')
 
   // ── Completion state (optimistic) ───────────────────────────────────────────
@@ -701,8 +706,8 @@ function DayDetailModal({
             </div>
           )}
 
-          {/* Quick day block (future days only) */}
-          {isFutureDay && !readOnly && !isExamDay && (
+          {/* Quick day block (future non-structural-rest days only) */}
+          {isFutureDay && !readOnly && !isExamDay && !isStructuralRestDay && (
             <BlockDayButton
               planId={planId}
               dateStr={dateStr}
@@ -1439,6 +1444,7 @@ export function PlanCalendar({ plan, planDays, sessions, extraStudyLogs, readOnl
           examDate={examDate}
           todayDate={todayDate}
           readOnly={readOnly}
+          planRestDays={plan.rest_days ?? []}
           extraStudyBySection={extraByDate.get(selectedDate) ?? {}}
           planSchoolDayHours={plan.school_day_hours}
           planWeekendHours={plan.weekend_hours}
