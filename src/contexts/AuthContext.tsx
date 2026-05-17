@@ -40,6 +40,8 @@ function metaScalarFromUser(meta: Record<string, unknown> | null | undefined, ke
  */
 async function tryMailchimpJwtBackup(sessionUser: User, caller: string): Promise<void> {
   const meta = sessionUser.user_metadata as Record<string, unknown> | null;
+  const emailMarketingOptIn = meta?.email_marketing_opt_in;
+  if (emailMarketingOptIn === false) return;
   const stream = metaScalarFromUser(meta, ["stream"]);
   const entryYear = metaScalarFromUser(meta, ["entry_year", "entryYear"]) ?? null;
   const firstName = metaScalarFromUser(meta, ["first_name", "firstName"]) ?? null;

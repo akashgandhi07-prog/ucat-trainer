@@ -550,6 +550,13 @@ Deno.serve(async (req) => {
     typeof recordFromBody === "object";
 
   if (isWebhookBySecret) {
+    const webhookMeta = coerceUserMeta(recordFromBody?.raw_user_meta_data);
+    if (webhookMeta["email_marketing_opt_in"] === false) {
+      return new Response(
+        JSON.stringify({ ok: true, message: "User opted out of email marketing" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
     const subscriberPayload = payloadFromAuthRecord(recordFromBody);
     if (!subscriberPayload) {
       return new Response(
