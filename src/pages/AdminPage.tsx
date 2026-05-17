@@ -848,6 +848,66 @@ export default function AdminPage() {
           </section>
         )}
 
+        {registrations.length > 0 && (
+          <section className="mb-10">
+            <h2 className="text-lg font-semibold text-slate-900 mb-3">Recent sign-ups</h2>
+            <p className="text-sm text-slate-600 mb-3">All registered users, newest first. Activity = total questions answered across all trainers.</p>
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+              <table className="w-full text-sm min-w-[640px]">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50">
+                    <th className="px-3 py-2 text-left font-medium text-slate-700 whitespace-nowrap">#</th>
+                    <th className="px-3 py-2 text-left font-medium text-slate-700 whitespace-nowrap">Name</th>
+                    <th className="px-3 py-2 text-left font-medium text-slate-700 whitespace-nowrap">Email</th>
+                    <th className="px-3 py-2 text-left font-medium text-slate-700 whitespace-nowrap">Signed up</th>
+                    <th className="px-3 py-2 text-left font-medium text-slate-700 whitespace-nowrap">Last login</th>
+                    <th className="px-3 py-2 text-right font-medium text-slate-700 whitespace-nowrap">Questions</th>
+                    <th className="px-3 py-2 text-right font-medium text-slate-700 whitespace-nowrap">Days active</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...registrations]
+                    .sort((a, b) => {
+                      if (!a.created_at && !b.created_at) return 0;
+                      if (!a.created_at) return 1;
+                      if (!b.created_at) return -1;
+                      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+                    })
+                    .map((r, i) => (
+                      <tr key={r.user_id} className="border-b border-slate-100 hover:bg-slate-50">
+                        <td className="px-3 py-2 text-slate-400 text-xs tabular-nums">{i + 1}</td>
+                        <td className="px-3 py-2 text-slate-900 font-medium whitespace-nowrap">
+                          {r.display_name || <span className="text-slate-400 italic">—</span>}
+                        </td>
+                        <td className="px-3 py-2 text-slate-600 truncate max-w-[180px]" title={r.email || ""}>
+                          {r.email || "—"}
+                        </td>
+                        <td className="px-3 py-2 text-slate-600 whitespace-nowrap">
+                          {r.created_at ? new Date(r.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                        </td>
+                        <td className="px-3 py-2 text-slate-600 whitespace-nowrap">
+                          {r.last_active_at
+                            ? new Date(r.last_active_at).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })
+                            : <span className="text-slate-400">Never</span>}
+                        </td>
+                        <td className="px-3 py-2 text-right tabular-nums">
+                          {r.total_questions > 0
+                            ? <span className="text-slate-900 font-medium">{r.total_questions.toLocaleString()}</span>
+                            : <span className="text-slate-400">0</span>}
+                        </td>
+                        <td className="px-3 py-2 text-right tabular-nums">
+                          {r.days_active != null && r.days_active > 0
+                            ? <span className="text-slate-900">{r.days_active}</span>
+                            : <span className="text-slate-400">—</span>}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
+
         <section className="mb-10">
           <h2 className="text-lg font-semibold text-slate-900 mb-4">Statistics</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1684,7 +1744,7 @@ export default function AdminPage() {
                                     onClick={() =>
                                       setExpandedQF((prev) => {
                                         const next = new Set(prev);
-                                        isExpanded ? next.delete(row.question_identifier) : next.add(row.question_identifier);
+                                        if (isExpanded) { next.delete(row.question_identifier); } else { next.add(row.question_identifier); }
                                         return next;
                                       })
                                     }

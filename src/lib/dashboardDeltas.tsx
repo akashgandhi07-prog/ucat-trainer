@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import type { SessionRow } from "../types/session";
 
 export type DeltaDirection = "up" | "down" | "same" | null;

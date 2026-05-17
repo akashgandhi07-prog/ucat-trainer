@@ -711,13 +711,13 @@ export const trainerFaqs: TrainerFaqMap = {
       id: "sjt-appropriateness-tips",
       question: "How should I approach Appropriateness Rating questions?",
       answer:
-        "Ask yourself two questions: Does this action directly address the core professional duty in the scenario? And does it risk any harm — to the patient, a colleague, or the profession? Very Appropriate actions tackle the key duty proactively without creating new problems. Very Inappropriate actions either do nothing or actively make things worse. Most nuance sits in the Appropriate versus Inappropriate boundary, which is where the GMC domain reference helps most.",
+        "Ask yourself two questions: Does this action directly address the core professional duty in the scenario? And does it risk any harm - to the patient, a colleague, or the profession? Very Appropriate actions tackle the key duty proactively without creating new problems. Very Inappropriate actions either do nothing or actively make things worse. Most nuance sits in the Appropriate versus Inappropriate boundary, which is where the GMC domain reference helps most.",
     },
     {
       id: "sjt-importance-tips",
       question: "How should I approach Importance Rating questions?",
       answer:
-        "Identify whether each consideration directly relates to patient safety, a core professional duty, or a legal or ethical obligation. These almost always sit at Very Important. Considerations that serve personal convenience, reputation, or institutional politics generally sit at Minor Importance or Not Important at All. The hardest items involve professional development or team dynamics — these typically land at Important rather than Very Important unless there is an immediate risk at stake.",
+        "Identify whether each consideration directly relates to patient safety, a core professional duty, or a legal or ethical obligation. These almost always sit at Very Important. Considerations that serve personal convenience, reputation, or institutional politics generally sit at Minor Importance or Not Important at All. The hardest items involve professional development or team dynamics - these typically land at Important rather than Very Important unless there is an immediate risk at stake.",
     },
     {
       id: "sjt-ranking-tips",

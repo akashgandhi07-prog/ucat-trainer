@@ -268,7 +268,7 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
     const s = logic.summaryStats;
     const canTryNextStage = s.passedThresholds && s.stageIndex < MENTAL_MATHS_STAGES.length - 1;
     const stageConfig = MENTAL_MATHS_STAGES[s.stageIndex];
-    const targetAvgS = stageConfig ? (stageConfig.maxAvgTimeMs / 1000).toFixed(0) : "—";
+    const targetAvgS = stageConfig ? (stageConfig.maxAvgTimeMs / 1000).toFixed(0) : "-";
     const actualAvgS = formatAvgTime(s.avgTimeMs);
 
     return (
@@ -304,13 +304,13 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
         </div>
         {s.passedThresholds && (
           <p className="text-sm text-emerald-700 font-medium mb-5">
-            {s.isNewPersonalBest ? "New personal best — you've never been faster on this stage!" : "Targets met — nice work!"}
+            {s.isNewPersonalBest ? "New personal best - you've never been faster on this stage!" : "Targets met - nice work!"}
             {canTryNextStage && " Next stage is now unlocked."}
           </p>
         )}
         {!s.passedThresholds && (
           <p className="text-sm text-slate-500 mb-5">
-            Keep practising — you need {stageConfig?.requiredAccuracy ?? 80}% accuracy and under {targetAvgS}s avg to unlock the next stage.
+            Keep practising. You need {stageConfig?.requiredAccuracy ?? 80}% accuracy and under {targetAvgS}s avg to unlock the next stage.
           </p>
         )}
         <div className="flex flex-col gap-3">

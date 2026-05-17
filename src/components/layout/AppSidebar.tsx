@@ -1,9 +1,10 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { NavLink } from "react-router-dom";
 import {
   BookOpen,
   Calculator,
   CalendarDays,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Flame,
@@ -23,6 +24,7 @@ import { ProductUpsellSidebar } from "./ProductUpsell";
 
 const SIDEBAR_COLLAPSED_KEY = "ucat-sidebar-collapsed";
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function readSidebarCollapsedPreference(): boolean {
   try {
     return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "1";
@@ -31,6 +33,7 @@ export function readSidebarCollapsedPreference(): boolean {
   }
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function writeSidebarCollapsedPreference(collapsed: boolean): void {
   try {
     localStorage.setItem(SIDEBAR_COLLAPSED_KEY, collapsed ? "1" : "0");
@@ -121,6 +124,19 @@ export default function AppSidebar({
   const iconOnly = !forceExpanded && collapsed;
   const { user, profile } = useAuth();
   const [streak, setStreak] = useState(0);
+  const navRef = useRef<HTMLElement>(null);
+  const [canScrollDown, setCanScrollDown] = useState(false);
+
+  useEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+    const check = () => setCanScrollDown(el.scrollTop + el.clientHeight < el.scrollHeight - 4);
+    check();
+    el.addEventListener("scroll", check, { passive: true });
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => { el.removeEventListener("scroll", check); ro.disconnect(); };
+  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -207,9 +223,11 @@ export default function AppSidebar({
 
       {showStreak ? <StreakCard streak={streak} iconOnly={iconOnly} /> : null}
 
+      <div className="relative flex-1 min-h-0">
       <nav
+        ref={navRef}
         className={cn(
-          "flex-1 min-h-0 overflow-y-auto space-y-0.5",
+          "h-full overflow-y-auto space-y-0.5",
           iconOnly ? "px-2 py-3" : "px-3 py-3",
         )}
         aria-label="Main"
@@ -390,6 +408,14 @@ export default function AppSidebar({
           )}
         </NavLink>
       </nav>
+      {canScrollDown && (
+        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-10 flex items-end justify-center pb-1.5"
+          style={{ background: "linear-gradient(to bottom, transparent, hsl(215 52% 11% / 0.95))" }}
+        >
+          <ChevronDown className="h-4 w-4 text-sky-300/70 animate-bounce" aria-hidden />
+        </div>
+      )}
+      </div>
       <ProductUpsellSidebar stream={profile?.stream ?? null} iconOnly={iconOnly} />
     </aside>
   );

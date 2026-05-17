@@ -209,7 +209,6 @@ export default function UcatGuidesPanel({
   className,
 }: UcatGuidesPanelProps) {
   const catalogMode = !compact;
-  if (!catalogMode && guides.length === 0) return null;
 
   const defaults = getGuidesPanelCopy(context);
   const title = titleProp ?? defaults.title;
@@ -242,6 +241,8 @@ export default function UcatGuidesPanel({
   useEffect(() => {
     setOpenSectionId(initialSection);
   }, [initialSection]);
+
+  if (!catalogMode && guides.length === 0) return null;
 
   return (
     <aside

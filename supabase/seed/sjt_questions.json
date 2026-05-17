@@ -108,7 +108,7 @@
         "text": "Accept the gift and inform her GP supervisor, following any local practice policy on gifts.",
         "correctRating": "appropriate",
         "rationale": "A modest token of genuine gratitude from a patient after care has concluded is broadly acceptable under GMP, provided it is declared and handled in line with local policy. Informing her supervisor demonstrates transparency and professional integrity. The gift is small, the clinical relationship is complete, and Lena is not in a position to make clinical decisions that could be influenced by it.",
-        "whyNotAdjacent": "This is a sound, proportionate response. 'Very Appropriate' is slightly strong here; declining (app-003-b) is overcautious but not unreasonable for a student unsure of policy.",
+        "whyNotAdjacent": "This is a sound, proportionate response. 'Very Appropriate' is slightly strong here; declining the gift is overcautious but not unreasonable for a student unsure of policy.",
         "gmpRef": {
           "label": "GMP · Trust and professionalism (gifts)",
           "url": "https://www.gmc-uk.org/professional-standards/professional-standards-for-doctors/good-medical-practice/trust-and-professionalism"
@@ -1050,7 +1050,7 @@
         "text": "Ask whether another trained member of staff can perform the procedure if direct supervision is not available.",
         "correctRating": "appropriate",
         "rationale": "This is appropriate. If direct supervision is unavailable, Harriet should not perform the procedure herself. Asking for someone appropriately trained to perform it is a practical way to protect patient safety while recognising the pressures in the department.",
-        "whyNotAdjacent": "This is not 'Very Appropriate' because disclosing limits and seeking supervision (app-018-a) is the stronger first response. It is better than refusing without explanation."
+        "whyNotAdjacent": "This is not 'Very Appropriate' because disclosing her limits and seeking supervision is the stronger first response. It is better than refusing without explanation."
       },
       {
         "id": "app-018-d",
@@ -1170,7 +1170,7 @@
         "text": "Ask Mrs Pavel what worries her about having the extraction now, and check that she understands the risks of delaying treatment.",
         "correctRating": "appropriate",
         "rationale": "This is appropriate. Ethan explores the patient's reasons and checks whether her decision is informed. It respects autonomy while ensuring she understands the possible consequences of delaying treatment.",
-        "whyNotAdjacent": "This is not 'Very Appropriate' because respecting a capacitous patient's wish to delay, once risks are understood (app-021-c), is the stronger response when she has already understood the recommendation."
+        "whyNotAdjacent": "This is not 'Very Appropriate' because respecting a capacitous patient's wish to delay once risks are understood, is the stronger response when she has already understood the recommendation."
       },
       {
         "id": "app-021-b",

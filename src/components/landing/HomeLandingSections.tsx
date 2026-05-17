@@ -234,7 +234,7 @@ export function LandingSectionHub({ onVerbal, onDecision, onQuant, onSjt }: Sect
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">UCAT sections</p>
           <h2 className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight text-white">Pick a section to open the hub</h2>
           <p className="mt-2 text-sm sm:text-base text-slate-400 max-w-2xl mx-auto">
-            Each hub groups every drill for that subtest. Start anywhere — your first session can take
+            Each hub groups every drill for that subtest. Start anywhere - your first session can take
             under two minutes.
           </p>
         </div>

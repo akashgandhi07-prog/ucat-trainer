@@ -158,7 +158,7 @@ export default function LatestMockCard({ userId }: LatestMockCardProps) {
     if (trimTotal !== "") {
       const n = Number(trimTotal);
       if (!Number.isInteger(n) || n < 900 || n > 2700) {
-        setTargetError("Must be 900–2700.");
+        setTargetError("Must be 900-2700.");
         return;
       }
       mockTargetTotal = n;
@@ -167,7 +167,7 @@ export default function LatestMockCard({ userId }: LatestMockCardProps) {
     if (trimSjt !== "") {
       const n = Number(trimSjt);
       if (!Number.isInteger(n) || n < 1 || n > 4) {
-        setTargetError("Band must be 1–4.");
+        setTargetError("Band must be 1-4.");
         return;
       }
       mockTargetSjtBand = n;
@@ -336,7 +336,7 @@ export default function LatestMockCard({ userId }: LatestMockCardProps) {
               <div key={key} className="bg-slate-50 rounded-xl p-3 text-center">
                 <p className="text-xs font-medium text-slate-500 mb-1">{key.toUpperCase()}</p>
                 <p className="text-xl font-bold text-slate-900">
-                  {val ?? <span className="text-slate-300">–</span>}
+                  {val ?? <span className="text-slate-300">-</span>}
                   <DeltaBadge delta={delta} />
                 </p>
                 <p className="text-[10px] text-slate-400 mt-0.5">/ 900</p>
@@ -346,7 +346,7 @@ export default function LatestMockCard({ userId }: LatestMockCardProps) {
           <div className="bg-slate-50 rounded-xl p-3 text-center">
             <p className="text-xs font-medium text-slate-500 mb-1">SJT</p>
             <p className={`text-xl font-bold ${sjtBandColor(latest.score_sjt)}`}>
-              {latest.score_sjt != null ? `Band ${latest.score_sjt}` : <span className="text-slate-300">–</span>}
+              {latest.score_sjt != null ? `Band ${latest.score_sjt}` : <span className="text-slate-300">-</span>}
               {sjtDelta != null && sjtDelta !== 0 && (
                 <span className={`text-xs font-semibold ml-1 ${sjtDelta < 0 ? "text-emerald-600" : "text-red-500"}`}>
                   {sjtDelta < 0 ? "↑" : "↓"}

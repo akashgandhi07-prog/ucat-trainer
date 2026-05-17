@@ -214,7 +214,7 @@ export default function ReaderPage() {
     setReadingKey((k) => k + 1);
     setPassage((current) => pickNewRandomPassage(current?.id, difficulty, category));
     readingStartTimeRef.current = null;
-  }, [difficulty]);
+  }, [difficulty, category]);
 
   const handleRestartWithWpm = useCallback(
     (newWpm: number) => {
@@ -226,7 +226,7 @@ export default function ReaderPage() {
       setPassage((current) => pickNewRandomPassage(current?.id, difficulty, category));
       readingStartTimeRef.current = null;
     },
-    [difficulty]
+    [difficulty, category]
   );
 
   const handleApplySuggestedChunkSize = useCallback(() => {

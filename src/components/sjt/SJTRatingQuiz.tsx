@@ -208,7 +208,7 @@ export default function SJTRatingQuiz({ question, onComplete, onProgress }: Prop
                   {currentScore !== 1 && (
                     <div className="border-t border-border pt-3">
                       <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-                        Why not {userLabel}
+                        Other points
                       </p>
                       <p className="text-sm text-foreground leading-relaxed">{item.whyNotAdjacent}</p>
                     </div>

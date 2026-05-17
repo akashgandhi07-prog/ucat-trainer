@@ -18,7 +18,7 @@ interface SettingsViewProps {
 
 function formatRange(p: { start: string; end: string }): string {
   const fmt = (d: string) => new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-  return p.start === p.end ? fmt(p.start) : `${fmt(p.start)} – ${fmt(p.end)}`
+  return p.start === p.end ? fmt(p.start) : `${fmt(p.start)} - ${fmt(p.end)}`
 }
 
 export function SettingsView({
@@ -140,7 +140,7 @@ export function SettingsView({
               min={UCAT_EXAM_WINDOW_START_ISO}
               max={UCAT_EXAM_WINDOW_END_ISO}
               onChange={e => setExamDate(e.target.value)}
-              hint="Official UCAT sittings: 13 Jul – 24 Sep 2026"
+              hint="Official UCAT sittings: 13 Jul - 24 Sep 2026"
               required
             />
             <div>
@@ -225,8 +225,8 @@ export function SettingsView({
             </div>
             <p className="text-xs text-slate-500">
               {taKind === 'busy'
-                ? 'No sessions — trips, festivals, commitments.'
-                : 'Free day hours applied — school holidays, time off.'}
+                ? 'No sessions - trips, festivals, commitments.'
+                : 'Free day hours applied - school holidays, time off.'}
             </p>
             <div className="grid grid-cols-2 gap-2">
               <div>

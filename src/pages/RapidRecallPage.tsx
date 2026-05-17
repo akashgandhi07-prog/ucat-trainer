@@ -269,7 +269,7 @@ export default function RapidRecallPage() {
         Skip to main content
       </a>
       <Header />
-      <main id="main-content" className="flex-1 flex items-center justify-center py-12 px-4" tabIndex={-1}>
+      <main id="main-content" className={`flex-1 py-12 px-4 ${phase === "results" ? "" : "flex items-center justify-center"}`} tabIndex={-1}>
         {phase === "reading" && (
           <div className="w-full max-w-3xl">
             <RecallModeExplainer />
@@ -343,7 +343,7 @@ export default function RapidRecallPage() {
         )}
 
         {phase === "results" && (
-          <div className="w-full max-w-md mx-auto text-center">
+          <div className="w-full max-w-2xl mx-auto">
             <RecallModeExplainer />
             <h2 className="text-xl font-semibold text-slate-900 mb-6">
               Rapid Recall - Results
@@ -421,7 +421,7 @@ export default function RapidRecallPage() {
                       const snippet = item.passageSnippet;
                       if (item.correctAnswerRaw === "true") {
                         return snippet
-                          ? `The passage stated: "${snippet}" — this statement is a paraphrase of that, so the correct answer is True.`
+                          ? `The passage stated: "${snippet}" - this statement is a paraphrase of that, so the correct answer is True.`
                           : "This statement matches what the passage says, so the correct answer is True.";
                       }
                       if (item.correctAnswerRaw === "false") {

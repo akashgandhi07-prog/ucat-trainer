@@ -32,6 +32,7 @@ type Props = {
 };
 
 export default function SJTPerformancePanel({ refreshKey: _refreshKey, onClear }: Props) {
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- _refreshKey is a cache-bust trigger, not used inside
   const stats = useMemo(() => getSJTStats(), [_refreshKey]);
 
   if (!stats) return null;

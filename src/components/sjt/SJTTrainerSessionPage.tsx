@@ -96,6 +96,9 @@ export default function SJTTrainerSessionPage({
   useEffect(() => {
     if (phase === "between") {
       void prefetchNext();
+      window.scrollTo({ top: 0, behavior: "instant" });
+    } else if (phase === "quiz") {
+      window.scrollTo({ top: 0, behavior: "instant" });
     }
   }, [phase, prefetchNext]);
 
@@ -173,7 +176,6 @@ export default function SJTTrainerSessionPage({
       setLastScore({ score, max });
       setPerformanceRefreshKey((key) => key + 1);
       setPhase("between");
-      window.scrollTo({ top: 0, behavior: "instant" });
     },
     [question, user?.id],
   );
@@ -185,7 +187,6 @@ export default function SJTTrainerSessionPage({
       savedQuestionIdRef.current = null;
       progressRef.current = null;
       setPhase("quiz");
-      window.scrollTo({ top: 0, behavior: "instant" });
     } finally {
       setAdvancing(false);
     }

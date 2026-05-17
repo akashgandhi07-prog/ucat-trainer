@@ -462,7 +462,6 @@ function OfferCard({
   offer,
   placement,
   stream,
-  firstName: _firstName,
   accuracy,
   compact = false,
   className,
@@ -619,7 +618,7 @@ const EXTRAS_ASIDE_INTRO: Partial<Record<UpsellPlacement, string>> = {
   planner_onboarding_aside:
     "Paid support from TheUKCATPeople. Your free study plan never requires these.",
   mock_scores:
-    "Optional paid support — the free mock tracker never requires these.",
+    "Optional paid support - the free mock tracker never requires these.",
 };
 
 /** Right-hand panel: course → tutoring → package (onboarding, mock scores, etc.). */
@@ -1025,7 +1024,7 @@ export function StrategyCallBanner({
         >
           Book a free strategy call
         </a>{" "}
-        — we&apos;ll help you pick the right programme.
+and we&apos;ll help you pick the right programme.
       </p>
     );
   }

@@ -467,7 +467,7 @@ function Step5({ state, onUpdate }: StepProps) {
           onChange={h => onUpdate({ schoolDayHours: h, weekendHours: h })}
         />
         <p className="text-xs text-muted-foreground">
-          We'll start at about half this and ramp up each week. Pick an ambitious max — you can always lower it later.
+          We'll start at about half this and ramp up each week. Pick an ambitious max - you can always lower it later.
         </p>
       </div>
     )
@@ -560,7 +560,7 @@ function Step6({ state, onUpdate }: StepProps) {
   return (
     <div className="space-y-5">
       <p className="text-sm text-muted-foreground">
-        Add any time away between now and your exam — school holidays, family trips, festivals, anything. We'll use these to schedule study intelligently around them.
+        Add any time away between now and your exam - school holidays, family trips, festivals, anything. We'll use these to schedule study intelligently around them.
       </p>
 
       <div className="rounded-lg border border-border bg-muted p-4 space-y-3">
@@ -591,8 +591,8 @@ function Step6({ state, onUpdate }: StepProps) {
         </div>
         <p className="text-xs text-muted-foreground">
           {kind === 'busy'
-            ? 'No sessions scheduled — perfect for festivals, family trips, or anything where you genuinely can\'t study.'
-            : 'Treated as a free day: higher daily hours applied — ideal for school holidays when you have more time.'}
+            ? 'No sessions scheduled - perfect for festivals, family trips, or anything where you genuinely can\'t study.'
+            : 'Treated as a free day: higher daily hours applied - ideal for school holidays when you have more time.'}
         </p>
 
         <div className="grid grid-cols-2 gap-2">
@@ -644,7 +644,7 @@ function Step6({ state, onUpdate }: StepProps) {
         </div>
       ) : (
         <p className="text-center text-sm text-muted-foreground py-4">
-          Nothing added yet — you can also manage time away from your plan once it's created.
+          Nothing added yet - you can also manage time away from your plan once it's created.
         </p>
       )}
     </div>
@@ -748,7 +748,7 @@ const STEP_DESCRIPTIONS = [
   'We\'ll build your plan backwards from your exam date.',
   'Weaker sections get more sessions allocated. You can adjust these later.',
   'We\'ll ramp up from about half your max, so be ambitious.',
-  'Optional: add holidays, trips, festivals — anything that affects your availability.',
+  'Optional: add holidays, trips, festivals - anything that affects your availability.',
   'Optional: skip if you\'re happy to study any day of the week.',
 ]
 

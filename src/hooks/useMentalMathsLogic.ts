@@ -49,10 +49,11 @@ export function useMentalMathsLogic(onSessionComplete?: (stats: MentalMathsSumma
 
   useEffect(() => {
     mountedRef.current = true;
+    // Capture .current in the effect body so the cleanup closure reads a stable snapshot
+    const t = timeoutRef.current;
+    const i = intervalRef.current;
     return () => {
       mountedRef.current = false;
-      const t = timeoutRef.current;
-      const i = intervalRef.current;
       if (t) clearTimeout(t);
       if (i) clearInterval(i);
     };

@@ -20,10 +20,10 @@ const SJT_BANDS = [
 
 function getSjtBand(pct: number | null): { band: string; color: string; description: string } | null {
   if (pct === null) return null;
-  if (pct >= 80) return { band: "Band 1", color: "#16a34a", description: "Very high — top performers" };
-  if (pct >= 60) return { band: "Band 2", color: "#2563eb", description: "Good — above average" };
-  if (pct >= 40) return { band: "Band 3", color: "#d97706", description: "Moderate — room to improve" };
-  return { band: "Band 4", color: "#dc2626", description: "Needs work — focus here" };
+  if (pct >= 80) return { band: "Band 1", color: "#16a34a", description: "Very high: top performers" };
+  if (pct >= 60) return { band: "Band 2", color: "#2563eb", description: "Good: above average" };
+  if (pct >= 40) return { band: "Band 3", color: "#d97706", description: "Moderate: room to improve" };
+  return { band: "Band 4", color: "#dc2626", description: "Needs work: focus here" };
 }
 import type { SJTSessionsRow, SJTQuestionType, GMCDomainId } from "../../types/sjt";
 
@@ -118,7 +118,7 @@ export default function SJTAnalytics({ sessions }: Props) {
         <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
           <p className="text-sm font-medium text-slate-500">Avg score</p>
           <p className="text-3xl font-bold text-slate-900">
-            {avgPct != null ? `${avgPct}%` : "—"}
+            {avgPct != null ? `${avgPct}%` : "-"}
           </p>
           {avgBand && (
             <div className="mt-1.5 flex items-center gap-1.5">
@@ -136,7 +136,7 @@ export default function SJTAnalytics({ sessions }: Props) {
         <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm col-span-2 sm:col-span-1">
           <p className="text-sm font-medium text-slate-500">Best score</p>
           <p className="text-3xl font-bold text-slate-900">
-            {bestPct != null ? `${bestPct}%` : "—"}
+            {bestPct != null ? `${bestPct}%` : "-"}
           </p>
           {bestPct != null && (() => {
             const b = getSjtBand(bestPct);
@@ -233,7 +233,7 @@ export default function SJTAnalytics({ sessions }: Props) {
                   {type.charAt(0).toUpperCase() + type.slice(1)}
                 </p>
                 <p className="text-xl font-bold text-slate-900">
-                  {s && s.count > 0 ? `${Math.round(s.total / s.count)}%` : "—"}
+                  {s && s.count > 0 ? `${Math.round(s.total / s.count)}%` : "-"}
                 </p>
                 <p className="text-[10px] text-slate-400">
                   {s?.count ?? 0} session{(s?.count ?? 0) !== 1 ? "s" : ""}
@@ -255,7 +255,7 @@ export default function SJTAnalytics({ sessions }: Props) {
                 <div key={domain} className="bg-slate-50 rounded-lg p-3">
                   <p className="text-xs font-medium text-slate-600 mb-1">{label}</p>
                   <p className="text-xl font-bold text-slate-900">
-                    {s && s.count > 0 ? `${Math.round(s.total / s.count)}%` : "—"}
+                    {s && s.count > 0 ? `${Math.round(s.total / s.count)}%` : "-"}
                   </p>
                   <p className="text-[10px] text-slate-400">
                     {s?.count ?? 0} session{(s?.count ?? 0) !== 1 ? "s" : ""}
