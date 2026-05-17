@@ -88,6 +88,63 @@ const TYPE_PILL: Record<string, string> = {
   reflection:   'bg-slate-100 text-slate-700',
 }
 
+// ─── Block day button ─────────────────────────────────────────────────────────
+
+function BlockDayButton({
+  planId,
+  dateStr,
+  isCurrentlyBlocked,
+  onDone,
+}: {
+  planId: string
+  dateStr: string
+  isCurrentlyBlocked: boolean
+  onDone: () => void
+}) {
+  const router = useRouter()
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState('')
+
+  async function toggle() {
+    setBusy(true)
+    setErr('')
+    try {
+      const res = await fetch('/api/plans/block-day', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planId, dayDate: dateStr, blocked: !isCurrentlyBlocked }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Failed')
+      router.refresh()
+      onDone()
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : 'Failed to update')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="border-t border-slate-100 px-5 py-3">
+      <button
+        type="button"
+        onClick={toggle}
+        disabled={busy}
+        className={[
+          'w-full text-sm font-medium py-2 rounded-lg border transition-colors disabled:opacity-50',
+          isCurrentlyBlocked
+            ? 'border-green-300 text-green-700 bg-green-50 hover:bg-green-100'
+            : 'border-red-200 text-red-600 bg-red-50 hover:bg-red-100',
+        ].join(' ')}
+      >
+        {busy ? 'Updating…' : isCurrentlyBlocked ? 'Unblock this day' : 'Block this day (no study)'}
+      </button>
+      {err && <p className="text-xs text-red-600 text-center mt-1">{err}</p>}
+    </div>
+  )
+}
+
 // ─── Day detail modal ─────────────────────────────────────────────────────────
 
 const SECTION_OPTS = [
@@ -644,6 +701,16 @@ function DayDetailModal({
             </div>
           )}
 
+          {/* Quick day block (future days only) */}
+          {isFutureDay && !readOnly && !isExamDay && (
+            <BlockDayButton
+              planId={planId}
+              dateStr={dateStr}
+              isCurrentlyBlocked={isRest && (override?.availability ?? dayRecord?.availability) === 'unavailable'}
+              onDone={onClose}
+            />
+          )}
+
           {/* Edit availability */}
           {!readOnly && !isExamDay && (
             <div className="border-t border-slate-100 px-5 py-4 space-y-3 bg-slate-50">
@@ -1070,6 +1137,11 @@ function DayCell({
                   s.completed ? 'opacity-40' : '',
                 ].join(' ')}
               >
+                {s.completed && (
+                  <svg className="w-2 h-2 shrink-0" fill="none" viewBox="0 0 8 8">
+                    <path d="M1 4l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                )}
                 {TYPE_SHORT[s.session_type] ?? s.session_type}
               </span>
             ))}

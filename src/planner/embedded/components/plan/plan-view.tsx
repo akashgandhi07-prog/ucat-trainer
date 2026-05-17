@@ -141,6 +141,80 @@ function DayEditPopover({
   )
 }
 
+// ─── Custom week hours editor ─────────────────────────────────────────────────
+
+function WeekHoursEditor({
+  weekId,
+  currentHours,
+  onDone,
+}: {
+  weekId: string
+  currentHours: number
+  onDone: () => void
+}) {
+  const router = useRouter()
+  const [value, setValue] = useState(String(currentHours))
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState('')
+
+  async function save() {
+    const h = Number(value)
+    if (!Number.isFinite(h) || h < 0.5 || h > 12) {
+      setErr('Enter a value between 0.5 and 12')
+      return
+    }
+    setBusy(true)
+    setErr('')
+    try {
+      const res = await fetch(`/api/plans/weeks/${weekId}/hours`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ customHours: h }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Failed')
+      router.refresh()
+      onDone()
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : 'Failed')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+      <input
+        type="number"
+        min={0.5}
+        max={12}
+        step={0.5}
+        value={value}
+        onChange={e => setValue(e.target.value)}
+        autoFocus
+        className="w-16 h-7 rounded-md border border-slate-300 px-1.5 text-xs text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      <span className="text-xs text-slate-400">h/day</span>
+      <button
+        type="button"
+        onClick={save}
+        disabled={busy}
+        className="text-xs bg-blue-600 text-white px-2 py-1 rounded-md hover:bg-blue-700 disabled:opacity-50"
+      >
+        {busy ? '…' : '✓'}
+      </button>
+      <button
+        type="button"
+        onClick={onDone}
+        className="text-xs text-slate-400 hover:text-slate-600 px-1 py-1"
+      >
+        ✕
+      </button>
+      {err && <span className="text-xs text-red-600">{err}</span>}
+    </div>
+  )
+}
+
 // ─── Main plan view ───────────────────────────────────────────────────────────
 
 export function PlanView({ plan, planWeeks, planDays, sessions, canEdit, readOnly = false, todayDate }: PlanViewProps) {
@@ -186,6 +260,7 @@ export function PlanView({ plan, planWeeks, planDays, sessions, canEdit, readOnl
   const [openWeeks, setOpenWeeks] = useState<Set<number>>(
     new Set(currentWeekNumber ? [currentWeekNumber] : [planWeeks[0]?.week_number ?? 1])
   )
+  const [editingWeekHours, setEditingWeekHours] = useState<string | null>(null)
 
   function toggleWeek(weekNum: number) {
     setOpenWeeks(prev => {
@@ -270,8 +345,25 @@ export function PlanView({ plan, planWeeks, planDays, sessions, canEdit, readOnl
                 </div>
                 <div className="flex items-center gap-5 shrink-0 text-sm">
                   <div className="text-center hidden sm:block">
-                    <div className="font-semibold text-slate-900">{(totalMinutes / 60).toFixed(1)}h</div>
-                    <div className="text-xs text-slate-400">planned</div>
+                    {canEdit && !readOnly && !isPast && editingWeekHours === week.id ? (
+                      <WeekHoursEditor
+                        weekId={week.id}
+                        currentHours={week.default_hours}
+                        onDone={() => setEditingWeekHours(null)}
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={e => { e.stopPropagation(); if (canEdit && !readOnly && !isPast) setEditingWeekHours(week.id) }}
+                        title={canEdit && !readOnly && !isPast ? 'Click to set custom hours for this week' : undefined}
+                        className={canEdit && !readOnly && !isPast ? 'hover:text-blue-600 transition-colors' : ''}
+                      >
+                        <div className="font-semibold text-slate-900">{(totalMinutes / 60).toFixed(1)}h</div>
+                        <div className="text-xs text-slate-400">
+                          planned{canEdit && !readOnly && !isPast ? ' ✎' : ''}
+                        </div>
+                      </button>
+                    )}
                   </div>
                   <div className="text-center hidden sm:block">
                     <div className="font-semibold text-slate-900">{mocksCount}</div>
