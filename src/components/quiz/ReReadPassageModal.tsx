@@ -1,13 +1,18 @@
+import QuestionMediaBlock from "../media/QuestionMediaBlock";
+import type { QuestionMedia } from "../../types/questionMedia";
+
 type ReReadPassageModalProps = {
   isOpen: boolean;
   onClose: () => void;
   passageText: string;
+  passageMedia?: QuestionMedia[];
 };
 
 export default function ReReadPassageModal({
   isOpen,
   onClose,
   passageText,
+  passageMedia,
 }: ReReadPassageModalProps) {
   if (!isOpen) return null;
 
@@ -33,6 +38,7 @@ export default function ReReadPassageModal({
           </button>
         </div>
         <div className="p-4 overflow-y-auto flex-1 text-[15px] leading-[1.6] text-ucat-body">
+          <QuestionMediaBlock media={passageMedia} placement="stem" className="mb-4" />
           {passageText}
         </div>
         <div className="p-4 border-t border-slate-200">

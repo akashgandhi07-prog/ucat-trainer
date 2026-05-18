@@ -1,7 +1,10 @@
+import type { QuestionMedia } from "../types/questionMedia";
+
 export type Passage = {
   id: string;
   title: string;
   text: string;
+  media?: QuestionMedia[];
   category: string;
   difficulty: number; // 1 (easiest) - 10 (hardest)
 };
@@ -667,4 +670,3 @@ export const PASSAGES: Passage[] = RAW_PASSAGES.map((p) => ({
   ...p,
   difficulty: estimateDifficulty(p.text, p.category),
 }));
-

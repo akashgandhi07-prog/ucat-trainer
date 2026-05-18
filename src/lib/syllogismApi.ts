@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 import type { SyllogismQuestion, LogicGroup } from "../types/syllogisms";
+import { normaliseQuestionMedia } from "../types/questionMedia";
 
 function toErrorMessage(e: unknown): string {
   if (isAbortError(e)) {
@@ -51,6 +52,7 @@ function mapRow(row: Record<string, unknown>): SyllogismQuestion | null {
     logic_group: row.logic_group as LogicGroup,
     trick_type: typeof row.trick_type === "string" ? row.trick_type : "",
     explanation: typeof row.explanation === "string" ? row.explanation : "",
+    media: normaliseQuestionMedia(row.media),
   };
 }
 

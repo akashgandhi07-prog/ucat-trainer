@@ -4,6 +4,7 @@ import type { SJTRankingQuestion, RankingAnswer } from "../../types/sjt";
 import { cn } from "../../lib/cn";
 import type { SJTQuizProgress } from "../../types/sjt";
 import QuestionFeedbackModal from "../feedback/QuestionFeedbackModal";
+import QuestionMediaBlock from "../media/QuestionMediaBlock";
 
 type Phase = "answering" | "results";
 
@@ -65,6 +66,7 @@ export default function SJTRankingQuiz({ question, onComplete, onProgress }: Pro
         <div className="rounded-xl border border-border bg-card shadow-sm p-5">
           <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Scenario</p>
           <p className="text-sm text-foreground leading-relaxed">{question.stem}</p>
+          <QuestionMediaBlock media={question.media} placement="stem" className="mt-4" />
         </div>
 
         {/* Pivot insight on desktop (below scenario in left col) */}
@@ -135,6 +137,7 @@ export default function SJTRankingQuiz({ question, onComplete, onProgress }: Pro
                     </div>
 
                     <p className="text-sm font-medium text-foreground leading-snug">{item.text}</p>
+                    <QuestionMediaBlock media={item.media} placement="question" />
 
                     {(userSelectedMost || userSelectedLeast) && (
                       <p className="text-xs text-muted-foreground">
@@ -223,6 +226,7 @@ export default function SJTRankingQuiz({ question, onComplete, onProgress }: Pro
                       )}
                     >
                       <p className="text-sm text-foreground mb-3 leading-snug">{item.text}</p>
+                      <QuestionMediaBlock media={item.media} placement="question" className="mb-3" />
                       <div className="flex gap-2">
                         <button
                           type="button"

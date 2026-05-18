@@ -295,6 +295,7 @@ export default function ReaderPage() {
             initialWpm={wpm}
             onFinish={handleReaderFinish}
             passageTitle={passage?.title}
+            passageMedia={passage?.media}
             wordCount={wordCount}
             guidedChunkingEnabled={guidedChunkingEnabled}
             chunkSize={guidedChunkSize}

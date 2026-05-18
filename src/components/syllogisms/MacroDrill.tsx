@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSyllogismLogic } from "./useSyllogismLogic";
 import QuestionFeedbackModal from "../feedback/QuestionFeedbackModal";
+import QuestionMediaBlock from "../media/QuestionMediaBlock";
 
 const DRAG_DATA_KEY = "application/x-syllogism-answer";
 
@@ -167,6 +168,7 @@ export default function MacroDrill() {
                 {stimulus}
               </p>
             )}
+            <QuestionMediaBlock media={questions[0]?.media} placement="stem" className="mt-3" />
             <p className="mt-2 text-sm font-medium text-slate-700">
               Place &lsquo;Yes&rsquo; if the conclusion does follow. Place
               &lsquo;No&rsquo; if it does not. On desktop, drag from the panel
@@ -402,4 +404,3 @@ export default function MacroDrill() {
       </div>
   );
 }
-

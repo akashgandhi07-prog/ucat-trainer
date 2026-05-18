@@ -1,3 +1,5 @@
+import type { QuestionMedia } from "./questionMedia";
+
 /**
  * Types for the Syllogism Trainer (Decision Making).
  * UK English used in comments and display labels (e.g. colour, behaviour, analyse).
@@ -10,6 +12,7 @@ export interface SyllogismQuestion {
   id: string;
   macro_block_id: string;
   stimulus_text: string;
+  media?: QuestionMedia[];
   conclusion_text: string;
   is_correct: boolean;
   logic_group: LogicGroup;

@@ -1,3 +1,5 @@
+import type { QuestionMedia } from "./questionMedia";
+
 export type GMCDomainId =
   | "knowledge_skills_development"
   | "patients_partnership_communication"
@@ -74,6 +76,7 @@ export type RatingItem = {
   rationale: string;
   whyNotAdjacent: string;
   gmpRef?: GmpReference;
+  media?: QuestionMedia[];
 };
 
 export type RankingItem = {
@@ -82,12 +85,14 @@ export type RankingItem = {
   rank: 1 | 2 | 3;
   rationale: string;
   gmpRef?: GmpReference;
+  media?: QuestionMedia[];
 };
 
 export type SJTRatingQuestion = {
   id: string;
   type: "appropriateness" | "importance";
   stem: string;
+  media?: QuestionMedia[];
   domain: GMCDomainId;
   difficulty: "foundation" | "standard" | "challenging";
   items: RatingItem[];
@@ -99,6 +104,7 @@ export type SJTRankingQuestion = {
   id: string;
   type: "ranking";
   stem: string;
+  media?: QuestionMedia[];
   domain: GMCDomainId;
   difficulty: "foundation" | "standard" | "challenging";
   items: RankingItem[];

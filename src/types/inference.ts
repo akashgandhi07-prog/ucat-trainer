@@ -1,3 +1,5 @@
+import type { QuestionMedia } from "./questionMedia";
+
 /** Character span within passage text (start inclusive, end exclusive). */
 export type TextSpan = { start: number; end: number };
 
@@ -5,6 +7,7 @@ export type InferenceQuestion = {
   id: string;
   passageId: string;
   questionText: string;
+  media?: QuestionMedia[];
   /** Primary correct span(s) - character offsets; accept if user overlaps any sufficiently */
   correctSpans: TextSpan[];
   /** Optional: alternate valid spans (e.g. longer context) */

@@ -10,6 +10,7 @@ import {
   getAdjacentRating,
 } from "../../types/sjt";
 import { cn } from "../../lib/cn";
+import QuestionMediaBlock from "../media/QuestionMediaBlock";
 
 type ItemPhase = "rating" | "feedback";
 
@@ -112,6 +113,7 @@ export default function SJTRatingQuiz({ question, onComplete, onProgress }: Prop
           <div className="rounded-xl border border-border bg-card shadow-sm p-5">
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Scenario</p>
             <p className="text-sm text-foreground leading-relaxed">{question.stem}</p>
+            <QuestionMediaBlock media={question.media} placement="stem" className="mt-4" />
           </div>
         </div>
 
@@ -148,6 +150,7 @@ export default function SJTRatingQuiz({ question, onComplete, onProgress }: Prop
                     : "How important is this consideration?"}
                 </p>
                 <p className="text-sm font-medium text-foreground leading-relaxed">{item.text}</p>
+                <QuestionMediaBlock media={item.media} placement="question" className="mt-3" />
               </div>
             </div>
 

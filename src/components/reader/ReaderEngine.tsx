@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useIsMobile } from "../../hooks/useIsMobile";
 import { clampChunkSize } from "../../lib/guidedChunkingPreferences";
+import QuestionMediaBlock from "../media/QuestionMediaBlock";
+import type { QuestionMedia } from "../../types/questionMedia";
 
 const DEFAULT_TEXT =
   "The quick brown fox jumps over the lazy dog. Reading at a steady pace improves comprehension and retention. Practice with TheUKCATPeople to build your speed and accuracy. Some people say all experts must agree; many often could argue that never always works.";
@@ -53,6 +55,7 @@ type ReaderEngineProps = {
   initialWpm?: number;
   onFinish?: (wpm: number, opts?: ReaderFinishOpts) => void;
   passageTitle?: string;
+  passageMedia?: QuestionMedia[];
   wordCount?: number;
   guidedChunkingEnabled?: boolean;
   chunkSize?: number;
@@ -63,6 +66,7 @@ export default function ReaderEngine({
   initialWpm,
   onFinish,
   passageTitle,
+  passageMedia,
   wordCount: wordCountProp,
   guidedChunkingEnabled = false,
   chunkSize,
@@ -464,10 +468,12 @@ export default function ReaderEngine({
               </div>
             </div>
           </div>
+          <QuestionMediaBlock media={passageMedia} placement="stem" className="mb-4" />
           {content}
         </>
       ) : (
         <>
+          <QuestionMediaBlock media={passageMedia} placement="stem" className="mb-4" />
           {content}
           <div className="flex flex-wrap items-center justify-between gap-4 mt-8 p-3 bg-slate-50 rounded-xl border border-slate-200">
             <div className="flex flex-wrap items-center gap-4">

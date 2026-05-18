@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 import type { SJTQuestion, SJTQuestionType } from "../types/sjt";
+import { normaliseQuestionMedia } from "../types/questionMedia";
 
 const FETCH_TIMEOUT_MS = 10_000;
 
@@ -39,7 +40,10 @@ function parseSjtQuestion(data: unknown): SJTQuestion | null {
   if (typeof o.id !== "string" || typeof o.type !== "string" || typeof o.stem !== "string") {
     return null;
   }
-  return data as SJTQuestion;
+  return {
+    ...(data as SJTQuestion),
+    media: normaliseQuestionMedia(o.media),
+  } as SJTQuestion;
 }
 
 export async function fetchRandomSJTQuestion(

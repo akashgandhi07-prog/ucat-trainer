@@ -22,6 +22,7 @@ import UcatGuidesPanel from "../components/layout/UcatGuidesPanel";
 import { trainerFaqs } from "../data/trainerFaqs";
 import { trackEvent, setActiveTrainer, clearActiveTrainer } from "../lib/analytics";
 import { PostDrillUpsell } from "../components/layout/ProductUpsell";
+import QuestionMediaBlock from "../components/media/QuestionMediaBlock";
 
 type Phase = "reading" | "questions" | "results";
 
@@ -312,6 +313,7 @@ export default function RapidRecallPage() {
               </span>
             </div>
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 max-h-[75vh] min-h-[50vh] overflow-y-auto overscroll-behavior-contain">
+              <QuestionMediaBlock media={passage.media} placement="stem" className="mb-4" />
               <p className="text-slate-800 leading-relaxed whitespace-pre-wrap">
                 {passageText}
               </p>
@@ -366,6 +368,7 @@ export default function RapidRecallPage() {
                 isOpen={passageModalOpen}
                 onClose={() => setPassageModalOpen(false)}
                 passageText={passageText}
+                passageMedia={passage.media}
               />
               {(() => {
                 const wordCount = passageText.trim().split(/\s+/).filter(Boolean).length;

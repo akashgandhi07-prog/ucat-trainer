@@ -2,6 +2,7 @@ import { useEffect, useCallback, useState } from "react";
 import { useSyllogismLogic } from "./useSyllogismLogic";
 import QuestionFeedbackModal from "../feedback/QuestionFeedbackModal";
 import { PostDrillUpsell } from "../layout/ProductUpsell";
+import QuestionMediaBlock from "../media/QuestionMediaBlock";
 
 const MICRO_BATCH_SIZE = 10;
 
@@ -167,6 +168,7 @@ export default function MicroDrill() {
                   <p className="text-base text-slate-800">
                     {current.stimulus_text}
                   </p>
+                  <QuestionMediaBlock media={current.media} placement="stem" className="mt-3" />
                 </div>
 
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
@@ -299,4 +301,3 @@ export default function MicroDrill() {
       </div>
   );
 }
-

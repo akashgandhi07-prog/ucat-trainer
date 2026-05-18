@@ -10,6 +10,7 @@ import type {
 } from "../../types/inference";
 import QuestionFeedbackModal from "../feedback/QuestionFeedbackModal";
 import type { TrainingType } from "../../types/training";
+import QuestionMediaBlock from "../media/QuestionMediaBlock";
 
 type InferenceQuizProps = {
   passageText: string;
@@ -197,6 +198,7 @@ export default function InferenceQuiz({
             passageRef={passageRef}
             highlights={highlights.length > 0 ? highlights : undefined}
           />
+          <QuestionMediaBlock media={current?.media} placement="stem" className="mt-4" />
         </div>
       </div>
 
@@ -222,6 +224,7 @@ export default function InferenceQuiz({
               Report question
             </button>
           </div>
+          <QuestionMediaBlock media={current.media} placement="question" className="mb-4" />
 
           {!feedback ? (
             <>
