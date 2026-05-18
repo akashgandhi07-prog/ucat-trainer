@@ -169,6 +169,7 @@ export default function Dashboard() {
   const [ucatMonth, setUcatMonth] = useState<7 | 8 | 9>(7);
   const [ucatDay, setUcatDay] = useState(13);
   const [ucatSaveStatus, setUcatSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [ucatSaveError, setUcatSaveError] = useState<string | null>(null);
   const [ucatEditing, setUcatEditing] = useState(false);
 
   type DashboardTab = "vr" | "dm" | "qr" | "sjt";
@@ -1219,16 +1220,19 @@ export default function Dashboard() {
                       }
                       const day = Math.min(Math.max(ucatDay, range.minDay), range.maxDay);
                       const iso = `${ucatYear}-${String(ucatMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-                      const { ok } = await upsertProfile(user.id, profile?.full_name ?? null, profile?.stream ?? null, { ucatExamDate: iso });
+                      const { ok, error: saveErr } = await upsertProfile(user.id, profile?.full_name ?? null, profile?.stream ?? null, { ucatExamDate: iso });
                       if (ok) {
                         setUcatSaveStatus("saved");
+                        setUcatSaveError(null);
                         setUcatEditing(false);
                         setShowExamDateEditor(false);
                         await refetchProfile();
                         setTimeout(() => setUcatSaveStatus("idle"), 2000);
                       } else {
+                        console.error("[exam date save]", saveErr);
+                        setUcatSaveError(saveErr ?? "Unknown error");
                         setUcatSaveStatus("error");
-                        setTimeout(() => setUcatSaveStatus("idle"), 3000);
+                        setTimeout(() => setUcatSaveStatus("idle"), 5000);
                       }
                     }}
                     className="ml-1 min-h-[32px] rounded bg-slate-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-600 disabled:opacity-60"
@@ -1236,6 +1240,9 @@ export default function Dashboard() {
                     {ucatSaveStatus === "saving" ? "Saving…" : ucatSaveStatus === "saved" ? "Saved" : ucatSaveStatus === "error" ? "Error - try again" : "Save"}
                   </button>
                 </div>
+              )}
+              {ucatSaveStatus === "error" && ucatSaveError && (
+                <p className="mt-2 text-xs text-red-600 bg-red-50 rounded px-2 py-1">{ucatSaveError}</p>
               )}
             </div>
           )}

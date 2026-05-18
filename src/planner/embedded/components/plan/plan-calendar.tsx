@@ -933,7 +933,7 @@ export function RebuildAheadModal({
         <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4">
           <div>
             <label className="text-[11px] font-semibold text-slate-600 uppercase tracking-wide">
-              Anchor date
+              Rebuild from
             </label>
             <input
               type="date"
@@ -944,7 +944,7 @@ export function RebuildAheadModal({
               className="mt-1.5 w-full h-10 rounded-lg border border-slate-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <p className="text-[11px] text-slate-400 mt-1">
-              Usually today or the start of next week; pick whatever week you want the reshuffle to begin from.
+              Sessions from this date forward will be regenerated. Leave as today unless you want to keep this week as-is.
             </p>
           </div>
 
