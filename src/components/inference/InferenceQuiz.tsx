@@ -161,6 +161,7 @@ export default function InferenceQuiz({
       const breakdown = [...answers.values()];
       onComplete(correct, total, breakdown);
     } else {
+      document.getElementById("app-main-scroll")?.scrollTo({ top: 0, behavior: "instant" });
       setCurrentIndex((i) => i + 1);
     }
   }, [isLastQuestion, questions.length, answers, onNextQuestion, onComplete]);

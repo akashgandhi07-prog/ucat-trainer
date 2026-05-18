@@ -21,7 +21,7 @@ export const LANDING_TRAINER_SECTION_META: Record<
   dm: {
     label: "Decision Making",
     hubHref: "/decision-making",
-    summary: "Syllogisms plus beta Venn, data and argument skills trainers.",
+    summary: "Syllogisms, Venn logic, data reasoning and argument judgement drills.",
   },
   qr: {
     label: "Quantitative Reasoning",

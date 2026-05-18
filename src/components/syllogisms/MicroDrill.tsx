@@ -7,9 +7,7 @@ import QuestionMediaBlock from "../media/QuestionMediaBlock";
 const MICRO_BATCH_SIZE = 10;
 
 function scrollTrainerToTop() {
-  if (typeof window !== "undefined") {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
+  document.getElementById("app-main-scroll")?.scrollTo({ top: 0, behavior: "instant" });
 }
 
 function getFeedbackLabel(isCorrect: boolean, actuallyFollows: boolean): string {

@@ -218,7 +218,7 @@ export default function AppSidebar({
           ? "w-[min(280px,85vw)]"
           : collapsed && !hoverExpanded
             ? "w-[4.75rem]"
-            : "w-[min(280px,20vw)] min-w-[240px] max-w-[280px]",
+            : "w-[17.5rem]",
       )}
       onMouseEnter={handleSidebarMouseEnter}
       onMouseLeave={handleSidebarMouseLeave}
@@ -291,7 +291,7 @@ export default function AppSidebar({
               <NavIcon active={isActive}>
                 <Home className="h-4 w-4" aria-hidden />
               </NavIcon>
-              {!iconOnly ? <span>Home</span> : null}
+              <span className={cn("overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-300 ease-in-out", iconOnly ? "max-w-0 opacity-0" : "max-w-[12rem] opacity-100")}>Home</span>
             </>
           )}
         </NavLink>
@@ -306,7 +306,7 @@ export default function AppSidebar({
               <NavIcon active={isActive}>
                 <LayoutDashboard className="h-4 w-4" aria-hidden />
               </NavIcon>
-              {!iconOnly ? <span>My progress</span> : null}
+              <span className={cn("overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-300 ease-in-out", iconOnly ? "max-w-0 opacity-0" : "max-w-[12rem] opacity-100")}>My progress</span>
             </>
           )}
         </NavLink>
@@ -329,7 +329,7 @@ export default function AppSidebar({
               <NavIcon active={isActive}>
                 <BookOpen className="h-4 w-4" aria-hidden />
               </NavIcon>
-              {!iconOnly ? <span>Verbal Reasoning</span> : null}
+              <span className={cn("overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-300 ease-in-out", iconOnly ? "max-w-0 opacity-0" : "max-w-[12rem] opacity-100")}>Verbal Reasoning</span>
             </>
           )}
         </NavLink>
@@ -344,7 +344,7 @@ export default function AppSidebar({
               <NavIcon active={isActive}>
                 <Scale className="h-4 w-4" aria-hidden />
               </NavIcon>
-              {!iconOnly ? <span>Decision Making</span> : null}
+              <span className={cn("overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-300 ease-in-out", iconOnly ? "max-w-0 opacity-0" : "max-w-[12rem] opacity-100")}>Decision Making</span>
             </>
           )}
         </NavLink>
@@ -359,7 +359,7 @@ export default function AppSidebar({
               <NavIcon active={isActive}>
                 <Calculator className="h-4 w-4" aria-hidden />
               </NavIcon>
-              {!iconOnly ? <span>Quantitative Reasoning</span> : null}
+              <span className={cn("overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-300 ease-in-out", iconOnly ? "max-w-0 opacity-0" : "max-w-[12rem] opacity-100")}>Quantitative Reasoning</span>
             </>
           )}
         </NavLink>
@@ -374,7 +374,7 @@ export default function AppSidebar({
               <NavIcon active={isActive}>
                 <Users className="h-4 w-4" aria-hidden />
               </NavIcon>
-              {!iconOnly ? <span>Situational Judgement</span> : null}
+              <span className={cn("overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-300 ease-in-out", iconOnly ? "max-w-0 opacity-0" : "max-w-[12rem] opacity-100")}>Situational Judgement</span>
             </>
           )}
         </NavLink>
@@ -399,7 +399,7 @@ export default function AppSidebar({
                   <NavIcon active={isActive}>
                     <CalendarDays className="h-4 w-4" aria-hidden />
                   </NavIcon>
-                  {!iconOnly ? <span>Study plan</span> : null}
+                  <span className={cn("overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-300 ease-in-out", iconOnly ? "max-w-0 opacity-0" : "max-w-[12rem] opacity-100")}>Study plan</span>
                 </>
               )}
             </NavLink>
@@ -414,7 +414,7 @@ export default function AppSidebar({
                   <NavIcon active={isActive}>
                     <LineChart className="h-4 w-4" aria-hidden />
                   </NavIcon>
-                  {!iconOnly ? <span>Mock scores</span> : null}
+                  <span className={cn("overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-300 ease-in-out", iconOnly ? "max-w-0 opacity-0" : "max-w-[12rem] opacity-100")}>Mock scores</span>
                 </>
               )}
             </NavLink>
@@ -430,7 +430,7 @@ export default function AppSidebar({
                     <NavIcon active={isActive}>
                       <GraduationCap className="h-4 w-4" aria-hidden />
                     </NavIcon>
-                    {!iconOnly ? <span>Tutor dashboard</span> : null}
+                    <span className={cn("overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-300 ease-in-out", iconOnly ? "max-w-0 opacity-0" : "max-w-[12rem] opacity-100")}>Tutor dashboard</span>
                   </>
                 )}
               </NavLink>
@@ -456,7 +456,7 @@ export default function AppSidebar({
               <NavIcon active={isActive}>
                 <Library className="h-4 w-4" aria-hidden />
               </NavIcon>
-              {!iconOnly ? <span>Study guides</span> : null}
+              <span className={cn("overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-300 ease-in-out", iconOnly ? "max-w-0 opacity-0" : "max-w-[12rem] opacity-100")}>Study guides</span>
             </>
           )}
         </NavLink>

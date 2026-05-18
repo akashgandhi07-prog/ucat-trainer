@@ -96,9 +96,9 @@ export default function SJTTrainerSessionPage({
   useEffect(() => {
     if (phase === "between") {
       void prefetchNext();
-      window.scrollTo({ top: 0, behavior: "instant" });
+      document.getElementById("app-main-scroll")?.scrollTo({ top: 0, behavior: "instant" });
     } else if (phase === "quiz") {
-      window.scrollTo({ top: 0, behavior: "instant" });
+      document.getElementById("app-main-scroll")?.scrollTo({ top: 0, behavior: "instant" });
     }
   }, [phase, prefetchNext]);
 

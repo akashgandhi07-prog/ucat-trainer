@@ -119,7 +119,7 @@ const HERO_SECTIONS = [
   {
     icon: Scale,
     label: "Decision Making",
-    count: "2 drills",
+    count: "5 drills",
     accent: "bg-amber-50 border-amber-200 hover:border-amber-300 hover:bg-amber-100/70",
     iconBg: "bg-amber-100",
     iconColor: "text-amber-600",
@@ -319,8 +319,8 @@ export function LandingSectionHub({ onVerbal, onDecision, onQuant, onSjt }: Sect
       icon: Scale,
       accent: "bg-amber-50 text-amber-600 group-hover:bg-amber-100",
       title: "Decision Making",
-      desc: "Syllogism micro and macro drills for UCAT-style logic.",
-      label: "2 trainers",
+      desc: "Syllogisms, Venn logic, data reasoning and argument judgement.",
+      label: "5 trainers",
     },
     {
       onClick: onQuant,

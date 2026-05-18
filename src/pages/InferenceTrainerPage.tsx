@@ -34,9 +34,7 @@ type LocationState = {
 };
 
 function scrollTrainerToTop() {
-  if (typeof window !== "undefined") {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
+  document.getElementById("app-main-scroll")?.scrollTo({ top: 0, behavior: "instant" });
 }
 
 function pickPassageWithInference(

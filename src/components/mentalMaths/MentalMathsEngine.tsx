@@ -8,9 +8,7 @@ import { CheckCircle2, Lock, Trophy } from "lucide-react";
 const SUBMIT_LOCK_MS = 300;
 
 function scrollTrainerToTop() {
-  if (typeof window !== "undefined") {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
+  document.getElementById("app-main-scroll")?.scrollTo({ top: 0, behavior: "instant" });
 }
 
 function formatAvgTime(ms: number): string {

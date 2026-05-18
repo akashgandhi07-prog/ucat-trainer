@@ -48,9 +48,7 @@ export default function MacroDrill() {
   const stimulus = questions[0]?.stimulus_text ?? "";
 
   const scrollToTopOfDrill = () => {
-    if (typeof window !== "undefined") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
+    document.getElementById("app-main-scroll")?.scrollTo({ top: 0, behavior: "instant" });
   };
 
   const handleToggle = useCallback(
