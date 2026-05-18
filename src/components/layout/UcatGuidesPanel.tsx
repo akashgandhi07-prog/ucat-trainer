@@ -51,7 +51,7 @@ const CATALOG_SECTION_STYLE: Record<
     headerHover: "hover:bg-sky-100/90",
     stripe: "bg-gradient-to-b from-sky-500 to-sky-600",
     panelWash: "from-sky-500/[0.07] via-transparent to-transparent",
-    tileAccent: "border-t-[3px] border-sky-500/90",
+    tileAccent: "border-t-[3px] border-t-sky-500/90",
   },
   verbal: {
     Icon: BookOpen,
@@ -61,7 +61,7 @@ const CATALOG_SECTION_STYLE: Record<
     headerHover: "hover:bg-blue-100/90",
     stripe: "bg-gradient-to-b from-blue-500 to-blue-600",
     panelWash: "from-blue-500/[0.07] via-transparent to-transparent",
-    tileAccent: "border-t-[3px] border-blue-500/90",
+    tileAccent: "border-t-[3px] border-t-blue-500/90",
   },
   decision: {
     Icon: Scale,
@@ -71,7 +71,7 @@ const CATALOG_SECTION_STYLE: Record<
     headerHover: "hover:bg-amber-100/90",
     stripe: "bg-gradient-to-b from-amber-500 to-amber-600",
     panelWash: "from-amber-500/[0.07] via-transparent to-transparent",
-    tileAccent: "border-t-[3px] border-amber-500/90",
+    tileAccent: "border-t-[3px] border-t-amber-500/90",
   },
   quant: {
     Icon: Calculator,
@@ -81,7 +81,7 @@ const CATALOG_SECTION_STYLE: Record<
     headerHover: "hover:bg-emerald-100/90",
     stripe: "bg-gradient-to-b from-emerald-500 to-emerald-600",
     panelWash: "from-emerald-500/[0.07] via-transparent to-transparent",
-    tileAccent: "border-t-[3px] border-emerald-500/90",
+    tileAccent: "border-t-[3px] border-t-emerald-500/90",
   },
   sjt: {
     Icon: Heart,
@@ -91,7 +91,7 @@ const CATALOG_SECTION_STYLE: Record<
     headerHover: "hover:bg-rose-100/90",
     stripe: "bg-gradient-to-b from-rose-500 to-rose-600",
     panelWash: "from-rose-500/[0.07] via-transparent to-transparent",
-    tileAccent: "border-t-[3px] border-rose-500/90",
+    tileAccent: "border-t-[3px] border-t-rose-500/90",
   },
   application: {
     Icon: GraduationCap,
@@ -101,7 +101,7 @@ const CATALOG_SECTION_STYLE: Record<
     headerHover: "hover:bg-violet-100/90",
     stripe: "bg-gradient-to-b from-violet-500 to-violet-600",
     panelWash: "from-violet-500/[0.07] via-transparent to-transparent",
-    tileAccent: "border-t-[3px] border-violet-500/90",
+    tileAccent: "border-t-[3px] border-t-violet-500/90",
   },
 };
 
@@ -112,7 +112,7 @@ const DEFAULT_SECTION_STYLE = {
   headerHover: "hover:bg-muted/80",
   stripe: "bg-primary",
   panelWash: "from-primary/[0.06] via-transparent to-transparent",
-  tileAccent: "border-t-[3px] border-primary/80",
+  tileAccent: "border-t-[3px] border-t-primary/80",
 };
 
 type UcatGuidesPanelProps = {
@@ -143,54 +143,52 @@ function GuideTile({
   /** Top accent when shown inside catalogue grid */
   catalogTileAccentClass?: string;
 }) {
-  const pad = compact ? "p-2.5" : "p-3.5 sm:p-4";
   return (
-    <li className="min-w-0">
+    <li className="flex min-w-0 flex-col">
       <a
         href={item.href}
         className={cn(
-          "group relative flex h-full min-h-[7.75rem] flex-col overflow-hidden rounded-xl border border-border/70",
-          "bg-gradient-to-b from-background to-muted/30 shadow-sm",
-          "ring-1 ring-black/[0.03] transition-[transform,box-shadow,border-color,background-color] duration-200 ease-out",
-          "dark:from-card dark:to-muted/20 dark:ring-white/[0.04]",
-          "hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 hover:ring-primary/15 motion-reduce:hover:translate-y-0",
-          "active:translate-y-0 active:brightness-[0.99]",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+          "group flex h-full flex-col overflow-hidden rounded-xl border border-border/60 bg-background",
+          "shadow-[0_1px_3px_0_rgb(0_0_0/0.05),0_1px_2px_-1px_rgb(0_0_0/0.04)]",
+          "transition-[transform,box-shadow,border-color] duration-200 ease-out",
+          "hover:-translate-y-0.5 hover:border-border hover:shadow-[0_4px_16px_0_rgb(0_0_0/0.08),0_2px_6px_-2px_rgb(0_0_0/0.05)]",
+          "active:translate-y-0",
+          "motion-reduce:hover:translate-y-0",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
           catalogTileAccentClass,
-          pad,
+          compact ? "p-3" : "p-4",
         )}
         {...EXTERNAL_LINK_PROPS}
       >
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-        <div className="flex flex-1 flex-col gap-2">
-          <p
+        <p
+          className={cn(
+            "flex-1 font-semibold leading-snug text-foreground transition-colors duration-150 group-hover:text-primary",
+            compact ? "line-clamp-3 text-xs" : "line-clamp-3 text-sm",
+          )}
+        >
+          {item.title}
+        </p>
+        <div
+          className={cn(
+            "flex items-center justify-between gap-2 border-t border-border/40",
+            compact ? "mt-2.5 pt-2" : "mt-3 pt-2.5",
+          )}
+        >
+          <span
             className={cn(
-              "line-clamp-4 text-balance font-semibold leading-snug text-foreground transition-colors duration-200 group-hover:text-primary",
-              compact ? "text-xs" : "text-sm",
-            )}
-          >
-            {item.title}
-          </p>
-          <p
-            className={cn(
-              "mt-auto font-medium text-primary/90 transition-colors duration-200 group-hover:text-primary",
+              "font-medium text-primary transition-colors duration-150",
               compact ? "text-[10px]" : "text-xs",
             )}
           >
             {UCAT_GUIDES_MARKETING.linkCta}
-          </p>
-        </div>
-        <div className="mt-3 flex justify-end">
-          <span
+          </span>
+          <ArrowUpRight
             className={cn(
-              "inline-flex items-center justify-center rounded-lg border border-border/70 bg-background/80",
-              "text-muted-foreground transition-all duration-200 group-hover:scale-105 group-hover:border-primary/35 group-hover:bg-primary/10 group-hover:text-primary",
-              compact ? "h-7 w-7" : "h-8 w-8",
+              "shrink-0 text-muted-foreground/40 transition-all duration-150 group-hover:text-primary group-hover:translate-x-0.5 group-hover:-translate-y-0.5",
+              compact ? "h-3 w-3" : "h-3.5 w-3.5",
             )}
             aria-hidden
-          >
-            <ArrowUpRight className={cn(compact ? "w-3.5 h-3.5" : "w-4 h-4")} />
-          </span>
+          />
         </div>
       </a>
     </li>

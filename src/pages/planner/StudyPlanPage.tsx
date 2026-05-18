@@ -51,20 +51,25 @@ export default function StudyPlanPage() {
       return
     }
     let cancelled = false
+    // Hard fallback: if the fetch never resolves (e.g. network issue + cancelled race),
+    // stop the loading spinner so the user isn't stuck forever. The cleanup also clears this.
     const timer = window.setTimeout(() => {
       if (!cancelled) setCloudReady(false)
     }, 25_000)
     import('../../planner/lib/load-planner-data')
       .then(({ fetchActivePlan, isMocksOnlyPlaceholderPlan }) =>
         fetchActivePlan(userId).then((plan) => {
-          if (!cancelled) setCloudReady(!!plan && !isMocksOnlyPlaceholderPlan(plan))
+          if (!cancelled) {
+            window.clearTimeout(timer)
+            setCloudReady(!!plan && !isMocksOnlyPlaceholderPlan(plan))
+          }
         }),
       )
       .catch(() => {
-        if (!cancelled) setCloudReady(false)
-      })
-      .finally(() => {
-        window.clearTimeout(timer)
+        if (!cancelled) {
+          window.clearTimeout(timer)
+          setCloudReady(false)
+        }
       })
     return () => {
       cancelled = true

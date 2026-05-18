@@ -118,9 +118,7 @@ function formatSessionScore(session: SessionRow): string {
     return `${kps} KPS, ${pct}%`;
   }
   if (type === "mental_maths") {
-    const stage = session.difficulty ?? "stage_1";
-    const stageLabel = stage.replace("stage_", "Stage ");
-    return `${stageLabel}, ${pct}%`;
+    return `${pct}%`;
   }
   return `${pct}%`;
 }
@@ -135,6 +133,24 @@ function getStoredTargetWpm(): number | null {
   if (stored == null) return null;
   const n = parseInt(stored, 10);
   return Number.isFinite(n) && n >= 200 && n <= 900 ? n : null;
+}
+
+function DashboardLoadingRefreshHint() {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const t = window.setTimeout(() => setShow(true), 2000);
+    return () => window.clearTimeout(t);
+  }, []);
+  if (!show) return null;
+  return (
+    <button
+      type="button"
+      onClick={() => window.location.reload()}
+      className="text-xs text-slate-400 underline underline-offset-2 hover:text-slate-600 transition-colors"
+    >
+      Taking too long? Refresh the page
+    </button>
+  );
 }
 
 export default function Dashboard() {
@@ -270,6 +286,17 @@ export default function Dashboard() {
     let timeoutId: number | null = null;
     let activeAbortController: AbortController | null = null;
 
+    // Hard fallback: if the fetch loop never resolves (e.g. AbortError thrown instead of returned),
+    // stop the loading spinner after 35s so the user isn't stuck forever.
+    const hardTimeoutId = window.setTimeout(() => {
+      if (!cancelled) {
+        dashboardLog.warn("Dashboard hard timeout: sessions fetch never resolved", { userId });
+        setError("Unable to load dashboard. Please try again later.");
+        setSessions([]);
+        setLoading(false);
+      }
+    }, 35_000);
+
     const fetchSessions = async () => {
       if (cancelled) return;
       dashboardLog.info("Fetching sessions", { userId, attempt: attempt + 1 });
@@ -283,53 +310,72 @@ export default function Dashboard() {
         dashboardLog.warn("Session fetch timed out", { userId, attempt: attempt + 1 });
       }, FETCH_TIMEOUT_MS);
 
-      const { data, error: err } = await supabase
-        .from("sessions")
-        .select("id, user_id, training_type, difficulty, wpm, correct, total, created_at, passage_id, time_seconds")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: true })
-        .abortSignal(abortController.signal);
+      try {
+        const { data, error: err } = await supabase
+          .from("sessions")
+          .select("id, user_id, training_type, difficulty, wpm, correct, total, created_at, passage_id, time_seconds")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: true })
+          .abortSignal(abortController.signal);
 
-      if (timeoutId !== null) {
-        clearTimeout(timeoutId);
-        timeoutId = null;
-      }
-      activeAbortController = null;
+        if (timeoutId !== null) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
+        activeAbortController = null;
 
-      if (cancelled) return;
+        if (cancelled) return;
 
-      if (err) {
-        const isAborted = err.message?.includes("aborted") || err.message?.includes("abort");
-        dashboardLog.error("Sessions fetch failed", {
-          message: err.message,
-          code: err.code,
-          error: err,
-          isTimeout: isAborted
-        });
+        if (err) {
+          const isAborted = err.message?.includes("aborted") || err.message?.includes("abort");
+          dashboardLog.error("Sessions fetch failed", {
+            message: err.message,
+            code: err.code,
+            error: err,
+            isTimeout: isAborted
+          });
+          if (attempt < SESSIONS_FETCH_RETRIES) {
+            attempt += 1;
+            dashboardLog.info("Retrying sessions fetch", { nextAttempt: attempt + 1 });
+            setTimeout(fetchSessions, 800);
+            return;
+          }
+          if (cancelled) return;
+          setError("Unable to load dashboard. Please try again later.");
+          setSessions([]);
+          setLoading(false);
+          return;
+        }
+
+        const rows = (data as SessionRow[]) ?? [];
+        dashboardLog.info("Sessions loaded", { userId, count: rows.length });
+        if (cancelled) return;
+        setSessions(rows);
+        setError(null);
+        setLoading(false);
+      } catch (e) {
+        if (timeoutId !== null) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
+        activeAbortController = null;
+        if (cancelled) return;
+        dashboardLog.error("Sessions fetch threw unexpectedly", { error: e });
         if (attempt < SESSIONS_FETCH_RETRIES) {
           attempt += 1;
-          dashboardLog.info("Retrying sessions fetch", { nextAttempt: attempt + 1 });
           setTimeout(fetchSessions, 800);
           return;
         }
-        if (cancelled) return;
         setError("Unable to load dashboard. Please try again later.");
         setSessions([]);
         setLoading(false);
-        return;
       }
-
-      const rows = (data as SessionRow[]) ?? [];
-      dashboardLog.info("Sessions loaded", { userId, count: rows.length });
-      if (cancelled) return;
-      setSessions(rows);
-      setError(null);
-      setLoading(false);
     };
 
     fetchSessions();
     return () => {
       cancelled = true;
+      window.clearTimeout(hardTimeoutId);
       if (timeoutId !== null) {
         clearTimeout(timeoutId);
         timeoutId = null;
@@ -787,7 +833,7 @@ export default function Dashboard() {
         created_at: s.created_at,
         label: s.mode === "macro" ? "Decision Making (Macro)" : "Decision Making (Micro)",
         timeDisplay: s.average_time_per_decision > 0 ? `${Math.round(s.average_time_per_decision * s.total_questions)}s` : "-",
-        scoreDisplay: s.mode === "macro" ? `${s.score} pts` : `${s.score} / ${s.total_questions} correct`,
+        scoreDisplay: s.mode === "macro" ? `${s.score} pts` : (s.total_questions > 0 ? `${Math.round((s.score / s.total_questions) * 100)}%` : "-"),
         scorePercent: microPct,
       };
     });
@@ -833,7 +879,7 @@ export default function Dashboard() {
         created_at: items[0].created_at,
         label: items[0].label,
         timeDisplay: "-",
-        scoreDisplay: avgScore != null ? `avg ${avgScore}%` : "-",
+        scoreDisplay: avgScore != null ? `${avgScore}%` : "-",
         scorePercent: avgScore,
         count: items.length,
       } satisfies RecentActivityItem;
@@ -1091,8 +1137,9 @@ export default function Dashboard() {
   const renderAuthenticatedDashboard = () => {
     if (loading) {
       return (
-        <div className="min-h-[50vh] flex items-center justify-center">
+        <div className="min-h-[50vh] flex flex-col items-center justify-center gap-4">
           <p className="text-slate-600">Loading dashboard…</p>
+          <DashboardLoadingRefreshHint />
         </div>
       );
     }
@@ -1220,7 +1267,18 @@ export default function Dashboard() {
                       }
                       const day = Math.min(Math.max(ucatDay, range.minDay), range.maxDay);
                       const iso = `${ucatYear}-${String(ucatMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-                      const { ok, error: saveErr } = await upsertProfile(user.id, profile?.full_name ?? null, profile?.stream ?? null, { ucatExamDate: iso });
+                      // Try the security-definer RPC first (migration 041); fall back to direct upsert.
+                      let ok = false;
+                      let saveErr: string | undefined;
+                      const { error: rpcErr } = await supabase.rpc("set_ucat_exam_date", { p_exam_date: iso });
+                      if (!rpcErr) {
+                        ok = true;
+                      } else {
+                        const fallback = await upsertProfile(user.id, profile?.full_name ?? null, profile?.stream ?? null, { ucatExamDate: iso });
+                        ok = fallback.ok;
+                        saveErr = fallback.error;
+                        if (!ok) saveErr = rpcErr.message || saveErr;
+                      }
                       if (ok) {
                         setUcatSaveStatus("saved");
                         setUcatSaveError(null);
@@ -1349,33 +1407,45 @@ export default function Dashboard() {
           ) : (
             <div>
               {/* Tab nav */}
-              <div className="flex gap-1 p-1 bg-slate-100 rounded-xl mb-4 overflow-x-auto">
-                {TABS.map((tab) => (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => handleTabChange(tab.id)}
-                    className={cn(
-                      "flex-1 min-w-0 rounded-lg px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap",
-                      activeTab === tab.id
-                        ? "bg-white text-slate-900 shadow-sm"
-                        : "text-slate-600 hover:text-slate-900 hover:bg-white/60",
-                    )}
-                  >
-                    <span className="hidden sm:inline">{tab.label}</span>
-                    <span className="sm:hidden">{tab.shortLabel}</span>
-                    {tab.count > 0 && (
-                      <span className={cn(
-                        "ml-1.5 inline-flex items-center justify-center rounded-full text-[10px] font-semibold px-1.5 py-0.5 leading-none",
-                        activeTab === tab.id
-                          ? "bg-slate-200 text-slate-700"
-                          : "bg-slate-300/60 text-slate-500",
-                      )}>
-                        {tab.count}
-                      </span>
-                    )}
-                  </button>
-                ))}
+              <div className="mb-1">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">Select a section to view analytics</p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
+                  {TABS.map((tab) => {
+                    const isActive = activeTab === tab.id;
+                    const colorMap: Record<string, { active: string; inactive: string; badge: string }> = {
+                      vr:  { active: "bg-blue-600 border-blue-600 text-white shadow-blue-200 shadow-md",  inactive: "bg-white border-slate-200 text-slate-700 hover:border-blue-300 hover:bg-blue-50",  badge: isActive ? "bg-blue-500 text-white" : "bg-blue-100 text-blue-700" },
+                      dm:  { active: "bg-violet-600 border-violet-600 text-white shadow-violet-200 shadow-md", inactive: "bg-white border-slate-200 text-slate-700 hover:border-violet-300 hover:bg-violet-50", badge: isActive ? "bg-violet-500 text-white" : "bg-violet-100 text-violet-700" },
+                      qr:  { active: "bg-emerald-600 border-emerald-600 text-white shadow-emerald-200 shadow-md", inactive: "bg-white border-slate-200 text-slate-700 hover:border-emerald-300 hover:bg-emerald-50", badge: isActive ? "bg-emerald-500 text-white" : "bg-emerald-100 text-emerald-700" },
+                      sjt: { active: "bg-orange-500 border-orange-500 text-white shadow-orange-200 shadow-md",  inactive: "bg-white border-slate-200 text-slate-700 hover:border-orange-300 hover:bg-orange-50",  badge: isActive ? "bg-orange-400 text-white" : "bg-orange-100 text-orange-700" },
+                    };
+                    const colors = colorMap[tab.id];
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => handleTabChange(tab.id)}
+                        className={cn(
+                          "relative flex flex-col items-center justify-center rounded-xl border-2 px-3 py-3 transition-all duration-150",
+                          isActive ? colors.active : colors.inactive,
+                        )}
+                      >
+                        <span className="text-sm font-semibold leading-tight text-center">
+                          <span className="hidden sm:inline">{tab.label}</span>
+                          <span className="sm:hidden">{tab.shortLabel}</span>
+                        </span>
+                        <span className={cn(
+                          "mt-1.5 inline-flex items-center justify-center rounded-full text-[10px] font-bold px-2 py-0.5",
+                          colors.badge,
+                        )}>
+                          {tab.count} session{tab.count !== 1 ? "s" : ""}
+                        </span>
+                        {isActive && (
+                          <span className="mt-1 text-[8px] opacity-70">▼</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* VR: Speed Reading · Rapid Recall · Keyword Scanning · Inference */}
@@ -1792,19 +1862,18 @@ export default function Dashboard() {
               {/* QR: Calculator · Mental Maths */}
               {activeTab === "qr" && (
                 <div className="space-y-8">
-                  <div className="flex items-center justify-between -mb-4">
-                    <h2 className="text-base font-semibold text-slate-700">Quantitative Reasoning</h2>
-                    <Link
-                      to="/ucat-quantitative-reasoning-practice"
-                      className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-                    >
-                      Practice now →
-                    </Link>
-                  </div>
                   <section>
-                    <h2 className="text-lg font-semibold text-slate-900 mb-4">
-                      {TRAINING_TYPE_LABELS.calculator}
-                    </h2>
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-lg font-semibold text-slate-900">
+                        {TRAINING_TYPE_LABELS.calculator}
+                      </h2>
+                      <Link
+                        to="/ucat-quantitative-reasoning-practice"
+                        className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                      >
+                        Practice now →
+                      </Link>
+                    </div>
                     {calculatorSessions.length === 0 ? (
                       <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                         <p className="text-slate-500">

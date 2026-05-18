@@ -839,46 +839,47 @@ export function ProductUpsellSidebar({
     <div className="mx-3 mb-3 mt-auto space-y-2 border-t border-white/10 pt-3 shrink-0" aria-label="Optional paid support">
       <StrategyCallBanner variant="sidebar" />
       {course ? (
-        <div className="rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 border border-amber-400/25 p-3">
+        <div className="group rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 border border-amber-400/25 p-3 transition-colors hover:bg-amber-500/10">
           <UpsellLink
             href={course.href}
-            className="group block rounded-lg -m-1 p-1 outline-offset-2 transition-colors hover:bg-amber-500/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-200/70"
+            className="block rounded-lg -m-1 p-1 outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-200/70"
             onTrack={() => trackClick("course", "sidebar", stream, course.id)}
           >
             <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-200/90">
-              Live course · £{course.priceGbp}
+              Live online · £{course.priceGbp}
             </p>
             <p className="text-sm font-semibold text-white mt-0.5 leading-snug">1-day UCAT course</p>
-            <p className="text-xs text-sky-200/80 mt-0.5">
-              {course.displayDate.replace(/^\w+\s+/, "")} · {course.instructor}
-            </p>
-            <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-amber-100 group-hover:text-white">
-              {COURSE_COPY.cta}
-              <ArrowUpRight className="h-3 w-3 shrink-0" aria-hidden />
-            </span>
+            <div className="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-[grid-template-rows] duration-300 ease-in-out">
+              <div className="overflow-hidden">
+                <p className="text-xs text-sky-200/80 mt-0.5">
+                  {course.displayDate.replace(/^\w+\s+/, "")} · {course.instructor}
+                </p>
+                {secondary ? (
+                  <p className="mt-0.5 text-[10px] text-sky-300/70">
+                    Also {secondary.displayDate.replace(/^\w+\s+/, "")}
+                  </p>
+                ) : null}
+                <span className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-amber-100">
+                  {COURSE_COPY.cta}
+                  <ArrowUpRight className="h-3 w-3 shrink-0" aria-hidden />
+                </span>
+              </div>
+            </div>
           </UpsellLink>
-          {secondary ? (
-            <a
-              href={secondary.href}
-              {...EXTERNAL}
-              className="mt-1 block text-[10px] text-sky-300/70 hover:text-sky-200"
-              onClick={() => trackClick("course", "sidebar", stream, secondary.id)}
-            >
-              Also {secondary.displayDate.replace(/^\w+\s+/, "")}
-            </a>
-          ) : null}
         </div>
       ) : null}
       <a
         href={TUTORING_OFFER.href}
         {...EXTERNAL}
-        className="block rounded-xl bg-white/10 hover:bg-white/15 px-3 py-2.5 transition-colors"
+        className="group block rounded-xl bg-white/10 hover:bg-white/15 px-3 py-2 transition-colors"
         onClick={() => trackClick("tutoring", "sidebar", stream, null)}
       >
         <p className="text-sm font-medium text-white">
           {firstName ? `${firstName}, ${TUTORING_OFFER.sidebarTitle}` : TUTORING_OFFER.sidebarTitle}
         </p>
-        <p className="text-[11px] text-sky-200/80">{TUTORING_OFFER.sidebarSub}</p>
+        <div className="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-[grid-template-rows] duration-300 ease-in-out">
+          <p className="overflow-hidden text-[11px] text-sky-200/80">{TUTORING_OFFER.sidebarSub}</p>
+        </div>
       </a>
       <a
         href={pkg.href}
@@ -1035,7 +1036,7 @@ and we&apos;ll help you pick the right programme.
         href={STRATEGY_CALL_URL}
         {...EXTERNAL}
         className={cn(
-          "flex items-center gap-2.5 rounded-xl bg-emerald-500/20 border border-emerald-400/30 px-3 py-2.5",
+          "group flex items-center gap-2.5 rounded-xl bg-emerald-500/20 border border-emerald-400/30 px-3 py-2",
           "hover:bg-emerald-500/30 transition-colors",
           className,
         )}
@@ -1045,8 +1046,10 @@ and we&apos;ll help you pick the right programme.
           <CalendarCheck className="h-3.5 w-3.5" aria-hidden />
         </span>
         <div className="min-w-0">
-          <p className="text-xs font-semibold text-white leading-tight">Free strategy call</p>
-          <p className="text-[10px] text-emerald-200/80 leading-tight">Discuss your options with a doctor</p>
+          <p className="text-sm font-medium text-white leading-tight">Free strategy call</p>
+          <div className="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-[grid-template-rows] duration-300 ease-in-out">
+            <p className="overflow-hidden text-[10px] text-emerald-200/80 leading-tight">Discuss your options with a doctor</p>
+          </div>
         </div>
       </a>
     );

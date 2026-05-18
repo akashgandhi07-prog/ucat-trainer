@@ -40,6 +40,26 @@
   --radius: 0.75rem;
 }
 
+/* Global scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(214 20% 80%);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(215 16% 60%);
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(214 20% 80%) transparent;
+}
+
 @layer base {
   html {
     -webkit-tap-highlight-color: transparent;

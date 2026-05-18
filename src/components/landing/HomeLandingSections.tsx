@@ -99,47 +99,147 @@ function TrustStars({ className }: { className?: string }) {
   );
 }
 
+const HERO_SECTIONS = [
+  {
+    icon: BookOpen,
+    label: "Verbal Reasoning",
+    count: "4 drills",
+    accent: "bg-blue-50 border-blue-200 hover:border-blue-300 hover:bg-blue-100/70",
+    iconBg: "bg-blue-100",
+    iconColor: "text-blue-600",
+    href: "/verbal",
+  },
+  {
+    icon: Scale,
+    label: "Decision Making",
+    count: "2 drills",
+    accent: "bg-amber-50 border-amber-200 hover:border-amber-300 hover:bg-amber-100/70",
+    iconBg: "bg-amber-100",
+    iconColor: "text-amber-600",
+    href: "/decision-making",
+  },
+  {
+    icon: Calculator,
+    label: "Quantitative Reasoning",
+    count: "2 drills",
+    accent: "bg-emerald-50 border-emerald-200 hover:border-emerald-300 hover:bg-emerald-100/70",
+    iconBg: "bg-emerald-100",
+    iconColor: "text-emerald-600",
+    href: "/quantitative",
+  },
+  {
+    icon: Users,
+    label: "Situational Judgement",
+    count: "3 drills",
+    accent: "bg-purple-50 border-purple-200 hover:border-purple-300 hover:bg-purple-100/70",
+    iconBg: "bg-purple-100",
+    iconColor: "text-purple-600",
+    href: "/ucat-sjt-practice",
+  },
+] as const;
+
 export function LandingHero() {
   return (
-    <section className="relative overflow-hidden border-b border-border bg-gradient-to-b from-primary/5 via-background to-background">
-      <LandingContainer className="py-10 sm:py-16 text-center">
-        <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-          Free UCAT practice and training
-        </p>
-        <h1 className="mt-3 text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight text-foreground max-w-3xl mx-auto">
-          Train the skills behind a strong UCAT score.
-        </h1>
-        <p className="mt-4 text-base sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-          {LANDING_TRAINER_COUNT} free UCAT practice drills for Verbal Reasoning, Decision Making,
-          Quantitative Reasoning and Situational Judgement. Open any trainer instantly. Sign in only when
-          you want progress saved.
-        </p>
+    <section className="relative overflow-hidden border-b border-border bg-background">
+      {/* Subtle dot grid */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-40"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, hsl(var(--border)) 1px, transparent 1px)",
+          backgroundSize: "28px 28px",
+        }}
+      />
+      {/* Top colour wash */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-primary/6 to-transparent" />
 
-        <LandingTrustStrip className="mt-8 justify-center" />
+      <LandingContainer className="relative py-12 sm:py-18 lg:py-20">
+        <div className="grid lg:grid-cols-[1fr_420px] xl:grid-cols-[1fr_480px] gap-10 lg:gap-16 items-center">
 
-        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <Link
-            to="/verbal"
-            className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors"
-          >
-            Browse Verbal Reasoning
-            <ArrowRight className="h-4 w-4" aria-hidden />
-          </Link>
-          <a
-            href="#all-trainers"
-            className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-border bg-card px-6 py-3 text-sm font-semibold text-foreground hover:border-primary/40 hover:bg-muted/50 transition-colors"
-          >
-            See every drill
-          </a>
-          <a
-            href={STRATEGY_CALL_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition-colors"
-          >
-            Free strategy call
-            <ArrowUpRight className="h-4 w-4" aria-hidden />
-          </a>
+          {/* ── Left: headline + CTAs ── */}
+          <div>
+            {/* Trust badge */}
+            <div className="inline-flex items-center gap-2 rounded-full border border-amber-300/60 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 mb-6">
+              <TrustStars className="text-amber-500" />
+              {TRUSTPILOT_STATS.score} on Trustpilot · 14+ years teaching UCAT
+            </div>
+
+            <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] font-extrabold tracking-tight text-foreground leading-[1.08]">
+              The fastest way to
+              <br />
+              <span className="text-primary">raise your UCAT score.</span>
+            </h1>
+
+            <p className="mt-5 text-base sm:text-lg text-muted-foreground leading-relaxed max-w-[520px]">
+              {LANDING_TRAINER_COUNT} targeted skill drills: Verbal Reasoning, Decision Making,
+              Quantitative Reasoning and Situational Judgement. Open any drill instantly,
+              no account needed.
+            </p>
+
+            {/* CTAs */}
+            <div className="mt-8 flex flex-col sm:flex-row gap-3">
+              <a
+                href="#all-trainers"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-7 py-3.5 text-sm font-bold text-primary-foreground shadow-md hover:bg-primary/90 active:scale-[0.98] transition-all"
+              >
+                Pick a drill, it&apos;s free
+                <ArrowRight className="h-4 w-4" aria-hidden />
+              </a>
+              <a
+                href={STRATEGY_CALL_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-emerald-500 bg-white px-7 py-3.5 text-sm font-bold text-emerald-700 hover:bg-emerald-50 active:scale-[0.98] transition-all"
+              >
+                Book a free strategy call
+                <ArrowUpRight className="h-4 w-4" aria-hidden />
+              </a>
+            </div>
+            <p className="mt-3 text-xs text-muted-foreground">
+              No card required · Progress saves automatically when you sign in
+            </p>
+
+            {/* Stats row */}
+            <div className="mt-10 pt-8 border-t border-border flex flex-wrap gap-x-7 gap-y-2.5">
+              {[
+                { value: "10,000+", label: "students helped" },
+                { value: String(LANDING_TRAINER_COUNT), label: "free drills" },
+                { value: "14+", label: "years teaching UCAT" },
+              ].map(({ value, label }) => (
+                <div key={label}>
+                  <span className="text-xl font-extrabold text-foreground">{value}</span>
+                  <span className="ml-1.5 text-sm text-muted-foreground">{label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Right: 2×2 section cards ── */}
+          <div className="grid grid-cols-2 gap-3">
+            {HERO_SECTIONS.map(({ icon: Icon, label, count, accent, iconBg, iconColor, href }) => (
+              <Link
+                key={label}
+                to={href}
+                className={cn(
+                  "group flex flex-col gap-3 rounded-2xl border p-4 sm:p-5 transition-all duration-200",
+                  accent,
+                )}
+              >
+                <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl", iconBg)}>
+                  <Icon className={cn("h-5 w-5", iconColor)} aria-hidden />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-bold text-foreground leading-snug">{label}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{count}</p>
+                </div>
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                  Open hub
+                  <ArrowRight className="h-3 w-3 translate-x-0 group-hover:translate-x-0.5 transition-transform" aria-hidden />
+                </span>
+              </Link>
+            ))}
+          </div>
+
         </div>
       </LandingContainer>
     </section>
@@ -453,6 +553,14 @@ export function LandingPlanning({ plannerOn }: { plannerOn: boolean }) {
       desc: "Log free UCAT mock scores from Medify, official practice tests and other resources in one place.",
       cta: "Open mock tracker",
     },
+    {
+      to: "/study-guides",
+      icon: BookOpen,
+      accent: "bg-sky-50 text-sky-600",
+      title: "Study guides",
+      desc: "Concise topic guides covering every UCAT subtest — a quick reference alongside your practice.",
+      cta: "Browse study guides",
+    },
   ];
 
   return (
@@ -462,11 +570,11 @@ export function LandingPlanning({ plannerOn }: { plannerOn: boolean }) {
           <SectionEyebrow>Planning and progress</SectionEyebrow>
           <SectionTitle>Free tools beyond the drills</SectionTitle>
           <SectionIntro>
-            Pair skill work with a generated study plan and a mock score log. No subscription required
-            for either tool.
+            Pair skill work with a generated study plan, a mock score log, and topic study guides. No
+            subscription required for any of these tools.
           </SectionIntro>
         </div>
-        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 max-w-3xl">
+        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-5xl">
           {cards.map(({ to, icon: Icon, accent, title, desc, cta }) => (
             <Link
               key={to}

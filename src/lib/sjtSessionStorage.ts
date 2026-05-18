@@ -191,8 +191,5 @@ export function formatSJTSessionScore(row: Pick<SJTSessionsRow, "score" | "max_s
   if (!row.completed) {
     return `${pct}% (partial)`;
   }
-  if (row.max_score <= 1) {
-    return row.score === row.max_score ? "Full marks" : `${pct}%`;
-  }
-  return `${row.score} / ${row.max_score} (${pct}%)`;
+  return `${pct}%`;
 }
