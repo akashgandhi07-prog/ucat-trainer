@@ -1,0 +1,238 @@
+/**
+ * Mega-menu navigation linking to the main theukcatpeople.co.uk site.
+ * Rendered inside AppTopBar (desktop) and the AppShell mobile drawer header.
+ */
+import { useState, useRef, useCallback, useEffect } from "react";
+import { ChevronDown } from "lucide-react";
+import { cn } from "../../lib/cn";
+
+const BASE = "https://www.theukcatpeople.co.uk";
+
+export type MenuItem = { label: string; href: string; description?: string };
+export type MenuGroup = { heading?: string; items: MenuItem[] };
+export type NavItem =
+  | { label: string; href: string; groups?: undefined }
+  | { label: string; href?: undefined; groups: MenuGroup[] };
+
+export const MAIN_NAV: NavItem[] = [
+  {
+    label: "Full Packages",
+    groups: [
+      {
+        items: [
+          { label: "All Packages", href: `${BASE}/packages`, description: "Browse everything we offer" },
+          { label: "Medicine Ultimate Package", href: `${BASE}/ultimate-package`, description: "End-to-end medicine application support" },
+          { label: "Dentistry Application Package", href: `${BASE}/dentistry-application-packages`, description: "Complete dentistry bundle" },
+          { label: "Veterinary Ultimate Package", href: `${BASE}/veterinary-medicine-ultimate-package`, description: "Tailored vet school package" },
+        ],
+      },
+    ],
+  },
+  {
+    label: "UCAT",
+    groups: [
+      {
+        heading: "Tutoring & Courses",
+        items: [
+          { label: "UCAT 1-1 Tutoring", href: `${BASE}/ucat-tutoring`, description: "Personalised tutor sessions" },
+          { label: "UCAT 1 Day Course", href: `${BASE}/ucat-courses`, description: "Intensive group course" },
+          { label: "UCAT Schools Course", href: `${BASE}/ucat-course-schools`, description: "Delivered in your school" },
+          { label: "UCAT & BMAT Tutors", href: `${BASE}/ucat-bmat-tutors`, description: "Expert specialist tutors" },
+        ],
+      },
+      {
+        heading: "Free Resources",
+        items: [
+          { label: "Free Practice Questions", href: `${BASE}/ukcattuition-free-practice-questions`, description: "Official-style question bank" },
+          { label: "Free Strategy Consultation", href: `${BASE}/free-strategy-consultation`, description: "30-min expert call" },
+        ],
+      },
+    ],
+  },
+  {
+    label: "Personal Statement",
+    groups: [
+      {
+        heading: "Medicine & Dentistry",
+        items: [
+          { label: "Medicine PS Reviews", href: `${BASE}/personal-statement-medicine` },
+          { label: "Dentistry PS Reviews", href: `${BASE}/dentistry-personal-statement` },
+          { label: "Medicine & Dentistry PS", href: `${BASE}/personal-statement-medicine-dentist` },
+        ],
+      },
+      {
+        heading: "Allied Health",
+        items: [
+          { label: "Veterinary PS Reviews", href: `${BASE}/vet-school-personal-statement` },
+          { label: "Pharmacy PS Reviews", href: `${BASE}/pharmacy-personal-statement` },
+          { label: "Dental Hygiene & Therapy PS", href: `${BASE}/dental-hygiene-and-therapy-personal-statement` },
+          { label: "Physiotherapy PS Reviews", href: `${BASE}/physiotherapy-personal-statement-reviews` },
+          { label: "Occupational Therapy PS", href: `${BASE}/occupational-therapy-personal-statement` },
+        ],
+      },
+    ],
+  },
+  {
+    label: "Interview Prep",
+    groups: [
+      {
+        items: [
+          { label: "Medicine Interview Tutoring", href: `${BASE}/medicine-interview-tutor-coaching`, description: "MMI, panel & Oxbridge prep" },
+          { label: "Dentistry Interview Tutoring", href: `${BASE}/dentistry-interview-coaching`, description: "All dental school formats" },
+          { label: "Vet School Interview Coaching", href: `${BASE}/vet-school-interview-coaching`, description: "MAT & general interview prep" },
+          { label: "Oxbridge Medicine Programme", href: `${BASE}/oxbridge-medicine-mentoring-tutoring-programme`, description: "Specialist Oxbridge support" },
+        ],
+      },
+    ],
+  },
+  {
+    label: "Free Guides",
+    groups: [
+      {
+        items: [
+          { label: "Application Guide", href: `${BASE}/application-guide`, description: "Step-by-step admissions guide" },
+          { label: "Free BMAT Past Papers", href: `${BASE}/free-bmat-past-papers-solutions`, description: "Full papers & worked solutions" },
+          { label: "How Universities Use UCAT", href: `${BASE}/medical-schools/ucat/how-universities-use-the-ucat`, description: "Threshold data by school" },
+          { label: "UK Dental Schools Guide", href: `${BASE}/guide/dental-school/dentistry-university-uk`, description: "Rankings, entry reqs & tips" },
+          { label: "UK Vet Schools Guide", href: `${BASE}/guide/vet-schools-uk`, description: "Every vet school compared" },
+        ],
+      },
+    ],
+  },
+  {
+    label: "More",
+    groups: [
+      {
+        heading: "Specialist",
+        items: [
+          { label: "BMAT Tutoring", href: `${BASE}/bmat-tutoring` },
+          { label: "BMAT Courses", href: `${BASE}/bmat-courses` },
+          { label: "GAMSAT Tutors", href: `${BASE}/gamsat-tutors` },
+        ],
+      },
+      {
+        heading: "Company",
+        items: [
+          { label: "Reviews", href: `${BASE}/reviews` },
+          { label: "Blog", href: `${BASE}/blog` },
+          { label: "Join Our Team", href: `${BASE}/join-our-team` },
+          { label: "Contact Us", href: `${BASE}/theukcatpeople-contact-us` },
+        ],
+      },
+    ],
+  },
+];
+
+function DropdownPanel({ groups }: { groups: MenuGroup[] }) {
+  const multiCol = groups.length > 1;
+  return (
+    <div
+      className={cn(
+        "absolute top-full left-1/2 -translate-x-1/2 mt-1.5 bg-white rounded-2xl shadow-2xl border border-slate-100/80 p-4 z-50",
+        multiCol ? "grid gap-x-5" : "min-w-[220px]",
+      )}
+      style={multiCol ? { gridTemplateColumns: `repeat(${groups.length}, minmax(190px, 1fr))` } : undefined}
+    >
+      {/* Caret */}
+      <div className="absolute -top-[5px] left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-white border-l border-t border-slate-100/80 rotate-45" />
+
+      {groups.map((group, gi) => (
+        <div key={gi} className={gi > 0 ? "border-l border-slate-100 pl-5" : ""}>
+          {group.heading && (
+            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2 px-2">
+              {group.heading}
+            </p>
+          )}
+          <ul className="space-y-0.5">
+            {group.items.map((item) => (
+              <li key={item.href}>
+                <a
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block rounded-xl px-2.5 py-2 hover:bg-slate-50 transition-colors group"
+                >
+                  <span className="block text-[13px] font-medium text-slate-800 group-hover:text-primary transition-colors leading-tight">
+                    {item.label}
+                  </span>
+                  {item.description && (
+                    <span className="block text-[11px] text-slate-400 mt-0.5 leading-tight">
+                      {item.description}
+                    </span>
+                  )}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function NavButton({ item }: { item: NavItem }) {
+  const [open, setOpen] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const enter = useCallback(() => {
+    if (timer.current) clearTimeout(timer.current);
+    setOpen(true);
+  }, []);
+
+  const leave = useCallback(() => {
+    timer.current = setTimeout(() => setOpen(false), 100);
+  }, []);
+
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+
+  if (!item.groups) {
+    return (
+      <a
+        href={item.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center px-2.5 py-1.5 text-[13px] font-medium text-slate-600 hover:text-primary rounded-lg hover:bg-slate-50 transition-colors whitespace-nowrap"
+      >
+        {item.label}
+      </a>
+    );
+  }
+
+  return (
+    <div className="relative" onMouseEnter={enter} onMouseLeave={leave}>
+      <button
+        type="button"
+        aria-expanded={open}
+        className={cn(
+          "flex items-center gap-0.5 px-2.5 py-1.5 text-[13px] font-medium rounded-lg transition-colors whitespace-nowrap",
+          open ? "text-primary bg-primary/5" : "text-slate-600 hover:text-primary hover:bg-slate-50",
+        )}
+      >
+        {item.label}
+        <ChevronDown
+          className={cn("w-3 h-3 mt-px shrink-0 transition-transform duration-200", open && "rotate-180")}
+          aria-hidden
+        />
+      </button>
+
+      <div
+        className={cn(
+          "transition-[opacity,transform] duration-150 origin-top",
+          open ? "opacity-100 scale-y-100 pointer-events-auto" : "opacity-0 scale-y-95 pointer-events-none",
+        )}
+      >
+        <DropdownPanel groups={item.groups} />
+      </div>
+    </div>
+  );
+}
+
+export function MainSiteNavBar() {
+  return (
+    <nav className="flex items-center gap-0.5" aria-label="Main site navigation">
+      {MAIN_NAV.map((item) => (
+        <NavButton key={item.label} item={item} />
+      ))}
+    </nav>
+  );
+}

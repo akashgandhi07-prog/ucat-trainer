@@ -1,16 +1,13 @@
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { getAppTopBarTitle } from "../../lib/appPageTitles";
-import { APP_CONTENT_X } from "../../lib/appContentLayout";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useAuthModal } from "../../contexts/AuthModalContext";
 import { useBugReportModal } from "../../contexts/BugReportContext";
+import { MainSiteNavBar } from "./MainSiteNav";
 
 export default function AppTopBar({ className = "" }: { className?: string }) {
   const [signingOut, setSigningOut] = useState(false);
-  const { pathname } = useLocation();
   const navigate = useNavigate();
-  const pageTitle = getAppTopBarTitle(pathname);
   const { user, profile, isAdmin, loading, sessionLoadFailed, retryGetSession, signOut } = useAuth();
   const { openAuthModal } = useAuthModal();
   const { openBugReport } = useBugReportModal();
@@ -19,45 +16,55 @@ export default function AppTopBar({ className = "" }: { className?: string }) {
     profile?.full_name?.trim() ||
     (user?.user_metadata?.full_name as string)?.trim() ||
     (user?.user_metadata?.name as string)?.trim() ||
-    user?.email?.trim() ||
+    user?.email?.split("@")[0]?.trim() ||
     null;
 
   const showSessionRecovery = !loading && !user && sessionLoadFailed;
 
   return (
     <header
-      className={`h-14 shrink-0 border-b border-border bg-background flex items-center justify-between gap-3 ${APP_CONTENT_X} z-10 ${className}`}
+      className={`h-14 shrink-0 border-b border-border bg-background/95 backdrop-blur-sm flex items-center gap-3 px-4 z-30 ${className}`}
     >
       {showSessionRecovery ? (
-        <div className="flex items-center gap-2 text-xs text-amber-900">
+        <div className="flex items-center gap-2 text-xs text-amber-900 mr-auto">
           <span>Connection issue.</span>
           <button type="button" onClick={retryGetSession} className="font-medium underline">
             Retry
           </button>
         </div>
       ) : (
-        <p className="text-sm font-semibold text-foreground truncate">
-          {pageTitle}
-        </p>
+        /* Mega-menu — takes available horizontal space */
+        <div className="flex-1 min-w-0 overflow-hidden">
+          <MainSiteNavBar />
+        </div>
       )}
-      <div className="flex items-center gap-2 ml-auto flex-wrap justify-end">
+
+      {/* Right-hand controls */}
+      <div className="flex items-center gap-1.5 shrink-0 ml-auto">
         <button
           type="button"
           onClick={openBugReport}
-          className="text-sm font-medium text-muted-foreground hover:text-foreground px-2 py-1"
+          className="text-[13px] font-medium text-muted-foreground hover:text-foreground px-2.5 py-1.5 rounded-lg hover:bg-secondary transition-colors"
         >
           Feedback
         </button>
-        {isAdmin ? (
-          <Link to="/admin" className="text-sm font-medium text-muted-foreground hover:text-foreground px-2 py-1">
+
+        {isAdmin && (
+          <a
+            href="/admin"
+            className="text-[13px] font-medium text-muted-foreground hover:text-foreground px-2.5 py-1.5 rounded-lg hover:bg-secondary transition-colors"
+          >
             Admin
-          </Link>
-        ) : null}
+          </a>
+        )}
+
         {user ? (
           <>
-            <span className="text-sm text-muted-foreground hidden md:inline">
-              Hi, {displayName ?? "there"}
-            </span>
+            {displayName && (
+              <span className="hidden md:block text-xs font-medium text-muted-foreground max-w-[110px] truncate px-1">
+                {displayName}
+              </span>
+            )}
             <button
               type="button"
               disabled={signingOut}
@@ -66,7 +73,7 @@ export default function AppTopBar({ className = "" }: { className?: string }) {
                 await signOut();
                 navigate("/");
               }}
-              className="text-sm font-medium text-muted-foreground hover:text-foreground px-2 py-1 disabled:opacity-50"
+              className="text-[13px] font-medium text-muted-foreground hover:text-foreground px-2.5 py-1.5 rounded-lg hover:bg-secondary transition-colors disabled:opacity-50"
             >
               {signingOut ? "Signing out…" : "Sign out"}
             </button>
@@ -76,14 +83,14 @@ export default function AppTopBar({ className = "" }: { className?: string }) {
             <button
               type="button"
               onClick={() => openAuthModal("register")}
-              className="text-sm font-medium text-foreground px-3 py-1.5 rounded-lg hover:bg-secondary"
+              className="text-[13px] font-semibold text-foreground px-3 py-1.5 rounded-lg hover:bg-secondary transition-colors"
             >
               Register
             </button>
             <button
               type="button"
               onClick={() => openAuthModal("login")}
-              className="text-sm font-medium bg-primary text-primary-foreground px-3 py-1.5 rounded-lg hover:bg-primary/90"
+              className="text-[13px] font-semibold bg-primary text-primary-foreground px-3.5 py-1.5 rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
             >
               Sign in
             </button>
