@@ -79,16 +79,19 @@ export default function TrainerFaqSection({
               </span>
             </button>
             <div
-              id={panelId}
-              role="region"
-              aria-labelledby={buttonId}
-              className={
-                isOpen
-                  ? "px-4 sm:px-5 pb-3 sm:pb-4 text-sm sm:text-base text-slate-700"
-                  : "hidden"
-              }
+              className="grid transition-[grid-template-rows] duration-200 ease-out"
+              style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
             >
-              <p className="leading-relaxed">{item.answer}</p>
+              <div className="overflow-hidden">
+                <div
+                  id={panelId}
+                  role="region"
+                  aria-labelledby={buttonId}
+                  className="px-4 sm:px-5 pb-3 sm:pb-4 text-sm sm:text-base text-slate-700"
+                >
+                  <p className="leading-relaxed">{item.answer}</p>
+                </div>
+              </div>
             </div>
           </div>
         );
@@ -159,12 +162,19 @@ export default function TrainerFaqSection({
               </span>
             </button>
             <div
-              id={id ? `${id}-panel` : undefined}
-              role="region"
-              aria-labelledby={id ? `${id}-heading` : undefined}
-              className={groupOpen ? "border-t border-slate-200 px-4 sm:px-5 pb-4 sm:pb-5 pt-3 sm:pt-4" : "hidden"}
+              className="grid transition-[grid-template-rows] duration-200 ease-out"
+              style={{ gridTemplateRows: groupOpen ? "1fr" : "0fr" }}
             >
-              {renderFaqList()}
+              <div className="overflow-hidden">
+                <div
+                  id={id ? `${id}-panel` : undefined}
+                  role="region"
+                  aria-labelledby={id ? `${id}-heading` : undefined}
+                  className="border-t border-slate-200 px-4 sm:px-5 pb-4 sm:pb-5 pt-3 sm:pt-4"
+                >
+                  {renderFaqList()}
+                </div>
+              </div>
             </div>
           </div>
         )}

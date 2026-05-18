@@ -395,31 +395,36 @@ export default function UcatGuidesPanel({
                         />
                       </span>
                     </button>
-                    {isOpen ? (
-                      <div
-                        id={`ucat-guides-panel-${section.id}`}
-                        role="region"
-                        aria-labelledby={`ucat-guides-trigger-${section.id}`}
-                        className={cn(
-                          "relative border-t border-border bg-gradient-to-b bg-card px-3 py-4 sm:px-5 sm:py-5",
-                          panelWash,
-                        )}
-                      >
-                        <p className="mb-3 text-[11px] font-medium uppercase tracking-wide text-muted-foreground sm:mb-4">
-                          Free to read on our site · opens in a new tab
-                        </p>
-                        <ul className={catalogTileGrid}>
-                          {section.guides.map((item) => (
-                            <GuideTile
-                              key={item.id}
-                              item={item}
-                              compact={false}
-                              catalogTileAccentClass={tileAccent}
-                            />
-                          ))}
-                        </ul>
+                    <div
+                      className="grid transition-[grid-template-rows] duration-200 ease-out"
+                      style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
+                    >
+                      <div className="overflow-hidden">
+                        <div
+                          id={`ucat-guides-panel-${section.id}`}
+                          role="region"
+                          aria-labelledby={`ucat-guides-trigger-${section.id}`}
+                          className={cn(
+                            "relative border-t border-border bg-gradient-to-b bg-card px-3 py-4 sm:px-5 sm:py-5",
+                            panelWash,
+                          )}
+                        >
+                          <p className="mb-3 text-[11px] font-medium uppercase tracking-wide text-muted-foreground sm:mb-4">
+                            Free to read on our site · opens in a new tab
+                          </p>
+                          <ul className={catalogTileGrid}>
+                            {section.guides.map((item) => (
+                              <GuideTile
+                                key={item.id}
+                                item={item}
+                                compact={false}
+                                catalogTileAccentClass={tileAccent}
+                              />
+                            ))}
+                          </ul>
+                        </div>
                       </div>
-                    ) : null}
+                    </div>
                   </div>
                 );
               })}

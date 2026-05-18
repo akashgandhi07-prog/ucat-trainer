@@ -478,46 +478,51 @@ function DrillSectionAccordion({
           {trainers.length} drills
         </span>
         <ChevronDown
-          className={cn("h-5 w-5 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")}
+          className={cn("h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 ease-out", open && "rotate-180")}
           aria-hidden
         />
       </button>
-      {open ? (
-        <div className="border-t border-border px-4 sm:px-5 pb-4 sm:pb-5 pt-2 space-y-2">
-          {trainers.map((trainer) => (
-            <Link
-              key={trainer.id}
-              to={trainer.href}
-              className="group flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 rounded-xl border border-border/80 bg-background px-4 py-3 hover:border-primary/40 hover:bg-primary/5 transition-colors"
-            >
-              <span className="min-w-0 flex-1">
-                <span className="flex flex-wrap items-center gap-2">
-                  <span className="font-medium text-foreground group-hover:text-primary">
-                    {trainer.title}
-                  </span>
-                  {trainer.tag ? (
-                    <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                      {trainer.tag}
+      <div
+        className="grid transition-[grid-template-rows] duration-200 ease-out"
+        style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
+      >
+        <div className="overflow-hidden">
+          <div className="border-t border-border px-4 sm:px-5 pb-4 sm:pb-5 pt-2 space-y-2">
+            {trainers.map((trainer) => (
+              <Link
+                key={trainer.id}
+                to={trainer.href}
+                className="group flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 rounded-xl border border-border/80 bg-background px-4 py-3 hover:border-primary/40 hover:bg-primary/5 transition-colors"
+              >
+                <span className="min-w-0 flex-1">
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className="font-medium text-foreground group-hover:text-primary">
+                      {trainer.title}
                     </span>
-                  ) : null}
+                    {trainer.tag ? (
+                      <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        {trainer.tag}
+                      </span>
+                    ) : null}
+                  </span>
+                  <span className="mt-0.5 block text-sm text-muted-foreground">{trainer.description}</span>
                 </span>
-                <span className="mt-0.5 block text-sm text-muted-foreground">{trainer.description}</span>
-              </span>
-              <span className="inline-flex items-center gap-1 text-sm font-medium text-primary shrink-0">
-                Open drill
-                <ArrowRight className="h-3.5 w-3.5" aria-hidden />
-              </span>
+                <span className="inline-flex items-center gap-1 text-sm font-medium text-primary shrink-0">
+                  Open drill
+                  <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+                </span>
+              </Link>
+            ))}
+            <Link
+              to={meta.hubHref}
+              className="inline-flex items-center gap-1 text-sm font-medium text-primary mt-1 px-1"
+            >
+              Open {meta.label} hub
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden />
             </Link>
-          ))}
-          <Link
-            to={meta.hubHref}
-            className="inline-flex items-center gap-1 text-sm font-medium text-primary mt-1 px-1"
-          >
-            Open {meta.label} hub
-            <ArrowRight className="h-3.5 w-3.5" aria-hidden />
-          </Link>
+          </div>
         </div>
-      ) : null}
+      </div>
     </div>
   );
 }
