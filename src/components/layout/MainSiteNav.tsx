@@ -3,6 +3,7 @@
  * Rendered inside AppTopBar (desktop) and the AppShell mobile drawer header.
  */
 import { useState, useRef, useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown } from "lucide-react";
 import { cn } from "../../lib/cn";
 
@@ -123,15 +124,35 @@ export const MAIN_NAV: NavItem[] = [
   },
 ];
 
-function DropdownPanel({ groups }: { groups: MenuGroup[] }) {
+type PanelPos = { top: number; centerX: number };
+
+function DropdownPanel({
+  groups,
+  pos,
+  onMouseEnter,
+  onMouseLeave,
+}: {
+  groups: MenuGroup[];
+  pos: PanelPos;
+  onMouseEnter: () => void;
+  onMouseLeave: () => void;
+}) {
   const multiCol = groups.length > 1;
-  return (
+
+  const panel = (
     <div
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       className={cn(
-        "absolute top-full left-1/2 -translate-x-1/2 mt-1.5 bg-white rounded-2xl shadow-2xl border border-slate-100/80 p-4 z-50",
+        "fixed z-[9999] bg-white rounded-2xl shadow-2xl border border-slate-100/80 p-4",
         multiCol ? "grid gap-x-5" : "min-w-[220px]",
       )}
-      style={multiCol ? { gridTemplateColumns: `repeat(${groups.length}, minmax(190px, 1fr))` } : undefined}
+      style={{
+        top: pos.top + 8,
+        left: pos.centerX,
+        transform: "translateX(-50%)",
+        ...(multiCol ? { gridTemplateColumns: `repeat(${groups.length}, minmax(190px, 1fr))` } : {}),
+      }}
     >
       {/* Caret */}
       <div className="absolute -top-[5px] left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-white border-l border-t border-slate-100/80 rotate-45" />
@@ -168,14 +189,22 @@ function DropdownPanel({ groups }: { groups: MenuGroup[] }) {
       ))}
     </div>
   );
+
+  return createPortal(panel, document.body);
 }
 
 function NavButton({ item }: { item: NavItem }) {
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<PanelPos>({ top: 56, centerX: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const enter = useCallback(() => {
     if (timer.current) clearTimeout(timer.current);
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      setPos({ top: rect.bottom, centerX: rect.left + rect.width / 2 });
+    }
     setOpen(true);
   }, []);
 
@@ -199,7 +228,7 @@ function NavButton({ item }: { item: NavItem }) {
   }
 
   return (
-    <div className="relative" onMouseEnter={enter} onMouseLeave={leave}>
+    <div ref={containerRef} onMouseEnter={enter} onMouseLeave={leave}>
       <button
         type="button"
         aria-expanded={open}
@@ -215,14 +244,14 @@ function NavButton({ item }: { item: NavItem }) {
         />
       </button>
 
-      <div
-        className={cn(
-          "transition-[opacity,transform] duration-150 origin-top",
-          open ? "opacity-100 scale-y-100 pointer-events-auto" : "opacity-0 scale-y-95 pointer-events-none",
-        )}
-      >
-        <DropdownPanel groups={item.groups} />
-      </div>
+      {open && (
+        <DropdownPanel
+          groups={item.groups}
+          pos={pos}
+          onMouseEnter={enter}
+          onMouseLeave={leave}
+        />
+      )}
     </div>
   );
 }
