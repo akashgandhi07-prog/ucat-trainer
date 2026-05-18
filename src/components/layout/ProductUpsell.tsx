@@ -845,10 +845,17 @@ export function ProductUpsellSidebar({
             className="block rounded-lg -m-1 p-1 outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-200/70"
             onTrack={() => trackClick("course", "sidebar", stream, course.id)}
           >
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-200/90">
-              Live online · £{course.priceGbp}
-            </p>
-            <p className="text-sm font-semibold text-white mt-0.5 leading-snug">1-day UCAT course</p>
+            <div className="flex items-start gap-2">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-400/25 text-amber-200 mt-0.5">
+                <Sparkles className="h-3.5 w-3.5" aria-hidden />
+              </span>
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-amber-200/90">
+                  Live online · £{course.priceGbp}
+                </p>
+                <p className="text-sm font-semibold text-white mt-0.5 leading-snug">1-day UCAT course</p>
+              </div>
+            </div>
             <div className="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-[grid-template-rows] duration-300 ease-in-out">
               <div className="overflow-hidden">
                 <p className="text-xs text-sky-200/80 mt-0.5">
@@ -871,14 +878,19 @@ export function ProductUpsellSidebar({
       <a
         href={TUTORING_OFFER.href}
         {...EXTERNAL}
-        className="group block rounded-xl bg-white/10 hover:bg-white/15 px-3 py-2 transition-colors"
+        className="group flex items-start gap-2 rounded-xl bg-white/10 hover:bg-white/15 px-3 py-2 transition-colors"
         onClick={() => trackClick("tutoring", "sidebar", stream, null)}
       >
-        <p className="text-sm font-medium text-white">
-          {firstName ? `${firstName}, ${TUTORING_OFFER.sidebarTitle}` : TUTORING_OFFER.sidebarTitle}
-        </p>
-        <div className="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-[grid-template-rows] duration-300 ease-in-out">
-          <p className="overflow-hidden text-[11px] text-sky-200/80">{TUTORING_OFFER.sidebarSub}</p>
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/10 text-sky-200 mt-0.5">
+          <GraduationCap className="h-3.5 w-3.5" aria-hidden />
+        </span>
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-white">
+            {firstName ? `${firstName}, ${TUTORING_OFFER.sidebarTitle}` : TUTORING_OFFER.sidebarTitle}
+          </p>
+          <div className="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-[grid-template-rows] duration-300 ease-in-out">
+            <p className="overflow-hidden text-[11px] text-sky-200/80">{TUTORING_OFFER.sidebarSub}</p>
+          </div>
         </div>
       </a>
       <a

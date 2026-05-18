@@ -121,7 +121,8 @@ export default function AppSidebar({
   onNavigate,
   forceExpanded = false,
 }: AppSidebarProps) {
-  const iconOnly = !forceExpanded && collapsed;
+  const [hoverExpanded, setHoverExpanded] = useState(false);
+  const iconOnly = !forceExpanded && collapsed && !hoverExpanded;
   const { user, profile } = useAuth();
   const [streak, setStreak] = useState(0);
   const navRef = useRef<HTMLElement>(null);
@@ -167,8 +168,14 @@ export default function AppSidebar({
         "relative flex h-full min-h-0 flex-col border-r-2 border-sky-400/50",
         "bg-gradient-to-b from-[hsl(215_48%_14%)] to-[hsl(215_52%_11%)] text-white",
         "transition-[width] duration-200 ease-out",
-        forceExpanded ? "w-[min(280px,85vw)]" : collapsed ? "w-[4.75rem]" : "w-[min(280px,20vw)] min-w-[240px] max-w-[280px]",
+        forceExpanded
+          ? "w-[min(280px,85vw)]"
+          : collapsed && !hoverExpanded
+            ? "w-[4.75rem]"
+            : "w-[min(280px,20vw)] min-w-[240px] max-w-[280px]",
       )}
+      onMouseEnter={() => { if (collapsed && !forceExpanded) setHoverExpanded(true); }}
+      onMouseLeave={() => setHoverExpanded(false)}
     >
       <div
         className={cn(
