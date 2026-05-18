@@ -478,12 +478,12 @@ function DrillSectionAccordion({
           {trainers.length} drills
         </span>
         <ChevronDown
-          className={cn("h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 ease-out", open && "rotate-180")}
+          className={cn("h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-[350ms] ease-out", open && "rotate-180")}
           aria-hidden
         />
       </button>
       <div
-        className="grid transition-[grid-template-rows] duration-200 ease-out"
+        className="grid transition-[grid-template-rows] duration-[350ms] ease-out"
         style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
       >
         <div className="overflow-hidden">
