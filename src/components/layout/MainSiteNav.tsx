@@ -21,10 +21,8 @@ export const MAIN_NAV: NavItem[] = [
     groups: [
       {
         items: [
-          { label: "All Packages", href: `${BASE}/packages`, description: "Browse everything we offer" },
           { label: "Medicine Ultimate Package", href: `${BASE}/ultimate-package`, description: "End-to-end medicine application support" },
           { label: "Dentistry Application Package", href: `${BASE}/dentistry-application-packages`, description: "Complete dentistry bundle" },
-          { label: "Veterinary Ultimate Package", href: `${BASE}/veterinary-medicine-ultimate-package`, description: "Tailored vet school package" },
         ],
       },
     ],
@@ -38,7 +36,6 @@ export const MAIN_NAV: NavItem[] = [
           { label: "UCAT 1-1 Tutoring", href: `${BASE}/ucat-tutoring`, description: "Personalised tutor sessions" },
           { label: "UCAT 1 Day Course", href: `${BASE}/ucat-courses`, description: "Intensive group course" },
           { label: "UCAT Schools Course", href: `${BASE}/ucat-course-schools`, description: "Delivered in your school" },
-          { label: "UCAT & BMAT Tutors", href: `${BASE}/ucat-bmat-tutors`, description: "Expert specialist tutors" },
         ],
       },
       {
@@ -54,21 +51,10 @@ export const MAIN_NAV: NavItem[] = [
     label: "Personal Statement",
     groups: [
       {
-        heading: "Medicine & Dentistry",
         items: [
-          { label: "Medicine PS Reviews", href: `${BASE}/personal-statement-medicine` },
-          { label: "Dentistry PS Reviews", href: `${BASE}/dentistry-personal-statement` },
-          { label: "Medicine & Dentistry PS", href: `${BASE}/personal-statement-medicine-dentist` },
-        ],
-      },
-      {
-        heading: "Allied Health",
-        items: [
-          { label: "Veterinary PS Reviews", href: `${BASE}/vet-school-personal-statement` },
-          { label: "Pharmacy PS Reviews", href: `${BASE}/pharmacy-personal-statement` },
-          { label: "Dental Hygiene & Therapy PS", href: `${BASE}/dental-hygiene-and-therapy-personal-statement` },
-          { label: "Physiotherapy PS Reviews", href: `${BASE}/physiotherapy-personal-statement-reviews` },
-          { label: "Occupational Therapy PS", href: `${BASE}/occupational-therapy-personal-statement` },
+          { label: "Medicine PS Reviews", href: `${BASE}/personal-statement-medicine`, description: "From £149" },
+          { label: "Dentistry PS Reviews", href: `${BASE}/dentistry-personal-statement`, description: "From £149" },
+          { label: "Medicine & Dentistry PS", href: `${BASE}/personal-statement-medicine-dentist`, description: "From £149" },
         ],
       },
     ],
@@ -80,7 +66,6 @@ export const MAIN_NAV: NavItem[] = [
         items: [
           { label: "Medicine Interview Tutoring", href: `${BASE}/medicine-interview-tutor-coaching`, description: "MMI, panel & Oxbridge prep" },
           { label: "Dentistry Interview Tutoring", href: `${BASE}/dentistry-interview-coaching`, description: "All dental school formats" },
-          { label: "Vet School Interview Coaching", href: `${BASE}/vet-school-interview-coaching`, description: "MAT & general interview prep" },
           { label: "Oxbridge Medicine Programme", href: `${BASE}/oxbridge-medicine-mentoring-tutoring-programme`, description: "Specialist Oxbridge support" },
         ],
       },
@@ -92,36 +77,13 @@ export const MAIN_NAV: NavItem[] = [
       {
         items: [
           { label: "Application Guide", href: `${BASE}/application-guide`, description: "Step-by-step admissions guide" },
-          { label: "Free BMAT Past Papers", href: `${BASE}/free-bmat-past-papers-solutions`, description: "Full papers & worked solutions" },
           { label: "How Universities Use UCAT", href: `${BASE}/medical-schools/ucat/how-universities-use-the-ucat`, description: "Threshold data by school" },
           { label: "UK Dental Schools Guide", href: `${BASE}/guide/dental-school/dentistry-university-uk`, description: "Rankings, entry reqs & tips" },
-          { label: "UK Vet Schools Guide", href: `${BASE}/guide/vet-schools-uk`, description: "Every vet school compared" },
         ],
       },
     ],
   },
-  {
-    label: "More",
-    groups: [
-      {
-        heading: "Specialist",
-        items: [
-          { label: "BMAT Tutoring", href: `${BASE}/bmat-tutoring` },
-          { label: "BMAT Courses", href: `${BASE}/bmat-courses` },
-          { label: "GAMSAT Tutors", href: `${BASE}/gamsat-tutors` },
-        ],
-      },
-      {
-        heading: "Company",
-        items: [
-          { label: "Reviews", href: `${BASE}/reviews` },
-          { label: "Blog", href: `${BASE}/blog` },
-          { label: "Join Our Team", href: `${BASE}/join-our-team` },
-          { label: "Contact Us", href: `${BASE}/theukcatpeople-contact-us` },
-        ],
-      },
-    ],
-  },
+  { label: "Blog", href: `${BASE}/blog` },
 ];
 
 type PanelPos = { top: number; centerX: number };
