@@ -2,8 +2,12 @@ import { useNavigate } from "react-router-dom";
 import { Calculator, Brain } from "lucide-react";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
-import SkillsSectionLayout, { SkillsSectionBlock } from "../components/layout/SkillsSectionLayout";
+import SkillsSectionLayout, {
+  HubTrainerGrid,
+  SkillsSectionBlock,
+} from "../components/layout/SkillsSectionLayout";
 import HubTrainerCard from "../components/layout/HubTrainerCard";
+import { HUB_SKILLS_TRAINERS_TITLE } from "../components/layout/hubTrainerLayout";
 import SEOHead from "../components/seo/SEOHead";
 import TrainerFaqSection from "../components/seo/TrainerFaqSection";
 import { trainerFaqs } from "../data/trainerFaqs";
@@ -42,8 +46,9 @@ export default function QuantitativeReasoningPage() {
         accent="emerald"
         breadcrumbs={breadcrumbs}
       >
-        <SkillsSectionBlock title="Trainers">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl">
+        <div className="space-y-8 sm:space-y-10">
+        <SkillsSectionBlock title={HUB_SKILLS_TRAINERS_TITLE}>
+          <HubTrainerGrid trainerCount={2}>
             <HubTrainerCard
               title="Calculator Trainer"
               description="Master the on-screen calculator and keypad under time pressure."
@@ -55,10 +60,10 @@ export default function QuantitativeReasoningPage() {
               title="Mental Maths Trainer"
               description="Build speed and estimation without the calculator."
               icon={Brain}
-              accent="violet"
+              accent="emerald"
               onClick={() => navigate("/train/mentalMaths")}
             />
-          </div>
+          </HubTrainerGrid>
         </SkillsSectionBlock>
         <UcatGuidesPanel embedded context="quantHub" />
         <TrainerFaqSection
@@ -68,6 +73,7 @@ export default function QuantitativeReasoningPage() {
           intro="Guidance on using the Quantitative Reasoning hub, calculator trainer and mental maths practice to raise your UCAT QR score."
           faqs={trainerFaqs.quantHub}
         />
+        </div>
       </SkillsSectionLayout>
       <Footer />
     </>

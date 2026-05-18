@@ -1,0 +1,627 @@
+[
+  {
+    "id": "venn-exactly-two-001",
+    "trainer_type": "venn-logic",
+    "difficulty": "easy",
+    "sort_order": 0,
+    "stem": "A group of students were asked which of three activities they enjoyed: Cycling, Swimming and Running.",
+    "question": "Which statement best describes people who enjoyed exactly two activities?",
+    "options": [
+      {
+        "id": "A",
+        "text": "People who enjoyed any two activities, including those who enjoyed all three."
+      },
+      {
+        "id": "B",
+        "text": "People who enjoyed two activities but not the third."
+      },
+      {
+        "id": "C",
+        "text": "People who enjoyed at least one activity."
+      },
+      {
+        "id": "D",
+        "text": "People who enjoyed only one activity."
+      }
+    ],
+    "correct_answer": "B",
+    "explanation": "Exactly two means membership in two sets but not the third. Anyone who enjoyed all three is excluded.",
+    "skill_tag": "exactly-two",
+    "common_trap": "includes-all-three-incorrectly",
+    "optional_working_steps": null,
+    "review": {
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "This tests precise UCAT wording for exactly two versus at least two or any two including all three."
+    },
+    "is_active": true
+  },
+  {
+    "id": "venn-total-mentions-001",
+    "trainer_type": "venn-logic",
+    "difficulty": "medium",
+    "sort_order": 1,
+    "stem": "A group were asked how they like their eggs cooked. 14 liked boiled, 11 liked scrambled and 12 liked fried. 6 liked all three ways. 3 liked exactly two ways. 2 liked none of them.",
+    "question": "How many people were asked?",
+    "options": [
+      {
+        "id": "A",
+        "text": "20"
+      },
+      {
+        "id": "B",
+        "text": "22"
+      },
+      {
+        "id": "C",
+        "text": "24"
+      },
+      {
+        "id": "D",
+        "text": "26"
+      }
+    ],
+    "correct_answer": "C",
+    "explanation": "Total mentions = 14 + 11 + 12 = 37. All-three mentions = 6 × 3 = 18. Exactly-two mentions = 3 × 2 = 6. That leaves 37 − 18 − 6 = 13 people who liked exactly one way. Total people = 13 + 3 + 6 + 2 = 24.",
+    "skill_tag": "total-mentions",
+    "common_trap": "confuses-exactly-and-at-least",
+    "optional_working_steps": [
+      "Total mentions = 14 + 11 + 12 = 37.",
+      "All-three mentions = 6 × 3 = 18.",
+      "Exactly-two mentions = 3 × 2 = 6.",
+      "Exactly-one people = 37 − 18 − 6 = 13.",
+      "Total people = 13 + 3 + 6 + 2 = 24."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "The stem separates all three, exactly two and none. The total follows from mention counting."
+    },
+    "is_active": true
+  },
+  {
+    "id": "venn-unknown-overlap-001",
+    "trainer_type": "venn-logic",
+    "difficulty": "hard",
+    "sort_order": 2,
+    "stem": "There are 48 people in a room. 29 say they like reading. 9 say they like watching television.",
+    "question": "Which of the following must be true?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Between 10 and 19 inclusive people like neither reading nor television."
+      },
+      {
+        "id": "B",
+        "text": "Exactly 20 people like reading but not television."
+      },
+      {
+        "id": "C",
+        "text": "More people do not like reading than do not like watching television."
+      },
+      {
+        "id": "D",
+        "text": "Exactly 38 people like either reading or television."
+      }
+    ],
+    "correct_answer": "A",
+    "explanation": "At most 29 + 9 = 38 like reading or television, so at least 48 − 38 = 10 like neither. At least 29 like reading (all television fans could be readers), so at most 48 − 29 = 19 like neither. The number who like neither must be between 10 and 19 inclusive.",
+    "skill_tag": "unknown-overlap",
+    "common_trap": "assumes-no-overlap",
+    "optional_working_steps": [
+      "Maximum reading or TV = 29 + 9 = 38, so minimum neither = 10.",
+      "Minimum reading or TV = 29, so maximum neither = 19."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Overlap is unknown, so only a range for neither can be proved. Other options fix exact counts without justification."
+    },
+    "is_active": true
+  },
+  {
+    "id": "venn-negative-wording-001",
+    "trainer_type": "venn-logic",
+    "difficulty": "hard",
+    "sort_order": 3,
+    "stem": "In Millbrook, half of the 200 homes have both a front garden and a back garden. 70 homes do not have a back garden. 85 homes do not have a front garden.",
+    "question": "How many homes have neither a front garden nor a back garden?",
+    "options": [
+      {
+        "id": "A",
+        "text": "25"
+      },
+      {
+        "id": "B",
+        "text": "40"
+      },
+      {
+        "id": "C",
+        "text": "55"
+      },
+      {
+        "id": "D",
+        "text": "70"
+      }
+    ],
+    "correct_answer": "C",
+    "explanation": "100 homes have both gardens. Let x be the number with neither. Homes with only a front garden = 70 − x. Homes with only a back garden = 85 − x. So (70 − x) + 100 + (85 − x) + x = 200, giving 255 − x = 200 and x = 55.",
+    "skill_tag": "negative-wording",
+    "common_trap": "misinterprets-not-a",
+    "optional_working_steps": [
+      "Both gardens: 200 ÷ 2 = 100.",
+      "Let x = neither.",
+      "(70 − x) + 100 + (85 − x) + x = 200 → x = 55."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "The not-a wording is translated into only-front and only-back regions. The equation has one solution."
+    },
+    "is_active": true
+  },
+  {
+    "id": "venn-three-set-fill-001",
+    "trainer_type": "venn-logic",
+    "difficulty": "medium",
+    "sort_order": 4,
+    "stem": "Members were asked which keep-fit methods they used: Cycling, Swimming and Running. No member used all three. 12 used exactly two methods. 10 used only Running. 9 used both Cycling and Swimming.",
+    "question": "How many members used Running?",
+    "options": [
+      {
+        "id": "A",
+        "text": "12"
+      },
+      {
+        "id": "B",
+        "text": "13"
+      },
+      {
+        "id": "C",
+        "text": "17"
+      },
+      {
+        "id": "D",
+        "text": "21"
+      }
+    ],
+    "correct_answer": "B",
+    "explanation": "Exactly two includes the 9 who used both Cycling and Swimming, so 12 − 9 = 3 used Running as one of exactly two other pairs. Total using Running = only Running + those two Running pairs = 10 + 3 = 13.",
+    "skill_tag": "three-set-partition",
+    "common_trap": "double-counts-pair-overlap",
+    "optional_working_steps": [
+      "Other exactly-two pairs (involving Running) = 12 − 9 = 3.",
+      "Running total = 10 + 3 = 13."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "No all-three region is stated. Exactly two is partitioned using the given Cycling and Swimming pair."
+    },
+    "is_active": true
+  },
+  {
+    "id": "data-complement-001",
+    "trainer_type": "data-logic",
+    "difficulty": "easy",
+    "sort_order": 0,
+    "stem": "Route B has a 60% likelihood of remaining congestion free.",
+    "question": "What is the likelihood of congestion on Route B?",
+    "options": [
+      {
+        "id": "A",
+        "text": "30%"
+      },
+      {
+        "id": "B",
+        "text": "40%"
+      },
+      {
+        "id": "C",
+        "text": "50%"
+      },
+      {
+        "id": "D",
+        "text": "60%"
+      }
+    ],
+    "correct_answer": "B",
+    "explanation": "Congestion and congestion-free are complements, so they add to 100%. Congestion = 100% − 60% = 40%.",
+    "skill_tag": "complement",
+    "common_trap": "complement-error",
+    "optional_working_steps": null,
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Single complement step with whole-number percentages."
+    },
+    "is_active": true
+  },
+  {
+    "id": "data-missing-percentage-001",
+    "trainer_type": "data-logic",
+    "difficulty": "medium",
+    "sort_order": 1,
+    "stem": "150 patients reported exactly one post-operative complication. 36% reported breathing issues, 45 reported cardiovascular complaints and 18% reported hypothermia. The remaining patients reported nausea.",
+    "question": "What percentage of patients reported nausea?",
+    "options": [
+      {
+        "id": "A",
+        "text": "12%"
+      },
+      {
+        "id": "B",
+        "text": "14%"
+      },
+      {
+        "id": "C",
+        "text": "16%"
+      },
+      {
+        "id": "D",
+        "text": "18%"
+      }
+    ],
+    "correct_answer": "C",
+    "explanation": "45 out of 150 is 30%. Known percentages are 36%, 30% and 18%, totalling 84%. The remaining share is 100% − 84% = 16%.",
+    "skill_tag": "missing-percentage",
+    "common_trap": "raw-number-treated-as-percentage",
+    "optional_working_steps": [
+      "45 ÷ 150 × 100 = 30%.",
+      "36 + 30 + 18 = 84.",
+      "100 − 84 = 16%."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Exactly one complication makes categories mutually exclusive. The remaining percentage is determined uniquely."
+    },
+    "is_active": true
+  },
+  {
+    "id": "data-denominator-001",
+    "trainer_type": "data-logic",
+    "difficulty": "medium",
+    "sort_order": 2,
+    "stem": "Survey X involved 200 people. 84 said they liked the product, 76 said they did not like the product. The rest did not respond.",
+    "question": "What percentage of those who responded liked the product?",
+    "options": [
+      {
+        "id": "A",
+        "text": "42%"
+      },
+      {
+        "id": "B",
+        "text": "48%"
+      },
+      {
+        "id": "C",
+        "text": "52.5%"
+      },
+      {
+        "id": "D",
+        "text": "60%"
+      }
+    ],
+    "correct_answer": "C",
+    "explanation": "Respondents = 84 + 76 = 160. Of those who responded, 84 liked the product. 84 ÷ 160 × 100 = 52.5%.",
+    "skill_tag": "denominator",
+    "common_trap": "wrong-denominator",
+    "optional_working_steps": [
+      "Respondents = 84 + 76 = 160.",
+      "84 ÷ 160 × 100 = 52.5%."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "The question specifies respondents as the denominator, not everyone surveyed."
+    },
+    "is_active": true
+  },
+  {
+    "id": "data-at-least-one-001",
+    "trainer_type": "data-logic",
+    "difficulty": "medium",
+    "sort_order": 3,
+    "stem": "Kai takes two flights. Seat assignment is independent on each flight. The probability of a window seat on each flight is 0.4.",
+    "question": "Is Kai more likely than not to get at least one window seat?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Yes, because the probability of at least one window seat is 0.64."
+      },
+      {
+        "id": "B",
+        "text": "Yes, because the probability of at least one window seat is 0.8."
+      },
+      {
+        "id": "C",
+        "text": "No, because the probability of window seats on both flights is only 0.16."
+      },
+      {
+        "id": "D",
+        "text": "No, because the probability of at least one window seat is 0.24."
+      }
+    ],
+    "correct_answer": "A",
+    "explanation": "Use the complement. No window on one flight: 0.6. No window on both: 0.6 × 0.6 = 0.36. At least one window: 1 − 0.36 = 0.64, which is greater than 0.5.",
+    "skill_tag": "at-least-one",
+    "common_trap": "adds-probabilities-incorrectly",
+    "optional_working_steps": [
+      "P(no window on one flight) = 0.6.",
+      "P(no window on both) = 0.36.",
+      "P(at least one) = 1 − 0.36 = 0.64."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Independence is stated. Complement method gives a single numeric answer."
+    },
+    "is_active": true
+  },
+  {
+    "id": "data-first-player-001",
+    "trainer_type": "data-logic",
+    "difficulty": "hard",
+    "sort_order": 4,
+    "stem": "X and Y take turns throwing a biased six-sided die. The first person to throw a six wins. X throws first.",
+    "question": "Do X and Y have an equal chance of winning?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Yes, because they use the same die on each turn."
+      },
+      {
+        "id": "B",
+        "text": "Yes, because bias does not change the probability of a six on a single throw."
+      },
+      {
+        "id": "C",
+        "text": "No, because X has a chance to win before Y gets a turn."
+      },
+      {
+        "id": "D",
+        "text": "No, but only if the die is biased towards six."
+      }
+    ],
+    "correct_answer": "C",
+    "explanation": "Y can only win if X fails first. X has the first opportunity to throw a six, so X has the advantage regardless of how the die is biased.",
+    "skill_tag": "first-player-advantage",
+    "common_trap": "same-probability-each-turn",
+    "optional_working_steps": null,
+    "review": {
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Turn order creates first-throw advantage. Bias magnitude does not remove that structural edge."
+    },
+    "is_active": true
+  },
+  {
+    "id": "arg-health-lunches-001",
+    "trainer_type": "argument-judge",
+    "difficulty": "easy",
+    "sort_order": 0,
+    "stem": "To improve children's health, should all primary-age children be given free school lunches?",
+    "question": "Select the strongest argument.",
+    "options": [
+      {
+        "id": "A",
+        "text": "Yes, school lunches may help children concentrate in class.",
+        "label": "true-but-irrelevant"
+      },
+      {
+        "id": "B",
+        "text": "Yes, free school lunches can save carers money over a year.",
+        "label": "true-but-irrelevant"
+      },
+      {
+        "id": "C",
+        "text": "Yes, school lunches can help support good eating habits in children.",
+        "label": "directly-relevant"
+      },
+      {
+        "id": "D",
+        "text": "No, a lot of school lunches are wasted each year.",
+        "label": "does-not-answer-aim"
+      }
+    ],
+    "correct_answer": "C",
+    "explanation": "The aim is improving children's health. Good eating habits link most directly to health. Concentration, cost and waste do not address that aim as directly.",
+    "skill_tag": "identify-aim",
+    "common_trap": "true-but-irrelevant",
+    "optional_working_steps": null,
+    "review": {
+      "exactAim": "improve children's health",
+      "whyCorrect": "C links school lunches to good eating habits, which links to health.",
+      "whyAIsWrong": "A discusses concentration, not health.",
+      "whyBIsWrong": "B discusses saving money, not health.",
+      "whyCIsWrong": "C is the correct answer.",
+      "whyDIsWrong": "D discusses waste, not a health benefit from lunches.",
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "The aim is explicit and only one option targets health most directly."
+    },
+    "is_active": true
+  },
+  {
+    "id": "arg-voting-online-001",
+    "trainer_type": "argument-judge",
+    "difficulty": "hard",
+    "sort_order": 1,
+    "stem": "To reduce costs, increase accuracy and improve turnout, should voting in elections be undertaken online or, exceptionally, by post?",
+    "question": "Select the strongest argument.",
+    "options": [
+      {
+        "id": "A",
+        "text": "Yes, online or postal voting would be more convenient and would therefore be likely to improve turnout.",
+        "label": "only-addresses-one-criterion"
+      },
+      {
+        "id": "B",
+        "text": "Yes, electronic counting would provide results more rapidly and with less chance of error.",
+        "label": "only-addresses-one-criterion"
+      },
+      {
+        "id": "C",
+        "text": "No, the necessary equipment would be expensive, electronic voting may discourage some voters, and hackers might interfere with the result.",
+        "label": "directly-relevant"
+      },
+      {
+        "id": "D",
+        "text": "No, current systems work effectively, so there is no need to change.",
+        "label": "vague"
+      }
+    ],
+    "correct_answer": "C",
+    "explanation": "The stem lists cost, accuracy and turnout. C addresses all three: equipment cost, discouraging voters and hacking affecting accuracy. A mainly addresses turnout. B mainly addresses accuracy. D is vague.",
+    "skill_tag": "multi-criteria",
+    "common_trap": "only-addresses-one-criterion",
+    "optional_working_steps": null,
+    "review": {
+      "exactAim": "reduce costs, increase accuracy and improve turnout",
+      "whyCorrect": "C responds to cost, turnout and accuracy in one argument.",
+      "whyAIsWrong": "A focuses on convenience and turnout only.",
+      "whyBIsWrong": "B focuses on speed and accuracy only.",
+      "whyCIsWrong": "C is the correct answer.",
+      "whyDIsWrong": "D does not engage with the three criteria.",
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Three criteria are explicit. Only C addresses all of them."
+    },
+    "is_active": true
+  },
+  {
+    "id": "arg-elderly-care-001",
+    "trainer_type": "argument-judge",
+    "difficulty": "medium",
+    "sort_order": 2,
+    "stem": "Should society rather than family members be ultimately responsible for the care of older people when they can no longer mentally or physically care for themselves?",
+    "question": "Select the strongest argument.",
+    "options": [
+      {
+        "id": "A",
+        "text": "Yes, family members may help where possible, but society should ensure care is available when family cannot provide it.",
+        "label": "directly-relevant"
+      },
+      {
+        "id": "B",
+        "text": "Yes, older people with mental illness can be difficult for untrained relatives to support.",
+        "label": "too-narrow"
+      },
+      {
+        "id": "C",
+        "text": "No, families should learn to stick together by caring for relatives themselves.",
+        "label": "partially-relevant"
+      },
+      {
+        "id": "D",
+        "text": "No, everyone should save enough money to pay for their own care.",
+        "label": "unsupported-assumption"
+      }
+    ],
+    "correct_answer": "A",
+    "explanation": "A answers who should be ultimately responsible and covers cases where families cannot provide care. B only discusses mental illness. C does not solve cases where families cannot help. D assumes everyone can save enough.",
+    "skill_tag": "scope",
+    "common_trap": "too-narrow",
+    "optional_working_steps": null,
+    "review": {
+      "exactAim": "who should ultimately be responsible for care when older people cannot care for themselves",
+      "whyCorrect": "A balances family help with society's ultimate responsibility when family care is not possible.",
+      "whyAIsWrong": "A is the correct answer.",
+      "whyBIsWrong": "B is too narrow because it only discusses mental illness.",
+      "whyCIsWrong": "C does not address inability of families to provide care.",
+      "whyDIsWrong": "D relies on the unsupported assumption that everyone can save enough.",
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "A matches the full scope of the stem. Wrong options fail on scope or assumptions."
+    },
+    "is_active": true
+  },
+  {
+    "id": "arg-workplace-uniforms-001",
+    "trainer_type": "argument-judge",
+    "difficulty": "medium",
+    "sort_order": 3,
+    "stem": "Will enforcing uniforms in the workplace boost productivity?",
+    "question": "Select the strongest argument.",
+    "options": [
+      {
+        "id": "A",
+        "text": "Yes, shared workwear may promote team identity, and stronger team identity can improve workplace performance.",
+        "label": "directly-relevant"
+      },
+      {
+        "id": "B",
+        "text": "Yes, all employees will save time every morning if they are required to wear a uniform.",
+        "label": "unsupported-assumption"
+      },
+      {
+        "id": "C",
+        "text": "Yes, uniforms will remove every form of inequality in the workplace.",
+        "label": "overclaim"
+      },
+      {
+        "id": "D",
+        "text": "No, uniforms are always unpopular with employees.",
+        "label": "unsupported-assumption"
+      }
+    ],
+    "correct_answer": "A",
+    "explanation": "A links uniforms to team identity and then to performance. B assumes all employees lose significant choosing time that becomes productive work. C overclaims. D is an unsupported generalisation.",
+    "skill_tag": "unsupported-assumption",
+    "common_trap": "unsupported-assumption",
+    "optional_working_steps": null,
+    "review": {
+      "exactAim": "whether workplace uniforms will boost productivity",
+      "whyCorrect": "A gives a direct chain from uniforms to team identity to performance.",
+      "whyAIsWrong": "A is the correct answer.",
+      "whyBIsWrong": "B assumes uniform time savings become productive output for all staff.",
+      "whyCIsWrong": "C claims uniforms remove every form of inequality.",
+      "whyDIsWrong": "D makes a blanket claim about popularity without linking to productivity.",
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Only A links uniforms to productivity with a plausible mechanism."
+    },
+    "is_active": true
+  },
+  {
+    "id": "arg-speed-limits-001",
+    "trainer_type": "argument-judge",
+    "difficulty": "easy",
+    "sort_order": 4,
+    "stem": "In order to reduce fatal motoring accidents, should cars be fitted with a device to limit the speeds at which they can travel?",
+    "question": "Select the strongest argument.",
+    "options": [
+      {
+        "id": "A",
+        "text": "Yes, many deaths are caused by drivers who break speed limits.",
+        "label": "directly-relevant"
+      },
+      {
+        "id": "B",
+        "text": "Yes, driving at fast speeds uses more fuel and increases pollution.",
+        "label": "true-but-irrelevant"
+      },
+      {
+        "id": "C",
+        "text": "No, people should decide for themselves how fast they drive.",
+        "label": "does-not-answer-aim"
+      },
+      {
+        "id": "D",
+        "text": "No, more road deaths are caused by drink driving than by speeding.",
+        "label": "true-but-irrelevant"
+      }
+    ],
+    "correct_answer": "A",
+    "explanation": "The aim is reducing fatal accidents. A links speed-limit breaking to deaths and supports limiting speed mechanically. B discusses pollution. C does not address fatalities. D compares causes but does not answer whether speed limiters would reduce fatalities.",
+    "skill_tag": "identify-aim",
+    "common_trap": "true-but-irrelevant",
+    "optional_working_steps": null,
+    "review": {
+      "exactAim": "reduce fatal motoring accidents",
+      "whyCorrect": "A ties speeding deaths to the proposed intervention.",
+      "whyAIsWrong": "A is the correct answer.",
+      "whyBIsWrong": "B discusses fuel and pollution, not fatal accidents.",
+      "whyCIsWrong": "C discusses choice, not whether fatalities would fall.",
+      "whyDIsWrong": "D compares other causes without addressing the speed-limiter proposal.",
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "The fatal-accident aim is clear. Only A addresses it directly."
+    },
+    "is_active": true
+  }
+]

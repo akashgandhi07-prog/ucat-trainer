@@ -23,6 +23,10 @@ import { cn } from "../../lib/cn";
 import { ProductUpsellSidebar } from "./ProductUpsell";
 
 const SIDEBAR_COLLAPSED_KEY = "ucat-sidebar-collapsed";
+/** Brief pause before hover-expand so the sidebar does not snap open. */
+const HOVER_EXPAND_DELAY_MS = 140;
+/** Short delay before hover-collapse to avoid flicker at the edge. */
+const HOVER_COLLAPSE_DELAY_MS = 120;
 
 // eslint-disable-next-line react-refresh/only-export-components
 export function readSidebarCollapsedPreference(): boolean {
@@ -126,7 +130,49 @@ export default function AppSidebar({
   const { user, profile } = useAuth();
   const [streak, setStreak] = useState(0);
   const navRef = useRef<HTMLElement>(null);
+  const hoverExpandTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hoverCollapseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [canScrollDown, setCanScrollDown] = useState(false);
+
+  const clearHoverExpandTimer = () => {
+    if (hoverExpandTimerRef.current) {
+      clearTimeout(hoverExpandTimerRef.current);
+      hoverExpandTimerRef.current = null;
+    }
+  };
+
+  const clearHoverCollapseTimer = () => {
+    if (hoverCollapseTimerRef.current) {
+      clearTimeout(hoverCollapseTimerRef.current);
+      hoverCollapseTimerRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      clearHoverExpandTimer();
+      clearHoverCollapseTimer();
+    };
+  }, []);
+
+  const handleSidebarMouseEnter = () => {
+    if (!collapsed || forceExpanded) return;
+    clearHoverCollapseTimer();
+    clearHoverExpandTimer();
+    hoverExpandTimerRef.current = setTimeout(() => {
+      setHoverExpanded(true);
+      hoverExpandTimerRef.current = null;
+    }, HOVER_EXPAND_DELAY_MS);
+  };
+
+  const handleSidebarMouseLeave = () => {
+    clearHoverExpandTimer();
+    clearHoverCollapseTimer();
+    hoverCollapseTimerRef.current = setTimeout(() => {
+      setHoverExpanded(false);
+      hoverCollapseTimerRef.current = null;
+    }, HOVER_COLLAPSE_DELAY_MS);
+  };
 
   useEffect(() => {
     const el = navRef.current;
@@ -167,15 +213,15 @@ export default function AppSidebar({
       className={cn(
         "relative flex h-full min-h-0 flex-col border-r-2 border-sky-400/50",
         "bg-gradient-to-b from-[hsl(215_48%_14%)] to-[hsl(215_52%_11%)] text-white",
-        "transition-[width] duration-200 ease-out",
+        "transition-[width] duration-300 ease-in-out",
         forceExpanded
           ? "w-[min(280px,85vw)]"
           : collapsed && !hoverExpanded
             ? "w-[4.75rem]"
             : "w-[min(280px,20vw)] min-w-[240px] max-w-[280px]",
       )}
-      onMouseEnter={() => { if (collapsed && !forceExpanded) setHoverExpanded(true); }}
-      onMouseLeave={() => setHoverExpanded(false)}
+      onMouseEnter={handleSidebarMouseEnter}
+      onMouseLeave={handleSidebarMouseLeave}
     >
       <div
         className={cn(

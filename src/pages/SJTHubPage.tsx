@@ -1,12 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Scale, Star, ArrowUpDown, ExternalLink, ChevronRight, Users } from "lucide-react";
+import { Scale, Star, ArrowUpDown, ExternalLink, Users } from "lucide-react";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import SEOHead from "../components/seo/SEOHead";
 import UcatGuidesPanel from "../components/layout/UcatGuidesPanel";
 import TrainerFaqSection from "../components/seo/TrainerFaqSection";
-import SkillsSectionLayout, { SkillsSectionBlock } from "../components/layout/SkillsSectionLayout";
+import SkillsSectionLayout, {
+  HubTrainerGrid,
+  SkillsSectionBlock,
+} from "../components/layout/SkillsSectionLayout";
+import HubTrainerCard from "../components/layout/HubTrainerCard";
+import { HUB_SKILLS_TRAINERS_TITLE } from "../components/layout/hubTrainerLayout";
 import SJTPerformancePanel from "../components/sjt/SJTPerformancePanel";
 import { GMC_DOMAINS_LIST, GMP_MAIN_URL } from "../data/gmcDomains";
 import { getSJTStats } from "../lib/sjtAnalytics";
@@ -88,37 +93,22 @@ export default function SJTHubPage() {
         >
           <div className="space-y-8 sm:space-y-10">
 
-            <SkillsSectionBlock title="Pick a trainer">
-              <div className="grid gap-3 sm:gap-4 sm:grid-cols-3 text-left">
-                {TRAINERS.map(({ id, title, description, icon: Icon, path, benefit, tip }) => (
-                  <button
+            <SkillsSectionBlock title={HUB_SKILLS_TRAINERS_TITLE}>
+              <HubTrainerGrid trainerCount={3}>
+                {TRAINERS.map(({ id, title, description, icon, path, benefit, tip }) => (
+                  <HubTrainerCard
                     key={id}
-                    type="button"
+                    title={title}
+                    description={description}
+                    icon={icon}
+                    eyebrow={benefit}
+                    tip={tip}
+                    ctaLabel="Start trainer"
+                    accent="violet"
                     onClick={() => navigate(path)}
-                    className="group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm hover:border-primary/40 hover:shadow-md p-4 sm:p-5 text-left transition-all duration-200"
-                  >
-                    <div className="flex flex-col gap-1 sm:gap-2 mb-3">
-                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg shrink-0 bg-primary/10 text-primary">
-                        <Icon className="w-5 h-5" aria-hidden />
-                      </span>
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                        {benefit}
-                      </span>
-                    </div>
-                    <p className="text-sm sm:text-base font-semibold text-foreground">{title}</p>
-                    <p className="mt-1.5 text-xs sm:text-sm leading-relaxed text-muted-foreground flex-1">
-                      {description}
-                    </p>
-                    <div className="mt-4 rounded-lg bg-muted/50 border border-border px-3 py-2">
-                      <p className="text-xs text-muted-foreground leading-relaxed">{tip}</p>
-                    </div>
-                    <div className="mt-4 w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors bg-primary hover:bg-primary/90 text-primary-foreground">
-                      Start trainer
-                      <ChevronRight className="w-4 h-4" aria-hidden />
-                    </div>
-                  </button>
+                  />
                 ))}
-              </div>
+              </HubTrainerGrid>
             </SkillsSectionBlock>
 
             {getSJTStats() && (

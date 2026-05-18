@@ -21,6 +21,9 @@ import DecisionMakingPage from "./pages/DecisionMakingPage";
 import StudyGuidesPage from "./pages/StudyGuidesPage";
 import SyllogismMicroPage from "./pages/SyllogismMicroPage";
 import SyllogismMacroPage from "./pages/SyllogismMacroPage";
+import VennLogicTrainerPage from "./pages/VennLogicTrainerPage";
+import DataLogicTrainerPage from "./pages/DataLogicTrainerPage";
+import ArgumentJudgeTrainerPage from "./pages/ArgumentJudgeTrainerPage";
 import SJTHubPage from "./pages/SJTHubPage";
 import SJTAppropriatenessPage from "./pages/SJTAppropriatenessPage";
 import SJTImportancePage from "./pages/SJTImportancePage";
@@ -65,6 +68,12 @@ function App() {
                     <Route path="/ucat-keyword-scanning-trainer" element={<KeywordScanningPage />} />
                     <Route path="/ucat-inference-trainer" element={<InferenceTrainerPage />} />
                     <Route path="/ucat-decision-making-practice" element={<DecisionMakingPage />} />
+                    <Route path="/ucat-venn-logic-practice-questions" element={<VennLogicTrainerPage />} />
+                    <Route path="/ucat-data-logic-practice-questions" element={<DataLogicTrainerPage />} />
+                    <Route
+                      path="/ucat-argument-judge-practice-questions"
+                      element={<ArgumentJudgeTrainerPage />}
+                    />
                     <Route path="/study-guides" element={<StudyGuidesPage />} />
                     <Route path="/ucat-mental-maths-trainer" element={<MentalMathsPage />} />
                     <Route path="/ucat-syllogism-practice-macro-drills" element={<SyllogismMacroPage />} />

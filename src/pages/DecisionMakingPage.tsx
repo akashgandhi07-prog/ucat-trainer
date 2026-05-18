@@ -1,14 +1,19 @@
 import { useNavigate } from "react-router-dom";
-import { Scale, Zap, LayoutList } from "lucide-react";
+import { Scale, Zap, LayoutList, Circle, BarChart3 } from "lucide-react";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
-import SkillsSectionLayout, { SkillsSectionBlock } from "../components/layout/SkillsSectionLayout";
+import SkillsSectionLayout, {
+  HubTrainerGrid,
+  SkillsSectionBlock,
+} from "../components/layout/SkillsSectionLayout";
+import { HUB_SKILLS_TRAINERS_TITLE } from "../components/layout/hubTrainerLayout";
 import HubTrainerCard from "../components/layout/HubTrainerCard";
 import SEOHead from "../components/seo/SEOHead";
 import TrainerFaqSection from "../components/seo/TrainerFaqSection";
 import { trainerFaqs } from "../data/trainerFaqs";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 import UcatGuidesPanel from "../components/layout/UcatGuidesPanel";
+import { DM_TRAINER_CONFIGS } from "../data/dmTrainers/trainerConfig";
 
 export default function DecisionMakingPage() {
   const navigate = useNavigate();
@@ -16,7 +21,7 @@ export default function DecisionMakingPage() {
   const canonicalUrl = base ? `${base}/ucat-decision-making-practice` : undefined;
   const ogImageUrl = base ? `${base}/og-trainer.png` : undefined;
   const ogImageAlt =
-    "UCAT Decision Making hub with cards linking to syllogism micro and macro drills";
+    "UCAT Decision Making hub with syllogism drills and Venn, data and argument skills trainers";
   const breadcrumbs = base
     ? [
         { name: "Home", url: `${base}/` },
@@ -24,11 +29,15 @@ export default function DecisionMakingPage() {
       ]
     : undefined;
 
+  const venn = DM_TRAINER_CONFIGS["venn-logic"];
+  const data = DM_TRAINER_CONFIGS["data-logic"];
+  const argument = DM_TRAINER_CONFIGS["argument-judge"];
+
   return (
     <>
       <SEOHead
         title="UCAT Decision Making skills practice"
-        description="Free UCAT Decision Making drills for UK applicants: syllogism micro and macro practice from TheUKCATPeople. Build speed and accuracy for the test."
+        description="Free UCAT Decision Making practice for UK applicants: syllogisms, Venn diagram questions, data and probability logic, and strongest argument drills from The UKCAT People."
         canonicalUrl={canonicalUrl}
         imageUrl={ogImageUrl}
         imageAlt={ogImageAlt}
@@ -37,40 +46,64 @@ export default function DecisionMakingPage() {
       <Header />
       <SkillsSectionLayout
         title="Decision Making"
-        description="Train logical reasoning and syllogisms for the UCAT."
+        description="Train syllogisms, set logic, data reasoning and argument judgement for the UCAT."
         icon={Scale}
         accent="amber"
         breadcrumbs={breadcrumbs}
       >
+        <div className="space-y-8 sm:space-y-10">
         <SkillsSectionBlock
-          title="Syllogisms Trainer"
-          description="Decide whether conclusions follow from given premises. Use micro drills for speed and pattern recognition, or macro drills for full UCAT-style stimulus with five conclusions."
+          title={HUB_SKILLS_TRAINERS_TITLE}
+          description="Syllogism drills plus targeted practice for Venn logic, data reasoning and argument judgement. Each trainer isolates one repeatable UCAT pattern."
         >
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl">
+          <HubTrainerGrid trainerCount={5}>
             <HubTrainerCard
-              title="Micro Drill"
+              title="Syllogisms · Micro"
               description="One premise, one conclusion. Build instant pattern recognition with keyboard shortcuts."
               icon={Zap}
               accent="amber"
               onClick={() => navigate("/train/syllogism/micro")}
             />
             <HubTrainerCard
-              title="Macro Drill"
+              title="Syllogisms · Macro"
               description="Full stimulus with five conclusions. UCAT-style layout with sticky passage and Yes/No for each."
               icon={LayoutList}
               accent="amber"
               onClick={() => navigate("/train/syllogism/macro")}
             />
-          </div>
+            <HubTrainerCard
+              title={venn.title}
+              description={venn.hubDescription}
+              icon={Circle}
+              accent="amber"
+              onClick={() => navigate(venn.canonicalPath)}
+            />
+            <HubTrainerCard
+              title={data.title}
+              description={data.hubDescription}
+              icon={BarChart3}
+              accent="amber"
+              onClick={() => navigate(data.canonicalPath)}
+            />
+            <HubTrainerCard
+              title={argument.title}
+              description={argument.hubDescription}
+              icon={Scale}
+              accent="amber"
+              onClick={() => navigate(argument.canonicalPath)}
+            />
+          </HubTrainerGrid>
         </SkillsSectionBlock>
+
         <UcatGuidesPanel embedded context="decisionHub" />
         <TrainerFaqSection
           embedded
           id="decision-making-faq"
           title="Common questions about the UCAT Decision Making skills trainers"
-          intro="Answers to common questions about UCAT Decision Making, with a particular focus on using syllogism micro and macro drills to build reliable logical reasoning."
+          intro="Answers to common questions about UCAT Decision Making, including syllogism drills and skills trainers for Venn logic, data logic and argument judgement."
           faqs={trainerFaqs.decisionHub}
         />
+        </div>
       </SkillsSectionLayout>
       <Footer />
     </>

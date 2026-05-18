@@ -213,9 +213,9 @@ export default function UcatGuidesPanel({
   const description = descriptionProp ?? defaults.description;
   const rowX = compact ? "px-3.5" : "px-4 sm:px-5";
   const gridPad = compact ? "px-3.5 pb-3 pt-2" : "px-4 pb-4 pt-3 sm:px-5 sm:pb-5 sm:pt-3.5";
-  /** Hub / accordion: single column on narrow screens so titles (e.g. Quantitative Reasoning) are not squeezed. */
+  /** Hub / accordion: auto-fill uses full panel width; avoids a lone card on row two when a section has few guides. */
   const catalogTileGrid =
-    "grid list-none grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3.5 lg:grid-cols-4 lg:gap-4";
+    "grid list-none grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3.5 lg:grid-cols-[repeat(auto-fill,minmax(min(100%,13.5rem),1fr))] lg:gap-4";
   /** Sidebar / compact: parent is already narrow; two columns still work with smaller type. */
   const compactTileGrid =
     "grid list-none grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3.5 lg:grid-cols-4 lg:gap-4";

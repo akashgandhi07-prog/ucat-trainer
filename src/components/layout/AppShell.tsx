@@ -173,6 +173,7 @@ export default function AppShell() {
               <AppTopBar className="border-b-0 shadow-none" />
             </div>
             <main
+              id="app-main-scroll"
               ref={mainScrollRef}
               className="flex-1 min-h-0 min-w-0 overflow-y-auto bg-background"
             >

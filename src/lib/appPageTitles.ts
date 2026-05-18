@@ -17,7 +17,10 @@ export function getAppTopBarTitle(pathname: string): string {
   if (
     pathname === "/ucat-decision-making-practice" ||
     pathname.startsWith("/train/syllogism") ||
-    pathname.startsWith("/ucat-syllogism")
+    pathname.startsWith("/ucat-syllogism") ||
+    pathname.startsWith("/ucat-venn-logic") ||
+    pathname.startsWith("/ucat-data-logic") ||
+    pathname.startsWith("/ucat-argument-judge")
   ) {
     return "Decision Making";
   }

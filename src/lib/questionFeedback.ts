@@ -17,13 +17,38 @@ export const questionFeedbackIssueTypes = [
 
 export type QuestionFeedbackIssueType = (typeof questionFeedbackIssueTypes)[number];
 
-export type QuestionFeedbackKind = "dm_syllogism" | "vr_tfct" | "vr_inference" | "sjt_rating" | "sjt_ranking";
+export type QuestionFeedbackKind =
+  | "dm_syllogism"
+  | "dm_venn_logic"
+  | "dm_data_logic"
+  | "dm_argument_judge"
+  | "vr_tfct"
+  | "vr_inference"
+  | "sjt_rating"
+  | "sjt_ranking";
 
-export type QuestionFeedbackTrainerType = TrainingType | "syllogism_micro" | "syllogism_macro" | "sjt_appropriateness" | "sjt_ranking";
+export type QuestionFeedbackTrainerType =
+  | TrainingType
+  | "syllogism_micro"
+  | "syllogism_macro"
+  | "dm_venn_logic"
+  | "dm_data_logic"
+  | "dm_argument_judge"
+  | "sjt_appropriateness"
+  | "sjt_ranking";
 
 export const questionFeedbackSchema = z.object({
   trainerType: z.string().min(1, "Missing trainer type."),
-  questionKind: z.enum(["dm_syllogism", "vr_tfct", "vr_inference", "sjt_rating", "sjt_ranking"]),
+  questionKind: z.enum([
+    "dm_syllogism",
+    "dm_venn_logic",
+    "dm_data_logic",
+    "dm_argument_judge",
+    "vr_tfct",
+    "vr_inference",
+    "sjt_rating",
+    "sjt_ranking",
+  ]),
   questionIdentifier: z
     .string()
     .min(1, "Missing question identifier.")

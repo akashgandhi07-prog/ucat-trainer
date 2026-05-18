@@ -5,6 +5,7 @@ import type { BreadcrumbItem } from "../seo/SEOHead";
 import { useAppShell } from "../../contexts/AppShellContext";
 import { cn } from "../../lib/cn";
 import { APP_CONTENT_X, appContentWidthClass } from "../../lib/appContentLayout";
+import { hubTrainerGridClass } from "./hubTrainerLayout";
 
 export type SkillsSectionAccent = "blue" | "amber" | "emerald" | "primary" | "purple";
 
@@ -79,6 +80,20 @@ export default function SkillsSectionLayout({
         </div>
       </div>
     </div>
+  );
+}
+
+export function HubTrainerGrid({
+  trainerCount,
+  children,
+  className,
+}: {
+  trainerCount: number;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn(hubTrainerGridClass(trainerCount), className)}>{children}</div>
   );
 }
 

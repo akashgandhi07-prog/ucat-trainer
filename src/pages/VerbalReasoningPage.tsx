@@ -1,9 +1,13 @@
 import { useState, useMemo, useEffect } from "react";
-import type { ReactNode } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
-import SkillsSectionLayout, { SkillsSectionBlock } from "../components/layout/SkillsSectionLayout";
+import SkillsSectionLayout, {
+  HubTrainerGrid,
+  SkillsSectionBlock,
+} from "../components/layout/SkillsSectionLayout";
+import HubTrainerCard from "../components/layout/HubTrainerCard";
+import { HUB_SKILLS_TRAINERS_TITLE } from "../components/layout/hubTrainerLayout";
 import { PASSAGES } from "../data/passages";
 import type { Passage } from "../data/passages";
 import { getTipForMode } from "../data/tips";
@@ -143,28 +147,33 @@ function getProgressNarrativeCopy(
   return null;
 }
 
-const SKILLS: { type: TrainingType; icon: ReactNode; summary: string; benefit: string }[] = [
+const SKILLS: {
+  type: TrainingType;
+  icon: typeof Zap;
+  summary: string;
+  benefit: string;
+}[] = [
   {
     type: "speed_reading",
-    icon: <Zap className="w-5 h-5" aria-hidden="true" />,
+    icon: Zap,
     summary: "Dial in your ideal reading speed for dense UCAT-style passages without losing comprehension.",
     benefit: "2× faster reading",
   },
   {
     type: "rapid_recall",
-    icon: <Brain className="w-5 h-5" aria-hidden="true" />,
+    icon: Brain,
     summary: "Eliminate the need for re-reading with short, focused recall drills after each passage.",
     benefit: "No more re-reading",
   },
   {
     type: "keyword_scanning",
-    icon: <Search className="w-5 h-5" aria-hidden="true" />,
+    icon: Search,
     summary: "Train yourself to spot critical keywords and phrases quickly under time pressure.",
     benefit: "Find answers faster",
   },
   {
     type: "inference_trainer",
-    icon: <Target className="w-5 h-5" aria-hidden="true" />,
+    icon: Target,
     summary: "Identify the exact evidence that supports an inference by selecting text from the passage.",
     benefit: "Evidence-based answers",
   },
@@ -556,47 +565,21 @@ export default function VerbalReasoningPage() {
           headerExtra={hubHeaderExtra}
         >
           <div className="space-y-8 sm:space-y-10">
-          <SkillsSectionBlock title="Pick a skill to train">
-            <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4 text-left">
-            {SKILLS.map(({ type, icon, summary, benefit }) => {
-              const isActive = mode === type;
-              return (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => setMode(type)}
-                  className={`group relative flex flex-col overflow-hidden rounded-lg sm:rounded-xl border p-3 sm:p-4 md:p-5 text-left transition-all duration-200 ${isActive
-                      ? "border-primary bg-training-active-muted shadow-md ring-1 ring-primary/20"
-                      : "border-border bg-card shadow-sm hover:border-primary/40 hover:shadow-md"
-                    }`}
-                >
-                  <div className="flex flex-col gap-1 sm:gap-2 mb-2 sm:mb-3">
-                    <span
-                      className={`inline-flex h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 items-center justify-center rounded-lg shrink-0 [&>svg]:w-4 [&>svg]:h-4 sm:[&>svg]:w-5 sm:[&>svg]:h-5 ${isActive ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"
-                        }`}
-                    >
-                      {icon}
-                    </span>
-                    <span
-                      className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-widest leading-tight text-left ${isActive ? "text-primary" : "text-muted-foreground"
-                        }`}
-                    >
-                      {benefit}
-                    </span>
-                  </div>
-                  <p className="text-sm sm:text-base font-semibold text-foreground text-left">
-                    {TRAINING_TYPE_LABELS[type]}
-                  </p>
-                  <p className="mt-1 sm:mt-1.5 text-xs sm:text-sm leading-relaxed text-muted-foreground text-left">
-                    {summary}
-                  </p>
-                  {isActive && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" aria-hidden />
-                  )}
-                </button>
-              );
-            })}
-          </div>
+          <SkillsSectionBlock title={HUB_SKILLS_TRAINERS_TITLE}>
+            <HubTrainerGrid trainerCount={4}>
+            {SKILLS.map(({ type, icon, summary, benefit }) => (
+              <HubTrainerCard
+                key={type}
+                title={TRAINING_TYPE_LABELS[type]}
+                description={summary}
+                icon={icon}
+                eyebrow={benefit}
+                accent="blue"
+                selected={mode === type}
+                onClick={() => setMode(type)}
+              />
+            ))}
+            </HubTrainerGrid>
           </SkillsSectionBlock>
 
         {/* Settings panel */}

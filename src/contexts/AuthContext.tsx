@@ -6,6 +6,10 @@ import { trackEvent } from "../lib/analytics";
 import { getProfile, upsertProfile } from "../lib/profileApi";
 import { getGuestSessions, clearGuestSessions } from "../lib/guestSessions";
 import { mergeGuestSJTOnSignIn, migrateLocalSJTAttemptsToCloud } from "../lib/sjtSessionStorage";
+import {
+  mergeGuestDmTrainerOnSignIn,
+  migrateLegacyDmTrainerSessions,
+} from "../lib/dmTrainerSessionStorage";
 import { useToast } from "../contexts/ToastContext";
 import { syncSignupToMailchimp } from "../lib/mailchimpSync";
 import type { AuthState } from "../types/session";
@@ -261,6 +265,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         } catch (sjtErr) {
           authLog.error("Guest SJT merge failed", sjtErr);
+        }
+
+        try {
+          const dmMerged = await mergeGuestDmTrainerOnSignIn(session.user.id);
+          await migrateLegacyDmTrainerSessions(session.user.id);
+          if (!dmMerged && authListenerActive) {
+            authLog.warn("Guest DM trainer sessions merge failed");
+          }
+        } catch (dmErr) {
+          authLog.error("Guest DM trainer merge failed", dmErr);
         }
 
         try {

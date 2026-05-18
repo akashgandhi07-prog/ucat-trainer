@@ -2,7 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import { ChevronRight } from "lucide-react";
 import { cn } from "../../lib/cn";
 
-export type HubTrainerCardAccent = "primary" | "amber" | "emerald" | "violet";
+export type HubTrainerCardAccent = "primary" | "blue" | "amber" | "emerald" | "violet";
 
 const accentStyles: Record<
   HubTrainerCardAccent,
@@ -13,6 +13,12 @@ const accentStyles: Record<
     hoverBorder: "hover:border-primary/40",
     hoverTitle: "group-hover:text-primary",
     hoverChevron: "group-hover:text-primary",
+  },
+  blue: {
+    iconBox: "bg-blue-500/10 text-blue-600",
+    hoverBorder: "hover:border-blue-200",
+    hoverTitle: "group-hover:text-blue-700",
+    hoverChevron: "group-hover:text-blue-600",
   },
   amber: {
     iconBox: "bg-amber-500/10 text-amber-600",
@@ -40,6 +46,15 @@ type HubTrainerCardProps = {
   icon: LucideIcon;
   onClick: () => void;
   accent?: HubTrainerCardAccent;
+  /** Small uppercase label above the title (e.g. benefit line on VR / SJT). */
+  eyebrow?: string;
+  /** Optional tip box above the CTA (SJT hubs). */
+  tip?: string;
+  /** When set, shows a primary button instead of chevron-only navigation. */
+  ctaLabel?: string;
+  /** Highlights the card (e.g. active skill on Verbal Reasoning hub). */
+  selected?: boolean;
+  badge?: string;
 };
 
 export default function HubTrainerCard({
@@ -48,6 +63,11 @@ export default function HubTrainerCard({
   icon: Icon,
   onClick,
   accent = "primary",
+  eyebrow,
+  tip,
+  ctaLabel,
+  selected = false,
+  badge,
 }: HubTrainerCardProps) {
   const styles = accentStyles[accent];
 
@@ -56,33 +76,78 @@ export default function HubTrainerCard({
       type="button"
       onClick={onClick}
       className={cn(
-        "group flex flex-col items-stretch text-left p-5 sm:p-6 rounded-xl border border-border bg-card shadow-sm",
-        "hover:shadow-md transition-all duration-200",
-        styles.hoverBorder,
+        "group relative flex h-full flex-col items-stretch text-left rounded-xl border bg-card shadow-sm",
+        "p-5 sm:p-6 transition-all duration-200 hover:shadow-md",
+        selected
+          ? "border-primary bg-training-active-muted shadow-md ring-1 ring-primary/20"
+          : cn("border-border", styles.hoverBorder),
       )}
     >
-      <div className="flex items-center justify-between gap-2 mb-3">
-        <span className={cn("p-2 rounded-lg", styles.iconBox)}>
-          <Icon className="w-5 h-5" aria-hidden />
-        </span>
-        <ChevronRight
+      <div className="mb-3 flex items-start justify-between gap-2">
+        <span
           className={cn(
-            "w-5 h-5 text-muted-foreground shrink-0 transition-all",
-            "group-hover:translate-x-0.5",
-            styles.hoverChevron,
+            "rounded-lg p-2",
+            selected ? "bg-primary text-primary-foreground" : styles.iconBox,
           )}
-          aria-hidden
-        />
+        >
+          <Icon className="h-5 w-5" aria-hidden />
+        </span>
+        <div className="flex shrink-0 items-center gap-2">
+          {badge ? (
+            <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800">
+              {badge}
+            </span>
+          ) : null}
+          {!ctaLabel ? (
+            <ChevronRight
+              className={cn(
+                "h-5 w-5 text-muted-foreground transition-all group-hover:translate-x-0.5",
+                selected ? "text-primary" : styles.hoverChevron,
+              )}
+              aria-hidden
+            />
+          ) : null}
+        </div>
       </div>
+
+      {eyebrow ? (
+        <span
+          className={cn(
+            "mb-2 text-[10px] font-bold uppercase tracking-widest",
+            selected ? "text-primary" : "text-muted-foreground",
+          )}
+        >
+          {eyebrow}
+        </span>
+      ) : null}
+
       <h3
         className={cn(
-          "font-semibold text-foreground transition-colors text-base sm:text-lg text-left",
-          styles.hoverTitle,
+          "text-base font-semibold text-foreground sm:text-lg",
+          !selected && styles.hoverTitle,
+          selected && "text-primary",
         )}
       >
         {title}
       </h3>
-      <p className="mt-1 text-sm text-muted-foreground leading-relaxed text-left">{description}</p>
+      <p className="mt-1 flex-1 text-sm leading-relaxed text-muted-foreground">{description}</p>
+
+      {tip ? (
+        <div className="mt-4 rounded-lg border border-border bg-muted/50 px-3 py-2">
+          <p className="text-xs leading-relaxed text-muted-foreground">{tip}</p>
+        </div>
+      ) : null}
+
+      {ctaLabel ? (
+        <span className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors group-hover:bg-primary/90">
+          {ctaLabel}
+          <ChevronRight className="h-4 w-4" aria-hidden />
+        </span>
+      ) : null}
+
+      {selected && !ctaLabel ? (
+        <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" aria-hidden />
+      ) : null}
     </button>
   );
 }

@@ -21,7 +21,7 @@ export const LANDING_TRAINER_SECTION_META: Record<
   dm: {
     label: "Decision Making",
     hubHref: "/decision-making",
-    summary: "Syllogism speed and full stimulus practice.",
+    summary: "Syllogisms plus beta Venn, data and argument skills trainers.",
   },
   qr: {
     label: "Quantitative Reasoning",
@@ -83,6 +83,30 @@ export const LANDING_TRAINERS: readonly LandingTrainer[] = [
     tag: "5 conclusions",
     description: "Full UCAT-style stimulus with five yes/no conclusions beside the passage.",
     href: "/ucat-syllogism-practice-macro-drills",
+  },
+  {
+    id: "venn-logic",
+    section: "dm",
+    title: "Venn Logic",
+    tag: "Set logic",
+    description: "Translate exactly, only and neither into set regions without double counting.",
+    href: "/ucat-venn-logic-practice-questions",
+  },
+  {
+    id: "data-logic",
+    section: "dm",
+    title: "Data Logic",
+    tag: "Data skills",
+    description: "Percentages, complements, denominators and at-least-one probability.",
+    href: "/ucat-data-logic-practice-questions",
+  },
+  {
+    id: "argument-judge",
+    section: "dm",
+    title: "Argument Judge",
+    tag: "Arguments",
+    description: "Match the exact aim of the stem when choosing the strongest argument.",
+    href: "/ucat-argument-judge-practice-questions",
   },
   {
     id: "calculator",
