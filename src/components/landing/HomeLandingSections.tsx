@@ -165,7 +165,15 @@ export function LandingHero() {
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] font-extrabold tracking-tight text-foreground leading-[1.08]">
-              The fastest way to
+              The fastest &amp;{" "}
+              <span className="relative inline-block">
+                <span className="relative z-10 text-emerald-600">free</span>
+                <span
+                  className="absolute -inset-x-1 -inset-y-0.5 z-0 rounded-md bg-emerald-100"
+                  aria-hidden
+                />
+              </span>{" "}
+              way to
               <br />
               <span className="text-primary">raise your UCAT score.</span>
             </h1>
