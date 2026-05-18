@@ -59,6 +59,13 @@ const SECTION_ACCENT: Record<LandingTrainerSection, string> = {
   sjt: "text-purple-600 bg-purple-50 border-purple-100",
 };
 
+const SECTION_HEADER_BG: Record<LandingTrainerSection, string> = {
+  vr: "bg-blue-50 hover:bg-blue-100/80 border-blue-200/60",
+  dm: "bg-amber-50 hover:bg-amber-100/80 border-amber-200/60",
+  qr: "bg-emerald-50 hover:bg-emerald-100/80 border-emerald-200/60",
+  sjt: "bg-purple-50 hover:bg-purple-100/80 border-purple-200/60",
+};
+
 function LandingContainer({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <div className={cn("mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8", className)}>
@@ -173,9 +180,7 @@ export function LandingHero() {
                   aria-hidden
                 />
               </span>{" "}
-              way to
-              <br />
-              <span className="text-primary">raise your UCAT score.</span>
+              way to <span className="text-primary">raise your UCAT score.</span>
             </h1>
 
             <p className="mt-5 text-base sm:text-lg text-muted-foreground leading-relaxed max-w-[520px]">
@@ -451,9 +456,8 @@ function DrillSectionAccordion({
         type="button"
         className={cn(
           "flex w-full items-center gap-4 p-4 sm:p-5 text-left transition-colors",
-          open
-            ? "bg-muted border-b border-border hover:bg-muted/90"
-            : "bg-muted hover:bg-muted/90",
+          SECTION_HEADER_BG[section],
+          open && "border-b",
         )}
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
