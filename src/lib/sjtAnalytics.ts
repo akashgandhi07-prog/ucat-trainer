@@ -45,7 +45,7 @@ function saveAttempts(attempts: SJTAttempt[]): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(attempts.slice(-MAX_RECORDS)));
   } catch {
-    // storage unavailable — fail silently
+    // storage unavailable - fail silently
   }
 }
 

@@ -728,7 +728,7 @@ export function PlannerExtrasAside({
   );
 }
 
-/** @deprecated Use {@link PlannerExtrasAside} — kept for onboarding imports. */
+/** @deprecated Use {@link PlannerExtrasAside} - kept for onboarding imports. */
 export function PlannerOnboardingAside(
   props: Omit<Parameters<typeof PlannerExtrasAside>[0], "placement">,
 ) {
@@ -1010,7 +1010,7 @@ export function DashboardUpsellStack({
 }
 
 /**
- * "Book a free strategy call" CTA — used across sidebar, footer, landing, dashboard.
+ * "Book a free strategy call" CTA - used across sidebar, footer, landing, dashboard.
  * variant="sidebar"  → compact dark tile (fits inside the app sidebar)
  * variant="card"     → light bordered card for page content areas
  * variant="inline"   → single sentence with a link

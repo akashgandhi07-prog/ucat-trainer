@@ -168,16 +168,16 @@ function roundPlannerHours(h: number): number {
 /**
  * Target timed mock sessions per week, scaled by both phase and available hours.
  *
- * The key insight: a student doing 6h/day can fit 5–6 mocks/week in the final
+ * The key insight: a student doing 6h/day can fit 5-6 mocks/week in the final
  * weeks; a student doing 3h/day can fit fewer. Rather than hard-coding a fixed
  * count, we compute how many mock+reflection blocks physically fit in the week's
  * available time, then apply a generous phase ceiling so mocks can't run away in
  * early weeks even if hours are high.
  *
- * Phase ceilings (upper bounds — time is the real constraint):
+ * Phase ceilings (upper bounds - time is the real constraint):
  *   ≤3 weeks out  → up to 6 full mocks/wk  (final_week: one per day is fine)
- *   ≤6 weeks out  → up to 5 full mocks/wk  (full_mock: 4–5 for high-hours students)
- *   ≤10 weeks out → up to 3 mocks/wk       (mini_mock: 2–3 per week)
+ *   ≤6 weeks out  → up to 5 full mocks/wk  (full_mock: 4-5 for high-hours students)
+ *   ≤10 weeks out → up to 3 mocks/wk       (mini_mock: 2-3 per week)
  *   earlier       → 1 mini-mock/wk          (timed/foundations; overridden to 0 for first 2 foundation weeks)
  */
 export function weeklyMockTarget(
@@ -198,13 +198,13 @@ export function weeklyMockTarget(
   // Cap at 6 so there's always at least one guaranteed rest/pure-practice day.
   const fitsByTime = Math.min(6, Math.floor(weeklyAvailableMinutes / blockSize))
 
-  // Generous phase ceilings — time is the binding constraint for high-hours students;
+  // Generous phase ceilings - time is the binding constraint for high-hours students;
   // these ceilings only matter for very-low-hours students where fitsByTime exceeds
   // what makes educational sense for that phase.
   let phaseCeiling: number
   if (weeksRemaining <= 3) phaseCeiling = 6       // final sprint: up to daily mocks
-  else if (weeksRemaining <= 6) phaseCeiling = 5  // 4–5 for students with 5+ h/day
-  else if (weeksRemaining <= 10) phaseCeiling = 3 // 2–3 per week in mini_mock phase
+  else if (weeksRemaining <= 6) phaseCeiling = 5  // 4-5 for students with 5+ h/day
+  else if (weeksRemaining <= 10) phaseCeiling = 3 // 2-3 per week in mini_mock phase
   else phaseCeiling = 1                            // timed/foundations: 1 mini-mock/wk
 
   let ideal = Math.min(phaseCeiling, fitsByTime)
@@ -247,7 +247,7 @@ export function hoursForDate(
   /**
    * Final three weeks (21-day window before the exam, excluding exam day): ramp every day
    * from the student's current weekday baseline toward 6 h/day. We deliberately push past
-   * the student's stated weekend max — the exam is near and intensity must rise. A student
+   * the student's stated weekend max - the exam is near and intensity must rise. A student
    * who said "4 h weekends" will see the plan climb to 6 h here so the mock count is
    * achievable (each full mock + reflection block needs ~4 h).
    */
@@ -443,7 +443,7 @@ export function planDaySessions(
   }
 
   // ── Timed / foundations: 1 mini-mock per week (0 for foundations first 2 weeks)
-  // No preferMockDay gating — rely on remaining >= miniBlock (3h) to naturally
+  // No preferMockDay gating - rely on remaining >= miniBlock (3h) to naturally
   // land mocks on high-capacity days (weekends / holidays).
   if (weekMockCount < weeklyMockCap && remaining >= miniBlock) {
     sessions.push('mini_mock')

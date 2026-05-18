@@ -307,7 +307,7 @@ function buildCantTellQuestion(
   if (sentences.length < 3) return null;
   const snippet = pick(sentences);
 
-  // Use passage title when available — produces far more coherent Can't Tell statements
+  // Use passage title when available - produces far more coherent Can't Tell statements
   const topic = passageTitle
     ? passageTitle.toLowerCase()
     : null;

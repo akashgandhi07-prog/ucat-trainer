@@ -112,7 +112,7 @@ export default function TrainerFaqSection({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
-      <div className={embedded ? "w-full" : APP_CONTENT_WIDTH_NARROW}>
+      <div className={embedded ? "w-full" : cn(APP_CONTENT_WIDTH_NARROW, "mx-auto")}>
         {!collapseIntoSingleAccordion && (
           <>
             {title && (

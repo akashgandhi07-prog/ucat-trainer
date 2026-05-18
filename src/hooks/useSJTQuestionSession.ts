@@ -36,7 +36,7 @@ export function useSJTQuestionSession(type: SJTQuestionType) {
     } catch (e) {
       // Only silently discard if WE deliberately aborted (navigation away, reset, etc.)
       if (controller.signal.aborted) return;
-      // Everything else — network errors, timeouts, unexpected abort-shaped errors — surface as errors
+      // Everything else - network errors, timeouts, unexpected abort-shaped errors - surface as errors
       setError(
         !isAbortError(e) && e instanceof Error
           ? e.message
@@ -86,7 +86,7 @@ export function useSJTQuestionSession(type: SJTQuestionType) {
   useEffect(() => {
     const retry = () => {
       if (loadAbortRef.current?.signal.aborted === false && !question) {
-        // Still loading but question never arrived — re-trigger
+        // Still loading but question never arrived - re-trigger
         void loadInitial();
       }
     };

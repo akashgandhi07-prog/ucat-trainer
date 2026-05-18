@@ -192,7 +192,7 @@ export default function LatestMockCard({ userId }: LatestMockCardProps) {
   const targetSjt = plan?.mock_target_sjt_band ?? null;
   const hasTarget = targetTotal != null || targetSjt != null;
 
-  // Target chip — shown in both empty and populated states
+  // Target chip - shown in both empty and populated states
   const targetChip = plan && (
     editingTarget ? (
       <form onSubmit={saveTarget} className="flex flex-wrap items-center gap-2">

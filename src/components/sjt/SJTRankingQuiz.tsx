@@ -61,7 +61,7 @@ export default function SJTRankingQuiz({ question, onComplete, onProgress }: Pro
   return (
     <div className="lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start space-y-4 lg:space-y-0">
 
-      {/* Left col: Scenario — stays fixed on desktop */}
+      {/* Left col: Scenario - stays fixed on desktop */}
       <div className="lg:sticky lg:top-4">
         <div className="rounded-xl border border-border bg-card shadow-sm p-5">
           <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Scenario</p>

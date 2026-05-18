@@ -64,7 +64,7 @@ export function useSyllogismLogic(mode: SyllogismMode) {
   const fetchAbortRef = useRef<AbortController | null>(null);
   /** Macro: mirror of userAnswers so finishSession always reads latest (avoids stale closure). */
   const userAnswersRef = useRef<(boolean | null)[]>(userAnswers);
-  /** For pagehide/unmount autosave — avoids double-save if both fire. */
+  /** For pagehide/unmount autosave - avoids double-save if both fire. */
   const savedOnExitRef = useRef(false);
   const sessionFinishedRef = useRef(false);
   const finishSessionRef = useRef<() => Promise<SyllogismSessionSummary | null>>(() => Promise.resolve(null));

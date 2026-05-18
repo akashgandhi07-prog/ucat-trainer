@@ -74,7 +74,7 @@ function computeMockTabStats(list: DBMockScore[]) {
   const bestSjt = sjtBands.length > 0 ? Math.min(...sjtBands) : null
 
   // For full mocks every entry has all 3 sections so /2700 is correct.
-  // For mini mocks sections vary per entry — combined totals are not comparable.
+  // For mini mocks sections vary per entry - combined totals are not comparable.
   const allHaveAllThree = list.every(
     s => s.score_vr != null && s.score_dm != null && s.score_qr != null,
   )

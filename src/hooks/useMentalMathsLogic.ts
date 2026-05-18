@@ -29,7 +29,7 @@ export function useMentalMathsLogic(onSessionComplete?: (stats: MentalMathsSumma
   const [questionIndex, setQuestionIndex] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [responseTimesMs, setResponseTimesMs] = useState<number[]>([]);
-  // Pre-generated question queue for the whole stage — eliminates the between-question delay
+  // Pre-generated question queue for the whole stage - eliminates the between-question delay
   const [questionQueue, setQuestionQueue] = useState<QuestionPayload[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState<QuestionPayload | null>(null);
   const [userAnswer, setUserAnswer] = useState<number | null>(null);
@@ -205,7 +205,7 @@ export function useMentalMathsLogic(onSessionComplete?: (stats: MentalMathsSumma
       setQuestionIndex(nextIndex);
       setLastCorrect(null);
       setUserAnswer(null);
-      // Use pre-generated question — no computation needed here
+      // Use pre-generated question - no computation needed here
       setCurrentQuestion(questionQueue[nextIndex]);
       questionShownAtRef.current = Date.now();
       setElapsedQuestionSeconds(0);

@@ -46,6 +46,12 @@ function mapQuestion(raw: unknown): DmTrainerQuestion | null {
     optionalWorkingSteps: Array.isArray(row.optionalWorkingSteps)
       ? (row.optionalWorkingSteps as string[])
       : undefined,
+    generalRule: typeof row.generalRule === "string" ? row.generalRule : undefined,
+    wrongOptionReasons:
+      row.wrongOptionReasons && typeof row.wrongOptionReasons === "object"
+        ? (row.wrongOptionReasons as DmTrainerQuestion["wrongOptionReasons"])
+        : undefined,
+    keyInsight: typeof row.keyInsight === "string" ? row.keyInsight : undefined,
     review: review as DmTrainerQuestion["review"],
   };
 }
@@ -68,7 +74,20 @@ export async function fetchDmTrainerDrill(
       .filter((q): q is DmTrainerQuestion => q != null);
 
     if (mapped.length >= 1) {
-      return { questions: mapped, source: "supabase" };
+      // Enrich Supabase questions with local teaching fields (generalRule, wrongOptionReasons,
+      // keyInsight) which aren't stored in the database yet.
+      const localById = new Map(fallback.map((q) => [q.id, q]));
+      const enriched = mapped.map((q) => {
+        const local = localById.get(q.id);
+        if (!local) return q;
+        return {
+          ...q,
+          generalRule: q.generalRule ?? local.generalRule,
+          wrongOptionReasons: q.wrongOptionReasons ?? local.wrongOptionReasons,
+          keyInsight: q.keyInsight ?? local.keyInsight,
+        };
+      });
+      return { questions: enriched, source: "supabase" };
     }
   } catch {
     // fall through to local seed

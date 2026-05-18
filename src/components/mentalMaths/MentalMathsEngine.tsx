@@ -66,7 +66,7 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
     }
   }, [logic.status, logic.questionIndex, logic.currentQuestion?.kind]);
 
-  // Enter (or Space) on review advances to next question — ignore for 400ms so the submit Enter doesn't skip feedback
+  // Enter (or Space) on review advances to next question - ignore for 400ms so the submit Enter doesn't skip feedback
   useEffect(() => {
     if (logic.status !== "review") return;
     reviewShownAtRef.current = Date.now();

@@ -877,13 +877,13 @@ export default function AdminPage() {
                       <tr key={r.user_id} className="border-b border-slate-100 hover:bg-slate-50">
                         <td className="px-3 py-2 text-slate-400 text-xs tabular-nums">{i + 1}</td>
                         <td className="px-3 py-2 text-slate-900 font-medium whitespace-nowrap">
-                          {r.display_name || <span className="text-slate-400 italic">—</span>}
+                          {r.display_name || <span className="text-slate-400 italic">-</span>}
                         </td>
                         <td className="px-3 py-2 text-slate-600 truncate max-w-[180px]" title={r.email || ""}>
-                          {r.email || "—"}
+                          {r.email || "-"}
                         </td>
                         <td className="px-3 py-2 text-slate-600 whitespace-nowrap">
-                          {r.created_at ? new Date(r.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                          {r.created_at ? new Date(r.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "-"}
                         </td>
                         <td className="px-3 py-2 text-slate-600 whitespace-nowrap">
                           {r.last_active_at
@@ -898,7 +898,7 @@ export default function AdminPage() {
                         <td className="px-3 py-2 text-right tabular-nums">
                           {r.days_active != null && r.days_active > 0
                             ? <span className="text-slate-900">{r.days_active}</span>
-                            : <span className="text-slate-400">—</span>}
+                            : <span className="text-slate-400">-</span>}
                         </td>
                       </tr>
                     ))}

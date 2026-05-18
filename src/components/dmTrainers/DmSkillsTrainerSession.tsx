@@ -315,7 +315,7 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
 
                 {showFeedback ? (
                   <>
-                    <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 sm:px-4 space-y-2">
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 sm:px-4 space-y-3">
                       <p
                         className={cn(
                           "text-sm font-semibold",
@@ -337,30 +337,63 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
                             <span className="font-semibold">Exact aim: </span>
                             {argReview.exactAim}
                           </p>
-                          <p className="text-sm text-slate-800 leading-relaxed">{argReview.whyCorrect}</p>
                           <p className="text-sm text-slate-800 leading-relaxed">{current.explanation}</p>
                         </>
                       ) : (
                         <p className="text-sm text-slate-800 leading-relaxed">{current.explanation}</p>
                       )}
 
-                      <div className="space-y-1.5 border-t border-slate-200/80 pt-2 text-xs text-slate-600">
-                        <p>
-                          <span className="font-semibold">Skill: </span>
-                          {current.skillTag.replace(/-/g, " ")}
-                        </p>
-                        <p>
-                          <span className="font-semibold">Common trap: </span>
-                          {current.commonTrap.replace(/-/g, " ")}
-                        </p>
-                        {current.optionalWorkingSteps && current.optionalWorkingSteps.length > 0 ? (
-                          <ul className="list-disc space-y-0.5 pl-4">
-                            {current.optionalWorkingSteps.map((step) => (
-                              <li key={step}>{step}</li>
-                            ))}
-                          </ul>
-                        ) : null}
-                      </div>
+                      {current.wrongOptionReasons && (
+                        <div className="space-y-1.5 border-t border-slate-200/80 pt-2.5">
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                            Why each option?
+                          </p>
+                          {current.options.map((opt) => {
+                            const reason = current.wrongOptionReasons?.[opt.id];
+                            if (!reason) return null;
+                            const isAnswer = opt.id === current.correctAnswer;
+                            return (
+                              <p key={opt.id} className="text-xs text-slate-700 leading-relaxed">
+                                <span
+                                  className={cn(
+                                    "font-semibold",
+                                    isAnswer ? "text-green-700" : "text-red-700",
+                                  )}
+                                >
+                                  {opt.id}:{" "}
+                                </span>
+                                {reason}
+                              </p>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {current.generalRule && (
+                        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5">
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-700 mb-1">
+                            Rule to remember
+                          </p>
+                          <p className="text-sm text-amber-900 leading-relaxed">{current.generalRule}</p>
+                        </div>
+                      )}
+
+                      {current.keyInsight && (
+                        <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2.5">
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-blue-700 mb-1">
+                            Key insight
+                          </p>
+                          <p className="text-sm text-blue-900 leading-relaxed">{current.keyInsight}</p>
+                        </div>
+                      )}
+
+                      {current.optionalWorkingSteps && current.optionalWorkingSteps.length > 0 ? (
+                        <ul className="list-disc space-y-0.5 pl-4 border-t border-slate-200/80 pt-2 text-xs text-slate-600">
+                          {current.optionalWorkingSteps.map((step) => (
+                            <li key={step}>{step}</li>
+                          ))}
+                        </ul>
+                      ) : null}
                     </div>
 
                     <div className="sticky bottom-0 z-10 -mx-5 border-t border-slate-200 bg-white/95 px-5 py-3 backdrop-blur-sm sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">

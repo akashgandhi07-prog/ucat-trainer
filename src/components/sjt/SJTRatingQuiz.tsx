@@ -91,7 +91,7 @@ export default function SJTRatingQuiz({ question, onComplete, onProgress }: Prop
   return (
     <div className="space-y-4">
 
-      {/* Progress — full width above both columns so cards align */}
+      {/* Progress - full width above both columns so cards align */}
       <div>
         <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
           <span>Item {itemIndex + 1} of {question.items.length}</span>

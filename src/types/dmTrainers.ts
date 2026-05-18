@@ -40,11 +40,15 @@ export interface DmTrainerQuestion {
   id: string;
   trainerType: DmTrainerType;
   difficulty: DmTrainerDifficulty;
+  beta?: boolean;
   stem: string;
   question: string;
   options: DmTrainerOption[];
   correctAnswer: DmTrainerOptionId;
   explanation: string;
+  generalRule?: string;
+  wrongOptionReasons?: Partial<Record<DmTrainerOptionId, string>>;
+  keyInsight?: string;
   skillTag: string;
   commonTrap: string;
   optionalWorkingSteps?: string[];

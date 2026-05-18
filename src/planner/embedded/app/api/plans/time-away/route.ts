@@ -65,7 +65,7 @@ export async function POST(request: Request) {
     if (toDelete.length > 0) {
       const idsToDelete = toDelete.map(d => existingById.get(d)!).filter(Boolean)
       if (idsToDelete.length) await sb.from('plan_days').delete().in('id', idsToDelete)
-      // Restore sessions for unblocked days (delete nothing — regeneration will recreate them)
+      // Restore sessions for unblocked days (delete nothing - regeneration will recreate them)
     }
 
     // Upsert new busy days

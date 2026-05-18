@@ -575,7 +575,7 @@ export function LandingPlanning({ plannerOn }: { plannerOn: boolean }) {
       icon: BookOpen,
       accent: "bg-sky-50 text-sky-600",
       title: "Study guides",
-      desc: "Concise topic guides covering every UCAT subtest — a quick reference alongside your practice.",
+      desc: "Concise topic guides covering every UCAT subtest - a quick reference alongside your practice.",
       cta: "Browse study guides",
     },
   ];
