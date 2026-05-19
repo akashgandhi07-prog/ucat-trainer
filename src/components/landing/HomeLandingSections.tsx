@@ -128,7 +128,7 @@ const HERO_SECTIONS = [
   {
     icon: Calculator,
     label: "Quantitative Reasoning",
-    count: "2 drills",
+    count: "3 drills",
     accent: "bg-emerald-50 border-emerald-200 hover:border-emerald-300 hover:bg-emerald-100/70",
     iconBg: "bg-emerald-100",
     iconColor: "text-emerald-600",
@@ -327,8 +327,8 @@ export function LandingSectionHub({ onVerbal, onDecision, onQuant, onSjt }: Sect
       icon: Calculator,
       accent: "bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100",
       title: "Quantitative Reasoning",
-      desc: "Calculator keypad speed and mental maths fluency.",
-      label: "2 trainers",
+      desc: "Calculator keypad speed, mental maths fluency and unit conversion drills.",
+      label: "3 trainers",
     },
     {
       onClick: onSjt,
