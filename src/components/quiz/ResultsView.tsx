@@ -255,6 +255,37 @@ export default function ResultsView({
                             </p>
                           )}
                         </>
+                      ) : item.correctAnswerRaw === "true" && item.originalFragment && item.replacedFragment ? (
+                        <>
+                          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                            Why it&apos;s true
+                          </p>
+                          <div className="space-y-1.5">
+                            <div>
+                              <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wide mb-0.5">Statement (what you saw)</p>
+                              <p className="text-sm text-slate-700 bg-blue-50 border-l-2 border-blue-400 pl-3 py-1.5 rounded-r">
+                                <HighlightedText
+                                  text={item.statement}
+                                  fragment={item.replacedFragment}
+                                  className="bg-blue-200 text-blue-900 font-semibold rounded px-0.5 not-italic"
+                                />
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wide mb-0.5">Original passage</p>
+                              <p className="text-sm text-slate-700 bg-green-50 border-l-2 border-green-500 pl-3 py-1.5 rounded-r">
+                                <HighlightedText
+                                  text={item.passageSnippet}
+                                  fragment={item.originalFragment}
+                                  className="bg-green-200 text-green-900 font-semibold rounded px-0.5 not-italic"
+                                />
+                              </p>
+                            </div>
+                          </div>
+                          <p className="text-xs text-slate-500">
+                            The highlighted word was paraphrased but the meaning is the same — the statement is true.
+                          </p>
+                        </>
                       ) : (
                         <>
                           <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
@@ -271,10 +302,10 @@ export default function ResultsView({
                             </p>
                           )}
                           {item.correctAnswerRaw === "true" && (
-                            <p className="text-xs text-slate-500">The statement is a paraphrase of this sentence.</p>
+                            <p className="text-xs text-slate-500">The statement matches what the passage says.</p>
                           )}
                           {item.correctAnswerRaw === "cant_tell" && (
-                            <p className="text-xs text-slate-500">The passage doesn't contain enough information to confirm or deny the statement shown.</p>
+                            <p className="text-xs text-slate-500">The passage doesn&apos;t contain enough information to confirm or deny the statement shown.</p>
                           )}
                         </>
                       )}

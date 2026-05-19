@@ -75,19 +75,36 @@ const SYNONYM_MAP: [RegExp, string[]][] = [
   [/\bexamined\b/gi, ["investigated", "studied", "analysed"]],
 ];
 
-function paraphrase(sentence: string): string {
+type ParaphraseResult = {
+  text: string;
+  originalFragment?: string;
+  replacedFragment?: string;
+};
+
+function paraphrase(sentence: string): ParaphraseResult {
   let result = sentence;
   let changes = 0;
-  const maxChanges = 2; // keep it readable
+  let firstOriginal: string | undefined;
+  let firstReplaced: string | undefined;
+  const maxChanges = 2;
   for (const [re, synonyms] of shuffle(SYNONYM_MAP)) {
     if (changes >= maxChanges) break;
     if (re.test(result)) {
-      result = result.replace(re, pick(synonyms));
+      const replacement = pick(synonyms);
+      if (!firstOriginal) {
+        const match = result.match(re);
+        if (match) {
+          firstOriginal = match[0];
+          firstReplaced = firstOriginal[0] === firstOriginal[0].toUpperCase()
+            ? replacement.charAt(0).toUpperCase() + replacement.slice(1)
+            : replacement;
+        }
+      }
+      result = result.replace(re, replacement);
       changes++;
     }
   }
-  // Try clause reorder: "X, which/that Y" stays, but "A. B" → keep as is
-  return result;
+  return { text: result, originalFragment: firstOriginal, replacedFragment: firstReplaced };
 }
 
 // ───────── distortion strategies ─────────
@@ -444,9 +461,11 @@ function buildQuestions(passageText: string, count: number, passageTitle?: strin
     const sentence = shuffledSentences[i];
     const paraphrased = paraphrase(sentence);
     questions.push({
-      displayedSentence: paraphrased,
+      displayedSentence: paraphrased.text,
       correctAnswer: "true",
       passageSnippet: sentence,
+      originalFragment: paraphrased.originalFragment,
+      replacedFragment: paraphrased.replacedFragment,
     });
     usedIndices.add(i);
   }
