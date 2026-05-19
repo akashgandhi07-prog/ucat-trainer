@@ -1910,6 +1910,7 @@ export default function Dashboard() {
                     {renderDifficultyBreakdown(speedDifficultyBreakdown)}
                   </section>
 
+                  {(rapidRecallSessions.length > 0 || vrCount === 0) && (
                   <section>
                     <h2 className="text-lg font-semibold text-slate-900 mb-4">
                       {TRAINING_TYPE_LABELS.rapid_recall}
@@ -1967,7 +1968,9 @@ export default function Dashboard() {
                       </>
                     )}
                   </section>
+                  )}
 
+                  {(keywordSessions.length > 0 || vrCount === 0) && (
                   <section>
                     <h2 className="text-lg font-semibold text-slate-900 mb-4">
                       {TRAINING_TYPE_LABELS.keyword_scanning}
@@ -2027,7 +2030,9 @@ export default function Dashboard() {
                       </>
                     )}
                   </section>
+                  )}
 
+                  {(inferenceSessions.length > 0 || vrCount === 0) && (
                   <section>
                     <h2 className="text-lg font-semibold text-slate-900 mb-4">
                       {TRAINING_TYPE_LABELS.inference_trainer}
@@ -2096,6 +2101,29 @@ export default function Dashboard() {
                       </>
                     )}
                   </section>
+                  )}
+
+                  {/* Compact "also try" strip for untried VR trainers */}
+                  {vrCount > 0 && (rapidRecallSessions.length === 0 || keywordSessions.length === 0 || inferenceSessions.length === 0) && (
+                    <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">Also try</span>
+                      {rapidRecallSessions.length === 0 && (
+                        <Link to="/ucat-verbal-reasoning-practice" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">
+                          Rapid Recall →
+                        </Link>
+                      )}
+                      {keywordSessions.length === 0 && (
+                        <Link to="/ucat-verbal-reasoning-practice" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">
+                          Keyword Scanning →
+                        </Link>
+                      )}
+                      {inferenceSessions.length === 0 && (
+                        <Link to="/train/inference" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">
+                          Inference Trainer →
+                        </Link>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 
