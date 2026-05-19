@@ -123,6 +123,7 @@ export async function trackEvent(
       console.warn("[Analytics] Failed to insert event:", error.message);
     }
   } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") return;
     console.warn("[Analytics] Error tracking event:", err);
   }
 }
