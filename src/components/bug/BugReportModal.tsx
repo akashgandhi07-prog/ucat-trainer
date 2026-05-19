@@ -182,10 +182,9 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
   /* eslint-disable-next-line react-hooks/incompatible-library -- React Hook Form watch() used intentionally for dynamic labels */
   const feedbackType = watch("feedbackType");
   const isBug = feedbackType === "bug";
-  const title = isBug ? "Report a bug" : "Suggest an improvement";
-  const descriptionLabel = isBug ? "What went wrong?" : "What would you like to suggest?";
+  const descriptionLabel = isBug ? "What happened?" : "What would you like to suggest?";
   const descriptionPlaceholder = isBug
-    ? "Describe what you were doing and what happened..."
+    ? "Describe what you were doing and what you saw. The more detail, the easier it is to fix."
     : "Describe your idea or improvement...";
   const pageLabel = isBug ? "Where did it happen? (optional)" : "Where does this apply? (optional)";
   const submitLabel = status === "loading" ? "Sending…" : "Send feedback";
@@ -195,23 +194,32 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
         <Dialog.Content
-          className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-xl p-6 outline-none"
+          className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-xl p-6 outline-none"
           aria-labelledby="feedback-modal-title"
         >
-          <div className="flex items-center justify-between mb-4">
-            <Dialog.Title id="feedback-modal-title" className="text-lg font-semibold text-slate-900">
-              {title}
-            </Dialog.Title>
+          {/* Header */}
+          <div className="mb-1 flex items-start justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xl" aria-hidden>💬</span>
+              <Dialog.Title id="feedback-modal-title" className="text-base font-semibold text-slate-900">
+                Share your thoughts
+              </Dialog.Title>
+            </div>
             <Dialog.Close asChild>
               <button
                 type="button"
-                className="min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-600 -m-2"
+                className="flex min-h-[36px] min-w-[36px] items-center justify-center rounded-full text-slate-400 hover:text-slate-600 transition-colors"
                 aria-label="Close"
               >
                 ×
               </button>
             </Dialog.Close>
           </div>
+
+          <p className="mb-4 text-sm text-slate-500 leading-relaxed">
+            We read every message: bugs, rough edges, ideas. Your feedback
+            genuinely shapes how this platform improves. Thank you for taking the time.
+          </p>
 
         <form
           onSubmit={rhfHandleSubmit(onSubmit, (fieldErrors) => {
@@ -246,30 +254,31 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
           </div>
 
           <div>
-            <p className="block text-sm font-medium text-slate-700 mb-2">What would you like to send?</p>
-            <div className="flex gap-3">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  value="bug"
-                  className="text-blue-600 focus:ring-blue-500"
-                  {...register("feedbackType")}
-                />
-                <span className="text-sm text-slate-700">Report a bug</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  value="suggestion"
-                  className="text-blue-600 focus:ring-blue-500"
-                  {...register("feedbackType")}
-                />
-                <span className="text-sm text-slate-700">Suggest an improvement</span>
-              </label>
+            <p className="mb-2 text-sm font-medium text-slate-700">What kind of feedback is this?</p>
+            <div className="grid grid-cols-2 gap-2">
+              {(["bug", "suggestion"] as const).map((type) => {
+                const icon = type === "bug" ? "🐛" : "💡";
+                const label = type === "bug" ? "Found a bug" : "Got an idea";
+                return (
+                  <label
+                    key={type}
+                    className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2.5 text-sm transition-colors ${
+                      feedbackType === type
+                        ? "border-primary bg-primary/5 text-slate-900 font-medium"
+                        : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                    }`}
+                  >
+                    <input type="radio" value={type} className="sr-only" {...register("feedbackType")} />
+                    <span aria-hidden className="text-base">{icon}</span>
+                    <span>{label}</span>
+                  </label>
+                );
+              })}
             </div>
           </div>
+
           <div>
-            <label htmlFor="feedback-description" className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="feedback-description" className="mb-1 block text-sm font-medium text-slate-700">
               {descriptionLabel}
             </label>
             <textarea
@@ -277,19 +286,20 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
               maxLength={DESCRIPTION_MAX}
               placeholder={descriptionPlaceholder}
               rows={4}
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
               disabled={status === "loading"}
               {...register("description")}
             />
             {errors.description && (
               <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
             )}
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-slate-400">
               {(watch("description") ?? "").length}/{DESCRIPTION_MAX} characters
             </p>
           </div>
+
           <div>
-            <label htmlFor="feedback-page" className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="feedback-page" className="mb-1 block text-sm font-medium text-slate-700">
               {pageLabel}
             </label>
             <input
@@ -297,7 +307,7 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
               type="text"
               maxLength={PAGE_URL_MAX}
               placeholder="/dashboard"
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               disabled={status === "loading"}
               {...register("pageUrl")}
             />
@@ -305,27 +315,31 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
               <p className="mt-1 text-sm text-red-600">{errors.pageUrl.message}</p>
             )}
           </div>
+
           {message && (
             <p
               role="status"
               aria-live="polite"
-              className={`text-sm ${status === "error" ? "text-red-600" : "text-emerald-700"}`}
+              className={`text-sm rounded-lg px-3 py-2 ${
+                status === "error" ? "bg-red-50 text-red-700" : "bg-emerald-50 text-emerald-700"
+              }`}
             >
               {message}
             </p>
           )}
-          <div className="flex gap-2">
+
+          <div className="flex gap-2 pt-1">
             <button
               type="button"
               onClick={handleClose}
-              className="flex-1 px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50"
+              className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={status === "loading" || (rateLimitRemaining !== null && rateLimitRemaining > 0)}
-              className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50"
+              className="flex-1 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60 transition-colors"
             >
               {rateLimitRemaining !== null && rateLimitRemaining > 0
                 ? `Wait ${rateLimitRemaining}s`
@@ -333,6 +347,16 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
             </button>
           </div>
         </form>
+
+          <p className="mt-4 text-center text-xs text-slate-400">
+            Prefer email? Reach us at{" "}
+            <a
+              href="mailto:info@theukcatpeople.co.uk"
+              className="text-slate-500 underline underline-offset-2 hover:text-slate-700 transition-colors"
+            >
+              info@theukcatpeople.co.uk
+            </a>
+          </p>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

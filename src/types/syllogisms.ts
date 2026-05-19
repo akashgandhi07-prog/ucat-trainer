@@ -6,6 +6,7 @@ import type { QuestionMedia } from "./questionMedia";
  */
 
 export type LogicGroup = "categorical" | "relative" | "majority" | "complex";
+export type SyllogismMode = "foundation" | "micro" | "macro";
 
 /** A single syllogism question: one stimulus + one conclusion with correctness and explanation. */
 export interface SyllogismQuestion {
@@ -18,13 +19,15 @@ export interface SyllogismQuestion {
   logic_group: LogicGroup;
   trick_type: string;
   explanation: string;
+  rule_name?: string | null;
+  key_takeaway?: string | null;
 }
 
 /** Session summary as stored in syllogism_sessions (with optional per-logic-group accuracy). */
 export interface SyllogismSession {
   id: string;
   user_id: string;
-  mode: "micro" | "macro";
+  mode: SyllogismMode;
   score: number;
   total_questions: number;
   average_time_per_decision: number;
@@ -38,7 +41,7 @@ export interface SyllogismSession {
 /** Payload for inserting a syllogism session (omits id and created_at). */
 export interface SyllogismSessionInsert {
   user_id: string;
-  mode: "micro" | "macro";
+  mode: SyllogismMode;
   score: number;
   total_questions: number;
   average_time_per_decision: number;

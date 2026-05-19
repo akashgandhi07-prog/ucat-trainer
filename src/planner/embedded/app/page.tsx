@@ -94,8 +94,8 @@ export default async function HomePage() {
             {[
               { phase: 'Foundations', weeks: '8+ weeks out', desc: 'Untimed section practice, building understanding', color: 'bg-slate-100 text-slate-700' },
               { phase: 'Timed Practice', weeks: '6+ weeks out', desc: 'Full-speed section practice, first timed mocks', color: 'bg-blue-50 text-blue-700' },
-              { phase: 'Mini Mocks', weeks: '6 weeks out', desc: '2-section back-to-back mocks, 3× per week', color: 'bg-pink-50 text-pink-700' },
-              { phase: 'Full Mocks', weeks: '5 weeks out', desc: '4 full mocks per week, reflection after each', color: 'bg-red-50 text-red-700' },
+              { phase: 'Mini Mocks', weeks: 'Before full mocks', desc: 'Short section mocks, usually 4-5× per week', color: 'bg-pink-50 text-pink-700' },
+              { phase: 'Full Mocks', weeks: 'Final stretch', desc: 'Full mocks ramp from 2 to 3 to 4, then up to 6', color: 'bg-red-50 text-red-700' },
               { phase: 'Final Week', weeks: 'Last 7 days', desc: 'Mock every day, light review, mandatory rest', color: 'bg-amber-50 text-amber-700' },
             ].map(p => (
               <div key={p.phase} className={`rounded-xl ${p.color} px-4 py-4`}>

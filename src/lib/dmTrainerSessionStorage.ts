@@ -78,6 +78,17 @@ export function clearGuestDmTrainerSessions(): void {
   localStorage.removeItem(GUEST_DM_TRAINER_SESSIONS_KEY);
 }
 
+/** Maps the hyphenated DmTrainerType to the underscore trainer_type used in user_trainer_state. */
+function toDmHistoryType(
+  trainerType: DmTrainerType,
+): "dm_venn_logic" | "dm_data_logic" | "dm_argument_judge" {
+  switch (trainerType) {
+    case "venn-logic":     return "dm_venn_logic";
+    case "data-logic":     return "dm_data_logic";
+    case "argument-judge": return "dm_argument_judge";
+  }
+}
+
 export async function saveDmTrainerSessionToCloud(
   userId: string,
   payload: DmTrainerSessionPayload,
@@ -92,6 +103,15 @@ export async function saveDmTrainerSessionToCloud(
       });
       if (error) throw error;
     });
+
+    // Record the completed drill in the history system (non-retry full runs only).
+    // Fire-and-forget — a failure here should never block the session save result.
+    if (!payload.retry_mode) {
+      void supabase.rpc("complete_dm_trainer_drill", {
+        p_trainer_type: toDmHistoryType(payload.trainer_type),
+      });
+    }
+
     supabaseLog.info("dm_trainer_session_saved", {
       trainer_type: payload.trainer_type,
       score: payload.score,

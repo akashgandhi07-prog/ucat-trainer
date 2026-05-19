@@ -41,6 +41,12 @@ export async function POST(request: Request) {
     }
 
     await updateExamDateTime(planId, examIso, examTime ?? null, body.ucatSen)
+    await sb
+      .from('profiles')
+      .upsert(
+        { id: gate.studentId, ucat_exam_date: examIso, updated_at: new Date().toISOString() },
+        { onConflict: 'id' },
+      )
 
     return NextResponse.json({ ok: true })
   } catch (e: unknown) {

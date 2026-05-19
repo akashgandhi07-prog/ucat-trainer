@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useLocation, Link, Navigate } from "react-router-dom";
+import { fetchNextInferencePassageId } from "../lib/inferenceApi";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import InferenceSessionHeader from "../components/inference/InferenceSessionHeader";
@@ -82,6 +83,7 @@ export default function InferenceTrainerPage() {
   const hasAutoSavedRef = useRef(false);
   const mountedRef = useRef(true);
   const startTimeRef = useRef<number>(Date.now());
+  const passagePickAbortRef = useRef<AbortController | null>(null);
   const { user } = useAuth();
 
   // Captures latest values for use in pagehide/unmount handlers (avoids stale closures).
@@ -96,6 +98,37 @@ export default function InferenceTrainerPage() {
   });
   const savedOnExitRef = useRef(false);
 
+  /**
+   * Picks the next passage using DB-backed history (authenticated users) or the
+   * local random picker (anon / network failure). Updates `passage` state.
+   */
+  const pickAndSetNextPassage = useCallback(
+    (currentId?: string | null) => {
+      passagePickAbortRef.current?.abort();
+      const controller = new AbortController();
+      passagePickAbortRef.current = controller;
+
+      fetchNextInferencePassageId(currentId, controller.signal)
+        .then((nextId) => {
+          if (controller.signal.aborted) return;
+          if (nextId) {
+            const found = PASSAGES.find((p) => p.id === nextId) ?? null;
+            if (found) {
+              setPassage(found);
+              return;
+            }
+          }
+          // Fallback: local random picker
+          setPassage(pickPassageWithInference(currentId, difficulty));
+        })
+        .catch(() => {
+          if (controller.signal.aborted) return;
+          setPassage(pickPassageWithInference(currentId, difficulty));
+        });
+    },
+    [difficulty],
+  );
+
   const questions: InferenceQuestion[] =
     passage != null
       ? getInferenceQuestionsForPassage(passage.id, passage.text)
@@ -106,6 +139,7 @@ export default function InferenceTrainerPage() {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
+      passagePickAbortRef.current?.abort();
     };
   }, []);
 
@@ -213,13 +247,11 @@ export default function InferenceTrainerPage() {
       if (stayOnSamePassage && passage) {
         setQuizKey((k) => k + 1);
       } else {
-        setPassage((p) =>
-          pickPassageWithInference(p?.id ?? null, difficulty)
-        );
+        pickAndSetNextPassage(passage?.id ?? null);
         setQuizKey((k) => k + 1);
       }
     },
-    [difficulty, passage]
+    [passage, pickAndSetNextPassage]
   );
 
   const handleEndSession = useCallback(() => {
@@ -291,7 +323,7 @@ export default function InferenceTrainerPage() {
           setCurrentIndex(0);
           startTimeRef.current = Date.now();
           setElapsedSeconds(0);
-          setPassage((p) => pickPassageWithInference(p?.id ?? null, difficulty));
+          pickAndSetNextPassage(passage?.id ?? null);
         }
       } catch (err: unknown) {
         const message =
@@ -318,6 +350,7 @@ export default function InferenceTrainerPage() {
       passage?.id,
       difficulty,
       elapsedSeconds,
+      pickAndSetNextPassage,
     ]
   );
 
@@ -334,8 +367,8 @@ export default function InferenceTrainerPage() {
     setCurrentIndex(0);
     startTimeRef.current = Date.now();
     setElapsedSeconds(0);
-    setPassage((p) => pickPassageWithInference(p?.id ?? null, difficulty));
-  }, [difficulty]);
+    pickAndSetNextPassage(passage?.id ?? null);
+  }, [difficulty, passage?.id, pickAndSetNextPassage]);
 
   useEffect(() => {
     if (phase !== "results" || hasAutoSavedRef.current) return;
@@ -378,9 +411,7 @@ export default function InferenceTrainerPage() {
             </p>
             <button
               type="button"
-              onClick={() =>
-                setPassage(pickPassageWithInference(passage.id, difficulty))
-              }
+              onClick={() => pickAndSetNextPassage(passage.id)}
               className="min-h-[44px] px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
             >
               Try another passage

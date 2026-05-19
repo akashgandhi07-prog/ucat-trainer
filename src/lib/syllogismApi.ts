@@ -52,6 +52,8 @@ function mapRow(row: Record<string, unknown>): SyllogismQuestion | null {
     logic_group: row.logic_group as LogicGroup,
     trick_type: typeof row.trick_type === "string" ? row.trick_type : "",
     explanation: typeof row.explanation === "string" ? row.explanation : "",
+    rule_name: typeof row.rule_name === "string" ? row.rule_name : null,
+    key_takeaway: typeof row.key_takeaway === "string" ? row.key_takeaway : null,
     media: normaliseQuestionMedia(row.media),
   };
 }
@@ -98,6 +100,17 @@ export async function fetchSyllogismMicroBatch(
   return parseQuestionArray(data);
 }
 
+export async function fetchSyllogismFoundationBatch(
+  count: number,
+  signal?: AbortSignal,
+): Promise<SyllogismQuestion[]> {
+  const data = await rpcRequest<unknown>(
+    () => supabase.rpc("get_syllogism_foundation_batch", { p_count: count }),
+    signal,
+  );
+  return parseQuestionArray(data);
+}
+
 export async function fetchSyllogismMacroBlock(
   excludeBlockIds: string[] = [],
   signal?: AbortSignal,
@@ -110,4 +123,59 @@ export async function fetchSyllogismMacroBlock(
     signal,
   );
   return parseQuestionArray(data);
+}
+
+// ─── Trainer history management ───────────────────────────────────────────────
+
+/** All trainer types that use the question-history system. */
+export type TrainerHistoryType =
+  | "syllogism_foundation"
+  | "syllogism_micro"
+  | "syllogism_macro"
+  | "sjt_appropriateness"
+  | "sjt_importance"
+  | "sjt_ranking"
+  | "inference"
+  | "dm_venn_logic"
+  | "dm_data_logic"
+  | "dm_argument_judge";
+
+/** @deprecated Use TrainerHistoryType instead */
+export type SyllogismTrainerType = TrainerHistoryType;
+
+export interface TrainerState {
+  authenticated: boolean;
+  current_cycle?: number;
+  cycles_completed?: number;
+  seen_this_cycle?: number;
+  total_seen?: number;
+  last_activity_at?: string | null;
+}
+
+/**
+ * Increment the cycle for the signed-in user + trainer.
+ * History rows are never deleted — all-time stats are always preserved.
+ * Throws if the user is not authenticated.
+ */
+export async function resetTrainerHistory(
+  trainerType: TrainerHistoryType,
+): Promise<void> {
+  const { error } = await supabase.rpc("reset_trainer_history", {
+    p_trainer_type: trainerType,
+  });
+  if (error) throw new Error(toErrorMessage(error));
+}
+
+/**
+ * Returns seen-question stats for the signed-in user + trainer.
+ * Returns `{ authenticated: false }` for anon users (never throws).
+ */
+export async function getTrainerState(
+  trainerType: TrainerHistoryType,
+): Promise<TrainerState> {
+  const { data, error } = await supabase.rpc("get_trainer_state", {
+    p_trainer_type: trainerType,
+  });
+  if (error) throw new Error(toErrorMessage(error));
+  return (data ?? { authenticated: false }) as TrainerState;
 }

@@ -388,6 +388,7 @@ export default function AdminPage() {
   const [expandedQF, setExpandedQF] = useState<Set<string>>(new Set());
   const [qfDismissing, setQfDismissing] = useState<Set<string>>(new Set());
   const [qfDeleting, setQfDeleting] = useState<Set<string>>(new Set());
+  const [qfTrainerFilter, setQfTrainerFilter] = useState<string>("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   type UserSortKey = keyof AdminUserRow | "accuracy";
@@ -671,7 +672,8 @@ export default function AdminPage() {
 
   const handleDeleteQuestion = async (
     questionKind: string,
-    questionIdentifier: string
+    questionIdentifier: string,
+    trainerType: string,
   ) => {
     const isSyllogism = questionKind === "dm_syllogism";
     if (!isSyllogism) return;
@@ -680,8 +682,11 @@ export default function AdminPage() {
     const rawId = parts.length >= 2 ? parts.slice(1).join(":") : null;
     if (!rawId) return;
     setQfDeleting((prev) => new Set(prev).add(questionIdentifier));
+    // Foundation / micro / macro questions live in syllogism_questions; older ones in syllogisms.
+    const newSyllogismTrainers = ["syllogism_foundation", "syllogism_micro", "syllogism_macro"];
+    const tableName = newSyllogismTrainers.includes(trainerType) ? "syllogism_questions" : "syllogisms";
     const { error: delErr } = await supabase
-      .from("syllogisms")
+      .from(tableName)
       .delete()
       .eq("id", rawId);
     if (delErr) {
@@ -1604,33 +1609,79 @@ export default function AdminPage() {
           </section>
         )}
 
-        {questionFeedback.length > 0 && (
-          <section className="mb-10">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
-              <h2 className="text-lg font-semibold text-slate-900">Question feedback (DM, VR & SJT)</h2>
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => exportQuestionFeedbackCsv(questionFeedback)}
-                  className="min-h-[44px] px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
-                >
-                  Export CSV
-                </button>
-                <button
-                  type="button"
-                  onClick={() => exportQuestionFeedbackJson(questionFeedback)}
-                  className="min-h-[44px] px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
-                >
-                  Export JSON
-                </button>
-              </div>
+        <section className="mb-10">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">
+                Question feedback — all trainers
+                {questionFeedback.length > 0 && (
+                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                    {questionFeedback.length} report{questionFeedback.length !== 1 ? "s" : ""}
+                  </span>
+                )}
+              </h2>
+              <p className="mt-1 text-sm text-slate-600">
+                Per-question error reports from every trainer. Use this to find and fix confusing or flawed items.
+              </p>
             </div>
-            <p className="mb-3 text-sm text-slate-600">
-              Per-question reports from Decision Making, Verbal Reasoning, and SJT trainers. Use this to find
-              confusing or flawed items.
-            </p>
-            <div className="mb-4 bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
-              {(() => {
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => exportQuestionFeedbackCsv(
+                  questionFeedback.filter((r) => qfTrainerFilter === "all" || r.trainer_type === qfTrainerFilter)
+                )}
+                className="min-h-[44px] px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
+              >
+                Export CSV
+              </button>
+              <button
+                type="button"
+                onClick={() => exportQuestionFeedbackJson(
+                  questionFeedback.filter((r) => qfTrainerFilter === "all" || r.trainer_type === qfTrainerFilter)
+                )}
+                className="min-h-[44px] px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
+              >
+                Export JSON
+              </button>
+            </div>
+          </div>
+
+          {/* Trainer-type filter pills */}
+          {questionFeedback.length > 0 && (() => {
+            const trainerTypes = Array.from(new Set(questionFeedback.map((r) => r.trainer_type))).sort();
+            return (
+              <div className="mb-4 flex flex-wrap gap-2">
+                {(["all", ...trainerTypes] as string[]).map((t) => {
+                  const count = t === "all" ? questionFeedback.length : questionFeedback.filter((r) => r.trainer_type === t).length;
+                  return (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setQfTrainerFilter(t)}
+                      className={`min-h-[36px] px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                        qfTrainerFilter === t
+                          ? "bg-slate-800 text-white border-slate-800"
+                          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                      }`}
+                    >
+                      {t === "all" ? "All trainers" : t.replace(/_/g, " ")}
+                      <span className={`ml-1.5 ${qfTrainerFilter === t ? "text-slate-300" : "text-slate-400"}`}>
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
+          <div className="mb-4 bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+            {questionFeedback.length === 0 ? (
+              <div className="px-6 py-10 text-center text-slate-500 text-sm">
+                No question reports yet. Reports appear here when users flag an issue in any trainer.
+              </div>
+            ) : (
+            <>{(() => {
                 const aggregatesMap = new Map<
                   string,
                   {
@@ -1643,7 +1694,10 @@ export default function AdminPage() {
                     issues: Record<QuestionFeedbackIssueType, number>;
                   }
                 >();
-                questionFeedback.forEach((row) => {
+                const filteredFeedback = questionFeedback.filter(
+                  (r) => qfTrainerFilter === "all" || r.trainer_type === qfTrainerFilter
+                );
+                filteredFeedback.forEach((row) => {
                   const key = `${row.trainer_type}::${row.question_identifier}`;
                   let entry = aggregatesMap.get(key);
                   if (!entry) {
@@ -1675,7 +1729,7 @@ export default function AdminPage() {
                   (a, b) => b.total - a.total
                 );
                 const individualReports = (identifier: string) =>
-                  questionFeedback.filter(
+                  filteredFeedback.filter(
                     (r) => r.question_identifier === identifier
                   );
                 return (
@@ -1765,7 +1819,7 @@ export default function AdminPage() {
                                       type="button"
                                       onClick={() => {
                                         if (!window.confirm(`Delete this question from the question bank? This cannot be undone.\n\n${row.question_identifier}`)) return;
-                                        handleDeleteQuestion(row.question_kind, row.question_identifier);
+                                        handleDeleteQuestion(row.question_kind, row.question_identifier, row.trainer_type);
                                       }}
                                       disabled={isDismissing || isDeleting}
                                       className="inline-flex items-center px-2 py-1 rounded text-xs font-medium border border-red-200 text-red-700 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1808,10 +1862,10 @@ export default function AdminPage() {
                     </tbody>
                   </table>
                 );
-              })()}
-            </div>
-          </section>
-        )}
+              })()}</>
+            )}
+          </div>
+        </section>
 
         <section>
           <div className="flex flex-wrap items-center justify-between gap-4 mb-4">

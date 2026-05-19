@@ -1063,16 +1063,22 @@ export default function Dashboard() {
       };
     });
     const fromSyllogism: RecentActivityItem[] = syllogismSessions.map((s) => {
-      const microPct = s.mode === "micro" && s.total_questions > 0
+      const linearPct = (s.mode === "micro" || s.mode === "foundation") && s.total_questions > 0
         ? Math.round((s.score / s.total_questions) * 100)
         : null;
+      const label =
+        s.mode === "macro"
+          ? "Decision Making (Macro)"
+          : s.mode === "foundation"
+            ? "Decision Making (Foundations)"
+            : "Decision Making (Micro)";
       return {
         id: `syllogism-${s.id}`,
         created_at: s.created_at,
-        label: s.mode === "macro" ? "Decision Making (Macro)" : "Decision Making (Micro)",
+        label,
         timeDisplay: s.average_time_per_decision > 0 ? `${Math.round(s.average_time_per_decision * s.total_questions)}s` : "-",
         scoreDisplay: s.mode === "macro" ? `${s.score} pts` : (s.total_questions > 0 ? `${Math.round((s.score / s.total_questions) * 100)}%` : "-"),
-        scorePercent: microPct,
+        scorePercent: linearPct,
       };
     });
     const fromSjt: RecentActivityItem[] = sjtSessions.map((s) => {

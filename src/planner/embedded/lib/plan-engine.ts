@@ -7,7 +7,7 @@
 
 import {
   DBPlanWeek, DBPlanDay, DBSession,
-  Phase, SectionWeight, SessionType, WeekType, DifficultyRating, DateRange
+  Phase, SectionWeight, SessionType, WeekType, DifficultyRating, DateRange, UCATSection
 } from '@/types'
 import { addDays, toISODate, parseDate, weeksUntil, startOfWeek } from './utils'
 import {
@@ -24,6 +24,13 @@ const SESSION_LABEL_SHORT: Record<'vr' | 'dm' | 'qr' | 'sjt', string> = {
   sjt: 'Situational judgement',
 }
 
+const MINI_MOCK_LABEL: Record<UCATSection, string> = {
+  vr: 'Mini VR Mock',
+  dm: 'Mini DM Mock',
+  qr: 'Mini QR Mock',
+  sjt: 'Mini SJT Mock',
+}
+
 export interface PlannerRationaleContext {
   phase: Phase
   weaknessHintsList: string[]
@@ -34,6 +41,7 @@ function rationaleForSession(
   sessionType: SessionType,
   ctx: PlannerRationaleContext,
   previousSession: SessionType | null,
+  miniMockFocus?: UCATSection,
 ): string | null {
   if (sessionType === 'rest') return null
 
@@ -49,7 +57,7 @@ function rationaleForSession(
       return 'Two-hour review after your full mock: debrief errors, timing, and what to drill next.'
     }
     if (previousSession === 'mini_mock') {
-      return 'Block to score and review your mini mock thoroughly (about two hours).'
+      return 'Short review after the mini mock: score it, spot the timing issue, and choose the next drill.'
     }
     return 'Brief review slot to consolidate what you just practised.'
   }
@@ -59,7 +67,9 @@ function rationaleForSession(
       : 'Timed mock to track stamina and pacing under pressure.'
   }
   if (sessionType === 'mini_mock') {
-    return 'Shorter timed block to practise switching between sections.'
+    const focus = miniMockFocus ? `${SESSION_LABEL_SHORT[miniMockFocus]} ` : ''
+    const base = `${focus}mini mock: a short timed checkpoint before full mocks take over.`
+    return tagLine ? `${base} ${tagLine}` : base
   }
 
   const sec = practiceWeaknessBucket(sessionType)
@@ -102,7 +112,7 @@ export function getPhase(weeksUntilExam: number, hasPriorExperience: boolean): P
   if (weeksUntilExam <= 3) return 'final_week'
   // Weeks 4-6 out: 3 full mocks/week
   if (weeksUntilExam <= 6) return 'full_mock'
-  // Weeks 7-10 out: 2 mocks/week, transitioning from mini to full mocks
+  // Weeks 7-10 out: frequent section mini mocks before full mocks take over
   if (weeksUntilExam <= 10) return 'mini_mock'
   // Earlier: timed section practice (experienced) or untimed foundations (beginners)
   return hasPriorExperience ? 'timed' : 'foundations'
@@ -175,10 +185,9 @@ function roundPlannerHours(h: number): number {
  * early weeks even if hours are high.
  *
  * Phase ceilings (upper bounds - time is the real constraint):
- *   ≤3 weeks out  → up to 6 full mocks/wk  (final_week: one per day is fine)
- *   ≤6 weeks out  → up to 5 full mocks/wk  (full_mock: 4-5 for high-hours students)
- *   ≤10 weeks out → up to 3 mocks/wk       (mini_mock: 2-3 per week)
- *   earlier       → 1 mini-mock/wk          (timed/foundations; overridden to 0 for first 2 foundation weeks)
+ *   ≤3 weeks out  → full mocks ramp 4 → 5 → 6/wk, time permitting
+ *   ≤6 weeks out  → full mocks ramp 2 → 3 → 4/wk
+ *   earlier       → frequent 20-30 minute mini mocks, usually 4-5/wk
  */
 export function weeklyMockTarget(
   weeksRemaining: number,
@@ -189,7 +198,7 @@ export function weeklyMockTarget(
   if (weeksRemaining <= 0) return 0
 
   const fullBlock = (ucatSen ? 150 : 120) + 120   // full mock + 2h reflection
-  const miniBlock = 60 + 120                        // mini mock + 2h reflection (180 min)
+  const miniBlock = 25 + 30                         // mini mock + short review
 
   // Use the block size appropriate for the phase
   const blockSize = weeksRemaining <= 6 ? fullBlock : miniBlock
@@ -202,16 +211,24 @@ export function weeklyMockTarget(
   // these ceilings only matter for very-low-hours students where fitsByTime exceeds
   // what makes educational sense for that phase.
   let phaseCeiling: number
-  if (weeksRemaining <= 3) phaseCeiling = 6       // final sprint: up to daily mocks
-  else if (weeksRemaining <= 6) phaseCeiling = 5  // 4-5 for students with 5+ h/day
-  else if (weeksRemaining <= 10) phaseCeiling = 3 // 2-3 per week in mini_mock phase
-  else phaseCeiling = 1                            // timed/foundations: 1 mini-mock/wk
+  if (weeksRemaining <= 1) phaseCeiling = 6
+  else if (weeksRemaining <= 2) phaseCeiling = 5
+  else if (weeksRemaining <= 3) phaseCeiling = 4
+  else if (weeksRemaining <= 4) phaseCeiling = 4
+  else if (weeksRemaining <= 5) phaseCeiling = 3
+  else if (weeksRemaining <= 6) phaseCeiling = 2
+  else phaseCeiling = 5
 
   let ideal = Math.min(phaseCeiling, fitsByTime)
 
-  // Cap for very short plans so individual weeks stay achievable
-  if (totalWeeks <= 6) ideal = Math.min(ideal, 4)
-  if (totalWeeks <= 4) ideal = Math.min(ideal, 3)
+  // Very compressed plans still ramp, but they need to skip some stepping stones.
+  if (totalWeeks <= 6 && weeksRemaining <= 6) {
+    const compressedCeiling =
+      weeksRemaining <= 1 ? 5 :
+      weeksRemaining <= 2 ? 3 :
+      1
+    ideal = Math.min(ideal, compressedCeiling)
+  }
 
   return ideal
 }
@@ -252,7 +269,9 @@ export function hoursForDate(
    * achievable (each full mock + reflection block needs ~4 h).
    */
   if (daysUntilExam >= 1 && daysUntilExam <= 21) {
-    const low = Math.max(2, schoolDayMax)
+    const low = isHighCapacity
+      ? Math.max(3, weekendMax, schoolDayMax)
+      : Math.max(2, schoolDayMax)
     // Always ramp toward at least 6 h, even if the student's stated max is lower
     const high = Math.max(6, weekendMax, schoolDayMax)
     const t = (21 - daysUntilExam) / 20
@@ -295,14 +314,16 @@ const SESSION_DURATIONS: Record<SessionType, number> = {
   dm_practice:  45,
   qr_practice:  45,
   sjt_practice: 30,
-  mini_mock:    60,
+  mini_mock:    25,
   full_mock:   120,
   reflection:   45,
   rest:          0,
 }
 
-/** Review after a timed mock: score, debrief sections, plan next steps */
+/** Review after a full timed mock: score, debrief sections, plan next steps */
 const REFLECTION_AFTER_MOCK_MIN = 120
+/** Quick review after a section mini mock */
+const REFLECTION_AFTER_MINI_MOCK_MIN = 30
 /** Short consolidation after a practice stack on the same day */
 const REFLECTION_AFTER_PRACTICE_MIN = 45
 
@@ -317,8 +338,10 @@ function plannedSessionDurationMinutes(
 ): number {
   if (sessionType === 'full_mock') return fullMockMinutes(ucatSen)
   if (sessionType === 'reflection') {
-    return previousType === 'full_mock' || previousType === 'mini_mock'
+    return previousType === 'full_mock'
       ? REFLECTION_AFTER_MOCK_MIN
+      : previousType === 'mini_mock'
+        ? REFLECTION_AFTER_MINI_MOCK_MIN
       : REFLECTION_AFTER_PRACTICE_MIN
   }
   return SESSION_DURATIONS[sessionType]
@@ -359,6 +382,37 @@ function weakestPracticeSection(weights: SectionWeight): SessionType {
   ]).sort((a, b) => b.weight - a.weight))[0].type
 }
 
+type PlannedSession = {
+  type: SessionType
+  miniMockFocus?: UCATSection
+}
+
+function rankedMiniMockFocuses(weights: SectionWeight): UCATSection[] {
+  return ([
+    { section: 'vr' as UCATSection, weight: weights.vr },
+    { section: 'dm' as UCATSection, weight: weights.dm },
+    { section: 'qr' as UCATSection, weight: weights.qr },
+    { section: 'sjt' as UCATSection, weight: weights.sjt },
+  ]).sort((a, b) => b.weight - a.weight).map(row => row.section)
+}
+
+function miniMockFocusForSlot(weights: SectionWeight, slot: number): UCATSection {
+  const ranked = rankedMiniMockFocuses(weights)
+  const focusCycle: UCATSection[] = [
+    ranked[0],
+    ranked[1] ?? ranked[0],
+    ranked[0],
+    ranked[2] ?? ranked[0],
+    ranked[0],
+    ranked[3] ?? ranked[0],
+  ]
+  return focusCycle[slot % focusCycle.length]
+}
+
+function miniMockNote(focus?: UCATSection): string | null {
+  return focus ? MINI_MOCK_LABEL[focus] : null
+}
+
 export function planDaySessions(
   availableMinutes: number,
   phase: Phase,
@@ -373,28 +427,28 @@ export function planDaySessions(
   confidence: { vr: number; dm: number; qr: number; sjt: number },
   ucatSen: boolean,
   /** Calendar days until the exam (1 = day before). */
-  daysUntilExamCal: number,
+  _daysUntilExamCal: number,
   /** Whole-weeks until exam from this week's Monday (same basis as {@link getPhase}). */
-  weeksRemainingForWeek: number,
-): { sessions: SessionType[] } {
+  _weeksRemainingForWeek: number,
+): { sessions: PlannedSession[] } {
   if (isExamDay) return { sessions: [] }
 
-  const sessions: SessionType[] = []
+  const sessions: PlannedSession[] = []
   let remaining = availableMinutes
   const fullMock = fullMockMinutes(ucatSen)
   const fullMockBlock = fullMock + REFLECTION_AFTER_MOCK_MIN
-  const miniBlock = SESSION_DURATIONS.mini_mock + REFLECTION_AFTER_MOCK_MIN
+  const miniBlock = SESSION_DURATIONS.mini_mock + REFLECTION_AFTER_MINI_MOCK_MIN
 
   // ── Final 3 weeks: 4 full mocks/week ────────────────────────────────────────
   if (phase === 'final_week') {
     if (weekMockCount < weeklyMockCap && remaining >= fullMockBlock) {
-      sessions.push('full_mock')
+      sessions.push({ type: 'full_mock' })
       remaining -= fullMock
-      sessions.push('reflection')
+      sessions.push({ type: 'reflection' })
       remaining -= REFLECTION_AFTER_MOCK_MIN
       // Use any leftover time for targeted practice
       const weak = weakestPracticeSection(weights)
-      if (remaining >= SESSION_DURATIONS[weak]) sessions.push(weak)
+      if (remaining >= SESSION_DURATIONS[weak]) sessions.push({ type: weak })
       return { sessions }
     }
     // Non-mock days: high-intensity timed practice
@@ -404,54 +458,41 @@ export function planDaySessions(
   // ── Weeks 4-6 out: 3 full mocks/week ────────────────────────────────────────
   if (phase === 'full_mock') {
     if (weekMockCount < weeklyMockCap && remaining >= fullMockBlock) {
-      sessions.push('full_mock')
+      sessions.push({ type: 'full_mock' })
       remaining -= fullMock
-      sessions.push('reflection')
+      sessions.push({ type: 'reflection' })
       remaining -= REFLECTION_AFTER_MOCK_MIN
       const weak = weakestPracticeSection(weights)
-      if (remaining >= SESSION_DURATIONS[weak]) sessions.push(weak)
+      if (remaining >= SESSION_DURATIONS[weak]) sessions.push({ type: weak })
       return { sessions }
     }
     return planPracticeSessions(remaining, weights, true, tracker, currentDayIndex, confidence)
   }
 
-  // ── Weeks 7-10 out: 2 mocks/week, mini→full transition ──────────────────────
+  // ── Weeks 7-10 out: frequent section mini mocks ─────────────────────────────
   if (phase === 'mini_mock') {
     if (weekMockCount < weeklyMockCap) {
-      // Move to full mocks in the back half of this phase (≤8 weeks remaining)
-      // so students arrive at full_mock phase already experienced with full tests
-      if (weeksRemainingForWeek <= 8 && remaining >= fullMockBlock) {
-        sessions.push('full_mock')
-        remaining -= fullMock
-        sessions.push('reflection')
-        remaining -= REFLECTION_AFTER_MOCK_MIN
-        const weak = weakestPracticeSection(weights)
-        if (remaining >= SESSION_DURATIONS[weak]) sessions.push(weak)
-        return { sessions }
-      }
       if (remaining >= miniBlock) {
-        sessions.push('mini_mock')
+        sessions.push({ type: 'mini_mock', miniMockFocus: miniMockFocusForSlot(weights, weekMockCount) })
         remaining -= SESSION_DURATIONS.mini_mock
-        sessions.push('reflection')
-        remaining -= REFLECTION_AFTER_MOCK_MIN
+        sessions.push({ type: 'reflection' })
+        remaining -= REFLECTION_AFTER_MINI_MOCK_MIN
         const weak = weakestPracticeSection(weights)
-        if (remaining >= SESSION_DURATIONS[weak]) sessions.push(weak)
+        if (remaining >= SESSION_DURATIONS[weak]) sessions.push({ type: weak })
         return { sessions }
       }
     }
     return planPracticeSessions(remaining, weights, true, tracker, currentDayIndex, confidence)
   }
 
-  // ── Timed / foundations: 1 mini-mock per week (0 for foundations first 2 weeks)
-  // No preferMockDay gating - rely on remaining >= miniBlock (3h) to naturally
-  // land mocks on high-capacity days (weekends / holidays).
+  // ── Timed / foundations: frequent 25-minute mini mocks once foundations start.
   if (weekMockCount < weeklyMockCap && remaining >= miniBlock) {
-    sessions.push('mini_mock')
+    sessions.push({ type: 'mini_mock', miniMockFocus: miniMockFocusForSlot(weights, weekMockCount) })
     remaining -= SESSION_DURATIONS.mini_mock
-    sessions.push('reflection')
-    remaining -= REFLECTION_AFTER_MOCK_MIN
+    sessions.push({ type: 'reflection' })
+    remaining -= REFLECTION_AFTER_MINI_MOCK_MIN
     const weak = weakestPracticeSection(weights)
-    if (remaining >= SESSION_DURATIONS[weak]) sessions.push(weak)
+    if (remaining >= SESSION_DURATIONS[weak]) sessions.push({ type: weak })
     return { sessions }
   }
 
@@ -465,8 +506,8 @@ function planPracticeSessions(
   tracker: SectionTracker,
   currentDayIndex: number,
   confidence: { vr: number; dm: number; qr: number; sjt: number },
-): { sessions: SessionType[] } {
-  const sessions: SessionType[] = []
+): { sessions: PlannedSession[] } {
+  const sessions: PlannedSession[] = []
   let remaining = availableMinutes
 
   const ranked = ([
@@ -479,12 +520,12 @@ function planPracticeSessions(
   let added = 0
   for (const { type } of ranked) {
     const dur = SESSION_DURATIONS[type]
-    if (remaining >= dur) { sessions.push(type); remaining -= dur; added++ }
+    if (remaining >= dur) { sessions.push({ type }); remaining -= dur; added++ }
     if (added >= 3) break
   }
 
   if (remaining >= REFLECTION_AFTER_PRACTICE_MIN && sessions.length >= 2) {
-    sessions.push('reflection')
+    sessions.push({ type: 'reflection' })
   }
 
   return { sessions }
@@ -522,7 +563,7 @@ interface WeekPlan {
     date: Date
     isRest: boolean
     availableMinutes: number
-    sessions: { type: SessionType; rationale: string | null }[]
+    sessions: { type: SessionType; rationale: string | null; miniMockFocus?: UCATSection }[]
   }[]
 }
 
@@ -594,7 +635,7 @@ export function generateFullPlan(inputs: PlanInputs): GeneratedPlan {
 
     const weeklyMockCap = weeklyMockTarget(weeksRemaining, totalWeeks, weeklyAvailableMinutes, ucatSen)
     // First two weeks for true beginners: pure untimed foundations, no mocks at all.
-    // Once they've built some confidence (week 3+), 1 mini-mock per week begins.
+    // Once they've built some confidence (week 3+), frequent section mini mocks begin.
     const effectiveMockCap = (phase === 'foundations' && w < 2) ? 0 : weeklyMockCap
 
     for (let i = 0; i < 7; i++) {
@@ -622,7 +663,7 @@ export function generateFullPlan(inputs: PlanInputs): GeneratedPlan {
       )
       const availableMinutes = isRest ? 0 : Math.round(hours * 60)
 
-      let sessionTypes: SessionType[] = []
+      let plannedSessions: PlannedSession[] = []
       if (!isRest && availableMinutes >= 30) {
         const plan = planDaySessions(
           availableMinutes,
@@ -640,22 +681,23 @@ export function generateFullPlan(inputs: PlanInputs): GeneratedPlan {
           daysUntilExamCal,
           weeksRemaining,
         )
-        sessionTypes = plan.sessions
+        plannedSessions = plan.sessions
+        const sessionTypes = plannedSessions.map(s => s.type)
         if (sessionTypes.includes('full_mock') || sessionTypes.includes('mini_mock')) weekMockCount++
-        for (const s of sessionTypes) {
-          if (s === 'vr_practice') tracker.vr = globalDayIndex
-          if (s === 'dm_practice') tracker.dm = globalDayIndex
-          if (s === 'qr_practice') tracker.qr = globalDayIndex
+        for (const s of plannedSessions) {
+          if (s.type === 'vr_practice') tracker.vr = globalDayIndex
+          if (s.type === 'dm_practice') tracker.dm = globalDayIndex
+          if (s.type === 'qr_practice') tracker.qr = globalDayIndex
         }
       }
 
       let prevInDay: SessionType | null = null
-      const enriched = sessionTypes.map(st => {
+      const enriched = plannedSessions.map(session => {
         const row = {
-          type: st,
-          rationale: rationaleForSession(st, rationaleCtx, prevInDay),
+          ...session,
+          rationale: rationaleForSession(session.type, rationaleCtx, prevInDay, session.miniMockFocus),
         }
-        prevInDay = st
+        prevInDay = row.type
         return row
       })
 
@@ -732,7 +774,7 @@ export function planToDBRows(
           duration_minutes: plannedSessionDurationMinutes(sessionType, ucatSen, prev),
           position: idx,
           is_timed: sessionType !== 'sjt_practice' && sessionType !== 'reflection' && sessionType !== 'rest',
-          notes: null,
+          notes: sessionType === 'mini_mock' ? miniMockNote(row.miniMockFocus) : null,
           planner_rationale: row.rationale,
         })
       })

@@ -40,11 +40,14 @@ async function main() {
   const microQuestions = generateMicroBatch(MICRO_COUNT);
   console.log("Generating 100 macro blocks (500 questions)…");
   const macroQuestions = generateMacroBatch(MACRO_BLOCK_COUNT);
-  const all = [...microQuestions, ...macroQuestions];
-  console.log(`Total questions to insert: ${all.length}`);
+  console.log(`Total questions to insert: ${microQuestions.length + macroQuestions.length}`);
 
-  const payloads = all.map((q) => ({
+  const payloads = [
+    ...microQuestions.map((q) => ({ question_mode: "micro", q })),
+    ...macroQuestions.map((q) => ({ question_mode: "macro", q })),
+  ].map(({ question_mode, q }) => ({
     macro_block_id: q.macro_block_id,
+    question_mode,
     stimulus_text: q.stimulus_text,
     conclusion_text: q.conclusion_text,
     is_correct: q.is_correct,

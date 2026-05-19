@@ -7,7 +7,7 @@ import { SESSION_LABELS } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
-export type SessionLogTarget = Pick<DBSession, 'id' | 'session_type' | 'duration_minutes'> & {
+export type SessionLogTarget = Pick<DBSession, 'id' | 'session_type' | 'duration_minutes' | 'notes'> & {
   completed: boolean
   completed_minutes?: number | null
   perceived_effort?: number | null
@@ -54,7 +54,10 @@ function SessionLogBody({
   const [saving, setSaving] = useState(false)
 
   const planned = session.duration_minutes
-  const label = SESSION_LABELS[session.session_type]
+  const label =
+    session.session_type === 'mini_mock' && session.notes?.trim()
+      ? session.notes.trim()
+      : SESSION_LABELS[session.session_type]
 
   async function handleSave() {
     setError('')

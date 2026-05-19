@@ -193,20 +193,24 @@ export default function QuestionFeedbackModal({
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
         <Dialog.Content
-          className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white p-6 shadow-xl outline-none"
+          className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-6 shadow-xl outline-none"
           aria-labelledby="question-feedback-title"
         >
-          <div className="mb-4 flex items-center justify-between gap-2">
-            <Dialog.Title
-              id="question-feedback-title"
-              className="text-lg font-semibold text-slate-900"
-            >
-              Report this question
-            </Dialog.Title>
+          {/* Header */}
+          <div className="mb-1 flex items-start justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xl" aria-hidden>🙋</span>
+              <Dialog.Title
+                id="question-feedback-title"
+                className="text-base font-semibold text-slate-900"
+              >
+                Help us improve this question
+              </Dialog.Title>
+            </div>
             <Dialog.Close asChild>
               <button
                 type="button"
-                className="flex min-h-[36px] min-w-[36px] items-center justify-center rounded-full text-slate-400 hover:text-slate-700"
+                className="flex min-h-[36px] min-w-[36px] items-center justify-center rounded-full text-slate-400 hover:text-slate-600 transition-colors"
                 aria-label="Close"
               >
                 ×
@@ -214,51 +218,57 @@ export default function QuestionFeedbackModal({
             </Dialog.Close>
           </div>
 
-          <p className="mb-3 text-sm text-slate-600">
-            Spot a problem or confusing wording? Send a quick report so we can
-            review this item.
+          <p className="mb-4 text-sm text-slate-500 leading-relaxed">
+            Every report is read by the team. Whether it&apos;s a wording issue, a
+            possible mistake, or just something that felt off, your feedback
+            genuinely helps us make the question bank better for everyone. Thank you.
           </p>
 
           <form
             onSubmit={handleSubmit(onSubmit)}
             className="space-y-4"
-            aria-describedby={
-              message ? "question-feedback-status" : undefined
-            }
+            aria-describedby={message ? "question-feedback-status" : undefined}
           >
             <div>
               <p className="mb-2 text-sm font-medium text-slate-700">
-                What&apos;s the main issue?
+                What best describes the issue?
               </p>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {questionFeedbackIssueTypes.map((type) => {
                   const label =
                     type === "wrong_answer"
-                      ? "Possible mistake"
+                      ? "Answer looks wrong"
                       : type === "unclear_wording"
-                        ? "Unclear wording"
+                        ? "Wording is unclear"
                         : type === "too_hard"
-                          ? "Too hard"
+                          ? "Seems too difficult"
                           : type === "too_easy"
-                            ? "Too easy"
+                            ? "Seems too easy"
                             : type === "typo"
                               ? "Typo / formatting"
-                              : "Other";
+                              : "Something else";
+                  const icon =
+                    type === "wrong_answer" ? "❌" :
+                    type === "unclear_wording" ? "🤔" :
+                    type === "too_hard" ? "😓" :
+                    type === "too_easy" ? "😌" :
+                    type === "typo" ? "✏️" : "💬";
                   return (
                     <label
                       key={type}
-                      className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
+                      className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2.5 text-sm transition-colors ${
                         currentIssue === type
-                          ? "border-primary bg-primary/5 text-slate-900"
-                          : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
+                          ? "border-primary bg-primary/5 text-slate-900 font-medium"
+                          : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
                       }`}
                     >
                       <input
                         type="radio"
                         value={type}
-                        className="text-primary focus:ring-primary"
+                        className="sr-only"
                         {...register("issueType")}
                       />
+                      <span aria-hidden className="text-base">{icon}</span>
                       <span>{label}</span>
                     </label>
                   );
@@ -276,14 +286,14 @@ export default function QuestionFeedbackModal({
                 htmlFor="question-feedback-comment"
                 className="mb-1 block text-sm font-medium text-slate-700"
               >
-                Optional comment
+                Any extra detail? <span className="font-normal text-slate-400">(optional but very helpful)</span>
               </label>
               <textarea
                 id="question-feedback-comment"
                 rows={3}
                 maxLength={QUESTION_FEEDBACK_COMMENT_MAX}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                placeholder="E.g. the explanation contradicts the stimulus, or the wording feels ambiguous."
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+                placeholder="E.g. 'The explanation says X but the stimulus implies Y' (anything that helps us find the problem quickly)."
                 {...register("comment")}
               />
               {errors.comment && (
@@ -291,9 +301,6 @@ export default function QuestionFeedbackModal({
                   {errors.comment.message}
                 </p>
               )}
-              <p className="mt-1 text-xs text-slate-500">
-                Please don&apos;t include personal information.
-              </p>
             </div>
 
             {message && (
@@ -301,17 +308,21 @@ export default function QuestionFeedbackModal({
                 id="question-feedback-status"
                 role="status"
                 aria-live="polite"
-                className={`text-sm ${status === "error" ? "text-red-600" : "text-emerald-700"}`}
+                className={`text-sm rounded-lg px-3 py-2 ${
+                  status === "error"
+                    ? "bg-red-50 text-red-700"
+                    : "bg-emerald-50 text-emerald-700"
+                }`}
               >
                 {message}
               </p>
             )}
 
-            <div className="mt-2 flex gap-2">
+            <div className="flex gap-2 pt-1">
               <button
                 type="button"
                 onClick={handleClose}
-                className="flex-1 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
               >
                 Cancel
               </button>
@@ -321,13 +332,13 @@ export default function QuestionFeedbackModal({
                   status === "loading" ||
                   (rateLimitRemaining != null && rateLimitRemaining > 0)
                 }
-                className="flex-1 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+                className="flex-1 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60 transition-colors"
               >
                 {rateLimitRemaining != null && rateLimitRemaining > 0
                   ? `Wait ${rateLimitRemaining}s`
                   : status === "loading"
                     ? "Sending…"
-                    : "Send report"}
+                    : "Send feedback"}
               </button>
             </div>
           </form>

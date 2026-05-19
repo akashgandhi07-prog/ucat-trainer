@@ -5,13 +5,14 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import {
+  fetchSyllogismFoundationBatch,
   fetchSyllogismMacroBlock,
   fetchSyllogismMicroBatch,
   isAbortError,
 } from "../../lib/syllogismApi";
 import { saveSyllogismSession } from "../../utils/syllogismStorage";
 import { trackEvent, setActiveTrainer, clearActiveTrainer } from "../../lib/analytics";
-import type { SyllogismQuestion, LogicGroup } from "../../types/syllogisms";
+import type { SyllogismQuestion, LogicGroup, SyllogismMode } from "../../types/syllogisms";
 
 // User-facing message when no questions are available (do not expose seed script or env vars).
 const SEED_ERROR_MESSAGE =
@@ -31,8 +32,6 @@ function toErrorMessage(e: unknown): string {
   }
   return "Failed to load syllogism questions. Please try again or check your connection.";
 }
-
-export type SyllogismMode = "micro" | "macro";
 
 export interface SyllogismSessionSummary {
   score: number;
@@ -69,8 +68,8 @@ export function useSyllogismLogic(mode: SyllogismMode) {
   const sessionFinishedRef = useRef(false);
   const finishSessionRef = useRef<() => Promise<SyllogismSessionSummary | null>>(() => Promise.resolve(null));
 
-  const isMicro = mode === "micro";
   const isMacro = mode === "macro";
+  const isLinearMode = mode === "micro" || mode === "foundation";
 
   useEffect(() => {
     userAnswersRef.current = userAnswers;
@@ -158,6 +157,44 @@ export function useSyllogismLogic(mode: SyllogismMode) {
     } catch (e) {
       if (controller.signal.aborted || isAbortError(e)) return;
       console.error("Syllogism fetch error", e);
+      setError(toErrorMessage(e));
+      setQuestions([]);
+      setUserAnswers([]);
+    } finally {
+      if (!controller.signal.aborted) {
+        setLoading(false);
+      }
+    }
+  }, []);
+
+  const fetchFoundationQuestions = useCallback(async (count: number) => {
+    fetchAbortRef.current?.abort();
+    const controller = new AbortController();
+    fetchAbortRef.current = controller;
+
+    setLoading(true);
+    setError(null);
+    setSessionFinished(false);
+    setLastSummary(null);
+    savedOnExitRef.current = false;
+    try {
+      const list = await fetchSyllogismFoundationBatch(count, controller.signal);
+      if (controller.signal.aborted) return;
+
+      if (list.length === 0) {
+        setError(SEED_ERROR_MESSAGE);
+        setQuestions([]);
+        setUserAnswers([]);
+        return;
+      }
+
+      setQuestions(list);
+      setUserAnswers(list.map(() => null));
+      setCurrentIndex(0);
+      resetTiming();
+    } catch (e) {
+      if (controller.signal.aborted || isAbortError(e)) return;
+      console.error("Syllogism foundation fetch error", e);
       setError(toErrorMessage(e));
       setQuestions([]);
       setUserAnswers([]);
@@ -348,9 +385,9 @@ export function useSyllogismLogic(mode: SyllogismMode) {
     sessionFinished,
   ]);
 
-  /** Micro only: move to next question or finish session if on last and answered. */
+  /** Linear modes: move to next question or finish session if on last and answered. */
   const advanceToNext = useCallback(() => {
-    if (!isMicro || questions.length === 0) return;
+    if (!isLinearMode || questions.length === 0) return;
     const hasAnswer = userAnswers[currentIndex] !== null;
     const justAnswered = justAnsweredIndexRef.current === currentIndex;
     if (!hasAnswer && !justAnswered) return;
@@ -360,7 +397,7 @@ export function useSyllogismLogic(mode: SyllogismMode) {
     } else {
       setCurrentIndex((i) => i + 1);
     }
-  }, [isMicro, questions.length, currentIndex, userAnswers, finishSession]);
+  }, [isLinearMode, questions.length, currentIndex, userAnswers, finishSession]);
 
   // Keep finishSessionRef pointing at the latest callback (avoids stale closure in exit handler).
   useEffect(() => {
@@ -380,6 +417,7 @@ export function useSyllogismLogic(mode: SyllogismMode) {
     error,
     sessionFinished,
     lastSummary,
+    fetchFoundationQuestions,
     fetchMicroQuestions,
     fetchMacroBlock,
     submitAnswer,

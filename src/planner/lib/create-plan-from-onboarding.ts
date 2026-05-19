@@ -97,6 +97,17 @@ export async function createPlanFromOnboarding({
   const { error: sessErr } = await supabase.from(PLAN_TIMETABLE_TABLE).insert(sessions)
   if (sessErr) throw new Error(sessErr.message)
 
+  await supabase
+    .from('profiles')
+    .upsert(
+      {
+        id: user.id,
+        ucat_exam_date: toISODate(examDate),
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'id' },
+    )
+
   await supabase.from('plan_members').insert({ plan_id: plan.id, user_id: user.id, role: 'student' })
   if (tutorId) {
     await supabase.from('plan_members').insert({ plan_id: plan.id, user_id: tutorId, role: 'tutor' })

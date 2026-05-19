@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams, useNavigate, useLocation } from 'react-router-dom'
+import { Link, useSearchParams, useNavigate, useLocation } from 'react-router-dom'
+import { Pencil } from 'lucide-react'
 import { toast } from 'sonner'
 import { useRouter } from '@/lib/app-navigation'
 import { DBPlan, DBPlanDay, DBSession, DBExtraStudyLog, SessionType } from '@/types'
@@ -16,8 +17,11 @@ import {
   completeSession,
   rebalancePlan,
   saveExtraStudy as persistExtraStudy,
+  updateExamDateTime,
   updatePlanDay,
 } from '@/lib/planner-client'
+import { UCAT_EXAM_WINDOW_END_ISO, UCAT_EXAM_WINDOW_START_ISO } from '../../../../lib/ucatExamWindow'
+import { useAuth } from '../../../../hooks/useAuth'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -86,6 +90,18 @@ const TYPE_PILL: Record<string, string> = {
   full_mock:    'bg-red-100 text-red-800',
   mini_mock:    'bg-pink-100 text-pink-800',
   reflection:   'bg-slate-100 text-slate-700',
+}
+
+function sessionDisplayLabel(session: Pick<DBSession, 'session_type' | 'notes'>): string {
+  if (session.session_type === 'mini_mock' && session.notes?.trim()) return session.notes.trim()
+  return SESSION_LABELS[session.session_type]
+}
+
+function sessionCalendarLabel(session: Pick<DBSession, 'session_type' | 'notes'>): string {
+  if (session.session_type === 'mini_mock' && session.notes?.trim()) {
+    return session.notes.trim().replace(/\s+Mock$/i, '')
+  }
+  return TYPE_SHORT[session.session_type] ?? session.session_type
 }
 
 // ─── Block day button ─────────────────────────────────────────────────────────
@@ -202,6 +218,7 @@ function DayDetailModal({
   /** True when this day is a recurring rest day from the plan's rest_days setting (not a user-created block) */
   const isStructuralRestDay = planRestDays.includes(date.getDay())
   const activeSessions = sessions.filter(s => s.session_type !== 'rest')
+  const hasMockSession = activeSessions.some(s => s.session_type === 'full_mock' || s.session_type === 'mini_mock')
 
   // ── Completion state (optimistic) ───────────────────────────────────────────
   const [completions, setCompletions] = useState<Map<string, { completed: boolean; minutes: number | null }>>(
@@ -380,6 +397,7 @@ function DayDetailModal({
         id: sessionSheet.id,
         session_type: sessionSheet.session_type,
         duration_minutes: sessionSheet.duration_minutes,
+        notes: sessionSheet.notes,
         completed: completions.get(sessionSheet.id)?.completed ?? sessionSheet.completed,
         completed_minutes:
           completions.get(sessionSheet.id)?.minutes ?? sessionSheet.completed_minutes ?? null,
@@ -512,7 +530,7 @@ function DayDetailModal({
                         )}
                       </div>
                       <span className={`text-sm font-medium flex-1 ${fullHit ? 'line-through text-slate-400' : ''}`}>
-                        {SESSION_LABELS[s.session_type]}
+                        {sessionDisplayLabel(s)}
                       </span>
                       <span
                         className={`text-xs font-medium shrink-0 ${
@@ -544,6 +562,14 @@ function DayDetailModal({
                   <p className="text-xs text-slate-400 text-center pt-1">
                     Future days are view only until that date. Tap a session to see a reminder.
                   </p>
+                )}
+                {hasMockSession && (
+                  <Link
+                    to="/mock-scores"
+                    className="block w-full rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-center text-xs font-semibold text-blue-700 hover:bg-blue-100"
+                  >
+                    Log mock score
+                  </Link>
                 )}
               </div>
             ) : (
@@ -1052,6 +1078,114 @@ export function RebuildAheadModal({
   )
 }
 
+// ─── Exam date editor ─────────────────────────────────────────────────────────
+
+function ExamDateEditModal({
+  plan,
+  onClose,
+}: {
+  plan: DBPlan
+  onClose: () => void
+}) {
+  const router = useRouter()
+  const { refetchProfile } = useAuth()
+  const [examDate, setExamDate] = useState(plan.exam_date)
+  const [examTime, setExamTime] = useState(plan.exam_time ?? '')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  async function submit() {
+    setSaving(true)
+    setError('')
+    try {
+      await updateExamDateTime({
+        planId: plan.id,
+        examDate,
+        examTime: examTime || null,
+        regenerate: true,
+      })
+      await refetchProfile()
+      toast.success('Exam date updated and plan rebuilt')
+      router.refresh()
+      onClose()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not update exam date')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4"
+      onClick={() => !saving && onClose()}
+      role="presentation"
+    >
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+      <div
+        className="relative w-full max-w-md rounded-2xl border border-slate-100 bg-white shadow-2xl"
+        onClick={e => e.stopPropagation()}
+        role="dialog"
+        aria-labelledby="edit-exam-date-title"
+      >
+        <div className="border-b border-slate-100 px-5 py-4">
+          <h2 id="edit-exam-date-title" className="text-lg font-bold text-slate-900">
+            Edit exam date
+          </h2>
+          <p className="mt-1 text-xs text-slate-500">
+            Saving will update your dashboard date and rebuild the timetable from this week onward.
+          </p>
+        </div>
+        <div className="space-y-4 px-5 py-4">
+          <div>
+            <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+              UCAT date
+            </label>
+            <input
+              type="date"
+              min={UCAT_EXAM_WINDOW_START_ISO}
+              max={UCAT_EXAM_WINDOW_END_ISO}
+              value={examDate}
+              onChange={e => setExamDate(e.target.value)}
+              className="mt-1.5 h-10 w-full rounded-lg border border-slate-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+              Time
+            </label>
+            <input
+              type="time"
+              value={examTime}
+              onChange={e => setExamTime(e.target.value)}
+              className="mt-1.5 h-10 w-full rounded-lg border border-slate-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          {error && <p className="text-xs text-red-600">{error}</p>}
+          <div className="flex gap-2 pt-1">
+            <button
+              type="button"
+              disabled={saving}
+              onClick={onClose}
+              className="flex-1 rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={saving || !examDate}
+              onClick={submit}
+              className="flex-1 rounded-lg bg-blue-600 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+            >
+              {saving ? 'Rebuilding...' : 'Save and rebuild'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Day cell ─────────────────────────────────────────────────────────────────
 
 function DayCell({
@@ -1147,7 +1281,7 @@ function DayCell({
                     <path d="M1 4l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 )}
-                {TYPE_SHORT[s.session_type] ?? s.session_type}
+                {sessionCalendarLabel(s)}
               </span>
             ))}
             {extra > 0 && (
@@ -1186,6 +1320,7 @@ export function PlanCalendar({ plan, planDays, sessions, extraStudyLogs, readOnl
   })
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [showRebuildAhead, setShowRebuildAhead] = useState(false)
+  const [showExamDateEdit, setShowExamDateEdit] = useState(false)
   const [pdfExporting, setPdfExporting] = useState(false)
 
   useEffect(() => {
@@ -1292,10 +1427,10 @@ export function PlanCalendar({ plan, planDays, sessions, extraStudyLogs, readOnl
   const canGoNext = currentMonth < new Date(parseDate(examDate).getFullYear(), parseDate(examDate).getMonth(), 1)
 
   return (
-    <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-5">
+    <div className="w-full max-w-none p-4 md:p-8 space-y-5">
       {/* Page header */}
       <div className="flex items-start justify-between gap-4">
-        <div>
+        <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-bold text-slate-900">Revision Plan</h1>
           <p className="text-sm text-slate-500 mt-0.5">
             Exam: {parseDate(examDate).toLocaleDateString('en-GB', {
@@ -1304,9 +1439,19 @@ export function PlanCalendar({ plan, planDays, sessions, extraStudyLogs, readOnl
             {(plan as any).exam_time && (
               <span className="ml-2 text-slate-400">at {(plan as any).exam_time}</span>
             )}
+            {!readOnly && (
+              <button
+                type="button"
+                onClick={() => setShowExamDateEdit(true)}
+                className="ml-2 inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50"
+              >
+                <Pencil className="h-3 w-3" aria-hidden="true" />
+                Edit
+              </button>
+            )}
           </p>
           {readOnly ? (
-            <p className="mt-2 text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 max-w-xl">
+            <p className="mt-2 w-full text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
               Guest plan on this device only. Sign in to rebuild your timetable, edit future days and sync across devices. You can still download a PDF below.
             </p>
           ) : (
@@ -1318,6 +1463,12 @@ export function PlanCalendar({ plan, planDays, sessions, extraStudyLogs, readOnl
           )}
         </div>
         <div className="flex flex-wrap gap-2 shrink-0 justify-end">
+          <Link
+            to="/mock-scores"
+            className="text-xs bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-slate-600 hover:bg-slate-50 font-medium"
+          >
+            Log mock score
+          </Link>
           {!readOnly && (
             <button
               type="button"
@@ -1462,6 +1613,13 @@ export function PlanCalendar({ plan, planDays, sessions, extraStudyLogs, readOnl
           examDate={examDate}
           hoursSuggestion={hoursSuggestion}
           onClose={() => setShowRebuildAhead(false)}
+        />
+      )}
+
+      {showExamDateEdit && !readOnly && (
+        <ExamDateEditModal
+          plan={plan}
+          onClose={() => setShowExamDateEdit(false)}
         />
       )}
     </div>

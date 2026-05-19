@@ -304,14 +304,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const emailMarketingOptIn =
           (meta?.email_marketing_opt_in as boolean | undefined) ?? null;
 
-        await upsertProfile(session.user.id, fullName, stream, {
-          firstName,
-          lastName,
-          entryYear,
-          emailMarketingOptIn,
-        });
-        await tryMailchimpJwtBackup(session.user, "auth_context_signed_in");
-        if (authListenerActive) await fetchProfile(session.user.id);
+        try {
+          await upsertProfile(session.user.id, fullName, stream, {
+            firstName,
+            lastName,
+            entryYear,
+            emailMarketingOptIn,
+          });
+          await tryMailchimpJwtBackup(session.user, "auth_context_signed_in");
+          if (authListenerActive) await fetchProfile(session.user.id);
+        } catch (profileErr) {
+          authLog.error("Profile update after sign-in failed", profileErr);
+        }
       } else if (event === "SIGNED_OUT") {
         const exitingId = userRef.current?.id;
         if (exitingId && typeof sessionStorage !== "undefined") {

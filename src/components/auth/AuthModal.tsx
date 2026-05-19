@@ -35,6 +35,9 @@ const FALLBACK_AUTH_ERROR = "Something went wrong. Please try again.";
 
 function getUserFriendlyAuthError(rawMessage: string): string {
   const msg = rawMessage?.toLowerCase() ?? "";
+  if (msg.includes("failed to fetch") || msg.includes("network") || msg.includes("fetch")) {
+    return "Can't reach our servers. Check your internet connection and try again — if the problem persists, the service may be temporarily unavailable.";
+  }
   if (msg.includes("rate limit") || msg.includes("too many")) {
     return "Too many requests. Please wait a few minutes and try again.";
   }

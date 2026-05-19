@@ -7,10 +7,10 @@ import { supabase } from "../lib/supabase";
 import { withRetry } from "../lib/retry";
 import { supabaseLog } from "../lib/logger";
 import { trackEvent } from "../lib/analytics";
-import type { SyllogismSessionInsert } from "../types/syllogisms";
+import type { SyllogismMode, SyllogismSessionInsert } from "../types/syllogisms";
 
 export type SyllogismSessionSummary = {
-  mode: "micro" | "macro";
+  mode: SyllogismMode;
   score: number;
   total_questions: number;
   average_time_per_decision: number;

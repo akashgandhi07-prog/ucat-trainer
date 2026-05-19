@@ -1,6 +1,13 @@
 import type { MockSource, MockType } from '../embedded/types'
 import { PLAN_TIMETABLE_TABLE } from '../embedded/lib/planner-db-tables'
 import { weekNumberForCalendarDate } from '../embedded/lib/week-for-plan-date'
+import { toISODate } from '../embedded/lib/utils'
+import {
+  UCAT_EXAM_WINDOW_END_ISO,
+  UCAT_EXAM_WINDOW_START_ISO,
+  isWithinUcatExamWindow,
+  normaliseExamDateIso,
+} from '../../lib/ucatExamWindow'
 import { supabase } from '../../lib/supabase'
 import { requireStudentOrTutorPlan } from './planner-guard'
 import { regenerateFutureWeeks, updateDayAvailability } from './planner-db-ops'
@@ -115,6 +122,54 @@ export async function updatePlanDay(input: {
     } catch {
       /* non-fatal */
     }
+  }
+}
+
+export async function updateExamDateTime(input: {
+  planId: string
+  examDate: string
+  examTime: string | null
+  regenerate?: boolean
+}): Promise<void> {
+  const userId = await getCurrentUserId()
+  const gate = await requireStudentOrTutorPlan(input.planId, userId)
+  if (!gate.ok) throw new Error(gate.message)
+
+  const examIso = normaliseExamDateIso(input.examDate)
+  if (!examIso || !isWithinUcatExamWindow(examIso)) {
+    throw new Error(
+      `Exam date must be between ${UCAT_EXAM_WINDOW_START_ISO} and ${UCAT_EXAM_WINDOW_END_ISO}.`,
+    )
+  }
+
+  const { error: planErr } = await supabase
+    .from('plans')
+    .update({
+      exam_date: examIso,
+      exam_time: input.examTime || null,
+    })
+    .eq('id', input.planId)
+  if (planErr) throw new Error(planErr.message)
+
+  const { error: profileErr } = await supabase
+    .from('profiles')
+    .upsert(
+      {
+        id: gate.studentId,
+        ucat_exam_date: examIso,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'id' },
+    )
+  if (profileErr) throw new Error(profileErr.message)
+
+  if (input.regenerate ?? true) {
+    const { data: weeks } = await supabase
+      .from('plan_weeks')
+      .select('week_number, week_start')
+      .eq('plan_id', input.planId)
+    const currentWeek = weekNumberForCalendarDate(weeks ?? [], toISODate(new Date())) ?? 1
+    await regenerateFutureWeeks(input.planId, currentWeek)
   }
 }
 

@@ -15,9 +15,9 @@ const LOGIC_GROUP_LABELS: Record<LogicGroup, string> = {
 
 const SLOW_DECISION_THRESHOLD_SECONDS = 10;
 
-/** Derive total correct from session score: micro stores correct; macro stores 0/1/2 for 5 questions. */
+/** Derive total correct from session score: linear modes store correct; macro stores 0/1/2 for 5 questions. */
 function correctFromSession(s: SyllogismSession): number {
-  if (s.mode === "micro") return s.score;
+  if (s.mode === "micro" || s.mode === "foundation") return s.score;
   if (s.mode === "macro" && s.total_questions === 5) {
     if (s.score === 2) return 5;
     if (s.score === 1) return 4;
@@ -34,7 +34,7 @@ export default function SyllogismAnalytics({ sessions }: Props) {
       <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
         <h3 className="text-lg font-semibold text-slate-900 mb-2">Decision Making - Syllogisms</h3>
         <p className="text-slate-600 text-sm">
-          No syllogism sessions yet. Complete a few micro or macro drills to see your accuracy and speed here.
+          No syllogism sessions yet. Complete a few foundations, micro or macro drills to see your accuracy and speed here.
         </p>
         <Link
           to="/decision-making"

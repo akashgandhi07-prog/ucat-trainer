@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Scale, Zap, LayoutList, Circle, BarChart3 } from "lucide-react";
+import { Scale, Zap, LayoutList, Circle, BarChart3, GraduationCap } from "lucide-react";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import SkillsSectionLayout, {
@@ -56,7 +56,14 @@ export default function DecisionMakingPage() {
           title={HUB_SKILLS_TRAINERS_TITLE}
           description="Syllogism drills plus targeted practice for Venn logic, data reasoning and argument judgement. Each trainer isolates one repeatable UCAT pattern."
         >
-          <HubTrainerGrid trainerCount={5}>
+          <HubTrainerGrid trainerCount={6}>
+            <HubTrainerCard
+              title="Syllogisms · Foundations"
+              description="Atomic rule drills for all, some, no, most and conditional traps before timed practice."
+              icon={GraduationCap}
+              accent="amber"
+              onClick={() => navigate("/ucat-syllogism-foundations-trainer")}
+            />
             <HubTrainerCard
               title="Syllogisms · Micro"
               description="One premise, one conclusion. Build instant pattern recognition with keyboard shortcuts."

@@ -29,6 +29,7 @@ export type QuestionFeedbackKind =
 
 export type QuestionFeedbackTrainerType =
   | TrainingType
+  | "syllogism_foundation"
   | "syllogism_micro"
   | "syllogism_macro"
   | "dm_venn_logic"
@@ -140,4 +141,3 @@ export async function submitQuestionFeedback(
 
   return { success: true };
 }
-

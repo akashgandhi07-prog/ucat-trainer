@@ -116,7 +116,10 @@ function summarizeDay(
     )
     doneMinutes += credited
 
-    const label = PDF_SHORT[s.session_type] ?? s.session_type
+    const label =
+      s.session_type === 'mini_mock' && s.notes?.trim()
+        ? s.notes.trim().replace(/\s+Mock$/i, '')
+        : PDF_SHORT[s.session_type] ?? s.session_type
     if (isPastOrToday && s.completed) {
       const logged = s.completed_minutes ?? s.duration_minutes
       if (logged >= s.duration_minutes) {

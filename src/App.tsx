@@ -20,6 +20,7 @@ import ConversionsTrainerPage from "./pages/ConversionsTrainerPage";
 import QuantitativeReasoningPage from "./pages/QuantitativeReasoningPage";
 import DecisionMakingPage from "./pages/DecisionMakingPage";
 import StudyGuidesPage from "./pages/StudyGuidesPage";
+import SyllogismFoundationPage from "./pages/SyllogismFoundationPage";
 import SyllogismMicroPage from "./pages/SyllogismMicroPage";
 import SyllogismMacroPage from "./pages/SyllogismMacroPage";
 import VennLogicTrainerPage from "./pages/VennLogicTrainerPage";
@@ -78,6 +79,7 @@ function App() {
                     <Route path="/study-guides" element={<StudyGuidesPage />} />
                     <Route path="/ucat-mental-maths-trainer" element={<MentalMathsPage />} />
                     <Route path="/ucat-unit-conversions-trainer" element={<ConversionsTrainerPage />} />
+                    <Route path="/ucat-syllogism-foundations-trainer" element={<SyllogismFoundationPage />} />
                     <Route path="/ucat-syllogism-practice-macro-drills" element={<SyllogismMacroPage />} />
                     <Route path="/ucat-sjt-practice" element={<SJTHubPage />} />
                     <Route path="/ucat-sjt-appropriateness-trainer" element={<SJTAppropriatenessPage />} />
@@ -93,6 +95,7 @@ function App() {
                     <Route path="/decision-making" element={<Navigate to="/ucat-decision-making-practice" replace />} />
                     <Route path="/train/mentalMaths" element={<Navigate to="/ucat-mental-maths-trainer" replace />} />
                     <Route path="/train/conversions" element={<Navigate to="/ucat-unit-conversions-trainer" replace />} />
+                    <Route path="/train/syllogism/foundation" element={<Navigate to="/ucat-syllogism-foundations-trainer" replace />} />
                     <Route path="/train/syllogism/macro" element={<Navigate to="/ucat-syllogism-practice-macro-drills" replace />} />
 
                     <Route path="/configure" element={<ConfigureRedirect />} />
