@@ -190,9 +190,21 @@ function DropdownPanel({
   onMouseLeave: () => void;
 }) {
   const multiCol = groups.length > 1;
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [offset, setOffset] = useState(0);
+
+  useEffect(() => {
+    if (!panelRef.current) return;
+    const rect = panelRef.current.getBoundingClientRect();
+    const margin = 8;
+    if (rect.left < margin) setOffset(margin - rect.left);
+    else if (rect.right > window.innerWidth - margin) setOffset(window.innerWidth - margin - rect.right);
+    else setOffset(0);
+  }, [pos]);
 
   const panel = (
     <div
+      ref={panelRef}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       className={cn(
@@ -204,7 +216,7 @@ function DropdownPanel({
       style={{
         top: pos.top + 6,
         left: pos.centerX,
-        transform: "translateX(-50%)",
+        transform: `translateX(calc(-50% + ${offset}px))`,
         ...(multiCol
           ? { gridTemplateColumns: `repeat(${groups.length}, minmax(220px, 1fr))` }
           : {}),
