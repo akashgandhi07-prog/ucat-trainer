@@ -16,7 +16,7 @@ interface ReflectViewProps {
 const DIFFICULTY_OPTIONS: { value: DifficultyRating; label: string; emoji: string; color: string }[] = [
   { value: 1, label: 'Too hard', emoji: '😓', color: 'border-red-300 bg-red-50 text-red-700' },
   { value: 2, label: 'About right', emoji: '😊', color: 'border-green-300 bg-green-50 text-green-700' },
-  { value: 3, label: 'Too easy', emoji: '🚀', color: 'border-blue-300 bg-blue-50 text-blue-700' },
+  { value: 3, label: 'Too easy', emoji: '🚀', color: 'border-border bg-secondary text-foreground' },
 ]
 
 export function ReflectView({ planId, reflections: initialReflections, planWeeks }: ReflectViewProps) {
@@ -71,7 +71,7 @@ export function ReflectView({ planId, reflections: initialReflections, planWeeks
     <div className="p-6 md:p-10 max-w-2xl mx-auto space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-slate-900">Weekly Reflections</h1>
-        <p className="text-slate-500 mt-1">Review how each week went. Your rating adjusts the intensity of future weeks.</p>
+        <p className="text-muted-foreground mt-1">Review how each week went. Your rating adjusts the intensity of future weeks.</p>
       </div>
 
       <div className="space-y-4">
@@ -81,12 +81,12 @@ export function ReflectView({ planId, reflections: initialReflections, planWeeks
           const d = parseDate(week.week_start)
 
           return (
-            <Card key={week.week_number} className={isEditing ? 'border-blue-300 shadow-sm' : ''}>
+            <Card key={week.week_number} className={isEditing ? 'border-border shadow-sm' : ''}>
               <CardHeader className="py-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle className="text-base">Week {week.week_number}</CardTitle>
-                    <p className="text-sm text-slate-500 mt-0.5">
+                    <p className="text-sm text-muted-foreground mt-0.5">
                       {formatDate(d)}
                     </p>
                   </div>
@@ -130,7 +130,7 @@ export function ReflectView({ planId, reflections: initialReflections, planWeeks
                           type="button"
                           onClick={() => setDifficulty(opt.value)}
                           className={`rounded-lg border-2 py-3 text-center transition-all ${
-                            difficulty === opt.value ? opt.color + ' border-opacity-100' : 'border-slate-200 text-slate-600'
+                            difficulty === opt.value ? opt.color + ' border-opacity-100' : 'border-border text-slate-600'
                           }`}
                         >
                           <div className="text-xl mb-1">{opt.emoji}</div>
@@ -148,7 +148,7 @@ export function ReflectView({ planId, reflections: initialReflections, planWeeks
                       onChange={e => setText(e.target.value)}
                       placeholder="What went well? What was challenging? What will you focus on next week?"
                       rows={4}
-                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                      className="w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                     />
                   </div>
 

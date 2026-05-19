@@ -83,52 +83,52 @@ export default function ResultsView({
   return (
     <div className="w-full max-w-2xl mx-auto px-4 text-center">
       <div className="mb-4">
-        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-green-700 border border-slate-200">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-secondary text-green-700 border border-border">
           <span className="w-2 h-2 rounded-full bg-green-500" aria-hidden />
           DRILL COMPLETE
         </span>
       </div>
-      <h1 className="text-2xl font-bold text-slate-900 mb-1">
+      <h1 className="text-2xl font-bold text-foreground mb-1">
         Performance Analytics
       </h1>
-      <p className="text-slate-600 text-sm mb-8">
+      <p className="text-muted-foreground text-sm mb-8">
         Speed Reading{passageTitle ? ` · ${passageTitle}` : ""}
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 text-center">
-          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">
+        <div className="bg-card rounded-xl border border-border p-4 text-center">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
             Speed
           </p>
-          <p className="text-2xl font-bold text-slate-900">{wpm}</p>
-          <p className="text-sm text-slate-600">WPM</p>
+          <p className="text-2xl font-bold text-foreground">{wpm}</p>
+          <p className="text-sm text-muted-foreground">WPM</p>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 text-center">
-          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">
+        <div className="bg-card rounded-xl border border-border p-4 text-center">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
             Accuracy
           </p>
           <p className="text-2xl font-bold text-green-600">{accuracy}%</p>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-muted-foreground">
             {correct}/{total} correct
           </p>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 text-center">
-          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">
+        <div className="bg-card rounded-xl border border-border p-4 text-center">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
             Time spent
           </p>
-          <p className="text-2xl font-bold text-slate-900">{timeSpentSeconds}</p>
-          <p className="text-sm text-slate-600">seconds</p>
+          <p className="text-2xl font-bold text-foreground">{timeSpentSeconds}</p>
+          <p className="text-sm text-muted-foreground">seconds</p>
         </div>
       </div>
 
-      <div className="mb-8 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-center">
-        <p className="text-sm text-slate-700">
+      <div className="mb-8 rounded-xl border border-border bg-secondary px-4 py-3 text-center">
+        <p className="text-sm text-foreground">
           {accuracy >= 80
             ? "Good comprehension at this speed. Try +25 WPM next time to push your pace."
             : "Comprehension was lower; try the same or slightly lower WPM next time and focus on key sentences."}
         </p>
         {guidedChunkingEnabled && chunkSize != null && (
-          <p className="text-xs text-slate-600 mt-2">
+          <p className="text-xs text-muted-foreground mt-2">
             Guided chunking: {chunkSize} word{chunkSize !== 1 ? "s" : ""} per chunk.
             {suggestedChunkSize != null && suggestedChunkSize !== chunkSize && (
               <>
@@ -144,7 +144,7 @@ export default function ResultsView({
                     <button
                       type="button"
                       onClick={onAcceptSuggestedChunkSize}
-                      className="text-blue-600 hover:text-blue-700 hover:underline font-medium"
+                      className="text-primary hover:text-primary hover:underline font-medium"
                     >
                       Use suggested
                     </button>
@@ -161,7 +161,7 @@ export default function ResultsView({
           <button
             type="button"
             onClick={() => setPassageModalOpen(true)}
-            className="min-h-[44px] px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg transition-colors inline-flex items-center justify-center gap-2"
+            className="min-h-[44px] px-4 py-2 text-sm font-medium text-foreground bg-secondary hover:bg-slate-200 border border-border rounded-lg transition-colors inline-flex items-center justify-center gap-2"
           >
             View passage
           </button>
@@ -175,7 +175,7 @@ export default function ResultsView({
 
       {questionBreakdown.length > 0 && (
         <div className="mb-8 text-left">
-          <h2 className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-3">
+          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
             Question breakdown
           </h2>
           <div className="space-y-3">
@@ -193,7 +193,7 @@ export default function ResultsView({
                     }`}
                 >
                   <div className="flex items-center justify-between gap-2 mb-2">
-                    <span className="font-bold text-slate-900">{i + 1}</span>
+                    <span className="font-bold text-foreground">{i + 1}</span>
                     <span
                       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${isCorrect
                           ? "bg-green-200 text-green-800"
@@ -211,8 +211,8 @@ export default function ResultsView({
                       )}
                     </span>
                   </div>
-                  <p className="text-slate-800 mb-2">{item.statement}?</p>
-                  <p className="text-sm text-slate-600">
+                  <p className="text-foreground mb-2">{item.statement}?</p>
+                  <p className="text-sm text-muted-foreground">
                     Your answer: {userAnswerLabel(item.userAnswer)}
                   </p>
                   {!isCorrect && (
@@ -221,16 +221,16 @@ export default function ResultsView({
                     </p>
                   )}
                   {item.passageSnippet && (
-                    <div className="mt-3 pt-3 border-t border-slate-200/60 space-y-2">
+                    <div className="mt-3 pt-3 border-t border-border/60 space-y-2">
                       {item.correctAnswerRaw === "false" && item.originalFragment && item.replacedFragment ? (
                         <>
-                          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                             What changed
                           </p>
                           <div className="space-y-1.5">
                             <div>
-                              <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wide mb-0.5">Statement (what you saw)</p>
-                              <p className="text-sm text-slate-700 bg-red-50 border-l-2 border-red-400 pl-3 py-1.5 rounded-r">
+                              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-0.5">Statement (what you saw)</p>
+                              <p className="text-sm text-foreground bg-red-50 border-l-2 border-red-400 pl-3 py-1.5 rounded-r">
                                 <HighlightedText
                                   text={item.statement}
                                   fragment={item.replacedFragment}
@@ -239,8 +239,8 @@ export default function ResultsView({
                               </p>
                             </div>
                             <div>
-                              <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wide mb-0.5">Original passage</p>
-                              <p className="text-sm text-slate-700 bg-green-50 border-l-2 border-green-500 pl-3 py-1.5 rounded-r">
+                              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-0.5">Original passage</p>
+                              <p className="text-sm text-foreground bg-green-50 border-l-2 border-green-500 pl-3 py-1.5 rounded-r">
                                 <HighlightedText
                                   text={item.passageSnippet}
                                   fragment={item.originalFragment}
@@ -250,30 +250,30 @@ export default function ResultsView({
                             </div>
                           </div>
                           {item.distortionLabel && (
-                            <p className="text-xs text-slate-500">
-                              Trap: <span className="font-medium text-slate-600">{item.distortionLabel}</span>
+                            <p className="text-xs text-muted-foreground">
+                              Trap: <span className="font-medium text-muted-foreground">{item.distortionLabel}</span>
                             </p>
                           )}
                         </>
                       ) : item.correctAnswerRaw === "true" && item.originalFragment && item.replacedFragment ? (
                         <>
-                          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                             Why it&apos;s true
                           </p>
                           <div className="space-y-1.5">
                             <div>
-                              <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wide mb-0.5">Statement (what you saw)</p>
-                              <p className="text-sm text-slate-700 bg-blue-50 border-l-2 border-blue-400 pl-3 py-1.5 rounded-r">
+                              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-0.5">Statement (what you saw)</p>
+                              <p className="text-sm text-foreground bg-secondary border-l-2 border-primary/40 pl-3 py-1.5 rounded-r">
                                 <HighlightedText
                                   text={item.statement}
                                   fragment={item.replacedFragment}
-                                  className="bg-blue-200 text-blue-900 font-semibold rounded px-0.5 not-italic"
+                                  className="bg-secondary text-foreground font-semibold rounded px-0.5 not-italic"
                                 />
                               </p>
                             </div>
                             <div>
-                              <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wide mb-0.5">Original passage</p>
-                              <p className="text-sm text-slate-700 bg-green-50 border-l-2 border-green-500 pl-3 py-1.5 rounded-r">
+                              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-0.5">Original passage</p>
+                              <p className="text-sm text-foreground bg-green-50 border-l-2 border-green-500 pl-3 py-1.5 rounded-r">
                                 <HighlightedText
                                   text={item.passageSnippet}
                                   fragment={item.originalFragment}
@@ -282,30 +282,30 @@ export default function ResultsView({
                               </p>
                             </div>
                           </div>
-                          <p className="text-xs text-slate-500">
+                          <p className="text-xs text-muted-foreground">
                             The highlighted word was paraphrased but the meaning is the same — the statement is true.
                           </p>
                         </>
                       ) : (
                         <>
-                          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                             From the passage
                           </p>
-                          <p className="text-sm text-slate-700 bg-amber-50/80 border-l-2 border-amber-400 pl-3 py-1.5 rounded-r">
+                          <p className="text-sm text-foreground bg-amber-50/80 border-l-2 border-amber-400 pl-3 py-1.5 rounded-r">
                             {item.passageSnippet}
                           </p>
                           {item.correctAnswerRaw === "false" && (
-                            <p className="text-xs text-slate-600">
+                            <p className="text-xs text-muted-foreground">
                               {item.distortionLabel
-                                ? <>Trap: <span className="font-medium text-slate-700">{item.distortionLabel}</span>.</>
+                                ? <>Trap: <span className="font-medium text-foreground">{item.distortionLabel}</span>.</>
                                 : "The statement changes or overstates what the passage says."}
                             </p>
                           )}
                           {item.correctAnswerRaw === "true" && (
-                            <p className="text-xs text-slate-500">The statement matches what the passage says.</p>
+                            <p className="text-xs text-muted-foreground">The statement matches what the passage says.</p>
                           )}
                           {item.correctAnswerRaw === "cant_tell" && (
-                            <p className="text-xs text-slate-500">The passage doesn&apos;t contain enough information to confirm or deny the statement shown.</p>
+                            <p className="text-xs text-muted-foreground">The passage doesn&apos;t contain enough information to confirm or deny the statement shown.</p>
                           )}
                         </>
                       )}
@@ -324,7 +324,7 @@ export default function ResultsView({
         </p>
       )}
       <div className="mb-6">
-        <p className="text-sm font-medium text-slate-700 mb-2">
+        <p className="text-sm font-medium text-foreground mb-2">
           What pace next?
         </p>
         <div className="flex flex-wrap justify-center gap-2">
@@ -333,7 +333,7 @@ export default function ResultsView({
               type="button"
               onClick={onTrySlowerWpm}
               disabled={saving}
-              className="min-h-[44px] px-4 py-2 rounded-lg text-sm font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+              className="min-h-[44px] px-4 py-2 rounded-lg text-sm font-medium bg-secondary text-foreground hover:bg-slate-200 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
             >
               Slower -25 WPM
             </button>
@@ -353,7 +353,7 @@ export default function ResultsView({
               type="button"
               onClick={onTryFasterWpm}
               disabled={saving}
-              className="min-h-[44px] px-4 py-2 rounded-lg text-sm font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+              className="min-h-[44px] px-4 py-2 rounded-lg text-sm font-medium bg-secondary text-foreground hover:bg-slate-200 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
             >
               Faster +25 WPM
             </button>
@@ -362,7 +362,7 @@ export default function ResultsView({
       </div>
 
       {saving && (
-        <p className="mb-4 text-sm text-slate-600 inline-flex items-center gap-2" aria-live="polite">
+        <p className="mb-4 text-sm text-muted-foreground inline-flex items-center gap-2" aria-live="polite">
           <span className="inline-block w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" aria-hidden />
           Saving…
         </p>
@@ -373,19 +373,19 @@ export default function ResultsView({
             type="button"
             onClick={onRestart}
             disabled={saving}
-            className="min-h-[44px] px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors disabled:opacity-70"
+            className="min-h-[44px] px-4 py-2 text-sm font-medium text-foreground bg-secondary hover:bg-slate-200 rounded-lg transition-colors disabled:opacity-70"
           >
             Try another passage
           </button>
         )}
       </div>
       <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm">
-        <Link to="/" className="min-h-[44px] inline-flex items-center justify-center py-2 text-slate-500 hover:text-blue-600">
+        <Link to="/" className="min-h-[44px] inline-flex items-center justify-center py-2 text-muted-foreground hover:text-primary">
           Back to Home
         </Link>
         <Link
           to="/?mode=speed_reading"
-          className="min-h-[44px] inline-flex items-center justify-center py-2 text-slate-500 hover:text-blue-600"
+          className="min-h-[44px] inline-flex items-center justify-center py-2 text-muted-foreground hover:text-primary"
         >
           Change settings
         </Link>

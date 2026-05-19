@@ -58,7 +58,7 @@ export default function TrainerFaqSection({
         return (
           <div
             key={item.id}
-            className="border border-slate-200 rounded-lg bg-white/60 hover:border-slate-300 transition-colors"
+            className="border border-border rounded-lg bg-white/60 hover:border-border transition-colors"
           >
             <button
               type="button"
@@ -68,11 +68,11 @@ export default function TrainerFaqSection({
               onClick={() => setOpenId(isOpen ? null : item.id)}
               className="w-full flex items-center justify-between text-left px-4 sm:px-5 py-3 sm:py-3.5 gap-3"
             >
-              <h3 className="text-sm sm:text-base font-semibold text-slate-900">
+              <h3 className="text-sm sm:text-base font-semibold text-foreground">
                 {item.question}
               </h3>
               <span
-                className="inline-flex items-center justify-center rounded-full border border-slate-300 text-slate-500 w-6 h-6 text-xs shrink-0"
+                className="inline-flex items-center justify-center rounded-full border border-border text-muted-foreground w-6 h-6 text-xs shrink-0"
                 aria-hidden="true"
               >
                 {isOpen ? "−" : "+"}
@@ -87,7 +87,7 @@ export default function TrainerFaqSection({
                   id={panelId}
                   role="region"
                   aria-labelledby={buttonId}
-                  className="px-4 sm:px-5 pb-3 sm:pb-4 text-sm sm:text-base text-slate-700"
+                  className="px-4 sm:px-5 pb-3 sm:pb-4 text-sm sm:text-base text-foreground"
                 >
                   <p className="leading-relaxed">{item.answer}</p>
                 </div>
@@ -104,7 +104,7 @@ export default function TrainerFaqSection({
       id={id}
       aria-labelledby={id ? `${id}-heading` : undefined}
       className={cn(
-        "mt-12 sm:mt-16 border-t border-slate-200 pt-8 sm:pt-10",
+        "mt-12 sm:mt-16 border-t border-border pt-8 sm:pt-10",
         !embedded && APP_CONTENT_X,
       )}
     >
@@ -118,13 +118,13 @@ export default function TrainerFaqSection({
             {title && (
               <h2
                 id={id ? `${id}-heading` : undefined}
-                className="text-xl sm:text-2xl font-semibold text-slate-900 mb-2"
+                className="text-xl sm:text-2xl font-semibold text-foreground mb-2"
               >
                 {title}
               </h2>
             )}
             {intro && (
-              <p className="text-sm sm:text-base text-slate-600 mb-5 sm:mb-6">
+              <p className="text-sm sm:text-base text-muted-foreground mb-5 sm:mb-6">
                 {intro}
               </p>
             )}
@@ -133,7 +133,7 @@ export default function TrainerFaqSection({
         )}
 
         {collapseIntoSingleAccordion && (
-          <div className="border border-slate-200 rounded-xl bg-white/70 shadow-sm">
+          <div className="border border-border rounded-xl bg-white/70">
             <button
               type="button"
               id={id ? `${id}-heading` : undefined}
@@ -144,18 +144,18 @@ export default function TrainerFaqSection({
             >
               <div>
                 {title && (
-                  <h2 className="text-base sm:text-lg font-semibold text-slate-900">
+                  <h2 className="text-base sm:text-lg font-semibold text-foreground">
                     {title}
                   </h2>
                 )}
                 {intro && (
-                  <p className="mt-1 text-xs sm:text-sm text-slate-600">
+                  <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
                     {intro}
                   </p>
                 )}
               </div>
               <span
-                className="inline-flex items-center justify-center rounded-full border border-slate-300 text-slate-500 w-7 h-7 text-sm shrink-0"
+                className="inline-flex items-center justify-center rounded-full border border-border text-muted-foreground w-7 h-7 text-sm shrink-0"
                 aria-hidden="true"
               >
                 {groupOpen ? "−" : "+"}
@@ -170,7 +170,7 @@ export default function TrainerFaqSection({
                   id={id ? `${id}-panel` : undefined}
                   role="region"
                   aria-labelledby={id ? `${id}-heading` : undefined}
-                  className="border-t border-slate-200 px-4 sm:px-5 pb-4 sm:pb-5 pt-3 sm:pt-4"
+                  className="border-t border-border px-4 sm:px-5 pb-4 sm:pb-5 pt-3 sm:pt-4"
                 >
                   {renderFaqList()}
                 </div>

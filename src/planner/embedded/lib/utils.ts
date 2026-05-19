@@ -8,25 +8,25 @@ export function cn(...inputs: ClassValue[]) {
 
 // ─── Section colours ──────────────────────────────────────────────────────────
 export const SECTION_COLORS: Record<string, string> = {
-  vr_practice: 'bg-blue-100 text-blue-800 border-blue-200',
-  dm_practice: 'bg-green-100 text-green-800 border-green-200',
-  qr_practice: 'bg-amber-100 text-amber-800 border-amber-200',
-  sjt_practice: 'bg-purple-100 text-purple-800 border-purple-200',
-  full_mock:   'bg-red-100 text-red-800 border-red-200',
-  mini_mock:   'bg-pink-100 text-pink-800 border-pink-200',
-  reflection:  'bg-slate-100 text-slate-700 border-slate-200',
-  rest:        'bg-stone-100 text-stone-500 border-stone-200',
+  vr_practice:  'bg-secondary text-foreground border-border',
+  dm_practice:  'bg-secondary text-foreground border-border',
+  qr_practice:  'bg-secondary text-foreground border-border',
+  sjt_practice: 'bg-secondary text-foreground border-border',
+  full_mock:    'bg-foreground text-card border-foreground',
+  mini_mock:    'bg-secondary text-foreground border-border',
+  reflection:   'bg-secondary text-muted-foreground border-border',
+  rest:         'bg-secondary text-muted-foreground border-border',
 }
 
 export const SECTION_DOT: Record<string, string> = {
-  vr_practice: 'bg-blue-500',
-  dm_practice: 'bg-green-500',
-  qr_practice: 'bg-amber-500',
-  sjt_practice: 'bg-purple-500',
-  full_mock:   'bg-red-500',
-  mini_mock:   'bg-pink-500',
-  reflection:  'bg-slate-400',
-  rest:        'bg-stone-300',
+  vr_practice:  'bg-foreground',
+  dm_practice:  'bg-foreground',
+  qr_practice:  'bg-foreground',
+  sjt_practice: 'bg-foreground',
+  full_mock:    'bg-foreground',
+  mini_mock:    'bg-muted-foreground',
+  reflection:   'bg-muted-foreground',
+  rest:         'bg-muted-foreground',
 }
 
 export const SESSION_LABELS: Record<SessionType, string> = {
@@ -192,10 +192,10 @@ export function sjtBandLabel(band: number): string {
 export function scoreColor(score: number | null, section: UCATSection): string {
   if (!score) return 'text-slate-400'
   if (section === 'sjt') {
-    return score === 1 ? 'text-green-600' : score === 2 ? 'text-blue-600' : score === 3 ? 'text-amber-600' : 'text-red-600'
+    return score === 1 ? 'text-green-600' : score === 2 ? 'text-foreground' : score === 3 ? 'text-amber-600' : 'text-red-600'
   }
   if (score >= 700) return 'text-green-600'
-  if (score >= 600) return 'text-blue-600'
+  if (score >= 600) return 'text-foreground'
   if (score >= 500) return 'text-amber-600'
   return 'text-red-600'
 }

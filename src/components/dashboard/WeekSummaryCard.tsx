@@ -141,33 +141,33 @@ export default function WeekSummaryCard({
   if (totalThisWeek === 0 && prevWeekTotal === 0) return null;
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-      <h2 className="text-base font-semibold text-slate-900 mb-4">This week</h2>
+    <div className="bg-card rounded-xl border border-border p-5">
+      <h2 className="text-base font-semibold text-foreground mb-4">This week</h2>
 
       <div className="flex gap-1.5 mb-5">
         {dayDots.map((active, i) => (
           <div key={i} className="flex flex-col items-center gap-1 flex-1">
             <div
               className={`w-full h-6 rounded-md transition-colors ${
-                active ? "bg-blue-500" : "bg-slate-100"
+                active ? "bg-primary" : "bg-secondary"
               }`}
             />
-            <span className="text-[10px] text-slate-400">{dotLabels[i]}</span>
+            <span className="text-[10px] text-muted-foreground">{dotLabels[i]}</span>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="text-center">
-          <p className="text-2xl font-bold text-slate-900">
+          <p className="text-2xl font-bold text-foreground">
             {uniqueDays.size}
-            <span className="text-base font-normal text-slate-400">/7</span>
+            <span className="text-base font-normal text-muted-foreground">/7</span>
           </p>
-          <p className="text-xs text-slate-500 mt-0.5">Days active</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Days active</p>
         </div>
 
         <div className="text-center">
-          <p className="text-2xl font-bold text-slate-900">
+          <p className="text-2xl font-bold text-foreground">
             {totalThisWeek}
             {prevWeekTotal > 0 && sessionDelta !== 0 && (
               <span
@@ -180,24 +180,24 @@ export default function WeekSummaryCard({
               </span>
             )}
           </p>
-          <p className="text-xs text-slate-500 mt-0.5">Sessions</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Sessions</p>
         </div>
 
         <div className="text-center">
-          <p className="text-2xl font-bold text-slate-900">
+          <p className="text-2xl font-bold text-foreground">
             {bestPct != null ? `${bestPct}%` : "-"}
           </p>
-          <p className="text-xs text-slate-500 mt-0.5">Best score</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Best score</p>
         </div>
 
         <div className="text-center">
-          <p className="text-sm font-bold text-slate-900 leading-tight">{topTrainer ?? "-"}</p>
-          <p className="text-xs text-slate-500 mt-0.5">Top trainer</p>
+          <p className="text-sm font-bold text-foreground leading-tight">{topTrainer ?? "-"}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Top trainer</p>
         </div>
       </div>
 
       {totalThisWeek === 0 && prevWeekTotal > 0 && (
-        <p className="mt-4 text-sm text-slate-500 text-center">
+        <p className="mt-4 text-sm text-muted-foreground text-center">
           No sessions yet this week. You did {prevWeekTotal} last week.
         </p>
       )}

@@ -44,11 +44,11 @@ export default function QuestionMediaBlock({
           return (
             <figure
               key={item.id}
-              className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
+              className="overflow-hidden rounded-lg border border-border bg-white"
             >
-              <div className="relative bg-slate-50">
+              <div className="relative bg-secondary">
                 {failedIds.has(item.id) ? (
-                  <div className="flex min-h-40 items-center justify-center gap-2 p-6 text-sm text-slate-500">
+                  <div className="flex min-h-40 items-center justify-center gap-2 p-6 text-sm text-muted-foreground">
                     <ImageOff className="h-5 w-5" aria-hidden />
                     Image unavailable
                   </div>
@@ -73,14 +73,14 @@ export default function QuestionMediaBlock({
                 <button
                   type="button"
                   onClick={() => setExpanded(item)}
-                  className="absolute right-2 top-2 inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-slate-700 shadow-sm hover:bg-white hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="absolute right-2 top-2 inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-white/90 text-foreground hover:bg-white hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   aria-label="Expand image"
                 >
                   <Maximize2 className="h-4 w-4" aria-hidden />
                 </button>
               </div>
               {(item.caption || item.credit) && (
-                <figcaption className="border-t border-slate-100 px-4 py-2 text-xs text-slate-600">
+                <figcaption className="border-t border-border px-4 py-2 text-xs text-muted-foreground">
                   {item.caption && <span>{item.caption}</span>}
                   {item.caption && item.credit && <span> - </span>}
                   {item.credit && <span>{item.credit}</span>}
@@ -102,7 +102,7 @@ export default function QuestionMediaBlock({
           <button
             type="button"
             onClick={() => setExpanded(null)}
-            className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-900 shadow-lg hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white text-foreground shadow-lg hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             aria-label="Close expanded image"
           >
             <X className="h-5 w-5" aria-hidden />
@@ -117,7 +117,7 @@ export default function QuestionMediaBlock({
               className="max-h-[85vh] w-auto max-w-full object-contain"
             />
             {(expanded.caption || expanded.credit) && (
-              <figcaption className="border-t border-slate-100 px-4 py-3 text-sm text-slate-700">
+              <figcaption className="border-t border-border px-4 py-3 text-sm text-foreground">
                 {expanded.caption && <span>{expanded.caption}</span>}
                 {expanded.caption && expanded.credit && <span> - </span>}
                 {expanded.credit && <span>{expanded.credit}</span>}

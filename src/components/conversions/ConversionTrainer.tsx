@@ -203,17 +203,17 @@ export default function ConversionTrainer() {
   };
 
   return (
-    <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+    <div className="bg-card border border-border rounded-xl overflow-hidden">
       <div className="p-5 sm:p-8">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-          <span className="text-sm font-medium text-slate-500">Question {progress}</span>
+          <span className="text-sm font-medium text-muted-foreground">Question {progress}</span>
           <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
             Score {correctCount}/{answeredCount}
           </span>
         </div>
 
-        <div className="rounded-xl bg-slate-50/80 border border-slate-100 px-5 py-4 mb-5">
-          <p className="text-xl font-semibold text-slate-900">{question.prompt}</p>
+        <div className="rounded-xl bg-secondary/80 border border-border px-5 py-4 mb-5">
+          <p className="text-xl font-semibold text-foreground">{question.prompt}</p>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 mb-5">
@@ -225,7 +225,7 @@ export default function ConversionTrainer() {
             }}
             disabled={submitted}
             inputMode="decimal"
-            className="min-h-[48px] flex-1 rounded-xl border border-slate-200 px-4 text-base font-medium text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:bg-slate-50"
+            className="min-h-[48px] flex-1 rounded-xl border border-border px-4 text-base font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:bg-secondary"
             placeholder="e.g. 3600 m or £4.20"
             aria-label="Answer"
           />
@@ -233,7 +233,7 @@ export default function ConversionTrainer() {
             type="button"
             onClick={handleSubmit}
             disabled={submitted || parsedAnswer == null}
-            className="min-h-[48px] rounded-xl bg-primary px-5 font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+            className="min-h-[48px] rounded-xl bg-primary px-5 font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Submit
           </button>
@@ -247,26 +247,26 @@ export default function ConversionTrainer() {
               </p>
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-white px-5 py-4 mb-4">
-              <h3 className="text-sm font-semibold text-slate-900 mb-3">Method</h3>
-              <div className="space-y-2 text-sm text-slate-700 leading-relaxed">
-                <p><span className="font-semibold text-slate-900">Target:</span> {question.explanation.method.target}</p>
-                <p><span className="font-semibold text-slate-900">Convert:</span> {question.explanation.method.convert}</p>
-                <p><span className="font-semibold text-slate-900">Calculate:</span> {question.explanation.method.calculate}</p>
+            <div className="rounded-xl border border-border bg-white px-5 py-4 mb-4">
+              <h3 className="text-sm font-semibold text-foreground mb-3">Method</h3>
+              <div className="space-y-2 text-sm text-foreground leading-relaxed">
+                <p><span className="font-semibold text-foreground">Target:</span> {question.explanation.method.target}</p>
+                <p><span className="font-semibold text-foreground">Convert:</span> {question.explanation.method.convert}</p>
+                <p><span className="font-semibold text-foreground">Calculate:</span> {question.explanation.method.calculate}</p>
               </div>
 
               <div className="mt-4 space-y-3 text-sm leading-relaxed">
                 <div>
-                  <h3 className="font-semibold text-slate-900">Exam shortcut</h3>
-                  <p className="text-slate-700 mt-1">{question.explanation.examShortcut}</p>
+                  <h3 className="font-semibold text-foreground">Exam shortcut</h3>
+                  <p className="text-foreground mt-1">{question.explanation.examShortcut}</p>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-slate-900">Sense check</h3>
-                  <p className="text-slate-700 mt-1">{question.explanation.senseCheck}</p>
+                  <h3 className="font-semibold text-foreground">Sense check</h3>
+                  <p className="text-foreground mt-1">{question.explanation.senseCheck}</p>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-slate-900">Common trap</h3>
-                  <p className="text-slate-700 mt-1">{getCommonTrapCopy(question.explanation.commonTrap)}</p>
+                  <h3 className="font-semibold text-foreground">Common trap</h3>
+                  <p className="text-foreground mt-1">{getCommonTrapCopy(question.explanation.commonTrap)}</p>
                 </div>
               </div>
             </div>
@@ -287,7 +287,7 @@ export default function ConversionTrainer() {
                 <button
                   type="button"
                   onClick={handleRestart}
-                  className="min-h-[48px] rounded-xl border border-slate-200 bg-white text-slate-800 font-semibold hover:bg-slate-50 inline-flex items-center justify-center gap-2"
+                  className="min-h-[48px] rounded-xl border border-border bg-white text-foreground font-semibold hover:bg-secondary inline-flex items-center justify-center gap-2"
                 >
                   <RotateCcw className="h-4 w-4" />
                   Restart conversions
@@ -296,7 +296,7 @@ export default function ConversionTrainer() {
                 <button
                   type="button"
                   onClick={handleNext}
-                  className="min-h-[48px] rounded-xl bg-primary text-primary-foreground font-semibold shadow-sm hover:bg-primary/90"
+                  className="min-h-[48px] rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90"
                 >
                   Next question
                 </button>
@@ -305,7 +305,7 @@ export default function ConversionTrainer() {
                 type="button"
                 onClick={() => saveSession(answers, { force: true })}
                 disabled={answeredCount === 0 || savedAnswerCount === answeredCount}
-                className="min-h-[48px] rounded-xl border border-slate-200 bg-white text-slate-800 font-semibold hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="min-h-[48px] rounded-xl border border-border bg-white text-foreground font-semibold hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {savedAnswerCount === answeredCount ? "Checkpoint saved" : "Finish and log now"}
               </button>

@@ -9,17 +9,17 @@
   --color-ucat-muted: #666666;
 
   /* Semantic palette (light) */
-  --color-background: hsl(0 0% 100%);
+  --color-background: hsl(214 20% 95%);
   --color-foreground: hsl(215 25% 12%);
   --color-card: hsl(0 0% 100%);
   --color-card-foreground: hsl(215 25% 12%);
   --color-primary: hsl(217 71% 45%);
   --color-primary-foreground: hsl(0 0% 100%);
-  --color-secondary: hsl(214 32% 96%);
+  --color-secondary: hsl(214 20% 91%);
   --color-secondary-foreground: hsl(215 25% 12%);
-  --color-muted: hsl(214 32% 96%);
+  --color-muted: hsl(214 20% 91%);
   --color-muted-foreground: hsl(215 16% 47%);
-  --color-border: hsl(214 20% 90%);
+  --color-border: hsl(214 20% 88%);
   --color-ring: hsl(217 71% 45%);
 
   /* Semantic status (use only for meaning: success, error, warning) */

@@ -201,14 +201,14 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
           <div className="mb-1 flex items-start justify-between gap-2">
             <div className="flex items-center gap-2">
               <span className="text-xl" aria-hidden>💬</span>
-              <Dialog.Title id="feedback-modal-title" className="text-base font-semibold text-slate-900">
+              <Dialog.Title id="feedback-modal-title" className="text-base font-semibold text-foreground">
                 Share your thoughts
               </Dialog.Title>
             </div>
             <Dialog.Close asChild>
               <button
                 type="button"
-                className="flex min-h-[36px] min-w-[36px] items-center justify-center rounded-full text-slate-400 hover:text-slate-600 transition-colors"
+                className="flex min-h-[36px] min-w-[36px] items-center justify-center rounded-full text-muted-foreground hover:text-muted-foreground transition-colors"
                 aria-label="Close"
               >
                 ×
@@ -216,7 +216,7 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
             </Dialog.Close>
           </div>
 
-          <p className="mb-4 text-sm text-slate-500 leading-relaxed">
+          <p className="mb-4 text-sm text-muted-foreground leading-relaxed">
             We read every message: bugs, rough edges, ideas. Your feedback
             genuinely shapes how this platform improves. Thank you for taking the time.
           </p>
@@ -254,7 +254,7 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
           </div>
 
           <div>
-            <p className="mb-2 text-sm font-medium text-slate-700">What kind of feedback is this?</p>
+            <p className="mb-2 text-sm font-medium text-foreground">What kind of feedback is this?</p>
             <div className="grid grid-cols-2 gap-2">
               {(["bug", "suggestion"] as const).map((type) => {
                 const icon = type === "bug" ? "🐛" : "💡";
@@ -264,8 +264,8 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
                     key={type}
                     className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2.5 text-sm transition-colors ${
                       feedbackType === type
-                        ? "border-primary bg-primary/5 text-slate-900 font-medium"
-                        : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                        ? "border-primary bg-primary/5 text-foreground font-medium"
+                        : "border-border bg-white text-muted-foreground hover:border-border hover:bg-secondary"
                     }`}
                   >
                     <input type="radio" value={type} className="sr-only" {...register("feedbackType")} />
@@ -278,7 +278,7 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
           </div>
 
           <div>
-            <label htmlFor="feedback-description" className="mb-1 block text-sm font-medium text-slate-700">
+            <label htmlFor="feedback-description" className="mb-1 block text-sm font-medium text-foreground">
               {descriptionLabel}
             </label>
             <textarea
@@ -286,20 +286,20 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
               maxLength={DESCRIPTION_MAX}
               placeholder={descriptionPlaceholder}
               rows={4}
-              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+              className="w-full rounded-xl border border-border px-3 py-2 text-sm text-foreground placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
               disabled={status === "loading"}
               {...register("description")}
             />
             {errors.description && (
               <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
             )}
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="mt-1 text-xs text-muted-foreground">
               {(watch("description") ?? "").length}/{DESCRIPTION_MAX} characters
             </p>
           </div>
 
           <div>
-            <label htmlFor="feedback-page" className="mb-1 block text-sm font-medium text-slate-700">
+            <label htmlFor="feedback-page" className="mb-1 block text-sm font-medium text-foreground">
               {pageLabel}
             </label>
             <input
@@ -307,7 +307,7 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
               type="text"
               maxLength={PAGE_URL_MAX}
               placeholder="/dashboard"
-              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full rounded-xl border border-border px-3 py-2 text-sm text-foreground placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               disabled={status === "loading"}
               {...register("pageUrl")}
             />
@@ -332,7 +332,7 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
             <button
               type="button"
               onClick={handleClose}
-              className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+              className="flex-1 rounded-xl border border-border px-4 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary transition-colors"
             >
               Cancel
             </button>
@@ -348,11 +348,11 @@ export default function BugReportModal({ isOpen, onClose }: BugReportModalProps)
           </div>
         </form>
 
-          <p className="mt-4 text-center text-xs text-slate-400">
+          <p className="mt-4 text-center text-xs text-muted-foreground">
             Prefer email? Reach us at{" "}
             <a
               href="mailto:info@theukcatpeople.co.uk"
-              className="text-slate-500 underline underline-offset-2 hover:text-slate-700 transition-colors"
+              className="text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors"
             >
               info@theukcatpeople.co.uk
             </a>

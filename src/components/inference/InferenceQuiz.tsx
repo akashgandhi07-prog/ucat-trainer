@@ -179,7 +179,7 @@ export default function InferenceQuiz({
   if (questions.length === 0) {
     return (
       <div className="w-full max-w-2xl mx-auto px-4 text-center py-12">
-        <p className="text-slate-600">
+        <p className="text-muted-foreground">
           No inference questions available for this passage.
         </p>
       </div>
@@ -190,8 +190,8 @@ export default function InferenceQuiz({
     <div className="w-full max-w-6xl mx-auto px-4 flex flex-col lg:flex-row gap-6 lg:gap-8">
       {/* Left: Passage */}
       <div className="lg:w-[48%] flex-shrink-0">
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 max-h-[70vh] overflow-y-auto">
-          <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">
+        <div className="bg-card rounded-xl border border-border p-6 max-h-[70vh] overflow-y-auto">
+          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
             Passage
           </h3>
           <SelectablePassage
@@ -205,21 +205,21 @@ export default function InferenceQuiz({
 
       {/* Right: Question */}
       <div className="lg:flex-1 min-w-0">
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-          <div className="mb-4 rounded-lg bg-blue-100 border border-blue-300 px-4 py-3">
-            <p className="text-sm text-blue-900 font-medium">
+        <div className="bg-card rounded-xl border border-border p-6">
+          <div className="mb-4 rounded-lg bg-secondary border border-border px-4 py-3">
+            <p className="text-sm text-foreground font-medium">
               Please select the relevant section(s) of text as requested below.
             </p>
           </div>
 
           <div className="mb-4 flex items-start justify-between gap-3">
-            <h3 className="text-slate-800 font-semibold text-lg">
+            <h3 className="text-foreground font-semibold text-lg">
               {current.questionText}
             </h3>
             <button
               type="button"
               onClick={() => setFeedbackOpen(true)}
-              className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-800"
+              className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
             >
               <span aria-hidden>🚩</span>
               Report question
@@ -245,7 +245,7 @@ export default function InferenceQuiz({
                 <button
                   type="button"
                   onClick={handleSkip}
-                  className="min-h-[44px] px-6 py-2.5 text-slate-600 font-medium border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                  className="min-h-[44px] px-6 py-2.5 text-muted-foreground font-medium border border-border rounded-lg hover:bg-secondary transition-colors"
                 >
                   Skip
                 </button>
@@ -262,7 +262,7 @@ export default function InferenceQuiz({
                     : "bg-destructive-muted border-destructive"
                 }`}
               >
-                <p className="font-semibold text-slate-900 mb-1">
+                <p className="font-semibold text-foreground mb-1">
                   {feedback.result === "correct"
                     ? "Correct"
                     : feedback.result === "partial"
@@ -271,18 +271,18 @@ export default function InferenceQuiz({
                     ? "Skipped"
                     : "Incorrect"}
                 </p>
-                <p className="text-sm text-slate-700">{feedback.explanation}</p>
+                <p className="text-sm text-foreground">{feedback.explanation}</p>
                 <button
                   type="button"
                   onClick={() => setFeedbackOpen(true)}
-                  className="mt-2 inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white/60 px-3 py-1 text-xs font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                  className="mt-2 inline-flex items-center gap-1 rounded-full border border-border bg-white/60 px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
                 >
                   <span aria-hidden>🚩</span>
                   Report this question
                 </button>
                 {(feedback.result === "incorrect" || feedback.result === "skipped" || feedback.result === "partial") && (
-                  <div className="mt-3 pt-3 border-t border-slate-200">
-                    <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
+                  <div className="mt-3 pt-3 border-t border-border">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
                       Correct answer
                     </p>
                     <p className="text-sm">

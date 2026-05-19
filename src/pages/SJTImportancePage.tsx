@@ -18,7 +18,7 @@ export default function SJTImportancePage() {
       emptyMessage="No importance questions available yet."
       introContent={
         <>
-          <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+          <div className="rounded-xl border border-border bg-card p-5">
             <h2 className="text-sm font-semibold text-foreground mb-3">How this trainer works</h2>
             <div className="space-y-2 text-sm text-muted-foreground">
               <p>1. You will be presented with a clinical or training scenario.</p>

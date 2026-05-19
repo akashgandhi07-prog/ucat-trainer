@@ -42,11 +42,11 @@ export default function TutorInvitePage() {
   return (
     <section className="max-w-lg mx-auto px-6 py-10 space-y-6">
       <header>
-        <Link href="/tutor" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+        <Link href="/tutor" className="text-sm text-primary hover:text-primary font-medium">
           ← Back to overview
         </Link>
-        <h1 className="text-2xl font-bold text-slate-900 mt-4">Invite a student</h1>
-        <p className="text-slate-500 mt-1 text-sm">
+        <h1 className="text-2xl font-bold text-foreground mt-4">Invite a student</h1>
+        <p className="text-muted-foreground mt-1 text-sm">
           Create a one-time link your student opens to sign in with email and set up their timetable.
           Each generate creates a fresh token.
         </p>
@@ -66,9 +66,9 @@ export default function TutorInvitePage() {
 
           {inviteUrl ? (
             <div className="space-y-2">
-              <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">Link</label>
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Link</label>
               <div className="flex flex-col sm:flex-row gap-2">
-                <code className="flex-1 text-xs bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 break-all">
+                <code className="flex-1 text-xs bg-secondary border border-border rounded-lg px-3 py-2 break-all">
                   {inviteUrl}
                 </code>
                 <Button type="button" variant="outline" onClick={copy} className="shrink-0">

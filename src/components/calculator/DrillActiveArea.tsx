@@ -49,40 +49,40 @@ export const DrillActiveArea = ({
     }, [userKeystrokes]);
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full animate-in fade-in zoom-in-95 duration-300">
+        <div className="bg-card rounded-xl border border-border overflow-hidden flex flex-col h-full animate-in fade-in zoom-in-95 duration-300">
             {/* Header */}
-            <div className="bg-slate-50 p-4 border-b border-slate-200 flex justify-between items-center">
+            <div className="bg-secondary p-4 border-b border-border flex justify-between items-center">
                 <div>
-                    <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                    <h3 className="font-bold text-foreground flex items-center gap-2">
                         {drillName}
                         {stats?.timeLeft !== undefined && (
-                            <span className={`text-xs px-2 py-0.5 rounded-full flex items-center gap-1 ${stats.timeLeft < 10 ? 'bg-red-100 text-red-700 animate-pulse' : 'bg-slate-200 text-slate-700'}`}>
+                            <span className={`text-xs px-2 py-0.5 rounded-full flex items-center gap-1 ${stats.timeLeft < 10 ? 'bg-red-100 text-red-700 animate-pulse' : 'bg-slate-200 text-foreground'}`}>
                                 <Timer className="w-3 h-3" />
                                 {stats.timeLeft}s
                             </span>
                         )}
                     </h3>
-                    <p className="text-xs text-slate-500">{description}</p>
+                    <p className="text-xs text-muted-foreground">{description}</p>
                 </div>
                 <div className="flex items-center gap-4">
                     <div className="text-right">
-                        <div className="text-xs text-slate-500 uppercase tracking-wider">Score</div>
-                        <div className="font-mono font-bold text-lg text-indigo-600">{stats?.score || 0}</div>
+                        <div className="text-xs text-muted-foreground uppercase tracking-wider">Score</div>
+                        <div className="font-mono font-bold text-lg text-primary">{stats?.score || 0}</div>
                     </div>
                 </div>
             </div>
 
             {/* Main Display Area */}
             <div className="flex-1 p-8 flex flex-col justify-center items-center bg-white relative">
-                <div className="text-xs text-slate-400 uppercase tracking-widest mb-2 font-semibold">Calculate</div>
-                <div className="text-5xl md:text-6xl font-mono font-bold text-slate-900 tracking-tight mb-8">
+                <div className="text-xs text-muted-foreground uppercase tracking-widest mb-2 font-semibold">Calculate</div>
+                <div className="text-5xl md:text-6xl font-mono font-bold text-foreground tracking-tight mb-8">
                     {currentProblem.text}
                 </div>
 
                 {/* Expected Keystrokes Hint */}
                 {expectedKeystrokes && expectedKeystrokes.length > 0 && (
                     <div className="mb-8">
-                        <div className="text-[10px] text-slate-400 uppercase tracking-widest text-center mb-2">Expected Keystrokes</div>
+                        <div className="text-[10px] text-muted-foreground uppercase tracking-widest text-center mb-2">Expected Keystrokes</div>
                         <div className="flex flex-wrap justify-center gap-2">
                             {expectedKeystrokes.map((key, i) => (
                                 <div
@@ -93,7 +93,7 @@ export const DrillActiveArea = ({
                                             ? (userKeystrokes[i] === key || (key === 'Enter' && userKeystrokes[i] === '='))
                                                 ? 'bg-emerald-50 border-emerald-200 text-emerald-600' // Correct
                                                 : 'bg-red-50 border-red-200 text-red-600' // Wrong
-                                            : 'bg-slate-50 border-slate-200 text-slate-400'} // Not reached
+                                            : 'bg-secondary border-border text-muted-foreground'} // Not reached
                                     `}
                                 >
                                     {key === 'Enter' ? '⏎' : key === 'Backspace' ? '⌫' : key}
@@ -105,28 +105,28 @@ export const DrillActiveArea = ({
 
                 {/* User Typing Display */}
                 <div className="w-full max-w-lg">
-                    <div className="flex justify-between text-xs text-slate-500 mb-1 px-1">
+                    <div className="flex justify-between text-xs text-muted-foreground mb-1 px-1">
                         <span>Your Typing</span>
                         <span>{userKeystrokes.length} keystrokes</span>
                     </div>
                     <div
-                        className="bg-slate-50 border-2 border-slate-100 rounded-lg p-3 h-14 flex items-center overflow-x-auto gap-2 no-scrollbar scroll-smooth"
+                        className="bg-secondary border-2 border-border rounded-lg p-3 h-14 flex items-center overflow-x-auto gap-2 no-scrollbar scroll-smooth"
                         ref={scrollRef}
                     >
                         {userKeystrokes.length === 0 && (
                             <span className="text-slate-300 italic text-sm pl-1">Start typing...</span>
                         )}
                         {userKeystrokes.map((key, i) => (
-                            <span key={i} className="px-2 py-1 bg-white border border-slate-200 rounded shadow-sm text-sm font-mono text-slate-700 whitespace-nowrap min-w-[1.5rem] text-center">
+                            <span key={i} className="px-2 py-1 bg-card border border-border rounded text-sm font-mono text-foreground whitespace-nowrap min-w-[1.5rem] text-center">
                                 {key === 'Enter' ? '⏎' : key === 'Backspace' ? '⌫' : key}
                             </span>
                         ))}
                     </div>
 
                     {/* Progress Bar */}
-                    <div className="h-1 w-full bg-slate-100 mt-2 rounded-full overflow-hidden">
+                    <div className="h-1 w-full bg-secondary mt-2 rounded-full overflow-hidden">
                         <div
-                            className="h-full bg-indigo-500 transition-all duration-300 ease-out"
+                            className="h-full bg-secondary0 transition-all duration-300 ease-out"
                             style={{ width: `${progress}%` }}
                         />
                     </div>
@@ -134,12 +134,12 @@ export const DrillActiveArea = ({
             </div>
 
             {/* Footer Actions */}
-            <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center">
+            <div className="p-4 bg-secondary border-t border-border flex justify-between items-center">
                 {onReset && (
                     <button
                         type="button"
                         onClick={onReset}
-                        className="flex items-center gap-2 text-sm text-slate-500 hover:text-red-500 transition-colors px-3 py-1.5 rounded-md hover:bg-slate-100"
+                        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-red-500 transition-colors px-3 py-1.5 rounded-md hover:bg-secondary"
                     >
                         <RotateCcw className="w-3.5 h-3.5" />
                         Reset Session
@@ -148,7 +148,7 @@ export const DrillActiveArea = ({
                 <button
                     type="button"
                     onClick={onSkip}
-                    className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-700 px-4 py-2 hover:bg-slate-100 rounded-lg transition-colors"
+                    className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground px-4 py-2 hover:bg-secondary rounded-lg transition-colors"
                 >
                     Skip
                 </button>
@@ -156,7 +156,7 @@ export const DrillActiveArea = ({
                     <button
                         type="button"
                         onClick={onNextQuestion}
-                        className="ml-auto flex min-h-[44px] items-center gap-2 rounded-lg bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 hover:shadow group"
+                        className="ml-auto flex min-h-[44px] items-center gap-2 rounded-lg bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 hover:shadow group"
                     >
                         Next Question
                         <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" aria-hidden />
@@ -169,8 +169,8 @@ export const DrillActiveArea = ({
                         className={cn(
                             'inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                             showManualNext
-                                ? 'ml-2 border border-primary/40 bg-background text-primary shadow-sm hover:bg-primary/10'
-                                : 'ml-auto bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow',
+                                ? 'ml-2 border border-primary/40 bg-background text-primary hover:bg-primary/10'
+                                : 'ml-auto bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow',
                         )}
                     >
                         Finish

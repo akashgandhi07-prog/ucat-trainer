@@ -585,7 +585,7 @@ export default function VerbalReasoningPage() {
 
         {/* Settings panel */}
         <section className="pb-12">
-          <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+          <div className="rounded-2xl border border-border bg-card overflow-hidden">
             <div className="h-1 bg-gradient-to-r from-primary via-primary/70 to-primary/40" />
             <div className="p-5 sm:p-6">
               <div className="flex items-center justify-between mb-5">
@@ -620,7 +620,7 @@ export default function VerbalReasoningPage() {
                           type="button"
                           onClick={() => setDifficulty(level)}
                           className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${difficulty === level
-                              ? "bg-primary text-primary-foreground shadow-sm"
+                              ? "bg-primary text-primary-foreground"
                               : "text-muted-foreground hover:text-foreground"
                             }`}
                         >
@@ -642,7 +642,7 @@ export default function VerbalReasoningPage() {
                           onClick={() => setCategory(cat)}
                           className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all border ${
                             category === cat
-                              ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                              ? "bg-primary text-primary-foreground border-primary"
                               : "bg-secondary text-muted-foreground border-border hover:text-foreground"
                           }`}
                         >
@@ -726,7 +726,7 @@ export default function VerbalReasoningPage() {
                       <div className="rounded-xl border border-border bg-training-surface p-4">
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex items-start gap-3">
-                            <span className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-card text-muted-foreground shadow-sm border border-border">
+                            <span className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-card text-muted-foreground border border-border">
                               <Eye className="h-4 w-4" aria-hidden="true" />
                             </span>
                             <div>
@@ -768,7 +768,7 @@ export default function VerbalReasoningPage() {
                                   type="button"
                                   onClick={() => setGuidedChunkSize(clampChunkSize(size))}
                                   className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${guidedChunkSize === size
-                                      ? "bg-primary text-primary-foreground shadow-sm"
+                                      ? "bg-primary text-primary-foreground"
                                       : "text-muted-foreground hover:text-foreground"
                                     }`}
                                 >
@@ -794,7 +794,7 @@ export default function VerbalReasoningPage() {
                             type="button"
                             onClick={() => setTimeLimitSeconds(sec)}
                             className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${timeLimitSeconds === sec
-                                ? "bg-primary text-primary-foreground shadow-sm"
+                                ? "bg-primary text-primary-foreground"
                                 : "text-muted-foreground hover:text-foreground"
                               }`}
                           >
@@ -817,7 +817,7 @@ export default function VerbalReasoningPage() {
                             type="button"
                             onClick={() => setKeywordCount(n)}
                             className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${keywordCount === n
-                                ? "bg-primary text-primary-foreground shadow-sm"
+                                ? "bg-primary text-primary-foreground"
                                 : "text-muted-foreground hover:text-foreground"
                               }`}
                           >
@@ -855,7 +855,7 @@ export default function VerbalReasoningPage() {
                               ? handleStartKeywordScanning
                               : handleStartInferenceTrainer
                       }
-                      className="w-full flex items-center justify-center gap-2 min-h-[48px] px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 transition-colors shadow-sm"
+                      className="w-full flex items-center justify-center gap-2 min-h-[48px] px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 transition-colors"
                     >
                       Start training
                       <ChevronRight className="w-4 h-4" />

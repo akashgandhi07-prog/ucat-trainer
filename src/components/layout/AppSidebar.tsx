@@ -61,7 +61,7 @@ function navClass({ isActive }: { isActive: boolean }, iconOnly: boolean) {
     "group flex items-center rounded-xl text-sm font-medium transition-colors w-full",
     iconOnly ? "justify-center px-2 py-2.5" : "gap-2.5 px-3 py-2",
     isActive
-      ? "bg-white/15 text-white shadow-sm"
+      ? "bg-white/15 text-white"
       : "text-sky-200/80 hover:bg-white/10 hover:text-white",
   );
 }
@@ -99,7 +99,7 @@ function StreakCard({ streak, iconOnly }: { streak: number; iconOnly: boolean })
   if (iconOnly) {
     return (
       <div className="mx-2 mb-2 flex flex-col items-center gap-1 rounded-2xl bg-white/10 px-2 py-2.5">
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-sm">
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white">
           <Flame className="h-4 w-4" aria-hidden />
         </span>
         <span className="text-sm font-bold leading-none">{streak}</span>
@@ -109,7 +109,7 @@ function StreakCard({ streak, iconOnly }: { streak: number; iconOnly: boolean })
 
   return (
     <div className="mx-3 mb-2 flex items-center gap-3 rounded-xl bg-white/10 px-3 py-2.5">
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-sm">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white">
         <Flame className="h-5 w-5" aria-hidden />
       </span>
       <StreakText streak={streak} />

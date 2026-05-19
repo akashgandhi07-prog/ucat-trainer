@@ -40,10 +40,10 @@ function optionSurfaceClasses(
   if (showFeedback) {
     if (isAnswer) return "border-green-500 bg-green-50";
     if (chosen && !isAnswer) return "border-red-400 bg-red-50";
-    return "border-slate-200 bg-slate-50/80 opacity-75";
+    return "border-border bg-secondary/80 opacity-75";
   }
   if (chosen) return "border-primary bg-primary/5";
-  return "border-slate-200 bg-white hover:border-amber-300 hover:bg-amber-50/50";
+  return "border-border bg-white hover:border-amber-300 hover:bg-amber-50/50";
 }
 
 function DrillOptionButton({
@@ -77,12 +77,12 @@ function DrillOptionButton({
         optionSurfaceClasses(opt.id, selected, correctAnswer, showFeedback),
       )}
     >
-      <p className="text-sm leading-snug text-slate-800">
-        <span className="font-semibold text-slate-700">{opt.id}. </span>
+      <p className="text-sm leading-snug text-foreground">
+        <span className="font-semibold text-foreground">{opt.id}. </span>
         {opt.text}
       </p>
       {showRole ? (
-        <span className="mt-1 block text-[11px] leading-tight text-slate-500">Role: {roleLabel}</span>
+        <span className="mt-1 block text-[11px] leading-tight text-muted-foreground">Role: {roleLabel}</span>
       ) : null}
     </button>
   );
@@ -200,7 +200,7 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
   return (
     <div className={cn("pb-8", inAppShell ? APP_CONTENT_X : "px-4")}>
       <div className={cn("w-full pt-4", !inAppShell && "max-w-3xl mx-auto")}>
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 sm:p-6 lg:p-8 overflow-hidden">
+        <div className="bg-card rounded-xl border border-border p-5 sm:p-6 lg:p-8 overflow-hidden">
           <div
             className={cn(
               "mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4",
@@ -208,17 +208,17 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
             )}
           >
             <div className="min-w-0">
-              <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl">{config.title}</h1>
+              <h1 className="text-xl font-semibold text-foreground sm:text-2xl">{config.title}</h1>
               {phase !== "drill" ? (
-                <p className="mt-1 text-sm text-slate-600">{config.skillSummary}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{config.skillSummary}</p>
               ) : current ? (
-                <p className="mt-1 text-sm text-slate-600">
+                <p className="mt-1 text-sm text-muted-foreground">
                   Question {currentIndex + 1} of {total}
                   {retryMode ? " (retry)" : ""}
-                  <span className="mx-1.5 text-slate-400" aria-hidden>
+                  <span className="mx-1.5 text-muted-foreground" aria-hidden>
                     ·
                   </span>
-                  <span className="font-medium text-slate-700">
+                  <span className="font-medium text-foreground">
                     Score {correctCount}/{answers.length}
                   </span>
                 </p>
@@ -229,14 +229,14 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
                 <button
                   type="button"
                   onClick={() => setFeedbackOpen(true)}
-                  className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100"
+                  className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-secondary"
                 >
                   <span aria-hidden>🚩</span>
                   Report
                 </button>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs tabular-nums">
-                  <span className="font-medium uppercase tracking-wide text-slate-500">Time</span>
-                  <span className="font-semibold text-slate-900">{elapsedSeconds}s</span>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary px-2.5 py-1 text-xs tabular-nums">
+                  <span className="font-medium uppercase tracking-wide text-muted-foreground">Time</span>
+                  <span className="font-semibold text-foreground">{elapsedSeconds}s</span>
                 </span>
               </div>
             ) : null}
@@ -245,7 +245,7 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
 
           {phase === "intro" && (
             <div className="space-y-5">
-              {questionsLoading && <p className="text-sm text-slate-600">Loading questions…</p>}
+              {questionsLoading && <p className="text-sm text-muted-foreground">Loading questions…</p>}
               {questionsError && (
                 <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
                   <p>{questionsError}</p>
@@ -265,7 +265,7 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
               )}
               {!questionsLoading && !questionsError && (
                 <div className="lg:grid lg:grid-cols-[1fr_minmax(11rem,14rem)] lg:gap-8 lg:items-start">
-                  <ul className="list-disc pl-5 space-y-2 text-sm text-slate-700">
+                  <ul className="list-disc pl-5 space-y-2 text-sm text-foreground">
                     {config.introBullets.map((bullet) => (
                       <li key={bullet}>{bullet}</li>
                     ))}
@@ -287,16 +287,16 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
             <div className="space-y-3">
                 <div
                   className={cn(
-                    "rounded-lg border border-slate-200 bg-slate-50",
+                    "rounded-lg border border-border bg-secondary",
                     showFeedback ? "px-3 py-2.5 sm:px-4 sm:py-3" : "p-4",
                   )}
                 >
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">
                     Stem
                   </p>
                   <p
                     className={cn(
-                      "text-slate-800 leading-relaxed",
+                      "text-foreground leading-relaxed",
                       showFeedback ? "text-sm leading-snug" : "text-base",
                     )}
                   >
@@ -304,7 +304,7 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
                   </p>
                 </div>
 
-                <p className="text-sm font-semibold text-slate-900">{current.question}</p>
+                <p className="text-sm font-semibold text-foreground">{current.question}</p>
 
                 <DrillOptionGrid
                   current={current}
@@ -315,7 +315,7 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
 
                 {showFeedback ? (
                   <>
-                    <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 sm:px-4 space-y-3">
+                    <div className="rounded-lg border border-border bg-secondary px-3 py-3 sm:px-4 space-y-3">
                       <p
                         className={cn(
                           "text-sm font-semibold",
@@ -324,7 +324,7 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
                       >
                         {isCorrect ? "Correct" : "Incorrect"}
                         {!isCorrect ? (
-                          <span className="font-normal text-slate-700">
+                          <span className="font-normal text-foreground">
                             {" "}
                             · correct answer {current.correctAnswer}
                           </span>
@@ -333,19 +333,19 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
 
                       {argReview ? (
                         <>
-                          <p className="text-xs text-slate-600 leading-relaxed">
+                          <p className="text-xs text-muted-foreground leading-relaxed">
                             <span className="font-semibold">Exact aim: </span>
                             {argReview.exactAim}
                           </p>
-                          <p className="text-sm text-slate-800 leading-relaxed">{current.explanation}</p>
+                          <p className="text-sm text-foreground leading-relaxed">{current.explanation}</p>
                         </>
                       ) : (
-                        <p className="text-sm text-slate-800 leading-relaxed">{current.explanation}</p>
+                        <p className="text-sm text-foreground leading-relaxed">{current.explanation}</p>
                       )}
 
                       {current.wrongOptionReasons && (
-                        <div className="space-y-1.5 border-t border-slate-200/80 pt-2.5">
-                          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                        <div className="space-y-1.5 border-t border-border/80 pt-2.5">
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                             Why each option?
                           </p>
                           {current.options.map((opt) => {
@@ -353,7 +353,7 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
                             if (!reason) return null;
                             const isAnswer = opt.id === current.correctAnswer;
                             return (
-                              <p key={opt.id} className="text-xs text-slate-700 leading-relaxed">
+                              <p key={opt.id} className="text-xs text-foreground leading-relaxed">
                                 <span
                                   className={cn(
                                     "font-semibold",
@@ -379,16 +379,16 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
                       )}
 
                       {current.keyInsight && (
-                        <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2.5">
-                          <p className="text-[11px] font-semibold uppercase tracking-wide text-blue-700 mb-1">
+                        <div className="rounded-lg border border-border bg-secondary px-3 py-2.5">
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-foreground mb-1">
                             Key insight
                           </p>
-                          <p className="text-sm text-blue-900 leading-relaxed">{current.keyInsight}</p>
+                          <p className="text-sm text-foreground leading-relaxed">{current.keyInsight}</p>
                         </div>
                       )}
 
                       {current.optionalWorkingSteps && current.optionalWorkingSteps.length > 0 ? (
-                        <ul className="list-disc space-y-0.5 pl-4 border-t border-slate-200/80 pt-2 text-xs text-slate-600">
+                        <ul className="list-disc space-y-0.5 pl-4 border-t border-border/80 pt-2 text-xs text-muted-foreground">
                           {current.optionalWorkingSteps.map((step) => (
                             <li key={step}>{step}</li>
                           ))}
@@ -396,7 +396,7 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
                       ) : null}
                     </div>
 
-                    <div className="sticky bottom-0 z-10 -mx-5 border-t border-slate-200 bg-white/95 px-5 py-3 backdrop-blur-sm sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+                    <div className="sticky bottom-0 z-10 -mx-5 border-t border-border bg-white/95 px-5 py-3 backdrop-blur-sm sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
                       <button
                         type="button"
                         onClick={() => goToNext()}
@@ -404,13 +404,13 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
                       >
                         {currentIndex >= total - 1 ? "See results" : "Next question"}
                       </button>
-                      <p className="mt-1.5 text-center text-[11px] text-slate-500">
+                      <p className="mt-1.5 text-center text-[11px] text-muted-foreground">
                         Space or Enter to continue
                       </p>
                     </div>
                   </>
                 ) : (
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-muted-foreground">
                     <span className="font-medium uppercase tracking-wide">Shortcuts</span>
                     <span className="mx-1">·</span>
                     <span>1 to 4 or A to D to answer</span>
@@ -431,10 +431,10 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
                       : "bg-red-50 border-red-200",
                 )}
               >
-                <p className="text-2xl font-bold text-slate-900">
+                <p className="text-2xl font-bold text-foreground">
                   {correctCount} / {answers.length}
                 </p>
-                <p className="text-sm text-slate-600 mt-1">
+                <p className="text-sm text-muted-foreground mt-1">
                   {retryMode ? "Retry complete" : "Drill complete"} in {elapsedSeconds}s
                 </p>
               </div>
@@ -444,7 +444,7 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
                   <button
                     type="button"
                     onClick={retryIncorrect}
-                    className="flex-1 min-h-[44px] rounded-lg border border-slate-200 bg-white text-sm font-semibold text-slate-900 hover:bg-slate-50"
+                    className="flex-1 min-h-[44px] rounded-lg border border-border bg-white text-sm font-semibold text-foreground hover:bg-secondary"
                   >
                     Retry incorrect ({incorrectCount})
                   </button>
@@ -460,7 +460,7 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
                 <button
                   type="button"
                   onClick={backToIntro}
-                  className="flex-1 min-h-[44px] rounded-lg border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  className="flex-1 min-h-[44px] rounded-lg border border-border text-sm font-semibold text-foreground hover:bg-secondary"
                 >
                   Back to intro
                 </button>
@@ -472,7 +472,7 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
             <p className="mt-6 text-center text-sm">
               <Link
                 to="/ucat-decision-making-practice"
-                className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900"
+                className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground"
               >
                 <ArrowLeft className="w-4 h-4" aria-hidden />
                 Back to Decision Making

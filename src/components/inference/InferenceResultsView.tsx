@@ -31,46 +31,46 @@ export default function InferenceResultsView({
   return (
     <div className="w-full max-w-2xl mx-auto px-4 text-center">
       <div className="mb-4">
-        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-green-700 border border-slate-200">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-secondary text-green-700 border border-border">
           <span className="w-2 h-2 rounded-full bg-green-500" aria-hidden />
           SESSION COMPLETE
         </span>
       </div>
-      <h1 className="text-2xl font-bold text-slate-900 mb-1">
+      <h1 className="text-2xl font-bold text-foreground mb-1">
         Inference Trainer - Results
       </h1>
-      <p className="text-slate-600 text-sm mb-8">
+      <p className="text-muted-foreground text-sm mb-8">
         {passageTitle ? passageTitle : "Session complete"}
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 text-center">
-          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">
+        <div className="bg-card rounded-xl border border-border p-4 text-center">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
             Accuracy
           </p>
           <p className="text-2xl font-bold text-green-600">{accuracy}%</p>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-muted-foreground">
             {correct}/{total} correct
           </p>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 text-center">
-          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">
+        <div className="bg-card rounded-xl border border-border p-4 text-center">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
             Score
           </p>
-          <p className="text-2xl font-bold text-slate-900">{correct}</p>
-          <p className="text-sm text-slate-600">of {total} questions</p>
+          <p className="text-2xl font-bold text-foreground">{correct}</p>
+          <p className="text-sm text-muted-foreground">of {total} questions</p>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 text-center">
-          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">
+        <div className="bg-card rounded-xl border border-border p-4 text-center">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
             Time
           </p>
-          <p className="text-2xl font-bold text-slate-900">{timeSeconds}</p>
-          <p className="text-sm text-slate-600">seconds</p>
+          <p className="text-2xl font-bold text-foreground">{timeSeconds}</p>
+          <p className="text-sm text-muted-foreground">seconds</p>
         </div>
       </div>
 
-      <div className="mb-8 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-center">
-        <p className="text-sm text-slate-700">
+      <div className="mb-8 rounded-xl border border-border bg-secondary px-4 py-3 text-center">
+        <p className="text-sm text-foreground">
           {accuracy >= 80
             ? "Strong inference skills. Focus on narrowing to the precise sentence that supports the conclusion."
             : "Inference questions require identifying the exact evidence. Look for the sentence that directly answers the question."}
@@ -82,7 +82,7 @@ export default function InferenceResultsView({
           <button
             type="button"
             onClick={() => setPassageModalOpen(true)}
-            className="min-h-[44px] px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg transition-colors inline-flex items-center justify-center gap-2"
+            className="min-h-[44px] px-4 py-2 text-sm font-medium text-foreground bg-secondary hover:bg-slate-200 border border-border rounded-lg transition-colors inline-flex items-center justify-center gap-2"
           >
             View passage
           </button>
@@ -93,21 +93,21 @@ export default function InferenceResultsView({
               aria-modal="true"
               aria-labelledby="passage-modal-title"
             >
-              <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[80vh] flex flex-col">
-                <div className="flex items-center justify-between p-4 border-b border-slate-200">
-                  <h2 id="passage-modal-title" className="text-lg font-semibold text-slate-900">
+              <div className="bg-card rounded-xl shadow-xl max-w-2xl w-full max-h-[80vh] flex flex-col">
+                <div className="flex items-center justify-between p-4 border-b border-border">
+                  <h2 id="passage-modal-title" className="text-lg font-semibold text-foreground">
                     Passage
                   </h2>
                   <button
                     type="button"
                     onClick={() => setPassageModalOpen(false)}
-                    className="min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-600"
+                    className="min-w-[44px] min-h-[44px] flex items-center justify-center text-muted-foreground hover:text-muted-foreground"
                     aria-label="Close"
                   >
                     ×
                   </button>
                 </div>
-                <div className="p-4 overflow-y-auto flex-1 text-[15px] leading-[1.6] text-slate-800 whitespace-pre-wrap">
+                <div className="p-4 overflow-y-auto flex-1 text-[15px] leading-[1.6] text-foreground whitespace-pre-wrap">
                   {passageText}
                 </div>
               </div>
@@ -118,7 +118,7 @@ export default function InferenceResultsView({
 
       {breakdown.length > 0 && (
         <div className="mb-8 text-left">
-          <h2 className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-3">
+          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
             Question breakdown
           </h2>
           <div className="space-y-3">
@@ -135,7 +135,7 @@ export default function InferenceResultsView({
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2 mb-2">
-                    <span className="font-bold text-slate-900">Q{i + 1}</span>
+                    <span className="font-bold text-foreground">Q{i + 1}</span>
                     <span
                       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${
                         isCorrect
@@ -152,15 +152,15 @@ export default function InferenceResultsView({
                         : "Incorrect"}
                     </span>
                   </div>
-                  <p className="text-slate-800 mb-2 font-medium">{item.questionText}</p>
+                  <p className="text-foreground mb-2 font-medium">{item.questionText}</p>
                   {item.userText && (
-                    <p className="text-sm text-slate-600 mb-1">
+                    <p className="text-sm text-muted-foreground mb-1">
                       Your selection: &quot;{item.userText.length > 80 ? item.userText.slice(0, 80) + "…" : item.userText}&quot;
                     </p>
                   )}
-                  <p className="text-sm text-slate-700 mt-2">{item.explanation}</p>
-                  <div className="mt-3 pt-3 border-t border-slate-200/60">
-                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">
+                  <p className="text-sm text-foreground mt-2">{item.explanation}</p>
+                  <div className="mt-3 pt-3 border-t border-border/60">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
                       Correct answer
                     </p>
                     <p className="text-sm">
@@ -184,7 +184,7 @@ export default function InferenceResultsView({
         </p>
       )}
       {saving && (
-        <p className="mb-4 text-sm text-slate-600 inline-flex items-center gap-2" aria-live="polite">
+        <p className="mb-4 text-sm text-muted-foreground inline-flex items-center gap-2" aria-live="polite">
           <span
             className="inline-block w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"
             aria-hidden
@@ -205,7 +205,7 @@ export default function InferenceResultsView({
       <div className="mt-6">
         <a
           href="/"
-          className="min-h-[44px] inline-flex items-center justify-center py-2 text-sm text-slate-500 hover:text-blue-600"
+          className="min-h-[44px] inline-flex items-center justify-center py-2 text-sm text-muted-foreground hover:text-primary"
         >
           Back to Home
         </a>

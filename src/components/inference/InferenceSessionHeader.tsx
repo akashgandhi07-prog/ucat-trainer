@@ -34,19 +34,19 @@ export default function InferenceSessionHeader({
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
+      <header className="sticky top-0 z-40 bg-card border-b border-border">
         <div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-4">
             <button
               type="button"
               onClick={onEndSession}
-              className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-red-600 transition-colors px-2 py-1.5 rounded-lg hover:bg-slate-100"
+              className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-red-600 transition-colors px-2 py-1.5 rounded-lg hover:bg-secondary"
               aria-label="End session"
             >
               <span aria-hidden>×</span>
               End session
             </button>
-            <span className="text-sm text-slate-500 hidden sm:inline">
+            <span className="text-sm text-muted-foreground hidden sm:inline">
               Inference Trainer
             </span>
           </div>
@@ -55,21 +55,21 @@ export default function InferenceSessionHeader({
             <div className="flex items-center gap-2">
               <span
                 className={`text-lg font-bold tabular-nums ${
-                  isLongSession ? "text-red-600" : "text-slate-900"
+                  isLongSession ? "text-red-600" : "text-foreground"
                 }`}
                 aria-live="polite"
               >
                 {formatTime(elapsedSeconds)}
               </span>
-              <span className="text-xs text-slate-500 uppercase tracking-wider">
+              <span className="text-xs text-muted-foreground uppercase tracking-wider">
                 Time
               </span>
             </div>
             <div className="text-right">
-              <div className="text-sm font-bold text-slate-900 tabular-nums">
+              <div className="text-sm font-bold text-foreground tabular-nums">
                 {correct}/{total} correct
               </div>
-              <div className="text-xs text-slate-500">
+              <div className="text-xs text-muted-foreground">
                 Question {currentIndex + 1} of {questionCount}
               </div>
             </div>
@@ -81,13 +81,13 @@ export default function InferenceSessionHeader({
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
           <Dialog.Content
-            className="fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl shadow-xl p-6 outline-none"
+            className="fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 bg-card rounded-xl shadow-xl p-6 outline-none"
             aria-labelledby="end-session-title"
           >
-            <Dialog.Title id="end-session-title" className="text-lg font-semibold text-slate-900 mb-2">
+            <Dialog.Title id="end-session-title" className="text-lg font-semibold text-foreground mb-2">
               End session?
             </Dialog.Title>
-            <p className="text-slate-600 text-sm mb-6">
+            <p className="text-muted-foreground text-sm mb-6">
               {unanswered > 0
                 ? `You have ${unanswered} unanswered question${unanswered !== 1 ? "s" : ""}. Your progress will be saved.`
                 : "Your progress will be saved."}
@@ -96,7 +96,7 @@ export default function InferenceSessionHeader({
               <Dialog.Close asChild>
                 <button
                   type="button"
-                  className="min-h-[44px] px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                  className="min-h-[44px] px-4 py-2 text-sm font-medium text-foreground bg-secondary hover:bg-slate-200 rounded-lg transition-colors"
                 >
                   Cancel
                 </button>

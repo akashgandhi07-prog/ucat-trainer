@@ -91,13 +91,13 @@ export default function MicroDrill() {
   return (
     <div className="px-4 pb-8">
       <div className="w-full max-w-3xl mx-auto pt-4">
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8 overflow-hidden">
+          <div className="bg-card rounded-xl border border-border p-6 sm:p-8 overflow-hidden">
             <div className="flex items-baseline justify-between gap-4 mb-4">
               <div>
-                <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">
+                <h1 className="text-xl sm:text-2xl font-semibold text-foreground">
                   Micro Syllogism Drill
                 </h1>
-                <p className="mt-1 text-sm text-slate-600">
+                <p className="mt-1 text-sm text-muted-foreground">
                   Decide whether the conclusion must follow from the premises.
                 </p>
               </div>
@@ -108,16 +108,16 @@ export default function MicroDrill() {
                     if (!current) return;
                     setFeedbackOpen(true);
                   }}
-                  className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-800"
+                  className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
                 >
                   <span aria-hidden>🚩</span>
                   Report question
                 </button>
                 <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     Time
                   </p>
-                  <p className="text-sm font-semibold text-slate-900">
+                  <p className="text-sm font-semibold text-foreground">
                     {totalElapsedSeconds}s
                   </p>
                 </div>
@@ -143,39 +143,39 @@ export default function MicroDrill() {
             )}
 
             {loading && questions.length === 0 && (
-              <p className="text-sm text-slate-600">Loading questions…</p>
+              <p className="text-sm text-muted-foreground">Loading questions…</p>
             )}
 
             {current && (
               <>
-                <div className="mb-4 text-sm text-slate-600 flex items-center justify-between flex-wrap gap-2">
+                <div className="mb-4 text-sm text-muted-foreground flex items-center justify-between flex-wrap gap-2">
                   <span>
                     Question {currentIndex + 1} of {questions.length}
                   </span>
                   {questions.length > 0 && (
-                    <span className="font-medium text-slate-700">
+                    <span className="font-medium text-foreground">
                       Score: {correctSoFar} / {answeredCount}
                     </span>
                   )}
                 </div>
 
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
                   Premises
                 </p>
-                <div className="mb-6 rounded-lg border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-base text-slate-800">
+                <div className="mb-6 rounded-lg border border-border bg-secondary p-4">
+                  <p className="text-base text-foreground">
                     {current.stimulus_text}
                   </p>
                   <QuestionMediaBlock media={current.media} placement="stem" className="mt-3" />
                 </div>
 
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
                   Does this conclusion follow from the premises?
                 </p>
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400 mb-1">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">
                   Conclusion to evaluate
                 </p>
-                <p className="text-lg font-semibold text-slate-900 mb-4 rounded-lg bg-slate-50 border border-slate-200 p-4">
+                <p className="text-lg font-semibold text-foreground mb-4 rounded-lg bg-secondary border border-border p-4">
                   {current.conclusion_text}
                 </p>
 
@@ -203,8 +203,8 @@ export default function MicroDrill() {
                 )}
 
                 {hasAnsweredCurrent && (
-                  <div className="mt-6 border-t border-slate-200 pt-4">
-                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-3">
+                  <div className="mt-6 border-t border-border pt-4">
+                    <div className="rounded-lg border border-border bg-secondary p-4 space-y-3">
                       <p
                         className={
                           "text-sm font-semibold " +
@@ -213,14 +213,14 @@ export default function MicroDrill() {
                       >
                         {feedbackLabel}
                       </p>
-                      <div className="rounded-lg border border-slate-200 bg-white p-3">
-                        <p className="text-sm text-slate-700">
+                      <div className="rounded-lg border border-border bg-white p-3">
+                        <p className="text-sm text-foreground">
                           {current.explanation}
                         </p>
                         <button
                           type="button"
                           onClick={() => setFeedbackOpen(true)}
-                          className="mt-2 inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                          className="mt-2 inline-flex items-center gap-1 rounded-full border border-border bg-secondary px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
                         >
                           <span aria-hidden>🚩</span>
                           Report this question
@@ -244,7 +244,7 @@ export default function MicroDrill() {
                   </div>
                 )}
 
-                <div className="mt-6 text-xs text-slate-500">
+                <div className="mt-6 text-xs text-muted-foreground">
                   <span className="font-medium uppercase tracking-wide">
                     Shortcuts
                   </span>
@@ -259,12 +259,12 @@ export default function MicroDrill() {
             )}
 
             {sessionFinished && lastSummary && (
-              <div className="mt-6 border-t border-slate-200 pt-4">
-                <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                  <h2 className="text-sm font-semibold text-slate-900">
+              <div className="mt-6 border-t border-border pt-4">
+                <div className="rounded-lg border border-border bg-secondary p-4">
+                  <h2 className="text-sm font-semibold text-foreground">
                     Session summary
                   </h2>
-                  <p className="mt-2 text-sm text-slate-700">
+                  <p className="mt-2 text-sm text-foreground">
                     You answered{" "}
                     <span className="font-semibold">
                       {lastSummary.correct} of {lastSummary.total_questions}

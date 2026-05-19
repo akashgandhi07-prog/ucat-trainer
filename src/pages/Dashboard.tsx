@@ -149,7 +149,7 @@ function DashboardLoadingRefreshHint() {
     <button
       type="button"
       onClick={() => window.location.reload()}
-      className="text-xs text-slate-400 underline underline-offset-2 hover:text-slate-600 transition-colors"
+      className="text-xs text-muted-foreground underline underline-offset-2 hover:text-muted-foreground transition-colors"
     >
       Taking too long? Refresh the page
     </button>
@@ -171,9 +171,9 @@ function LockedDashboardPreview({
   ];
   const chartBars = [38, 48, 44, 58, 63, 71, 78, 74, 83, 88];
   const weakAreas = [
-    { label: "Unit conversions", value: 42, color: "bg-rose-500" },
-    { label: "Inference evidence", value: 57, color: "bg-amber-500" },
-    { label: "SJT appropriateness", value: 69, color: "bg-blue-500" },
+    { label: "Unit conversions", value: 42, color: "bg-foreground" },
+    { label: "Inference evidence", value: 57, color: "bg-muted-foreground" },
+    { label: "SJT appropriateness", value: 69, color: "bg-primary" },
   ];
   const activityRows = [
     ["Today", "Mental Maths", "78%"],
@@ -183,20 +183,20 @@ function LockedDashboardPreview({
   ];
 
   return (
-    <section className="relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 via-emerald-500 to-amber-500" />
+    <section className="relative overflow-hidden rounded-xl border border-border bg-white">
+      <div className="absolute inset-x-0 top-0 h-1 bg-primary" />
 
       <div className="p-5 sm:p-6">
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
+            <p className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary px-2.5 py-1 text-xs font-semibold text-muted-foreground">
               <Lock className="h-3.5 w-3.5" aria-hidden="true" />
               Free account preview
             </p>
-            <h2 className="mt-3 text-xl font-bold text-slate-900">
+            <h2 className="mt-3 text-xl font-bold text-foreground">
               See the dashboard your sessions build.
             </h2>
-            <p className="mt-1 max-w-2xl text-sm text-slate-600">
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
               Sign up free to unlock trends, weak-area tracking, recent activity, planner links and cross-device progress.
             </p>
           </div>
@@ -209,32 +209,32 @@ function LockedDashboardPreview({
           >
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {teaserStats.map((stat) => (
-                <div key={stat.label} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                <div key={stat.label} className="rounded-xl border border-border bg-secondary p-4">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     {stat.label}
                   </p>
-                  <p className="mt-1 text-2xl font-bold text-slate-900">{stat.value}</p>
-                  <p className="mt-1 text-xs text-slate-500">{stat.helper}</p>
+                  <p className="mt-1 text-2xl font-bold text-foreground">{stat.value}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{stat.helper}</p>
                 </div>
               ))}
             </div>
 
             <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-[1.25fr_0.75fr]">
-              <div className="rounded-xl border border-slate-200 bg-white p-4">
+              <div className="rounded-xl border border-border bg-white p-4">
                 <div className="mb-4 flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">WPM and accuracy trend</p>
-                    <p className="text-xs text-slate-500">Last 10 saved sessions</p>
+                    <p className="text-sm font-semibold text-foreground">WPM and accuracy trend</p>
+                    <p className="text-xs text-muted-foreground">Last 10 saved sessions</p>
                   </div>
-                  <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                  <span className="rounded-full bg-secondary border border-border px-2.5 py-1 text-xs font-semibold text-muted-foreground">
                     Improving
                   </span>
                 </div>
-                <div className="flex h-44 items-end gap-2 rounded-lg bg-slate-50 px-3 py-3">
+                <div className="flex h-44 items-end gap-2 rounded-lg bg-secondary px-3 py-3">
                   {chartBars.map((height, index) => (
                     <div key={index} className="flex flex-1 flex-col items-center justify-end gap-1">
                       <div
-                        className="w-full rounded-t-md bg-blue-500"
+                        className="w-full rounded-t-md bg-primary"
                         style={{ height: `${height}%` }}
                       />
                       <span className="h-2 w-2 rounded-full bg-slate-300" />
@@ -243,17 +243,17 @@ function LockedDashboardPreview({
                 </div>
               </div>
 
-              <div className="rounded-xl border border-slate-200 bg-white p-4">
-                <p className="text-sm font-semibold text-slate-900">Weak-area breakdown</p>
-                <p className="mb-4 text-xs text-slate-500">Know what to practise next.</p>
+              <div className="rounded-xl border border-border bg-white p-4">
+                <p className="text-sm font-semibold text-foreground">Weak-area breakdown</p>
+                <p className="mb-4 text-xs text-muted-foreground">Know what to practise next.</p>
                 <div className="space-y-4">
                   {weakAreas.map((area) => (
                     <div key={area.label}>
                       <div className="mb-1 flex items-center justify-between text-xs">
-                        <span className="font-medium text-slate-700">{area.label}</span>
-                        <span className="text-slate-500">{area.value}%</span>
+                        <span className="font-medium text-foreground">{area.label}</span>
+                        <span className="text-muted-foreground">{area.value}%</span>
                       </div>
-                      <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                      <div className="h-2 overflow-hidden rounded-full bg-secondary">
                         <div className={`h-full rounded-full ${area.color}`} style={{ width: `${area.value}%` }} />
                       </div>
                     </div>
@@ -262,9 +262,9 @@ function LockedDashboardPreview({
               </div>
             </div>
 
-            <div className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white">
+            <div className="mt-4 overflow-hidden rounded-xl border border-border bg-white">
               <table className="w-full text-sm">
-                <thead className="bg-slate-50 text-left text-slate-500">
+                <thead className="bg-secondary text-left text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3 font-medium">Date</th>
                     <th className="px-4 py-3 font-medium">Trainer</th>
@@ -273,10 +273,10 @@ function LockedDashboardPreview({
                 </thead>
                 <tbody>
                   {activityRows.map(([date, trainer, score]) => (
-                    <tr key={`${date}-${trainer}`} className="border-t border-slate-100">
-                      <td className="px-4 py-3 text-slate-500">{date}</td>
-                      <td className="px-4 py-3 font-medium text-slate-900">{trainer}</td>
-                      <td className="px-4 py-3 text-slate-700">{score}</td>
+                    <tr key={`${date}-${trainer}`} className="border-t border-border">
+                      <td className="px-4 py-3 text-muted-foreground">{date}</td>
+                      <td className="px-4 py-3 font-medium text-foreground">{trainer}</td>
+                      <td className="px-4 py-3 text-foreground">{score}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -285,14 +285,14 @@ function LockedDashboardPreview({
           </div>
 
           <div className="absolute -top-20 bottom-0 inset-x-0 flex items-start justify-center bg-white/55 px-4 pt-8 backdrop-blur-[1px] sm:pt-10">
-            <div className="max-w-md rounded-xl border border-slate-200 bg-white p-5 text-center shadow-lg">
+            <div className="max-w-md rounded-xl border border-border bg-white p-5 text-center shadow-lg">
               <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <Sparkles className="h-5 w-5" aria-hidden="true" />
               </div>
-              <p className="text-base font-semibold text-slate-900">
+              <p className="text-base font-semibold text-foreground">
                 Unlock your full progress dashboard.
               </p>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Free account. Saved history. Better next-step recommendations.
               </p>
               <div className="mt-4 flex flex-col justify-center gap-2 sm:flex-row">
@@ -1138,13 +1138,13 @@ export default function Dashboard() {
     if (!hasSessions) return null;
     return (
       <div className="mt-4">
-        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">By Difficulty</p>
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">By Difficulty</p>
         <div className="grid grid-cols-3 gap-2 text-center">
           {(["easy", "medium", "hard"] as TrainingDifficulty[]).map((d) => (
-            <div key={d} className="bg-slate-50 rounded-lg px-3 py-2">
-              <p className="text-[11px] font-medium text-slate-500">{TRAINING_DIFFICULTY_LABELS[d]}</p>
-              <p className="text-sm font-bold text-slate-900">{breakdown[d].count > 0 ? `${breakdown[d].avgAccuracy}%` : "-"}</p>
-              <p className="text-[10px] text-slate-400">{breakdown[d].count} session{breakdown[d].count !== 1 ? "s" : ""}</p>
+            <div key={d} className="bg-secondary rounded-lg px-3 py-2">
+              <p className="text-[11px] font-medium text-muted-foreground">{TRAINING_DIFFICULTY_LABELS[d]}</p>
+              <p className="text-sm font-bold text-foreground">{breakdown[d].count > 0 ? `${breakdown[d].avgAccuracy}%` : "-"}</p>
+              <p className="text-[10px] text-muted-foreground">{breakdown[d].count} session{breakdown[d].count !== 1 ? "s" : ""}</p>
             </div>
           ))}
         </div>
@@ -1156,8 +1156,8 @@ export default function Dashboard() {
   const renderAccuracyChart = (data: AccuracyChartPoint[], label: string) => {
     if (data.length < 2) return null;
     return (
-      <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm mt-4">
-        <h3 className="text-base font-medium text-slate-900 mb-4">{label}</h3>
+      <div className="bg-card rounded-xl border border-border p-4 mt-4">
+        <h3 className="text-base font-medium text-foreground mb-4">{label}</h3>
         <div className="h-52 sm:h-60 min-h-[180px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
@@ -1241,7 +1241,7 @@ export default function Dashboard() {
   }, [sessions, syllogismSessions, sjtSessions, today]);
 
   const skipLinkClass =
-    "absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-slate-900 font-medium rounded-lg ring-2 ring-blue-600 opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
+    "absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-foreground font-medium rounded-lg ring-2 ring-blue-600 opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
 
   const renderGuestDashboard = () => {
     if (sessionLoadFailed) {
@@ -1251,7 +1251,7 @@ export default function Dashboard() {
             <p className="text-red-900 font-medium mb-2">
               We couldn&apos;t connect to your account right now.
             </p>
-            <p className="text-slate-700 text-sm mb-4">
+            <p className="text-foreground text-sm mb-4">
               You can still practice, but saving and syncing progress may be temporarily unavailable.
             </p>
             <button
@@ -1269,11 +1269,11 @@ export default function Dashboard() {
     if (!guestSummary) {
       return (
         <div className="mb-10 space-y-6">
-          <section className="bg-white border border-slate-200 rounded-xl p-6 text-center shadow-sm">
-            <p className="text-slate-900 font-medium mb-2">
+          <section className="bg-card border border-border rounded-xl p-6 text-center">
+            <p className="text-foreground font-medium mb-2">
               Sign in to see your full dashboard.
             </p>
-            <p className="text-slate-600 text-sm mb-4">
+            <p className="text-muted-foreground text-sm mb-4">
               You can train without an account. Sign in only if you want your history saved across devices.
             </p>
             <div className="flex flex-wrap justify-center gap-3">
@@ -1305,11 +1305,11 @@ export default function Dashboard() {
       <>
         {isPlannerIntegrated() ? <UnifiedProductHub /> : null}
         <section className="mb-8">
-          <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-6">
-            <p className="text-amber-900 font-semibold mb-1">
+          <div className="bg-card border border-border rounded-xl p-6">
+            <p className="text-foreground font-semibold mb-1">
               Guest dashboard
             </p>
-            <p className="text-slate-800 text-sm mb-4">
+            <p className="text-foreground text-sm mb-4">
               These stats are stored only on this device. Create a free account to sync them and unlock full analytics.
             </p>
             <div className="flex flex-wrap gap-3">
@@ -1332,49 +1332,49 @@ export default function Dashboard() {
         </section>
         <section className="mb-10">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-              <p className="text-sm font-medium text-slate-500">Total sessions</p>
-              <p className="text-3xl font-bold text-slate-900">{guestSummary.totalSessions}</p>
+            <div className="bg-card rounded-xl border border-border p-5">
+              <p className="text-sm font-medium text-muted-foreground">Total sessions</p>
+              <p className="text-3xl font-bold text-foreground">{guestSummary.totalSessions}</p>
             </div>
-            <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-              <p className="text-sm font-medium text-slate-500">Speed Reading</p>
-              <p className="text-2xl font-bold text-slate-900">{guestSummary.speedReadingCount}</p>
-              <p className="text-xs text-slate-400 mt-1">session{guestSummary.speedReadingCount !== 1 ? "s" : ""}</p>
+            <div className="bg-card rounded-xl border border-border p-5">
+              <p className="text-sm font-medium text-muted-foreground">Speed Reading</p>
+              <p className="text-2xl font-bold text-foreground">{guestSummary.speedReadingCount}</p>
+              <p className="text-xs text-muted-foreground mt-1">session{guestSummary.speedReadingCount !== 1 ? "s" : ""}</p>
             </div>
-            <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-              <p className="text-sm font-medium text-slate-500">Rapid Recall</p>
-              <p className="text-2xl font-bold text-slate-900">{guestSummary.rapidRecallCount}</p>
+            <div className="bg-card rounded-xl border border-border p-5">
+              <p className="text-sm font-medium text-muted-foreground">Rapid Recall</p>
+              <p className="text-2xl font-bold text-foreground">{guestSummary.rapidRecallCount}</p>
               {guestSummary.rapidRecallAvgAccuracy != null && (
-                <p className="text-xs text-slate-500 mt-1">Avg accuracy: {guestSummary.rapidRecallAvgAccuracy}%</p>
+                <p className="text-xs text-muted-foreground mt-1">Avg accuracy: {guestSummary.rapidRecallAvgAccuracy}%</p>
               )}
             </div>
-            <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-              <p className="text-sm font-medium text-slate-500">Keyword Scanning</p>
-              <p className="text-2xl font-bold text-slate-900">{guestSummary.keywordScanningCount}</p>
+            <div className="bg-card rounded-xl border border-border p-5">
+              <p className="text-sm font-medium text-muted-foreground">Keyword Scanning</p>
+              <p className="text-2xl font-bold text-foreground">{guestSummary.keywordScanningCount}</p>
               {guestSummary.keywordScanningAvgAccuracy != null && (
-                <p className="text-xs text-slate-500 mt-1">Avg accuracy: {guestSummary.keywordScanningAvgAccuracy}%</p>
+                <p className="text-xs text-muted-foreground mt-1">Avg accuracy: {guestSummary.keywordScanningAvgAccuracy}%</p>
               )}
             </div>
             {/* QR guest summary */}
-            <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-              <p className="text-sm font-medium text-slate-500">QR skills</p>
-              <p className="text-2xl font-bold text-slate-900">
+            <div className="bg-card rounded-xl border border-border p-5">
+              <p className="text-sm font-medium text-muted-foreground">QR skills</p>
+              <p className="text-2xl font-bold text-foreground">
                 {guestSummary.mentalMathsCount + guestSummary.unitConversionsCount}
               </p>
-              <p className="text-xs text-slate-500 mt-1">Mental maths + conversions</p>
+              <p className="text-xs text-muted-foreground mt-1">Mental maths + conversions</p>
             </div>
           </div>
         </section>
         {guestSummary.averageWpm != null && (
           <section className="mb-10">
-            <div className="bg-gradient-to-br from-blue-50 to-slate-50 rounded-xl border border-blue-100 p-5 shadow-sm">
-              <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">
+            <div className="bg-card rounded-xl border border-border p-5">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
                 Your typical WPM (guest)
               </p>
-              <p className="text-3xl font-bold text-slate-900 mb-1">
+              <p className="text-3xl font-bold text-foreground mb-1">
                 {guestSummary.averageWpm} WPM
               </p>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-muted-foreground">
                 Based on your recent guest Speed Reading sessions on this device.
               </p>
             </div>
@@ -1394,7 +1394,7 @@ export default function Dashboard() {
     if (loading) {
       return (
         <div className="min-h-[50vh] flex flex-col items-center justify-center gap-4">
-          <p className="text-slate-600">Loading dashboard…</p>
+          <p className="text-muted-foreground">Loading dashboard…</p>
           <DashboardLoadingRefreshHint />
         </div>
       );
@@ -1404,7 +1404,7 @@ export default function Dashboard() {
       return (
         <div className="min-h-[50vh] flex flex-col items-center justify-center p-4">
           <p className="text-red-600 mb-4">{error}</p>
-          <Link to="/" className="text-blue-600 font-medium hover:underline">
+          <Link to="/" className="text-primary font-medium hover:underline">
             Back to Home
           </Link>
         </div>
@@ -1444,17 +1444,17 @@ export default function Dashboard() {
 
           {/* ── Inline exam date editor ── */}
           {user && (showExamDateEditor || !profile?.ucat_exam_date) && (
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+            <div className="bg-card rounded-xl border border-border p-4">
               <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                 <div>
-                  <p className="text-sm font-semibold text-slate-800">UCAT exam date</p>
-                  <p className="text-xs text-slate-400 mt-0.5">Official sittings · 13 July to 24 September {UCAT_EXAM_YEAR}</p>
+                  <p className="text-sm font-semibold text-foreground">UCAT exam date</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Official sittings · 13 July to 24 September {UCAT_EXAM_YEAR}</p>
                 </div>
                 {profile?.ucat_exam_date && showExamDateEditor && (
                   <button
                     type="button"
                     onClick={() => { setShowExamDateEditor(false); setUcatEditing(false); }}
-                    className="text-xs text-slate-500 hover:text-slate-700 transition-colors"
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                   >
                     Cancel
                   </button>
@@ -1462,14 +1462,14 @@ export default function Dashboard() {
               </div>
               {profile?.ucat_exam_date && !ucatEditing ? (
                 <div className="flex flex-wrap items-center gap-3">
-                  <div className="inline-flex items-center gap-2 rounded-lg bg-slate-50 border border-slate-200 px-3 py-2">
-                    <span className="text-slate-800 font-medium">{formatUcatDate(profile.ucat_exam_date)}</span>
+                  <div className="inline-flex items-center gap-2 rounded-lg bg-secondary border border-border px-3 py-2">
+                    <span className="text-foreground font-medium">{formatUcatDate(profile.ucat_exam_date)}</span>
                     <span className="text-emerald-600 text-xs font-medium">Saved</span>
                   </div>
                   <button
                     type="button"
                     onClick={() => setUcatEditing(true)}
-                    className="min-h-[36px] rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-colors"
+                    className="min-h-[36px] rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary hover:border-slate-400 transition-colors"
                   >
                     Edit
                   </button>
@@ -1479,7 +1479,7 @@ export default function Dashboard() {
                   <select
                     value={ucatDay}
                     onChange={(e) => setUcatDay(parseInt(e.target.value, 10))}
-                    className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+                    className="rounded border border-border bg-white px-2 py-1.5 text-sm text-foreground focus:border-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
                     aria-label="Exam day"
                   >
                     {(() => {
@@ -1494,7 +1494,7 @@ export default function Dashboard() {
                   <select
                     value={ucatMonth}
                     onChange={(e) => setUcatMonth(parseInt(e.target.value, 10) as 7 | 8 | 9)}
-                    className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+                    className="rounded border border-border bg-white px-2 py-1.5 text-sm text-foreground focus:border-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
                     aria-label="Exam month"
                   >
                     <option value={7}>July</option>
@@ -1504,7 +1504,7 @@ export default function Dashboard() {
                   <select
                     value={ucatYear}
                     onChange={(e) => setUcatYear(parseInt(e.target.value, 10))}
-                    className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+                    className="rounded border border-border bg-white px-2 py-1.5 text-sm text-foreground focus:border-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
                     aria-label="Exam year"
                   >
                     <option value={UCAT_EXAM_YEAR}>{UCAT_EXAM_YEAR}</option>
@@ -1577,7 +1577,7 @@ export default function Dashboard() {
           {recentActivity.length > 0 && (
             <section>
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-base font-semibold text-slate-900">Recent activity</h2>
+                <h2 className="text-base font-semibold text-foreground">Recent activity</h2>
                 {recentActivity.length > 10 && (
                   <button
                     type="button"
@@ -1588,7 +1588,7 @@ export default function Dashboard() {
                   </button>
                 )}
               </div>
-              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="bg-card rounded-xl border border-border overflow-hidden">
                 <div className="overflow-x-auto">
                   <table
                     className="w-full text-sm"
@@ -1596,20 +1596,20 @@ export default function Dashboard() {
                     aria-label="Recent training sessions"
                   >
                     <thead>
-                      <tr className="border-b border-slate-200 bg-slate-50">
-                        <th scope="col" className="text-left px-4 py-3 font-medium text-slate-600">
+                      <tr className="border-b border-border bg-secondary">
+                        <th scope="col" className="text-left px-4 py-3 font-medium text-muted-foreground">
                           Date
                         </th>
-                        <th scope="col" className="text-left px-4 py-3 font-medium text-slate-600">
+                        <th scope="col" className="text-left px-4 py-3 font-medium text-muted-foreground">
                           Trainer
                         </th>
                         <th
                           scope="col"
-                          className="text-left px-4 py-3 font-medium text-slate-600 hidden sm:table-cell"
+                          className="text-left px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell"
                         >
                           Time
                         </th>
-                        <th scope="col" className="text-left px-4 py-3 font-medium text-slate-600">
+                        <th scope="col" className="text-left px-4 py-3 font-medium text-muted-foreground">
                           Score
                         </th>
                       </tr>
@@ -1618,26 +1618,26 @@ export default function Dashboard() {
                       {(showAllActivity ? recentActivity : recentActivity.slice(0, 10)).map((item) => (
                         <tr
                           key={item.id}
-                          className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50"
+                          className="border-b border-border last:border-b-0 hover:bg-secondary/50"
                         >
-                          <td className="px-4 py-3 text-slate-600 text-xs whitespace-nowrap">
+                          <td className="px-4 py-3 text-muted-foreground text-xs whitespace-nowrap">
                             {new Date(item.created_at).toLocaleDateString(undefined, {
                               day: "numeric",
                               month: "short",
                             })}
                           </td>
-                          <td className="px-4 py-3 text-slate-900 font-medium">
+                          <td className="px-4 py-3 text-foreground font-medium">
                             <span>{item.label}</span>
                             {item.count != null && item.count > 1 && (
-                              <span className="ml-2 inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
+                              <span className="ml-2 inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-muted-foreground">
                                 ×{item.count}
                               </span>
                             )}
                           </td>
-                          <td className="px-4 py-3 text-slate-600 hidden sm:table-cell">
+                          <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
                             {item.timeDisplay}
                           </td>
-                          <td className="px-4 py-3 text-slate-900">{item.scoreDisplay}</td>
+                          <td className="px-4 py-3 text-foreground">{item.scoreDisplay}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -1649,8 +1649,8 @@ export default function Dashboard() {
 
           {/* ── Subject deep-dives (tabbed) ── */}
           {!hasAnySessions ? (
-            <div className="bg-slate-100 border border-slate-200 rounded-xl p-6 text-center">
-              <p className="text-slate-700 font-medium mb-4">
+            <div className="bg-secondary border border-border rounded-xl p-6 text-center">
+              <p className="text-foreground font-medium mb-4">
                 No sessions yet. Pick any trainer from the home page to get started.
               </p>
               <Link
@@ -1664,17 +1664,15 @@ export default function Dashboard() {
             <div>
               {/* Tab nav */}
               <div className="mb-1">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">Select a section to view analytics</p>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2">Select a section to view analytics</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
                   {TABS.map((tab) => {
                     const isActive = activeTab === tab.id;
-                    const colorMap: Record<string, { active: string; inactive: string; badge: string }> = {
-                      vr:  { active: "bg-blue-600 border-blue-600 text-white shadow-blue-200 shadow-md",  inactive: "bg-white border-slate-200 text-slate-700 hover:border-blue-300 hover:bg-blue-50",  badge: isActive ? "bg-blue-500 text-white" : "bg-blue-100 text-blue-700" },
-                      dm:  { active: "bg-violet-600 border-violet-600 text-white shadow-violet-200 shadow-md", inactive: "bg-white border-slate-200 text-slate-700 hover:border-violet-300 hover:bg-violet-50", badge: isActive ? "bg-violet-500 text-white" : "bg-violet-100 text-violet-700" },
-                      qr:  { active: "bg-emerald-600 border-emerald-600 text-white shadow-emerald-200 shadow-md", inactive: "bg-white border-slate-200 text-slate-700 hover:border-emerald-300 hover:bg-emerald-50", badge: isActive ? "bg-emerald-500 text-white" : "bg-emerald-100 text-emerald-700" },
-                      sjt: { active: "bg-orange-500 border-orange-500 text-white shadow-orange-200 shadow-md",  inactive: "bg-white border-slate-200 text-slate-700 hover:border-orange-300 hover:bg-orange-50",  badge: isActive ? "bg-orange-400 text-white" : "bg-orange-100 text-orange-700" },
+                    const colors = {
+                      active:   "bg-foreground border-foreground text-card",
+                      inactive: "bg-card border-border text-foreground hover:border-foreground/30 hover:bg-secondary",
+                      badge:    isActive ? "bg-card/20 text-card" : "bg-secondary text-muted-foreground",
                     };
-                    const colors = colorMap[tab.id];
                     return (
                       <button
                         key={tab.id}
@@ -1709,7 +1707,7 @@ export default function Dashboard() {
                 <div className="space-y-8">
                   <section>
                     <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-lg font-semibold text-slate-900">
+                      <h2 className="text-lg font-semibold text-foreground">
                         {TRAINING_TYPE_LABELS.speed_reading}
                       </h2>
                       <Link
@@ -1720,46 +1718,46 @@ export default function Dashboard() {
                       </Link>
                     </div>
                     {speedWpmCount > 0 && (
-                      <div className="bg-gradient-to-br from-blue-50 to-slate-50 rounded-xl border border-blue-100 p-4 mb-4">
-                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">
+                      <div className="bg-card rounded-xl border border-border p-4 mb-4">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
                           How you compare
                         </p>
                         <div className="flex flex-wrap items-center gap-2 mb-2">
-                          <span className="text-2xl font-bold text-slate-900">{averageWpm} WPM</span>
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          <span className="text-2xl font-bold text-foreground">{averageWpm} WPM</span>
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary text-foreground">
                             {getWpmTierLabel(getWpmTier(averageWpm))}
                           </span>
                         </div>
-                        <p className="text-sm text-slate-600">{getWpmComparisonCopy(averageWpm)}</p>
-                        <p className="text-xs text-slate-500 mt-2">
+                        <p className="text-sm text-muted-foreground">{getWpmComparisonCopy(averageWpm)}</p>
+                        <p className="text-xs text-muted-foreground mt-2">
                           Most users read between {WPM_BENCHMARK.typicalMin}-
                           {WPM_BENCHMARK.typicalMax} WPM. 400+ is strong.
                         </p>
                       </div>
                     )}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-                      <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                        <p className="text-sm font-medium text-slate-500">Your typical WPM</p>
-                        <p className="text-slate-500 text-xs mb-1">Average from your history</p>
-                        <p className="text-3xl font-bold text-slate-900">{averageWpm}</p>
+                      <div className="bg-card rounded-xl border border-border p-5">
+                        <p className="text-sm font-medium text-muted-foreground">Your typical WPM</p>
+                        <p className="text-muted-foreground text-xs mb-1">Average from your history</p>
+                        <p className="text-3xl font-bold text-foreground">{averageWpm}</p>
                         <StatDelta delta={wpmDelta.delta} direction={wpmDelta.direction} unit=" WPM" />
                       </div>
-                      <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                        <p className="text-sm font-medium text-slate-500">Best WPM</p>
-                        <p className="text-3xl font-bold text-slate-900">{bestWpm}</p>
+                      <div className="bg-card rounded-xl border border-border p-5">
+                        <p className="text-sm font-medium text-muted-foreground">Best WPM</p>
+                        <p className="text-3xl font-bold text-foreground">{bestWpm}</p>
                       </div>
-                      <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                        <p className="text-sm font-medium text-slate-500">Best comprehension</p>
-                        <p className="text-3xl font-bold text-slate-900">{speedReadingAccuracy}%</p>
+                      <div className="bg-card rounded-xl border border-border p-5">
+                        <p className="text-sm font-medium text-muted-foreground">Best comprehension</p>
+                        <p className="text-3xl font-bold text-foreground">{speedReadingAccuracy}%</p>
                       </div>
                     </div>
                     {lastPassageTitle != null && (
-                      <p className="text-sm text-slate-500 mb-2">Last passage: {lastPassageTitle}</p>
+                      <p className="text-sm text-muted-foreground mb-2">Last passage: {lastPassageTitle}</p>
                     )}
-                    <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-                      <h3 className="text-base font-medium text-slate-900 mb-4">WPM over time</h3>
+                    <div className="bg-card rounded-xl border border-border p-4">
+                      <h3 className="text-base font-medium text-foreground mb-4">WPM over time</h3>
                       {chartData.length === 0 ? (
-                        <p className="text-slate-500 py-8 text-center">
+                        <p className="text-muted-foreground py-8 text-center">
                           Complete a Speed Reading session to see your WPM.
                         </p>
                       ) : (
@@ -1829,13 +1827,13 @@ export default function Dashboard() {
                               </LineChart>
                             </ResponsiveContainer>
                           </div>
-                          <p className="text-slate-600 text-sm mt-3 text-center">
+                          <p className="text-muted-foreground text-sm mt-3 text-center">
                             You&apos;re{" "}
                             {Math.min(100, Math.round((averageWpm / WPM_TARGET) * 100))}% of the
                             way to {WPM_TARGET} WPM.
                           </p>
                           <form
-                            className="mt-3 flex flex-col items-center gap-2 text-xs text-slate-600"
+                            className="mt-3 flex flex-col items-center gap-2 text-xs text-muted-foreground"
                             onSubmit={(e) => {
                               e.preventDefault();
                               const raw = targetWpmInput.trim();
@@ -1873,14 +1871,14 @@ export default function Dashboard() {
                                   setTargetWpmInput(e.target.value);
                                   if (targetWpmError) setTargetWpmError(null);
                                 }}
-                                className="w-20 rounded-md border border-slate-300 px-2 py-1 text-center text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-20 rounded-md border border-border px-2 py-1 text-center text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 inputMode="numeric"
                                 pattern="[0-9]*"
                               />
                               <span>WPM</span>
                               <button
                                 type="submit"
-                                className="inline-flex items-center justify-center rounded-md border border-slate-300 px-2 py-1 text-xs font-medium text-blue-600 hover:bg-slate-50"
+                                className="inline-flex items-center justify-center rounded-md border border-border px-2 py-1 text-xs font-medium text-primary hover:bg-secondary"
                               >
                                 Save
                               </button>
@@ -1892,7 +1890,7 @@ export default function Dashboard() {
                                   setTargetWpmInput("");
                                   setTargetWpmError(null);
                                 }}
-                                className="inline-flex items-center justify-center rounded-md border border-slate-200 px-2 py-1 text-xs font-medium text-slate-500 hover:bg-slate-50"
+                                className="inline-flex items-center justify-center rounded-md border border-border px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-secondary"
                               >
                                 Clear
                               </button>
@@ -1912,12 +1910,12 @@ export default function Dashboard() {
 
                   {(rapidRecallSessions.length > 0 || vrCount === 0) && (
                   <section>
-                    <h2 className="text-lg font-semibold text-slate-900 mb-4">
+                    <h2 className="text-lg font-semibold text-foreground mb-4">
                       {TRAINING_TYPE_LABELS.rapid_recall}
                     </h2>
                     {rapidRecallSessions.length === 0 ? (
-                      <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                        <p className="text-slate-500">No Rapid Recall sessions yet.</p>
+                      <div className="bg-card rounded-xl border border-border p-5">
+                        <p className="text-muted-foreground">No Rapid Recall sessions yet.</p>
                         <Link
                           to="/ucat-verbal-reasoning-practice"
                           className="inline-flex mt-4 px-4 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
@@ -1928,33 +1926,33 @@ export default function Dashboard() {
                     ) : (
                       <>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                            <p className="text-sm font-medium text-slate-500">Average score</p>
-                            <p className="text-2xl font-bold text-slate-900">{rapidRecallAvg}%</p>
+                          <div className="bg-card rounded-xl border border-border p-5">
+                            <p className="text-sm font-medium text-muted-foreground">Average score</p>
+                            <p className="text-2xl font-bold text-foreground">{rapidRecallAvg}%</p>
                             <StatDelta
                               delta={rapidAccDelta.delta}
                               direction={rapidAccDelta.direction}
                               unit="%"
                             />
                           </div>
-                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                            <p className="text-sm font-medium text-slate-500">Best score</p>
-                            <p className="text-2xl font-bold text-slate-900">{rapidBestScore}%</p>
+                          <div className="bg-card rounded-xl border border-border p-5">
+                            <p className="text-sm font-medium text-muted-foreground">Best score</p>
+                            <p className="text-2xl font-bold text-foreground">{rapidBestScore}%</p>
                           </div>
-                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                            <p className="text-sm font-medium text-slate-500">Avg reading time</p>
-                            <p className="text-2xl font-bold text-slate-900">
+                          <div className="bg-card rounded-xl border border-border p-5">
+                            <p className="text-sm font-medium text-muted-foreground">Avg reading time</p>
+                            <p className="text-2xl font-bold text-foreground">
                               {rapidAvgTime != null ? `${rapidAvgTime}s` : "-"}
                             </p>
                           </div>
-                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                            <p className="text-sm font-medium text-slate-500">Best time</p>
-                            <p className="text-2xl font-bold text-slate-900">
+                          <div className="bg-card rounded-xl border border-border p-5">
+                            <p className="text-sm font-medium text-muted-foreground">Best time</p>
+                            <p className="text-2xl font-bold text-foreground">
                               {rapidBestTime != null ? `${rapidBestTime}s` : "-"}
                             </p>
                           </div>
                         </div>
-                        <div className="flex flex-wrap gap-3 text-sm text-slate-600 mb-4">
+                        <div className="flex flex-wrap gap-3 text-sm text-muted-foreground mb-4">
                           <span>
                             {rapidRecallSessions.length} session
                             {rapidRecallSessions.length !== 1 ? "s" : ""}
@@ -1962,7 +1960,7 @@ export default function Dashboard() {
                           {rapidLastSession && <span>Last session: {rapidLastSession}</span>}
                         </div>
                         {renderAccuracyChart(rapidAccuracyChart, "Recall accuracy over time")}
-                        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm mt-4">
+                        <div className="bg-card rounded-xl border border-border p-5 mt-4">
                           {renderDifficultyBreakdown(rapidDifficultyBreakdown)}
                         </div>
                       </>
@@ -1972,12 +1970,12 @@ export default function Dashboard() {
 
                   {(keywordSessions.length > 0 || vrCount === 0) && (
                   <section>
-                    <h2 className="text-lg font-semibold text-slate-900 mb-4">
+                    <h2 className="text-lg font-semibold text-foreground mb-4">
                       {TRAINING_TYPE_LABELS.keyword_scanning}
                     </h2>
                     {keywordSessions.length === 0 ? (
-                      <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                        <p className="text-slate-500">No Keyword Scanning sessions yet.</p>
+                      <div className="bg-card rounded-xl border border-border p-5">
+                        <p className="text-muted-foreground">No Keyword Scanning sessions yet.</p>
                         <Link
                           to="/ucat-verbal-reasoning-practice"
                           className="inline-flex mt-4 px-4 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
@@ -1988,35 +1986,35 @@ export default function Dashboard() {
                     ) : (
                       <>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                            <p className="text-sm font-medium text-slate-500">Average accuracy</p>
-                            <p className="text-2xl font-bold text-slate-900">{keywordAvg}%</p>
+                          <div className="bg-card rounded-xl border border-border p-5">
+                            <p className="text-sm font-medium text-muted-foreground">Average accuracy</p>
+                            <p className="text-2xl font-bold text-foreground">{keywordAvg}%</p>
                             <StatDelta
                               delta={keywordAccDelta.delta}
                               direction={keywordAccDelta.direction}
                               unit="%"
                             />
                           </div>
-                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                            <p className="text-sm font-medium text-slate-500">Best accuracy</p>
-                            <p className="text-2xl font-bold text-slate-900">
+                          <div className="bg-card rounded-xl border border-border p-5">
+                            <p className="text-sm font-medium text-muted-foreground">Best accuracy</p>
+                            <p className="text-2xl font-bold text-foreground">
                               {keywordBestAccuracy}%
                             </p>
                           </div>
-                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                            <p className="text-sm font-medium text-slate-500">Avg scan time</p>
-                            <p className="text-2xl font-bold text-slate-900">
+                          <div className="bg-card rounded-xl border border-border p-5">
+                            <p className="text-sm font-medium text-muted-foreground">Avg scan time</p>
+                            <p className="text-2xl font-bold text-foreground">
                               {averageScanTimeSeconds != null ? `${averageScanTimeSeconds}s` : "-"}
                             </p>
                           </div>
-                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                            <p className="text-sm font-medium text-slate-500">Best time</p>
-                            <p className="text-2xl font-bold text-slate-900">
+                          <div className="bg-card rounded-xl border border-border p-5">
+                            <p className="text-sm font-medium text-muted-foreground">Best time</p>
+                            <p className="text-2xl font-bold text-foreground">
                               {keywordBestTime != null ? `${keywordBestTime}s` : "-"}
                             </p>
                           </div>
                         </div>
-                        <div className="flex flex-wrap gap-3 text-sm text-slate-600 mb-4">
+                        <div className="flex flex-wrap gap-3 text-sm text-muted-foreground mb-4">
                           <span>
                             {keywordSessions.length} session
                             {keywordSessions.length !== 1 ? "s" : ""}
@@ -2024,7 +2022,7 @@ export default function Dashboard() {
                           {keywordLastSession && <span>Last session: {keywordLastSession}</span>}
                         </div>
                         {renderAccuracyChart(keywordAccuracyChart, "Scanning accuracy over time")}
-                        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm mt-4">
+                        <div className="bg-card rounded-xl border border-border p-5 mt-4">
                           {renderDifficultyBreakdown(keywordDifficultyBreakdown)}
                         </div>
                       </>
@@ -2034,12 +2032,12 @@ export default function Dashboard() {
 
                   {(inferenceSessions.length > 0 || vrCount === 0) && (
                   <section>
-                    <h2 className="text-lg font-semibold text-slate-900 mb-4">
+                    <h2 className="text-lg font-semibold text-foreground mb-4">
                       {TRAINING_TYPE_LABELS.inference_trainer}
                     </h2>
                     {inferenceSessions.length === 0 ? (
-                      <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                        <p className="text-slate-500">
+                      <div className="bg-card rounded-xl border border-border p-5">
+                        <p className="text-muted-foreground">
                           No Inference Trainer sessions yet. Practice identifying evidence that
                           supports inferences.
                         </p>
@@ -2053,35 +2051,35 @@ export default function Dashboard() {
                     ) : (
                       <>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                            <p className="text-sm font-medium text-slate-500">Average accuracy</p>
-                            <p className="text-2xl font-bold text-slate-900">{inferenceAvg}%</p>
+                          <div className="bg-card rounded-xl border border-border p-5">
+                            <p className="text-sm font-medium text-muted-foreground">Average accuracy</p>
+                            <p className="text-2xl font-bold text-foreground">{inferenceAvg}%</p>
                             <StatDelta
                               delta={inferenceAccDelta.delta}
                               direction={inferenceAccDelta.direction}
                               unit="%"
                             />
                           </div>
-                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                            <p className="text-sm font-medium text-slate-500">Best accuracy</p>
-                            <p className="text-2xl font-bold text-slate-900">
+                          <div className="bg-card rounded-xl border border-border p-5">
+                            <p className="text-sm font-medium text-muted-foreground">Best accuracy</p>
+                            <p className="text-2xl font-bold text-foreground">
                               {inferenceBestAccuracy}%
                             </p>
                           </div>
-                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                            <p className="text-sm font-medium text-slate-500">Sessions</p>
-                            <p className="text-2xl font-bold text-slate-900">
+                          <div className="bg-card rounded-xl border border-border p-5">
+                            <p className="text-sm font-medium text-muted-foreground">Sessions</p>
+                            <p className="text-2xl font-bold text-foreground">
                               {inferenceSessions.length}
                             </p>
                           </div>
-                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                            <p className="text-sm font-medium text-slate-500">Last session</p>
-                            <p className="text-lg font-bold text-slate-900">
+                          <div className="bg-card rounded-xl border border-border p-5">
+                            <p className="text-sm font-medium text-muted-foreground">Last session</p>
+                            <p className="text-lg font-bold text-foreground">
                               {inferenceLastSession ?? "-"}
                             </p>
                           </div>
                         </div>
-                        <div className="flex flex-wrap gap-3 text-sm text-slate-600 mb-4">
+                        <div className="flex flex-wrap gap-3 text-sm text-muted-foreground mb-4">
                           <span>
                             {inferenceSessions.length} session
                             {inferenceSessions.length !== 1 ? "s" : ""}
@@ -2089,13 +2087,13 @@ export default function Dashboard() {
                           {inferenceLastSession && <span>Last: {inferenceLastSession}</span>}
                           <Link
                             to="/train/inference"
-                            className="text-indigo-600 font-medium hover:underline"
+                            className="text-primary font-medium hover:underline"
                           >
                             Practice again →
                           </Link>
                         </div>
                         {renderAccuracyChart(inferenceAccuracyChart, "Accuracy over time")}
-                        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm mt-4">
+                        <div className="bg-card rounded-xl border border-border p-5 mt-4">
                           {renderDifficultyBreakdown(inferenceDifficultyBreakdown)}
                         </div>
                       </>
@@ -2105,8 +2103,8 @@ export default function Dashboard() {
 
                   {/* Compact "also try" strip for untried VR trainers */}
                   {vrCount > 0 && (rapidRecallSessions.length === 0 || keywordSessions.length === 0 || inferenceSessions.length === 0) && (
-                    <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-                      <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">Also try</span>
+                    <div className="rounded-lg border border-border bg-white px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Also try</span>
                       {rapidRecallSessions.length === 0 && (
                         <Link to="/ucat-verbal-reasoning-practice" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">
                           Rapid Recall →
@@ -2131,7 +2129,7 @@ export default function Dashboard() {
               {activeTab === "dm" && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-base font-semibold text-slate-700">Decision Making</h2>
+                    <h2 className="text-base font-semibold text-foreground">Decision Making</h2>
                     <Link
                       to="/ucat-decision-making-practice"
                       className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
@@ -2148,7 +2146,7 @@ export default function Dashboard() {
                 <div className="space-y-8">
                   <section>
                     <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-lg font-semibold text-slate-900">
+                      <h2 className="text-lg font-semibold text-foreground">
                         {TRAINING_TYPE_LABELS.calculator}
                       </h2>
                       <Link
@@ -2159,8 +2157,8 @@ export default function Dashboard() {
                       </Link>
                     </div>
                     {calculatorSessions.length === 0 ? (
-                      <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                        <p className="text-slate-500">
+                      <div className="bg-card rounded-xl border border-border p-5">
+                        <p className="text-muted-foreground">
                           No Calculator sessions yet. Start the Calculator Trainer to track your
                           speed.
                         </p>
@@ -2174,49 +2172,49 @@ export default function Dashboard() {
                     ) : (
                       <>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                            <p className="text-sm font-medium text-slate-500">Your Average KPS</p>
-                            <p className="text-3xl font-bold text-slate-900">{calculatorAvgKps}</p>
+                          <div className="bg-card rounded-xl border border-border p-5">
+                            <p className="text-sm font-medium text-muted-foreground">Your Average KPS</p>
+                            <p className="text-3xl font-bold text-foreground">{calculatorAvgKps}</p>
                             <StatDelta
                               delta={calcKpsDelta.delta}
                               direction={calcKpsDelta.direction}
                               unit=" KPS"
                             />
                           </div>
-                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                            <p className="text-sm font-medium text-slate-500">Best KPS</p>
-                            <p className="text-3xl font-bold text-slate-900">{calculatorBestKps}</p>
+                          <div className="bg-card rounded-xl border border-border p-5">
+                            <p className="text-sm font-medium text-muted-foreground">Best KPS</p>
+                            <p className="text-3xl font-bold text-foreground">{calculatorBestKps}</p>
                           </div>
-                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                            <p className="text-sm font-medium text-slate-500">Avg Accuracy</p>
-                            <p className="text-3xl font-bold text-slate-900">
+                          <div className="bg-card rounded-xl border border-border p-5">
+                            <p className="text-sm font-medium text-muted-foreground">Avg Accuracy</p>
+                            <p className="text-3xl font-bold text-foreground">
                               {calculatorAvgAccuracy}%
                             </p>
                           </div>
                         </div>
-                        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm mb-4">
-                          <h3 className="text-sm font-medium text-slate-900 mb-3">
+                        <div className="bg-card rounded-xl border border-border p-4 mb-4">
+                          <h3 className="text-sm font-medium text-foreground mb-3">
                             Performance by Mode
                           </h3>
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             {Object.entries(calculatorDrillBreakdown).map(([mode, stats]) => (
-                              <div key={mode} className="bg-slate-50 p-3 rounded-lg text-center">
-                                <p className="text-xs font-bold text-slate-600 uppercase mb-1">
+                              <div key={mode} className="bg-secondary p-3 rounded-lg text-center">
+                                <p className="text-xs font-bold text-muted-foreground uppercase mb-1">
                                   {mode === "fingerTwister" ? "Twister" : mode}
                                 </p>
-                                <p className="text-lg font-bold text-slate-900">
+                                <p className="text-lg font-bold text-foreground">
                                   {stats.avgKps}{" "}
-                                  <span className="text-xs font-normal text-slate-500">KPS</span>
+                                  <span className="text-xs font-normal text-muted-foreground">KPS</span>
                                 </p>
-                                <p className="text-xs text-slate-500">
+                                <p className="text-xs text-muted-foreground">
                                   {stats.avgAccuracy}% Acc ({stats.count})
                                 </p>
                               </div>
                             ))}
                           </div>
                         </div>
-                        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-                          <h3 className="text-base font-medium text-slate-900 mb-4">KPS Progress</h3>
+                        <div className="bg-card rounded-xl border border-border p-4">
+                          <h3 className="text-base font-medium text-foreground mb-4">KPS Progress</h3>
                           <div className="h-64 sm:h-72 min-h-[200px]">
                             <ResponsiveContainer width="100%" height="100%">
                               <LineChart
@@ -2265,12 +2263,12 @@ export default function Dashboard() {
                   </section>
 
                   <section>
-                    <h2 className="text-lg font-semibold text-slate-900 mb-4">
+                    <h2 className="text-lg font-semibold text-foreground mb-4">
                       {TRAINING_TYPE_LABELS.mental_maths}
                     </h2>
                     {mentalMathsSessions.length === 0 ? (
-                      <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                        <p className="text-slate-500">
+                      <div className="bg-card rounded-xl border border-border p-5">
+                        <p className="text-muted-foreground">
                           No Mental Maths sessions yet. Build speed and estimation without the
                           calculator.
                         </p>
@@ -2284,17 +2282,17 @@ export default function Dashboard() {
                     ) : (
                       <>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                            <p className="text-sm font-medium text-slate-500">Avg accuracy</p>
-                            <p className="text-3xl font-bold text-slate-900">
+                          <div className="bg-card rounded-xl border border-border p-5">
+                            <p className="text-sm font-medium text-muted-foreground">Avg accuracy</p>
+                            <p className="text-3xl font-bold text-foreground">
                               {mentalMathsAvgAccuracy}%
                             </p>
                           </div>
-                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                            <p className="text-sm font-medium text-slate-500">
+                          <div className="bg-card rounded-xl border border-border p-5">
+                            <p className="text-sm font-medium text-muted-foreground">
                               Avg time per question
                             </p>
-                            <p className="text-3xl font-bold text-slate-900">
+                            <p className="text-3xl font-bold text-foreground">
                               {mentalMathsAvgTimeMs != null
                                 ? `${(mentalMathsAvgTimeMs / 1000).toFixed(1)}s`
                                 : "-"}
@@ -2310,15 +2308,15 @@ export default function Dashboard() {
                               unit="s"
                             />
                           </div>
-                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                            <p className="text-sm font-medium text-slate-500">Sessions</p>
-                            <p className="text-3xl font-bold text-slate-900">
+                          <div className="bg-card rounded-xl border border-border p-5">
+                            <p className="text-sm font-medium text-muted-foreground">Sessions</p>
+                            <p className="text-3xl font-bold text-foreground">
                               {mentalMathsSessions.length}
                             </p>
                           </div>
-                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                            <p className="text-sm font-medium text-slate-500">Latest stage</p>
-                            <p className="text-2xl font-bold text-slate-900">
+                          <div className="bg-card rounded-xl border border-border p-5">
+                            <p className="text-sm font-medium text-muted-foreground">Latest stage</p>
+                            <p className="text-2xl font-bold text-foreground">
                               {mentalMathsSessions.length > 0 &&
                               mentalMathsSessions[mentalMathsSessions.length - 1]?.difficulty
                                 ? String(
@@ -2328,8 +2326,8 @@ export default function Dashboard() {
                             </p>
                           </div>
                         </div>
-                        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-                          <h3 className="text-base font-medium text-slate-900 mb-4">
+                        <div className="bg-card rounded-xl border border-border p-4">
+                          <h3 className="text-base font-medium text-foreground mb-4">
                             Avg time per question (last 10 sessions)
                           </h3>
                           <div className="h-64 sm:h-72 min-h-[200px]">
@@ -2381,12 +2379,12 @@ export default function Dashboard() {
                   </section>
 
                   <section>
-                    <h2 className="text-lg font-semibold text-slate-900 mb-4">
+                    <h2 className="text-lg font-semibold text-foreground mb-4">
                       {TRAINING_TYPE_LABELS.unit_conversions}
                     </h2>
                     {unitConversionSessions.length === 0 ? (
-                      <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                        <p className="text-slate-500">
+                      <div className="bg-card rounded-xl border border-border p-5">
+                        <p className="text-muted-foreground">
                           No Conversions sessions yet. Practise the unit traps that cost easy QR marks.
                         </p>
                         <Link
@@ -2399,9 +2397,9 @@ export default function Dashboard() {
                     ) : (
                       <>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                            <p className="text-sm font-medium text-slate-500">Avg accuracy</p>
-                            <p className="text-3xl font-bold text-slate-900">
+                          <div className="bg-card rounded-xl border border-border p-5">
+                            <p className="text-sm font-medium text-muted-foreground">Avg accuracy</p>
+                            <p className="text-3xl font-bold text-foreground">
                               {unitConversionAvgAccuracy}%
                             </p>
                             <StatDelta
@@ -2410,21 +2408,21 @@ export default function Dashboard() {
                               unit="%"
                             />
                           </div>
-                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                            <p className="text-sm font-medium text-slate-500">Best accuracy</p>
-                            <p className="text-3xl font-bold text-slate-900">
+                          <div className="bg-card rounded-xl border border-border p-5">
+                            <p className="text-sm font-medium text-muted-foreground">Best accuracy</p>
+                            <p className="text-3xl font-bold text-foreground">
                               {unitConversionBestAccuracy}%
                             </p>
                           </div>
-                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                            <p className="text-sm font-medium text-slate-500">Sessions</p>
-                            <p className="text-3xl font-bold text-slate-900">
+                          <div className="bg-card rounded-xl border border-border p-5">
+                            <p className="text-sm font-medium text-muted-foreground">Sessions</p>
+                            <p className="text-3xl font-bold text-foreground">
                               {unitConversionSessions.length}
                             </p>
                           </div>
                         </div>
-                        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-                          <h3 className="text-base font-medium text-slate-900 mb-4">
+                        <div className="bg-card rounded-xl border border-border p-4">
+                          <h3 className="text-base font-medium text-foreground mb-4">
                             Accuracy progress (last 10 sessions)
                           </h3>
                           <div className="h-64 sm:h-72 min-h-[200px]">
@@ -2472,13 +2470,13 @@ export default function Dashboard() {
                           </div>
                         </div>
                         {conversionCategoryBreakdown.length > 0 && (
-                          <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm mt-4">
+                          <div className="bg-card rounded-xl border border-border p-4 mt-4">
                             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-4">
                               <div>
-                                <h3 className="text-base font-medium text-slate-900">
+                                <h3 className="text-base font-medium text-foreground">
                                   Weak-area breakdown
                                 </h3>
-                                <p className="text-sm text-slate-500">
+                                <p className="text-sm text-muted-foreground">
                                   Based on the detailed conversion sessions saved on this device.
                                 </p>
                               </div>
@@ -2496,14 +2494,14 @@ export default function Dashboard() {
                               {conversionCategoryBreakdown.slice(0, 6).map((item) => (
                                 <div key={item.category}>
                                   <div className="flex items-center justify-between gap-3 text-sm mb-1">
-                                    <span className="font-medium text-slate-700">{item.category}</span>
-                                    <span className="text-slate-500">
+                                    <span className="font-medium text-foreground">{item.category}</span>
+                                    <span className="text-muted-foreground">
                                       {item.accuracy}% · {item.correct}/{item.total}
                                     </span>
                                   </div>
-                                  <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                                  <div className="h-2 rounded-full bg-secondary overflow-hidden">
                                     <div
-                                      className="h-full rounded-full bg-emerald-500"
+                                      className="h-full rounded-full bg-primary"
                                       style={{ width: `${item.accuracy}%` }}
                                     />
                                   </div>
@@ -2522,7 +2520,7 @@ export default function Dashboard() {
               {activeTab === "sjt" && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-base font-semibold text-slate-700">Situational Judgement</h2>
+                    <h2 className="text-base font-semibold text-foreground">Situational Judgement</h2>
                     <Link
                       to="/ucat-sjt-practice"
                       className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
@@ -2541,7 +2539,7 @@ export default function Dashboard() {
           className="shrink-0 w-full lg:w-72 lg:sticky lg:top-6 lg:self-start space-y-4"
           aria-label="Optional courses and tutoring"
         >
-          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
             Boost your prep
           </h2>
           <StrategyCallBanner variant="card" />
@@ -2560,12 +2558,12 @@ export default function Dashboard() {
     if (inAppShell) {
       return (
         <div className="flex-1 flex items-center justify-center px-4">
-          <p className="text-slate-600">Loading your dashboard…</p>
+          <p className="text-muted-foreground">Loading your dashboard…</p>
         </div>
       );
     }
     return (
-      <div className="flex flex-col min-h-screen bg-slate-50">
+      <div className="flex flex-col min-h-screen bg-secondary">
         <a href="#main-content" className={skipLinkClass}>
           Skip to main content
         </a>
@@ -2575,7 +2573,7 @@ export default function Dashboard() {
           className="flex-1 flex items-center justify-center px-4"
           tabIndex={-1}
         >
-          <p className="text-slate-600">Loading your dashboard…</p>
+          <p className="text-muted-foreground">Loading your dashboard…</p>
         </main>
         <Footer />
       </div>
@@ -2594,7 +2592,7 @@ export default function Dashboard() {
   return (
     <div
       className={cn(
-        "flex flex-col bg-slate-50",
+        "flex flex-col bg-secondary",
         inAppShell ? "flex-1 min-h-0" : "min-h-screen",
       )}
     >
@@ -2621,7 +2619,7 @@ export default function Dashboard() {
       >
         <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">
+            <h1 className="text-2xl font-bold text-foreground">
               {user
                 ? profile?.full_name?.trim().split(" ")[0]
                   ? `${profile.full_name.trim().split(" ")[0]}'s dashboard`
@@ -2629,7 +2627,7 @@ export default function Dashboard() {
                 : "Your UCAT dashboard"}
             </h1>
             {!user && (
-              <p className="text-sm text-slate-600 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Sign in to save progress and unlock your full analytics.
               </p>
             )}
@@ -2638,13 +2636,13 @@ export default function Dashboard() {
             <button
               type="button"
               onClick={openBugReport}
-              className="min-h-[44px] inline-flex items-center justify-center py-2 text-slate-600 hover:text-blue-600 font-medium transition-colors"
+              className="min-h-[44px] inline-flex items-center justify-center py-2 text-muted-foreground hover:text-primary font-medium transition-colors"
             >
               Feedback
             </button>
             <Link
               to="/"
-              className="min-h-[44px] inline-flex items-center justify-center py-2 text-blue-600 font-medium hover:underline"
+              className="min-h-[44px] inline-flex items-center justify-center py-2 text-primary font-medium hover:underline"
             >
               Back to Home
             </Link>

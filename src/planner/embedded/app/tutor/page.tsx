@@ -27,17 +27,17 @@ export default async function TutorOverviewPage() {
     <div className="p-6 md:p-10 max-w-4xl mx-auto space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-slate-900">Tutor Overview</h1>
-        <p className="text-slate-500 mt-1">Manage all your students' revision plans</p>
+        <p className="text-muted-foreground mt-1">Manage all your students' revision plans</p>
       </div>
 
       {students.length === 0 ? (
         <div className="text-center py-20">
           <div className="text-5xl mb-4">👩‍🎓</div>
           <h2 className="text-xl font-semibold text-slate-700">No students yet</h2>
-          <p className="text-slate-500 mt-2 mb-6">Invite a student to get started.</p>
+          <p className="text-muted-foreground mt-2 mb-6">Invite a student to get started.</p>
           <Link
             href="/tutor/invite"
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 text-white px-5 py-2.5 text-sm font-medium hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary text-white px-5 py-2.5 text-sm font-medium hover:bg-primary/90 transition-colors"
           >
             + Invite student
           </Link>
@@ -50,14 +50,14 @@ export default async function TutorOverviewPage() {
             const label = st?.full_name || st?.email?.split('@')[0] || 'Student'
             return (
               <Link key={plan.id} href={`/tutor/student/${plan.id}`}>
-                <Card className="hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer">
+                <Card className="hover:border-border hover:shadow-sm transition-all cursor-pointer">
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between">
                       <div>
                         <CardTitle className="text-base">
                           {label}
                         </CardTitle>
-                        <p className="text-sm text-slate-500 mt-0.5">{st?.email ?? ''}</p>
+                        <p className="text-sm text-muted-foreground mt-0.5">{st?.email ?? ''}</p>
                       </div>
                       <span className={`text-xs font-medium rounded-full px-2.5 py-1 ${
                         weeksLeft <= 3 ? 'bg-red-50 text-red-600' :

@@ -30,8 +30,8 @@ export default function TutorOverviewPage() {
   return (
     <section className="p-6 md:p-10 max-w-4xl mx-auto space-y-8">
       <header>
-        <h1 className="text-3xl font-bold text-slate-900">Tutor Overview</h1>
-        <p className="text-slate-500 mt-1">Manage all your students&apos; revision plans</p>
+        <h1 className="text-3xl font-bold text-foreground">Tutor Overview</h1>
+        <p className="text-muted-foreground mt-1">Manage all your students&apos; revision plans</p>
       </header>
 
       {students.length === 0 ? (
@@ -39,11 +39,11 @@ export default function TutorOverviewPage() {
           <p className="text-5xl mb-4" aria-hidden>
             👩‍🎓
           </p>
-          <h2 className="text-xl font-semibold text-slate-700">No students yet</h2>
-          <p className="text-slate-500 mt-2 mb-6">Invite a student to get started.</p>
+          <h2 className="text-xl font-semibold text-foreground">No students yet</h2>
+          <p className="text-muted-foreground mt-2 mb-6">Invite a student to get started.</p>
           <Link
             href="/tutor/invite"
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 text-white px-5 py-2.5 text-sm font-medium hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary text-white px-5 py-2.5 text-sm font-medium hover:bg-primary/90 transition-colors"
           >
             + Invite student
           </Link>
@@ -57,12 +57,12 @@ export default function TutorOverviewPage() {
             return (
               <li key={plan.id}>
                 <Link href={`/tutor/student/${plan.id}`}>
-                  <Card className="hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer h-full">
+                  <Card className="hover:border-border hover:shadow-sm transition-all cursor-pointer h-full">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-base flex items-start justify-between gap-2">
                         <span>
                           {label}
-                          <span className="block text-sm font-normal text-slate-500 mt-0.5">
+                          <span className="block text-sm font-normal text-muted-foreground mt-0.5">
                             {st?.email ?? ''}
                           </span>
                         </span>
@@ -80,7 +80,7 @@ export default function TutorOverviewPage() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="pt-2">
-                      <p className="text-sm text-slate-600">
+                      <p className="text-sm text-muted-foreground">
                         Exam:{' '}
                         {parseDate(plan.exam_date).toLocaleDateString('en-GB', {
                           weekday: 'short',

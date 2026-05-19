@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { cn } from '@/lib/utils'
 
 const btnPrimary =
-  'inline-flex h-10 w-full items-center justify-center rounded-lg bg-blue-600 px-4 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2'
+  'inline-flex h-10 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-white shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2'
 const btnSecondary =
   'inline-flex h-10 items-center justify-center rounded-lg bg-slate-100 px-4 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2'
 
@@ -91,14 +91,14 @@ export default async function JoinViaInvitePage({ params }: PageProps) {
         <div className="text-center space-y-1">
           <div className="inline-flex items-center gap-2 text-2xl font-bold tracking-tight text-slate-900">
             <div className="flex gap-1">
-              <div className="w-3 h-3 rounded-full bg-blue-500" />
+              <div className="w-3 h-3 rounded-full bg-secondary0" />
               <div className="w-3 h-3 rounded-full bg-green-500" />
               <div className="w-3 h-3 rounded-full bg-amber-500" />
-              <div className="w-3 h-3 rounded-full bg-purple-500" />
+              <div className="w-3 h-3 rounded-full bg-foreground" />
             </div>
             UCAT Planner
           </div>
-          <p className="text-sm text-slate-500">You&apos;ve been invited by your tutor</p>
+          <p className="text-sm text-muted-foreground">You&apos;ve been invited by your tutor</p>
         </div>
 
         <Card>

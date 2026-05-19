@@ -24,9 +24,9 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       if (this.props.fallback) return this.props.fallback;
       return (
-        <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 text-center">
-          <h1 className="text-xl font-bold text-slate-900 mb-2">Something went wrong</h1>
-          <p className="text-slate-600 mb-4">
+        <div className="min-h-screen bg-secondary flex flex-col items-center justify-center p-4 text-center">
+          <h1 className="text-xl font-bold text-foreground mb-2">Something went wrong</h1>
+          <p className="text-muted-foreground mb-4">
             We&apos;ve been notified. Please try again or go back home.
           </p>
 
@@ -37,7 +37,7 @@ export class ErrorBoundary extends Component<Props, State> {
             </div>
           )}
 
-          <a href="/" className="text-blue-600 font-medium hover:underline">
+          <a href="/" className="text-primary font-medium hover:underline">
             Back to Home
           </a>
         </div>

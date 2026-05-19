@@ -90,13 +90,13 @@ export default function FoundationDrill() {
   return (
     <div className="px-4 pb-8">
       <div className="w-full max-w-3xl mx-auto pt-4">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8 overflow-hidden">
+        <div className="bg-card rounded-xl border border-border p-6 sm:p-8 overflow-hidden">
           <div className="flex items-baseline justify-between gap-4 mb-4">
             <div>
-              <h1 className="text-xl sm:text-2xl font-semibold text-slate-900">
+              <h1 className="text-xl sm:text-2xl font-semibold text-foreground">
                 Syllogism Foundations
               </h1>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Drill the tiny inference rules behind UCAT syllogisms before moving to full questions.
               </p>
             </div>
@@ -107,16 +107,16 @@ export default function FoundationDrill() {
                   if (!current) return;
                   setFeedbackOpen(true);
                 }}
-                className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-800"
+                className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
               >
                 <Flag className="h-3.5 w-3.5" />
                 Report question
               </button>
               <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Time
                 </p>
-                <p className="text-sm font-semibold text-slate-900">
+                <p className="text-sm font-semibold text-foreground">
                   {totalElapsedSeconds}s
                 </p>
               </div>
@@ -140,17 +140,17 @@ export default function FoundationDrill() {
           {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
 
           {loading && questions.length === 0 && (
-            <p className="text-sm text-slate-600">Loading questions...</p>
+            <p className="text-sm text-muted-foreground">Loading questions...</p>
           )}
 
           {current && (
             <>
-              <div className="mb-4 text-sm text-slate-600 flex items-center justify-between flex-wrap gap-2">
+              <div className="mb-4 text-sm text-muted-foreground flex items-center justify-between flex-wrap gap-2">
                 <span>
                   Rule {currentIndex + 1} of {questions.length}
                 </span>
                 {questions.length > 0 && (
-                  <span className="font-medium text-slate-700">
+                  <span className="font-medium text-foreground">
                     Score: {correctSoFar} / {answeredCount}
                   </span>
                 )}
@@ -160,22 +160,22 @@ export default function FoundationDrill() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
                   Focus rule
                 </p>
-                <p className="mt-1 text-base font-semibold text-slate-900">
+                <p className="mt-1 text-base font-semibold text-foreground">
                   {current.rule_name ?? current.trick_type.replaceAll("_", " ")}
                 </p>
               </div>
 
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
                 Premise
               </p>
-              <div className="mb-6 rounded-lg border border-slate-200 bg-slate-50 p-4">
-                <p className="text-base text-slate-800">{current.stimulus_text}</p>
+              <div className="mb-6 rounded-lg border border-border bg-secondary p-4">
+                <p className="text-base text-foreground">{current.stimulus_text}</p>
               </div>
 
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
                 Does this conclusion have to follow?
               </p>
-              <p className="text-lg font-semibold text-slate-900 mb-4 rounded-lg bg-slate-50 border border-slate-200 p-4">
+              <p className="text-lg font-semibold text-foreground mb-4 rounded-lg bg-secondary border border-border p-4">
                 {current.conclusion_text}
               </p>
 
@@ -203,8 +203,8 @@ export default function FoundationDrill() {
               )}
 
               {hasAnsweredCurrent && (
-                <div className="mt-6 border-t border-slate-200 pt-4">
-                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-3">
+                <div className="mt-6 border-t border-border pt-4">
+                  <div className="rounded-lg border border-border bg-secondary p-4 space-y-3">
                     <p
                       className={
                         "text-sm font-semibold " +
@@ -213,11 +213,11 @@ export default function FoundationDrill() {
                     >
                       {feedbackLabel}
                     </p>
-                    <div className="rounded-lg border border-slate-200 bg-white p-3">
-                      <p className="text-sm text-slate-700">{current.explanation}</p>
+                    <div className="rounded-lg border border-border bg-white p-3">
+                      <p className="text-sm text-foreground">{current.explanation}</p>
                       {current.key_takeaway && (
-                        <p className="mt-3 text-sm text-slate-700">
-                          <span className="font-semibold text-slate-900">
+                        <p className="mt-3 text-sm text-foreground">
+                          <span className="font-semibold text-foreground">
                             Key takeaway:
                           </span>{" "}
                           {current.key_takeaway}
@@ -226,7 +226,7 @@ export default function FoundationDrill() {
                       <button
                         type="button"
                         onClick={() => setFeedbackOpen(true)}
-                        className="mt-3 inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                        className="mt-3 inline-flex items-center gap-1 rounded-full border border-border bg-secondary px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
                       >
                         <Flag className="h-3.5 w-3.5" />
                         Report this question
@@ -247,7 +247,7 @@ export default function FoundationDrill() {
                 </div>
               )}
 
-              <div className="mt-6 text-xs text-slate-500">
+              <div className="mt-6 text-xs text-muted-foreground">
                 <span className="font-medium uppercase tracking-wide">
                   Shortcuts
                 </span>
@@ -262,12 +262,12 @@ export default function FoundationDrill() {
           )}
 
           {sessionFinished && lastSummary && (
-            <div className="mt-6 border-t border-slate-200 pt-4">
-              <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                <h2 className="text-sm font-semibold text-slate-900">
+            <div className="mt-6 border-t border-border pt-4">
+              <div className="rounded-lg border border-border bg-secondary p-4">
+                <h2 className="text-sm font-semibold text-foreground">
                   Session summary
                 </h2>
-                <p className="mt-2 text-sm text-slate-700">
+                <p className="mt-2 text-sm text-foreground">
                   You answered{" "}
                   <span className="font-semibold">
                     {lastSummary.correct} of {lastSummary.total_questions}

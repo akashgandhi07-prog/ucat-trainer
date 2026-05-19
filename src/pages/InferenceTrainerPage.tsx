@@ -406,7 +406,7 @@ export default function InferenceTrainerPage() {
         <Header />
         <main className="flex-1 flex items-center justify-center py-12 px-4">
           <div className="text-center">
-            <p className="text-slate-600 mb-4">
+            <p className="text-muted-foreground mb-4">
               No inference questions for this passage. Try another.
             </p>
             <button
@@ -417,7 +417,7 @@ export default function InferenceTrainerPage() {
               Try another passage
             </button>
             <div className="mt-4">
-              <Link to="/" className="text-slate-500 hover:text-blue-600">
+              <Link to="/" className="text-muted-foreground hover:text-primary">
                 Back to Home
               </Link>
             </div>
@@ -439,7 +439,7 @@ export default function InferenceTrainerPage() {
     : undefined;
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50/50">
+    <div className="flex flex-col min-h-screen bg-secondary/50">
       <SEOHead
         title="UCAT Inference Trainer (UK)"
         description="Practice selecting evidence for inferences in UCAT Verbal Reasoning. Free inference trainer for UK applicants from TheUKCATPeople."
@@ -448,7 +448,7 @@ export default function InferenceTrainerPage() {
       />
       <a
         href="#main-content"
-        className="absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-slate-900 font-medium rounded-lg ring-2 ring-blue-600 opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto"
+        className="absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-foreground font-medium rounded-lg ring-2 ring-blue-600 opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto"
       >
         Skip to main content
       </a>

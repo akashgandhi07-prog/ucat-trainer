@@ -185,7 +185,7 @@ const CalculatorPage = () => {
         : undefined;
 
     return (
-        <div className="min-h-screen bg-slate-100 flex flex-col" onClick={() => setIsFocused(true)}>
+        <div className="min-h-screen bg-secondary flex flex-col" onClick={() => setIsFocused(true)}>
             <SEOHead
                 title="UCAT on-screen calculator practice (UK)"
                 description="Train the official-style on-screen calculator for UCAT Quantitative Reasoning. Sprint, Finger Twister and Memory Marathon drills with Pearson-style lag. Free for UK applicants."
@@ -193,28 +193,28 @@ const CalculatorPage = () => {
                 breadcrumbs={breadcrumbs}
             />
             {/* Header */}
-            <div className="bg-white shadow-sm p-4 flex items-center justify-between z-10">
+            <div className="bg-white p-4 flex items-center justify-between z-10">
                 <div className="flex items-center gap-4">
-                    <Link to="/" className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                        <ArrowLeft className="w-6 h-6 text-slate-600" />
+                    <Link to="/" className="p-2 hover:bg-secondary rounded-full transition-colors">
+                        <ArrowLeft className="w-6 h-6 text-muted-foreground" />
                     </Link>
-                    <h1 className="text-xl font-bold text-slate-800">Quantitative Reasoning</h1>
+                    <h1 className="text-xl font-bold text-foreground">Quantitative Reasoning</h1>
                 </div>
                 <div className="flex gap-4">
                     <button
                         onClick={() => setShortcutsOpen(true)}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-medium transition-colors"
+                        className="flex items-center gap-2 px-3 py-1.5 bg-secondary hover:bg-slate-200 text-muted-foreground rounded-lg text-sm font-medium transition-colors"
                     >
                         <Keyboard className="w-4 h-4" />
                         Shortcuts
                     </button>
                     <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-slate-600">Pearson Lag (40ms)</span>
+                        <span className="text-sm font-medium text-muted-foreground">Pearson Lag (40ms)</span>
                         <button
                             className={`w-12 h-6 rounded-full p-1 transition-colors ${lagEnabled ? 'bg-primary' : 'bg-muted'}`}
                             onClick={(e) => { e.stopPropagation(); setLagEnabled(!lagEnabled); }}
                         >
-                            <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform ${lagEnabled ? 'translate-x-6' : 'translate-x-0'}`} />
+                            <div className={`w-4 h-4 bg-white rounded-full transform transition-transform ${lagEnabled ? 'translate-x-6' : 'translate-x-0'}`} />
                         </button>
                     </div>
                 </div>
@@ -227,35 +227,35 @@ const CalculatorPage = () => {
                 {/* Left column part 1: XP + Drills - mobile order 1, desktop col 1 row 1 */}
                 <div className="order-1 lg:col-span-4 lg:col-start-1 lg:row-start-1 space-y-6">
                     {/* XP Banner */}
-                    <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl shadow-sm p-6 text-white relative overflow-hidden">
+                    <div className="bg-foreground rounded-xl p-6 text-card relative overflow-hidden">
                         <div className="relative z-10">
                             <div className="flex justify-between items-start mb-2">
                                 <div>
                                     <h2 className="text-2xl font-bold">{rank}</h2>
-                                    <p className="text-indigo-100 text-sm">Level {level}</p>
+                                    <p className="text-card/80 text-sm">Level {level}</p>
                                 </div>
                                 <div className="text-3xl">🏆</div>
                             </div>
-                            <div className="w-full bg-indigo-800/50 rounded-full h-2 mt-2">
+                            <div className="w-full bg-foreground/50 rounded-full h-2 mt-2">
                                 <div className="bg-white/90 h-2 rounded-full transition-all duration-1000" style={{ width: `${progress}%` }}></div>
                             </div>
-                            <p className="text-xs text-indigo-200 mt-1 text-right">{progress}% to Level {level + 1}</p>
+                            <p className="text-xs text-card/60 mt-1 text-right">{progress}% to Level {level + 1}</p>
                         </div>
                         <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
                         <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-16 h-16 bg-white/10 rounded-full blur-lg"></div>
                     </div>
 
-                    <div className="bg-white rounded-xl shadow-sm p-6">
+                    <div className="bg-card rounded-xl p-6">
                         <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-                            <Brain className="w-5 h-5 text-indigo-600" />
+                            <Brain className="w-5 h-5 text-primary" />
                             Targeted Drills
                         </h2>
-                        <div className="flex p-1 bg-slate-100 rounded-lg mb-4">
+                        <div className="flex p-1 bg-secondary rounded-lg mb-4">
                             {(['easy', 'medium', 'hard'] as Difficulty[]).map((d) => (
                                 <button
                                     key={d}
                                     onClick={() => setDifficulty(d)}
-                                    className={`flex-1 py-1.5 text-sm font-medium rounded-md capitalize transition-all ${difficulty === d ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                    className={`flex-1 py-1.5 text-sm font-medium rounded-md capitalize transition-all ${difficulty === d ? 'bg-white text-primary' : 'text-muted-foreground hover:text-foreground'}`}
                                 >
                                     {d}
                                 </button>
@@ -264,25 +264,25 @@ const CalculatorPage = () => {
                         <div className="space-y-2">
                             <button
                                 onClick={(e) => { e.stopPropagation(); setLastDrillStats(null); setActiveDrill('sprint'); }}
-                                className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-colors border ${activeDrill === 'sprint' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'hover:bg-slate-50 text-slate-700 border-slate-200'}`}
+                                className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-colors border ${activeDrill === 'sprint' ? 'bg-secondary border-border text-foreground' : 'hover:bg-secondary text-foreground border-border'}`}
                             >
                                 🏃 The Sprint (Speed)
                             </button>
                             <button
                                 onClick={(e) => { e.stopPropagation(); setLastDrillStats(null); setActiveDrill('fingerTwister'); }}
-                                className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-colors border ${activeDrill === 'fingerTwister' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'hover:bg-slate-50 text-slate-700 border-slate-200'}`}
+                                className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-colors border ${activeDrill === 'fingerTwister' ? 'bg-secondary border-border text-foreground' : 'hover:bg-secondary text-foreground border-border'}`}
                             >
                                 🌪️ Finger Twister
                             </button>
                             <button
                                 onClick={(e) => { e.stopPropagation(); setLastDrillStats(null); setActiveDrill('stages'); }}
-                                className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-colors border ${activeDrill === 'stages' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'hover:bg-slate-50 text-slate-700 border-slate-200'}`}
+                                className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-colors border ${activeDrill === 'stages' ? 'bg-secondary border-border text-foreground' : 'hover:bg-secondary text-foreground border-border'}`}
                             >
                                 🎯 UCAT Ready (Stages)
                             </button>
                             <button
                                 onClick={(e) => { e.stopPropagation(); setLastDrillStats(null); setActiveDrill('memory'); }}
-                                className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-colors border ${activeDrill === 'memory' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'hover:bg-slate-50 text-slate-700 border-slate-200'}`}
+                                className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-colors border ${activeDrill === 'memory' ? 'bg-secondary border-border text-foreground' : 'hover:bg-secondary text-foreground border-border'}`}
                             >
                                 🧠 Memory Marathon
                             </button>
@@ -330,7 +330,7 @@ const CalculatorPage = () => {
                         )}
                     </div>
 
-                    <div className={`flex flex-col items-center justify-center bg-white rounded-xl shadow-sm p-4 md:p-6 min-h-[420px] relative border border-slate-100 transition-all duration-300 ${activeDrill ? 'w-full xl:w-5/12' : 'w-full xl:w-5/12'}`}>
+                    <div className={`flex flex-col items-center justify-center bg-card rounded-xl p-4 md:p-6 min-h-[420px] relative border border-border transition-all duration-300 ${activeDrill ? 'w-full xl:w-5/12' : 'w-full xl:w-5/12'}`}>
 
                         {/* Click catcher for focus loss simulation */}
                         <div
@@ -351,7 +351,7 @@ const CalculatorPage = () => {
                             />
                         </div>
 
-                        <div className="mt-8 text-center max-w-md text-slate-400 text-sm z-10 pointer-events-none">
+                        <div className="mt-8 text-center max-w-md text-muted-foreground text-sm z-10 pointer-events-none">
                             <p className="flex items-center gap-2 justify-center mb-2">
                                 <Clock className="w-4 h-4" />
                                 <span>{activeDrill ? 'Drill Active' : 'Practice Mode'}</span>
@@ -364,24 +364,24 @@ const CalculatorPage = () => {
 
                 {/* Stats - mobile order 3 (bottom), desktop col 1 row 2 */}
                 <div className="order-3 lg:col-span-4 lg:col-start-1 lg:row-start-2">
-                    <div className="bg-white rounded-xl shadow-sm p-6">
+                    <div className="bg-card rounded-xl p-6">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-lg font-bold flex items-center gap-2">
                                 <Activity className="w-5 h-5 text-emerald-600" />
                                 Stats (Avg)
                             </h2>
-                            <button onClick={handleClearHistory} className="text-slate-400 hover:text-red-500" title="Clear History">
+                            <button onClick={handleClearHistory} className="text-muted-foreground hover:text-red-500" title="Clear History">
                                 <Trash2 className="w-4 h-4" />
                             </button>
                         </div>
                         <div className="grid grid-cols-2 gap-4 mb-4">
-                            <div className="bg-slate-50 p-4 rounded-lg text-center">
-                                <div className="text-2xl font-bold text-slate-800">{aggregates.averageKps}</div>
-                                <div className="text-xs text-slate-500 uppercase tracking-wide">Avg KPS</div>
+                            <div className="bg-secondary p-4 rounded-lg text-center">
+                                <div className="text-2xl font-bold text-foreground">{aggregates.averageKps}</div>
+                                <div className="text-xs text-muted-foreground uppercase tracking-wide">Avg KPS</div>
                             </div>
-                            <div className="bg-slate-50 p-4 rounded-lg text-center">
-                                <div className="text-2xl font-bold text-slate-800">{aggregates.averageAccuracy}%</div>
-                                <div className="text-xs text-slate-500 uppercase tracking-wide">Accuracy</div>
+                            <div className="bg-secondary p-4 rounded-lg text-center">
+                                <div className="text-2xl font-bold text-foreground">{aggregates.averageAccuracy}%</div>
+                                <div className="text-xs text-muted-foreground uppercase tracking-wide">Accuracy</div>
                             </div>
                         </div>
                         <AnalyticsDashboard data={chartData} />

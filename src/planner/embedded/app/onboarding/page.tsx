@@ -27,7 +27,7 @@ export default async function OnboardingPage({ searchParams }: PageProps) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-2 bg-slate-50 px-4">
         <p className="text-slate-700 font-medium">Completing setup…</p>
-        <p className="text-sm text-slate-500 text-center max-w-sm">
+        <p className="text-sm text-muted-foreground text-center max-w-sm">
           Your account is finishing syncing. Refresh this page in a moment.
         </p>
       </div>

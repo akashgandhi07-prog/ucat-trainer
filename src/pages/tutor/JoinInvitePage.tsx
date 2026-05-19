@@ -8,9 +8,9 @@ import { isPlannerTutor, isStudentInviteTokenValid } from '../../planner/lib/tut
 import PlannerLoading from '../../planner/components/PlannerLoading'
 
 const btnPrimary =
-  'inline-flex h-10 w-full items-center justify-center rounded-lg bg-blue-600 px-4 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2'
+  'inline-flex h-10 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-white transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2'
 const btnSecondary =
-  'inline-flex h-10 items-center justify-center rounded-lg bg-slate-100 px-4 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2'
+  'inline-flex h-10 items-center justify-center rounded-lg bg-secondary px-4 text-sm font-medium text-foreground transition-colors hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2'
 
 export default function JoinInvitePage() {
   const { token } = useParams<{ token: string }>()
@@ -82,8 +82,8 @@ export default function JoinInvitePage() {
     <div className="min-h-[60vh] bg-gradient-to-br from-slate-50 to-blue-50 flex items-start justify-center px-4 py-16">
       <div className="w-full max-w-lg space-y-6">
         <header className="text-center space-y-1">
-          <p className="text-2xl font-bold tracking-tight text-slate-900">UCAT study plan</p>
-          <p className="text-sm text-slate-500">You&apos;ve been invited by your tutor</p>
+          <p className="text-2xl font-bold tracking-tight text-foreground">UCAT study plan</p>
+          <p className="text-sm text-muted-foreground">You&apos;ve been invited by your tutor</p>
         </header>
 
         <Card>
@@ -95,7 +95,7 @@ export default function JoinInvitePage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-muted-foreground">
               Use this same device browser when you tap the magic link from your email. That keeps your invite connected
               to your account.
             </p>
@@ -109,7 +109,7 @@ export default function JoinInvitePage() {
             >
               Continue with email
             </button>
-            <p className="text-xs text-slate-400 text-center">
+            <p className="text-xs text-muted-foreground text-center">
               Share only this invite page with yourself. It&apos;s your personal onboarding link from your tutor.
             </p>
           </CardContent>

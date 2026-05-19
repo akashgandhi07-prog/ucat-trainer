@@ -45,21 +45,21 @@ export default function TutorStudentPage() {
 
   return (
     <article className="space-y-0">
-      <header className="bg-white border-b border-slate-200 px-6 md:px-10 py-6">
+      <header className="bg-card border-b border-border px-6 md:px-10 py-6">
         <div className="max-w-4xl mx-auto flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-lg">
+          <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center text-foreground font-bold text-lg">
             {(student?.full_name || student?.email || '?')[0].toUpperCase()}
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">{student?.full_name || 'Student'}</h1>
-            <p className="text-slate-500">{student?.email ?? ''}</p>
+            <h1 className="text-2xl font-bold text-foreground">{student?.full_name || 'Student'}</h1>
+            <p className="text-muted-foreground">{student?.email ?? ''}</p>
           </div>
         </div>
       </header>
 
       {reflections.length > 0 ? (
         <section className="px-6 md:px-10 py-8 max-w-4xl mx-auto">
-          <h2 className="text-xl font-bold text-slate-900 mb-4">Weekly Reflections</h2>
+          <h2 className="text-xl font-bold text-foreground mb-4">Weekly Reflections</h2>
           <ul className="space-y-3 list-none p-0 m-0">
             {reflections.map((r) => (
               <li key={r.id}>
@@ -67,7 +67,7 @@ export default function TutorStudentPage() {
                   <CardHeader className="py-3">
                     <CardTitle className="text-sm flex items-center justify-between gap-2">
                       <span>Week {r.week_number}</span>
-                      <span className="text-xs text-slate-400 font-normal">
+                      <span className="text-xs text-muted-foreground font-normal">
                         Rating:{' '}
                         {r.difficulty_rating === 1
                           ? '😓 Too hard'
@@ -78,7 +78,7 @@ export default function TutorStudentPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="py-0 pb-4">
-                    <p className="text-sm text-slate-600 italic">&ldquo;{r.reflection_text}&rdquo;</p>
+                    <p className="text-sm text-muted-foreground italic">&ldquo;{r.reflection_text}&rdquo;</p>
                   </CardContent>
                 </Card>
               </li>
@@ -99,7 +99,7 @@ export default function TutorStudentPage() {
         todayDate={toISODate(new Date())}
       />
 
-      <section className="border-t border-slate-200">
+      <section className="border-t border-border">
         <MockScoresView
           planId={planId}
           mockScores={mockScores}

@@ -28,7 +28,7 @@ export default function SyllogismMicroPage() {
     : undefined;
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50">
+    <div className="flex flex-col min-h-screen bg-secondary">
       <SEOHead
         title="UCAT syllogism micro drill (Decision Making)"
         description="Fast syllogism practice for UCAT Decision Making: one premise, one conclusion. Build pattern recognition for the UK UCAT."
@@ -41,7 +41,7 @@ export default function SyllogismMicroPage() {
           <div className="max-w-3xl mx-auto">
             <Link
               to="/decision-making"
-              className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900"
+              className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Decision Making

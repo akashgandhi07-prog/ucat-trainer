@@ -40,7 +40,7 @@ export default function DmTrainerPage({ trainerType }: Props) {
       <div className={cn("pt-4 pb-2", inAppShell ? APP_CONTENT_X : "px-4")}>
         <Link
           to="/ucat-decision-making-practice"
-          className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900"
+          className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="w-4 h-4" aria-hidden />
           Back to Decision Making
@@ -67,13 +67,13 @@ export default function DmTrainerPage({ trainerType }: Props) {
           canonicalUrl={canonicalUrl}
           breadcrumbs={breadcrumbs}
         />
-        <div className="w-full min-h-0 bg-slate-50">{content}</div>
+        <div className="w-full min-h-0 bg-secondary">{content}</div>
       </>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50">
+    <div className="flex flex-col min-h-screen bg-secondary">
       <SEOHead
         title={config.seoTitle}
         description={config.seoDescription}

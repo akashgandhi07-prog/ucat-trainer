@@ -4,7 +4,7 @@ const getKeyIntensity = (key: string) => {
     const intensity = (seed % 100) / 100;
     if (intensity > 0.8) return 'bg-red-200 text-red-800';
     if (intensity > 0.5) return 'bg-yellow-200 text-yellow-800';
-    return 'bg-slate-100 text-slate-600'; // Neutral
+    return 'bg-secondary text-muted-foreground'; // Neutral
 };
 
 export const KeyHeatmap = () => {
@@ -12,8 +12,8 @@ export const KeyHeatmap = () => {
 
     return (
         <div className="mt-6">
-            <h3 className="text-sm font-bold text-slate-500 mb-2 uppercase tracking-wider">Latency Heatmap</h3>
-            <p className="text-xs text-slate-400 mb-3">Red keys indicate slower average reaction times.</p>
+            <h3 className="text-sm font-bold text-muted-foreground mb-2 uppercase tracking-wider">Latency Heatmap</h3>
+            <p className="text-xs text-muted-foreground mb-3">Red keys indicate slower average reaction times.</p>
             <div className="grid grid-cols-3 gap-1 w-32 mx-auto">
                 {keys.map(key => (
                     <div

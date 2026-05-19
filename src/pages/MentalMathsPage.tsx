@@ -81,7 +81,7 @@ export default function MentalMathsPage() {
         <div className="max-w-3xl mx-auto">
           <Link
             to="/"
-            className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 mb-6"
+            className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground mb-6"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to home
@@ -99,7 +99,7 @@ export default function MentalMathsPage() {
             </ul>
           </div>
 
-          <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+          <div className="bg-card border border-border rounded-xl overflow-hidden">
             <MentalMathsEngine
               onSessionComplete={handleSessionComplete}
               onStageStart={(stageIndex) => setActiveTrainer("mental_maths", `stage_${stageIndex + 1}`)}

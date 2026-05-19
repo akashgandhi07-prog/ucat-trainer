@@ -137,7 +137,7 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
   if (logic.status === "idle") {
     return (
       <div className="p-5 sm:p-8">
-        <h2 className="text-base font-semibold text-slate-900 mb-4">Choose a stage</h2>
+        <h2 className="text-base font-semibold text-foreground mb-4">Choose a stage</h2>
         <div className="space-y-2.5">
           {MENTAL_MATHS_STAGES.map((stage, i) => {
             const unlocked = i <= logic.highestUnlocked;
@@ -156,8 +156,8 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
                   onClick={() => handleStageStart(i)}
                   className={`w-full flex items-center gap-3 rounded-xl border px-4 py-3.5 text-left transition-all ${
                     unlocked
-                      ? "border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50/30 text-slate-900 shadow-sm hover:shadow"
-                      : "border-slate-100 bg-slate-50/60 text-slate-400 cursor-not-allowed"
+                      ? "border-border bg-white hover:border-border hover:bg-secondary/30 text-foreground hover:shadow"
+                      : "border-border bg-secondary/60 text-muted-foreground cursor-not-allowed"
                   }`}
                 >
                   {/* Icon column */}
@@ -165,8 +165,8 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
                     pb
                       ? "bg-emerald-100 text-emerald-700"
                       : unlocked
-                        ? "bg-indigo-100 text-indigo-700"
-                        : "bg-slate-100 text-slate-400"
+                        ? "bg-secondary text-foreground"
+                        : "bg-secondary text-muted-foreground"
                   }`}>
                     {pb ? (
                       <CheckCircle2 className="w-4 h-4" />
@@ -179,30 +179,30 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
 
                   {/* Text column */}
                   <div className="flex-1 min-w-0">
-                    <p className={`font-medium text-sm leading-tight ${unlocked ? "text-slate-900" : "text-slate-400"}`}>
+                    <p className={`font-medium text-sm leading-tight ${unlocked ? "text-foreground" : "text-muted-foreground"}`}>
                       {stage.name}
                     </p>
                     {pb ? (
-                      <p className="text-xs text-slate-500 mt-0.5">
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         Best: <span className="font-semibold text-emerald-700">{formatAvgTime(pb.avgTimeMs)}</span> avg
                         {" · "}target: beat <span className="font-medium">{targetTime}s</span>
                       </p>
                     ) : unlocked ? (
-                      <p className="text-xs text-slate-400 mt-0.5">Target: {stage.requiredAccuracy}% accuracy · under {targetTime}s avg</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Target: {stage.requiredAccuracy}% accuracy · under {targetTime}s avg</p>
                     ) : null}
                   </div>
 
                   {/* Right action */}
                   {unlocked ? (
-                    <span className="flex-shrink-0 text-sm font-semibold text-indigo-600 whitespace-nowrap">
+                    <span className="flex-shrink-0 text-sm font-semibold text-primary whitespace-nowrap">
                       {pb ? "Retry →" : "Start →"}
                     </span>
                   ) : (
-                    <span className="flex-shrink-0 text-xs text-slate-400">Locked</span>
+                    <span className="flex-shrink-0 text-xs text-muted-foreground">Locked</span>
                   )}
                 </button>
                 {unlockHint && (
-                  <p className="text-xs text-slate-400 mt-1 pl-1">{unlockHint}</p>
+                  <p className="text-xs text-muted-foreground mt-1 pl-1">{unlockHint}</p>
                 )}
               </div>
             );
@@ -229,47 +229,47 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
     return (
       <div className="p-5 sm:p-8">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-          <span className="text-sm font-medium text-slate-500">
+          <span className="text-sm font-medium text-muted-foreground">
             Question {logic.questionIndex + 1} of {logic.questionCount}
           </span>
-          <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-sm font-medium tabular-nums text-slate-700">
+          <span className="inline-flex items-center rounded-full bg-secondary px-3 py-1 text-sm font-medium tabular-nums text-foreground">
             Took {logic.elapsedQuestionSeconds}s
           </span>
         </div>
         {q && (
-          <div className="rounded-xl bg-slate-50/80 border border-slate-100 px-5 py-4 mb-4">
-            <p className="text-xl font-semibold text-slate-900">{q.prompt}</p>
+          <div className="rounded-xl bg-secondary/80 border border-border px-5 py-4 mb-4">
+            <p className="text-xl font-semibold text-foreground">{q.prompt}</p>
           </div>
         )}
         <div className={`rounded-xl border px-5 py-4 mb-4 ${correct ? "bg-emerald-50/80 border-emerald-200" : "bg-rose-50/80 border-rose-200"}`}>
           <p className={`font-semibold ${correct ? "text-emerald-800" : "text-rose-800"}`}>
             {correct ? `Correct!${answerLine}` : `Incorrect.${answerLine}`}
           </p>
-          <p className="text-sm text-slate-600 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Score: {logic.correctCount} / {logic.questionIndex + 1} · press Enter or click below
           </p>
         </div>
         {q?.explanation && (
-          <div className="rounded-xl border border-slate-200 bg-white px-5 py-4 mb-4">
-            <h3 className="text-sm font-semibold text-slate-900 mb-3">Method</h3>
-            <div className="space-y-2 text-sm text-slate-700 leading-relaxed">
-              <p><span className="font-semibold text-slate-900">Target:</span> {q.explanation.method.target}</p>
-              <p><span className="font-semibold text-slate-900">Convert:</span> {q.explanation.method.convert}</p>
-              <p><span className="font-semibold text-slate-900">Calculate:</span> {q.explanation.method.calculate}</p>
+          <div className="rounded-xl border border-border bg-white px-5 py-4 mb-4">
+            <h3 className="text-sm font-semibold text-foreground mb-3">Method</h3>
+            <div className="space-y-2 text-sm text-foreground leading-relaxed">
+              <p><span className="font-semibold text-foreground">Target:</span> {q.explanation.method.target}</p>
+              <p><span className="font-semibold text-foreground">Convert:</span> {q.explanation.method.convert}</p>
+              <p><span className="font-semibold text-foreground">Calculate:</span> {q.explanation.method.calculate}</p>
             </div>
 
             <div className="mt-4 space-y-3 text-sm leading-relaxed">
               <div>
-                <h3 className="font-semibold text-slate-900">Exam shortcut</h3>
-                <p className="text-slate-700 mt-1">{q.explanation.examShortcut}</p>
+                <h3 className="font-semibold text-foreground">Exam shortcut</h3>
+                <p className="text-foreground mt-1">{q.explanation.examShortcut}</p>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">Sense check</h3>
-                <p className="text-slate-700 mt-1">{q.explanation.senseCheck}</p>
+                <h3 className="font-semibold text-foreground">Sense check</h3>
+                <p className="text-foreground mt-1">{q.explanation.senseCheck}</p>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">Common trap</h3>
-                <p className="text-slate-700 mt-1">{q.explanation.commonTrap}</p>
+                <h3 className="font-semibold text-foreground">Common trap</h3>
+                <p className="text-foreground mt-1">{q.explanation.commonTrap}</p>
               </div>
             </div>
           </div>
@@ -277,7 +277,7 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
         <button
           type="button"
           onClick={handleGoToNext}
-          className="w-full min-h-[48px] rounded-xl bg-primary text-primary-foreground font-semibold shadow-sm hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+          className="w-full min-h-[48px] rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
         >
           {isLast ? "See summary" : "Next question"}
         </button>
@@ -297,7 +297,7 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
     return (
       <div className="p-5 sm:p-8">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-slate-900">Session complete</h2>
+          <h2 className="text-xl font-bold text-foreground">Session complete</h2>
           {s.isNewPersonalBest && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
               <Trophy className="w-3.5 h-3.5" /> New personal best!
@@ -305,24 +305,24 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
           )}
         </div>
         <div className="grid grid-cols-2 gap-3 mb-6">
-          <div className="rounded-xl bg-slate-50 border border-slate-100 p-4 text-center">
-            <p className="text-2xl font-bold text-slate-900">{s.correct} / {s.total}</p>
-            <p className="text-xs font-medium text-slate-500 mt-0.5">Score</p>
+          <div className="rounded-xl bg-secondary border border-border p-4 text-center">
+            <p className="text-2xl font-bold text-foreground">{s.correct} / {s.total}</p>
+            <p className="text-xs font-medium text-muted-foreground mt-0.5">Score</p>
           </div>
-          <div className="rounded-xl bg-slate-50 border border-slate-100 p-4 text-center">
-            <p className="text-2xl font-bold text-slate-900">{s.accuracyPct}%</p>
-            <p className="text-xs font-medium text-slate-500 mt-0.5">Accuracy</p>
+          <div className="rounded-xl bg-secondary border border-border p-4 text-center">
+            <p className="text-2xl font-bold text-foreground">{s.accuracyPct}%</p>
+            <p className="text-xs font-medium text-muted-foreground mt-0.5">Accuracy</p>
           </div>
-          <div className="rounded-xl bg-slate-50 border border-slate-100 p-4 text-center">
-            <p className={`text-2xl font-bold ${s.passedThresholds ? "text-emerald-700" : "text-slate-900"}`}>
+          <div className="rounded-xl bg-secondary border border-border p-4 text-center">
+            <p className={`text-2xl font-bold ${s.passedThresholds ? "text-emerald-700" : "text-foreground"}`}>
               {actualAvgS}
             </p>
-            <p className="text-xs font-medium text-slate-500 mt-0.5">Avg per question</p>
-            <p className="text-xs text-slate-400 mt-0.5">target: &lt;{targetAvgS}s</p>
+            <p className="text-xs font-medium text-muted-foreground mt-0.5">Avg per question</p>
+            <p className="text-xs text-muted-foreground mt-0.5">target: &lt;{targetAvgS}s</p>
           </div>
-          <div className="rounded-xl bg-slate-50 border border-slate-100 p-4 text-center">
-            <p className="text-base font-bold text-slate-900">{s.stageName}</p>
-            <p className="text-xs font-medium text-slate-500 mt-0.5">Stage</p>
+          <div className="rounded-xl bg-secondary border border-border p-4 text-center">
+            <p className="text-base font-bold text-foreground">{s.stageName}</p>
+            <p className="text-xs font-medium text-muted-foreground mt-0.5">Stage</p>
           </div>
         </div>
         {s.passedThresholds && (
@@ -332,7 +332,7 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
           </p>
         )}
         {!s.passedThresholds && (
-          <p className="text-sm text-slate-500 mb-5">
+          <p className="text-sm text-muted-foreground mb-5">
             Keep practising. You need {stageConfig?.requiredAccuracy ?? 80}% accuracy and under {targetAvgS}s avg to unlock the next stage.
           </p>
         )}
@@ -341,7 +341,7 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
             <button
               type="button"
               onClick={() => handleStageStart(s.stageIndex + 1)}
-              className="w-full min-h-[48px] rounded-xl bg-primary text-primary-foreground font-semibold shadow-sm hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              className="w-full min-h-[48px] rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
             >
               Next stage →
             </button>
@@ -349,7 +349,7 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
           <button
             type="button"
             onClick={() => handleStageStart(s.stageIndex)}
-            className="w-full min-h-[48px] rounded-xl border border-slate-200 bg-white text-slate-800 font-medium hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2"
+            className="w-full min-h-[48px] rounded-xl border border-border bg-white text-foreground font-medium hover:bg-secondary transition-colors focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2"
           >
             Try again (same stage)
           </button>
@@ -374,16 +374,16 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
 
     const header = (
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <span className="text-sm font-medium text-slate-500">
+        <span className="text-sm font-medium text-muted-foreground">
           Question {logic.questionIndex + 1} of {logic.questionCount}
         </span>
         <div className="flex items-center gap-3">
-          <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-sm font-medium tabular-nums text-slate-700">
+          <span className="inline-flex items-center rounded-full bg-secondary px-3 py-1 text-sm font-medium tabular-nums text-foreground">
             {Math.floor(logic.elapsedQuestionSeconds / 60)}:{String(logic.elapsedQuestionSeconds % 60).padStart(2, "0")}
           </span>
-          <div className="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+          <div className="w-20 h-1.5 bg-secondary rounded-full overflow-hidden">
             <div
-              className="h-full bg-indigo-500 rounded-full transition-all duration-300 ease-out"
+              className="h-full bg-secondary0 rounded-full transition-all duration-300 ease-out"
               style={{ width: `${progressPct}%` }}
             />
           </div>
@@ -396,14 +396,14 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
         <button
           type="button"
           onClick={logic.backToIdle}
-          className="min-h-[44px] px-4 rounded-xl text-slate-500 text-sm font-medium hover:bg-slate-100 hover:text-slate-900 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2"
+          className="min-h-[44px] px-4 rounded-xl text-muted-foreground text-sm font-medium hover:bg-secondary hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2"
         >
           Back
         </button>
         <button
           type="button"
           onClick={logic.skipQuestion}
-          className="min-h-[44px] px-4 rounded-xl text-slate-500 text-sm font-medium hover:bg-slate-100 hover:text-slate-900 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2"
+          className="min-h-[44px] px-4 rounded-xl text-muted-foreground text-sm font-medium hover:bg-secondary hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2"
         >
           Skip
         </button>
@@ -414,8 +414,8 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
       return (
         <div className="p-5 sm:p-8">
           {header}
-          <div className="rounded-xl bg-slate-50/80 border border-slate-100 px-5 py-6 mb-6">
-            <p className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">{q.prompt}</p>
+          <div className="rounded-xl bg-secondary/80 border border-border px-5 py-6 mb-6">
+            <p className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">{q.prompt}</p>
           </div>
           <div className="mb-5">
             <input
@@ -428,7 +428,7 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
               onKeyDown={handleExactKeyDown}
               onPaste={handleExactPaste}
               placeholder="Your answer"
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition-shadow"
+              className="w-full rounded-xl border border-border bg-white px-4 py-3.5 text-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-shadow"
             />
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -437,7 +437,7 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
               type="button"
               disabled={submitLocked || exactInput === ""}
               onClick={handleSubmitExact}
-              className="min-h-[44px] flex-1 min-w-[140px] rounded-xl bg-primary text-primary-foreground font-semibold shadow-sm hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              className="min-h-[44px] flex-1 min-w-[140px] rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
             >
               Submit
             </button>
@@ -450,8 +450,8 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
     return (
       <div className="p-5 sm:p-8">
         {header}
-        <div className="rounded-xl bg-slate-50/80 border border-slate-100 px-5 py-5 mb-5">
-          <p className="text-base sm:text-lg font-medium text-slate-900 whitespace-pre-wrap leading-relaxed">{q.prompt}</p>
+        <div className="rounded-xl bg-secondary/80 border border-border px-5 py-5 mb-5">
+          <p className="text-base sm:text-lg font-medium text-foreground whitespace-pre-wrap leading-relaxed">{q.prompt}</p>
         </div>
         <div className="space-y-2 mb-5">
           {q.options.map((opt, i) => (
@@ -460,7 +460,7 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
               type="button"
               disabled={submitLocked}
               onClick={() => handleSubmitMcq(i)}
-              className="w-full min-h-[52px] rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-slate-900 font-medium hover:border-indigo-300 hover:bg-indigo-50/50 disabled:opacity-50 disabled:pointer-events-none transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2"
+              className="w-full min-h-[52px] rounded-xl border border-border bg-white px-4 py-3 text-left text-foreground font-medium hover:border-border hover:bg-secondary/50 disabled:opacity-50 disabled:pointer-events-none transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
             >
               {opt.toLocaleString()}
             </button>
@@ -472,7 +472,7 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
   }
 
   return (
-    <div className="p-6 text-center text-slate-600">
+    <div className="p-6 text-center text-muted-foreground">
       <p>Loading…</p>
     </div>
   );

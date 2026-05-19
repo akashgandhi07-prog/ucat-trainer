@@ -554,23 +554,23 @@ const StagePassedView = ({
     onContinue: () => void;
     onFinish: () => void;
 }) => (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full animate-in fade-in zoom-in-95 duration-300">
+    <div className="bg-card rounded-xl border border-border overflow-hidden flex flex-col h-full animate-in fade-in zoom-in-95 duration-300">
         <div className="flex-1 p-8 flex flex-col items-center justify-center gap-6">
             <div className="flex items-center gap-2 text-amber-500">
                 <Sparkles className="w-8 h-8" />
                 <span className="text-2xl font-bold text-amber-600">Stage passed!</span>
                 <Sparkles className="w-8 h-8" />
             </div>
-            <h2 className="text-3xl font-bold text-slate-800 text-center">Well done! 🎉</h2>
-            <p className="text-slate-600 text-center max-w-sm">
+            <h2 className="text-3xl font-bold text-foreground text-center">Well done! 🎉</h2>
+            <p className="text-muted-foreground text-center max-w-sm">
                 You crushed {stats.stageName}. {stats.accuracy === 100 ? "Perfect score!" : "Keep that momentum going!"}
             </p>
 
             <div className="grid grid-cols-2 gap-4 w-full max-w-xs mt-4">
-                <div className="bg-indigo-50 p-4 rounded-xl flex flex-col items-center">
-                    <Target className="w-5 h-5 text-indigo-600 mb-1" />
-                    <span className="text-xl font-bold text-indigo-900">{stats.accuracy}%</span>
-                    <span className="text-xs text-indigo-600 font-semibold uppercase tracking-wider">Accuracy</span>
+                <div className="bg-secondary p-4 rounded-xl flex flex-col items-center">
+                    <Target className="w-5 h-5 text-primary mb-1" />
+                    <span className="text-xl font-bold text-foreground">{stats.accuracy}%</span>
+                    <span className="text-xs text-primary font-semibold uppercase tracking-wider">Accuracy</span>
                 </div>
                 <div className="bg-emerald-50 p-4 rounded-xl flex flex-col items-center">
                     <Trophy className="w-5 h-5 text-emerald-600 mb-1" />
@@ -582,30 +582,30 @@ const StagePassedView = ({
                     <span className="text-xl font-bold text-amber-900">{stats.timeTaken}</span>
                     <span className="text-xs text-amber-600 font-semibold uppercase tracking-wider">Time</span>
                 </div>
-                <div className="bg-slate-50 p-4 rounded-xl flex flex-col items-center">
-                    <span className="text-xl font-bold text-slate-800 pt-1">{stats.kps}</span>
-                    <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider">KPS</span>
+                <div className="bg-secondary p-4 rounded-xl flex flex-col items-center">
+                    <span className="text-xl font-bold text-foreground pt-1">{stats.kps}</span>
+                    <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">KPS</span>
                 </div>
             </div>
 
             {stats.isLastStage ? (
-                <p className="text-slate-600 text-center font-medium">You&apos;ve completed all stages! Incredible work. 🏆</p>
+                <p className="text-muted-foreground text-center font-medium">You&apos;ve completed all stages! Incredible work. 🏆</p>
             ) : (
-                <p className="text-slate-500 text-center text-sm">Next up: {nextStageName}</p>
+                <p className="text-muted-foreground text-center text-sm">Next up: {nextStageName}</p>
             )}
 
             <div className="flex gap-4 w-full max-w-xs mt-4">
                 {stats.isLastStage ? (
                     <button
                         onClick={onFinish}
-                        className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-xl shadow-sm transition-colors"
+                        className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-xl transition-colors"
                     >
                         Back to menu
                     </button>
                 ) : (
                     <button
                         onClick={onContinue}
-                        className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-xl shadow-sm transition-colors"
+                        className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-xl transition-colors"
                     >
                         {nextStageName}
                         <ChevronRight className="w-5 h-5" />
@@ -764,7 +764,7 @@ export const StagesDrill = ({
 
     if (!stage) {
         return (
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center text-slate-600">
+            <div className="bg-card rounded-xl border border-border p-8 text-center text-muted-foreground">
                 No stages configured.
             </div>
         );
@@ -784,18 +784,18 @@ export const StagesDrill = ({
     if (stageFailed) {
         const achievedPct = questionCount > 0 ? Math.round((correctCount / questionCount) * 100) : 0;
         return (
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full animate-in fade-in zoom-in-95 duration-300">
-                <div className="bg-slate-50 p-4 border-b border-slate-200">
-                    <h3 className="font-bold text-slate-800">{stage.name}</h3>
-                    <p className="text-xs text-slate-500">Stage not passed</p>
+            <div className="bg-card rounded-xl border border-border overflow-hidden flex flex-col h-full animate-in fade-in zoom-in-95 duration-300">
+                <div className="bg-secondary p-4 border-b border-border">
+                    <h3 className="font-bold text-foreground">{stage.name}</h3>
+                    <p className="text-xs text-muted-foreground">Stage not passed</p>
                 </div>
                 <div className="flex-1 p-8 flex flex-col items-center justify-center gap-6">
-                    <p className="text-slate-600 text-center">
+                    <p className="text-muted-foreground text-center">
                         You got <strong>{achievedPct}%</strong> accuracy. You need {requiredAccuracy}% to pass. Keep practicing!
                     </p>
                     <button
                         onClick={retryStage}
-                        className="px-6 py-3 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-lg shadow-sm transition-colors"
+                        className="px-6 py-3 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold rounded-lg transition-colors"
                     >
                         Retry stage
                     </button>

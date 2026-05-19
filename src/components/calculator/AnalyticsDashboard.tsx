@@ -15,7 +15,7 @@ export const AnalyticsDashboard = ({ data }: AnalyticsDashboardProps) => {
 
     return (
         <div className="w-full h-64">
-            <h3 className="text-sm font-bold text-slate-500 mb-2 uppercase tracking-wider">Progress (Last Sessions)</h3>
+            <h3 className="text-sm font-bold text-muted-foreground mb-2 uppercase tracking-wider">Progress (Last Sessions)</h3>
             <ResponsiveContainer width="100%" height="100%">
                 <LineChart
                     data={chartData}

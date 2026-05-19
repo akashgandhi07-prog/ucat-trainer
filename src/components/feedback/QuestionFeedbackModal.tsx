@@ -202,7 +202,7 @@ export default function QuestionFeedbackModal({
               <span className="text-xl" aria-hidden>🙋</span>
               <Dialog.Title
                 id="question-feedback-title"
-                className="text-base font-semibold text-slate-900"
+                className="text-base font-semibold text-foreground"
               >
                 Help us improve this question
               </Dialog.Title>
@@ -210,7 +210,7 @@ export default function QuestionFeedbackModal({
             <Dialog.Close asChild>
               <button
                 type="button"
-                className="flex min-h-[36px] min-w-[36px] items-center justify-center rounded-full text-slate-400 hover:text-slate-600 transition-colors"
+                className="flex min-h-[36px] min-w-[36px] items-center justify-center rounded-full text-muted-foreground hover:text-muted-foreground transition-colors"
                 aria-label="Close"
               >
                 ×
@@ -218,7 +218,7 @@ export default function QuestionFeedbackModal({
             </Dialog.Close>
           </div>
 
-          <p className="mb-4 text-sm text-slate-500 leading-relaxed">
+          <p className="mb-4 text-sm text-muted-foreground leading-relaxed">
             Every report is read by the team. Whether it&apos;s a wording issue, a
             possible mistake, or just something that felt off, your feedback
             genuinely helps us make the question bank better for everyone. Thank you.
@@ -230,7 +230,7 @@ export default function QuestionFeedbackModal({
             aria-describedby={message ? "question-feedback-status" : undefined}
           >
             <div>
-              <p className="mb-2 text-sm font-medium text-slate-700">
+              <p className="mb-2 text-sm font-medium text-foreground">
                 What best describes the issue?
               </p>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -258,8 +258,8 @@ export default function QuestionFeedbackModal({
                       key={type}
                       className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2.5 text-sm transition-colors ${
                         currentIssue === type
-                          ? "border-primary bg-primary/5 text-slate-900 font-medium"
-                          : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                          ? "border-primary bg-primary/5 text-foreground font-medium"
+                          : "border-border bg-white text-muted-foreground hover:border-border hover:bg-secondary"
                       }`}
                     >
                       <input
@@ -284,15 +284,15 @@ export default function QuestionFeedbackModal({
             <div>
               <label
                 htmlFor="question-feedback-comment"
-                className="mb-1 block text-sm font-medium text-slate-700"
+                className="mb-1 block text-sm font-medium text-foreground"
               >
-                Any extra detail? <span className="font-normal text-slate-400">(optional but very helpful)</span>
+                Any extra detail? <span className="font-normal text-muted-foreground">(optional but very helpful)</span>
               </label>
               <textarea
                 id="question-feedback-comment"
                 rows={3}
                 maxLength={QUESTION_FEEDBACK_COMMENT_MAX}
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+                className="w-full rounded-xl border border-border px-3 py-2 text-sm text-foreground placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
                 placeholder="E.g. 'The explanation says X but the stimulus implies Y' (anything that helps us find the problem quickly)."
                 {...register("comment")}
               />
@@ -322,7 +322,7 @@ export default function QuestionFeedbackModal({
               <button
                 type="button"
                 onClick={handleClose}
-                className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+                className="flex-1 rounded-xl border border-border px-4 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary transition-colors"
               >
                 Cancel
               </button>

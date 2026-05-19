@@ -92,7 +92,7 @@ export default function AppShell() {
             <button
               type="button"
               className={cn(
-                "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-background text-foreground shadow-sm",
+                "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-background text-foreground",
                 "transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
               )}
               onClick={() => setMobileOpen((o) => !o)}
@@ -124,7 +124,7 @@ export default function AppShell() {
                 <button
                   type="button"
                   onClick={() => openAuthModal("login")}
-                  className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-primary px-3 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-primary px-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
                   <LogIn className="h-4 w-4" aria-hidden />
                   <span>Sign in</span>

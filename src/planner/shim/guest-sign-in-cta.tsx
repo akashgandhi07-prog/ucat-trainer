@@ -17,7 +17,7 @@ export function GuestSignInCta({ className = '' }: { className?: string }) {
       <Button
         type="button"
         size="sm"
-        className="shrink-0 bg-blue-600 hover:bg-blue-700"
+        className="shrink-0 bg-primary hover:bg-primary/90"
         onClick={() => openAuthModal('register')}
       >
         Sign in to save

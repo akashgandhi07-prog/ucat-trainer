@@ -348,7 +348,7 @@ export function MockScoresView({
                   className="flex flex-wrap items-center gap-2"
                 >
                   <div className="flex items-center gap-1.5">
-                    <label className="text-xs text-slate-500 whitespace-nowrap">Target (VR+DM+QR):</label>
+                    <label className="text-xs text-muted-foreground whitespace-nowrap">Target (VR+DM+QR):</label>
                     <input
                       type="number"
                       min={900}
@@ -357,16 +357,16 @@ export function MockScoresView({
                       placeholder="e.g. 2100"
                       value={totalInput}
                       onChange={e => { setTotalInput(e.target.value); setTargetError(null) }}
-                      className="w-24 h-7 rounded border border-slate-200 bg-white px-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-24 h-7 rounded border border-border bg-white px-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                     <span className="text-xs text-slate-400">/ 2700</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <label className="text-xs text-slate-500">SJT:</label>
+                    <label className="text-xs text-muted-foreground">SJT:</label>
                     <select
                       value={sjtInput}
                       onChange={e => { setSjtInput(e.target.value); setTargetError(null) }}
-                      className="h-7 rounded border border-slate-200 bg-white px-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="h-7 rounded border border-border bg-white px-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary"
                     >
                       <option value="">Any band</option>
                       <option value="1">Band 1</option>
@@ -379,7 +379,7 @@ export function MockScoresView({
                     <button
                       type="submit"
                       disabled={targetSaving}
-                      className="flex items-center gap-1 h-7 rounded bg-blue-600 px-2.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                      className="flex items-center gap-1 h-7 rounded bg-primary px-2.5 text-xs font-medium text-white hover:bg-primary/90 disabled:opacity-50"
                     >
                       <Check size={11} />
                       {targetSaving ? 'Saving…' : 'Save'}
@@ -387,7 +387,7 @@ export function MockScoresView({
                     <button
                       type="button"
                       onClick={cancelTargetEdit}
-                      className="flex items-center gap-1 h-7 rounded border border-slate-200 bg-white px-2.5 text-xs text-slate-500 hover:bg-slate-50"
+                      className="flex items-center gap-1 h-7 rounded border border-border bg-white px-2.5 text-xs text-muted-foreground hover:bg-slate-50"
                     >
                       <X size={11} />
                       Cancel
@@ -401,7 +401,7 @@ export function MockScoresView({
                 <button
                   type="button"
                   onClick={openTargetEdit}
-                  className="group flex items-center gap-1.5 rounded-full border border-dashed border-slate-300 bg-slate-50 px-3 py-1 text-xs text-slate-500 transition-colors hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700"
+                  className="group flex items-center gap-1.5 rounded-full border border-dashed border-border bg-slate-50 px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:bg-secondary hover:text-foreground"
                 >
                   {hasTarget ? (
                     <>
@@ -491,7 +491,7 @@ export function MockScoresView({
                       value={form.mockDate}
                       max={toISODate(new Date())}
                       onChange={e => setForm(f => ({ ...f, mockDate: e.target.value }))}
-                      className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="h-10 w-full rounded-lg border border-border bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                       required
                     />
                   </div>
@@ -500,7 +500,7 @@ export function MockScoresView({
                     <select
                       value={form.mockType}
                       onChange={e => setForm(f => ({ ...f, mockType: e.target.value as Tab }))}
-                      className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="h-10 w-full rounded-lg border border-border bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                     >
                       <option value="full">Full mock</option>
                       <option value="mini">Mini mock</option>
@@ -511,7 +511,7 @@ export function MockScoresView({
                     <select
                       value={form.mockSource}
                       onChange={e => setForm(f => ({ ...f, mockSource: e.target.value as MockSource | '' }))}
-                      className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="h-10 w-full rounded-lg border border-border bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                     >
                       <option value="">- Select source -</option>
                       {MOCK_SOURCES.map(s => (
@@ -548,7 +548,7 @@ export function MockScoresView({
                     <select
                       value={form.sjt}
                       onChange={e => setForm(f => ({ ...f, sjt: e.target.value }))}
-                      className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="h-10 w-full rounded-lg border border-border bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                     >
                       <option value="">- Band -</option>
                       <option value="1">Band 1 (best)</option>
@@ -567,7 +567,7 @@ export function MockScoresView({
 
                 <div>
                   <p className="text-sm font-medium text-slate-700 mb-2">Where did you leak marks?</p>
-                  <p className="text-xs text-slate-500 mb-2">
+                  <p className="text-xs text-muted-foreground mb-2">
                     Tick every area that felt weakest; future blocks get nudged that way alongside section scores.
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -580,8 +580,8 @@ export function MockScoresView({
                           onClick={() => toggleWeakness(opt.id)}
                           className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-all ${
                             on
-                              ? 'border-blue-500 bg-blue-50 text-blue-800'
-                              : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                              ? 'border-primary bg-secondary text-foreground'
+                              : 'border-border bg-white text-slate-600 hover:border-border'
                           }`}
                         >
                           {opt.label}
@@ -605,10 +605,10 @@ export function MockScoresView({
 
       {/* Encouragement */}
       {encouragement && (
-        <Card className="border-blue-100 bg-gradient-to-br from-blue-50/80 to-white">
+        <Card className="border-border bg-card">
           <CardContent className="pt-6 pb-5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-blue-700 mb-2">Momentum</p>
-            <p className="text-sm text-slate-700 leading-relaxed">{encouragement}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary mb-2">Momentum</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">{encouragement}</p>
           </CardContent>
         </Card>
       )}
@@ -622,13 +622,13 @@ export function MockScoresView({
             onClick={() => setActiveTab(tab)}
             className={`rounded-lg px-4 py-2.5 text-sm font-medium transition-colors flex-1 min-w-[10rem] sm:flex-initial sm:min-w-0 ${
               activeTab === tab
-                ? 'bg-blue-600 text-white'
-                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                ? 'bg-primary text-white'
+                : 'bg-white border border-border text-slate-600 hover:bg-slate-50'
             }`}
           >
             {tab === 'full' ? 'Full Mocks' : 'Mini Mocks'}
             <span className={`ml-2 rounded-full px-1.5 py-0.5 text-xs ${
-              activeTab === tab ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-500'
+              activeTab === tab ? 'bg-secondary0 text-white' : 'bg-slate-100 text-muted-foreground'
             }`}>
               {tab === 'full' ? fullScores.length : miniScores.length}
             </span>
@@ -638,7 +638,7 @@ export function MockScoresView({
 
       {/* Summary stats */}
       {tabStats && (
-        <Card className="border-slate-200">
+        <Card className="border-border">
           <CardHeader className="pb-2">
             <div className="flex items-baseline justify-between gap-2">
               <CardTitle className="text-base">
@@ -655,7 +655,7 @@ export function MockScoresView({
               <div className="grid grid-cols-2 gap-3">
                 {tabStats.avgTotal != null && (
                   <div className="bg-slate-50 rounded-lg p-3">
-                    <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wide mb-1">Avg combined</p>
+                    <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-1">Avg combined</p>
                     <p className="text-2xl font-bold tabular-nums text-slate-900 leading-none">
                       {tabStats.avgTotal}
                       <span className="text-sm font-normal text-slate-400 ml-1">/ 2700</span>
@@ -664,7 +664,7 @@ export function MockScoresView({
                 )}
                 {tabStats.bestTotal != null && (
                   <div className="bg-slate-50 rounded-lg p-3">
-                    <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wide mb-1">Best combined</p>
+                    <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-1">Best combined</p>
                     <p className="text-2xl font-bold tabular-nums text-slate-900 leading-none">
                       {tabStats.bestTotal}
                       <span className="text-sm font-normal text-slate-400 ml-1">/ 2700</span>
@@ -738,13 +738,13 @@ export function MockScoresView({
         chartData.some(d => d.VR || d.DM || d.QR || d.SJT != null || d.TOTAL != null) && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {([
-            { key: 'VR', color: '#3b82f6', label: 'Verbal Reasoning', kind: 'section' as const },
-            { key: 'DM', color: '#22c55e', label: 'Decision Making', kind: 'section' as const },
-            { key: 'QR', color: '#f59e0b', label: 'Quantitative Reasoning', kind: 'section' as const },
-            { key: 'SJT', color: '#a855f7', label: 'Situational Judgement', kind: 'sjt' as const },
+            { key: 'VR', color: '#2563eb', label: 'Verbal Reasoning', kind: 'section' as const },
+            { key: 'DM', color: '#475569', label: 'Decision Making', kind: 'section' as const },
+            { key: 'QR', color: '#94a3b8', label: 'Quantitative Reasoning', kind: 'section' as const },
+            { key: 'SJT', color: '#0f172a', label: 'Situational Judgement', kind: 'sjt' as const },
             // TOTAL chart only shown for full mocks (all 3 sections present)
             ...(activeTab === 'full'
-              ? [{ key: 'TOTAL' as const, color: '#475569', label: 'VR + DM + QR total', kind: 'total' as const }]
+              ? [{ key: 'TOTAL' as const, color: '#2563eb', label: 'VR + DM + QR total', kind: 'total' as const }]
               : []),
           ] as const).map(({ key, color, label, kind }) => {
             const hasData = chartData.some(d => (d as Record<string, unknown>)[key] !== undefined)
@@ -822,14 +822,14 @@ export function MockScoresView({
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100 text-left">
-                  <th className="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Date</th>
+                  <th className="px-5 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Date</th>
                   <th className="px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">Source</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-blue-500 uppercase tracking-wide">VR</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-green-500 uppercase tracking-wide">DM</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-amber-500 uppercase tracking-wide">QR</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-purple-500 uppercase tracking-wide">SJT</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Total</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Avg</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-foreground uppercase tracking-wide">VR</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-foreground uppercase tracking-wide">DM</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-foreground uppercase tracking-wide">QR</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-foreground uppercase tracking-wide">SJT</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Total</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Avg</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -885,7 +885,7 @@ export function MockScoresView({
           <div className="mx-auto mb-3 flex justify-center" aria-hidden>
             <BarChart3 className="h-10 w-10 text-slate-300" strokeWidth={1.5} />
           </div>
-          <p className="text-sm sm:text-base text-slate-500">
+          <p className="text-sm sm:text-base text-muted-foreground">
             No {activeTab === 'full' ? 'full' : 'mini'} mock scores logged yet.
           </p>
           {!readOnly && (
@@ -894,7 +894,7 @@ export function MockScoresView({
             </p>
           )}
           {readOnly && browseOnly && (
-            <p className="text-xs sm:text-sm mt-2 text-slate-500">
+            <p className="text-xs sm:text-sm mt-2 text-muted-foreground">
               Register for free to log mocks and track progress here.
             </p>
           )}

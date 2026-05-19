@@ -931,7 +931,7 @@ export default function DistortionQuiz({
         ))}
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+      <div className="bg-card rounded-xl border border-border p-6">
         <div className="flex items-center justify-between mb-4">
           <span className="text-[13px] font-medium text-ucat-muted">
             QUESTION {currentIndex + 1} OF {questions.length}
@@ -946,7 +946,7 @@ export default function DistortionQuiz({
               className={`flex items-center justify-center gap-1.5 text-[13px] px-3 py-2 min-h-[44px] rounded ${
                 flagged.has(currentIndex)
                   ? "bg-amber-100 text-amber-800"
-                  : "text-ucat-muted hover:bg-slate-100"
+                  : "text-ucat-muted hover:bg-secondary"
               }`}
             >
               <span aria-hidden>🚩</span>
@@ -962,8 +962,8 @@ export default function DistortionQuiz({
             type="button"
             onClick={() => handleAnswer("true")}
             className={`flex-1 min-h-[44px] px-4 py-3 rounded-lg border-2 font-normal text-[15px] text-ucat-body ${answers[currentIndex] === "true"
-              ? "border-slate-400 bg-slate-100 text-slate-800"
-              : "border-slate-200 hover:bg-slate-50"
+              ? "border-slate-400 bg-secondary text-foreground"
+              : "border-border hover:bg-secondary"
               }`}
           >
             True
@@ -972,8 +972,8 @@ export default function DistortionQuiz({
             type="button"
             onClick={() => handleAnswer("false")}
             className={`flex-1 min-h-[44px] px-4 py-3 rounded-lg border-2 font-normal text-[15px] text-ucat-body ${answers[currentIndex] === "false"
-              ? "border-slate-400 bg-slate-100 text-slate-800"
-              : "border-slate-200 hover:bg-slate-50"
+              ? "border-slate-400 bg-secondary text-foreground"
+              : "border-border hover:bg-secondary"
               }`}
           >
             False
@@ -982,8 +982,8 @@ export default function DistortionQuiz({
             type="button"
             onClick={() => handleAnswer("cant_tell")}
             className={`flex-1 min-h-[44px] px-4 py-3 rounded-lg border-2 font-normal text-[15px] text-ucat-body ${answers[currentIndex] === "cant_tell"
-              ? "border-slate-400 bg-slate-100 text-slate-800"
-              : "border-slate-200 hover:bg-slate-50"
+              ? "border-slate-400 bg-secondary text-foreground"
+              : "border-border hover:bg-secondary"
               }`}
           >
             Can&apos;t Tell
@@ -997,7 +997,7 @@ export default function DistortionQuiz({
             type="button"
             onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))}
             disabled={currentIndex === 0}
-            className="min-h-[44px] px-4 py-2 border border-slate-200 rounded-lg text-[15px] text-ucat-body hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="min-h-[44px] px-4 py-2 border border-border rounded-lg text-[15px] text-ucat-body hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             ← Previous
           </button>
@@ -1040,7 +1040,7 @@ export default function DistortionQuiz({
           <button
             type="button"
             onClick={() => setShowReRead(true)}
-            className="min-h-[44px] text-[13px] text-ucat-muted hover:text-blue-600 flex items-center justify-center gap-1 px-2"
+            className="min-h-[44px] text-[13px] text-ucat-muted hover:text-primary flex items-center justify-center gap-1 px-2"
           >
             <span aria-hidden>↻</span>
             Re-read passage (penalty applies)

@@ -142,15 +142,15 @@ function DropdownMenu({ groups }: { groups: MenuGroup[] }) {
   return (
     <div
       className={cn(
-        "absolute top-full left-1/2 -translate-x-1/2 mt-1 bg-white rounded-2xl shadow-xl border border-slate-100 p-4 z-50 min-w-[220px]",
+        "absolute top-full left-1/2 -translate-x-1/2 mt-1 bg-white rounded-2xl shadow-xl border border-border p-4 z-50 min-w-[220px]",
         multiCol ? "grid gap-x-6" : "",
       )}
       style={multiCol ? { gridTemplateColumns: `repeat(${groups.length}, minmax(180px, 1fr))` } : undefined}
     >
       {groups.map((group, gi) => (
-        <div key={gi} className={gi > 0 ? "border-l border-slate-100 pl-6" : ""}>
+        <div key={gi} className={gi > 0 ? "border-l border-border pl-6" : ""}>
           {group.heading && (
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2 px-1">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 px-1">
               {group.heading}
             </p>
           )}
@@ -161,13 +161,13 @@ function DropdownMenu({ groups }: { groups: MenuGroup[] }) {
                   href={item.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block rounded-xl px-3 py-2 hover:bg-slate-50 transition-colors group"
+                  className="block rounded-xl px-3 py-2 hover:bg-secondary transition-colors group"
                 >
-                  <span className="block text-sm font-medium text-slate-800 group-hover:text-primary transition-colors">
+                  <span className="block text-sm font-medium text-foreground group-hover:text-primary transition-colors">
                     {item.label}
                   </span>
                   {item.description && (
-                    <span className="block text-xs text-slate-400 mt-0.5 leading-tight">{item.description}</span>
+                    <span className="block text-xs text-muted-foreground mt-0.5 leading-tight">{item.description}</span>
                   )}
                 </a>
               </li>
@@ -200,7 +200,7 @@ function NavItemButton({ item }: { item: NavItem }) {
         href={item.href}
         target="_blank"
         rel="noopener noreferrer"
-        className="relative flex items-center gap-0.5 px-3 py-2 text-sm font-medium text-slate-700 hover:text-primary rounded-lg hover:bg-slate-50 transition-colors whitespace-nowrap"
+        className="relative flex items-center gap-0.5 px-3 py-2 text-sm font-medium text-foreground hover:text-primary rounded-lg hover:bg-secondary transition-colors whitespace-nowrap"
       >
         {item.label}
       </a>
@@ -214,7 +214,7 @@ function NavItemButton({ item }: { item: NavItem }) {
         aria-expanded={open}
         className={cn(
           "relative flex items-center gap-0.5 px-3 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap",
-          open ? "text-primary bg-primary/5" : "text-slate-700 hover:text-primary hover:bg-slate-50",
+          open ? "text-primary bg-primary/5" : "text-foreground hover:text-primary hover:bg-secondary",
         )}
       >
         {item.label}
@@ -257,7 +257,7 @@ export default function Header() {
   if (inAppShell) return null;
 
   return (
-    <header className="border-b border-slate-200/80 bg-white/90 backdrop-blur-md sticky top-0 z-40 pt-[env(safe-area-inset-top)]">
+    <header className="border-b border-border/80 bg-white/90 backdrop-blur-md sticky top-0 z-40 pt-[env(safe-area-inset-top)]">
       {showSessionRecovery && (
         <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center justify-center gap-2 flex-wrap text-sm text-amber-900">
           <span>Having trouble connecting?</span>
@@ -277,7 +277,7 @@ export default function Header() {
           to="/"
           className="shrink-0 flex items-center gap-2 mr-2"
         >
-          <span className="text-base font-bold tracking-tight text-slate-900">
+          <span className="text-base font-bold tracking-tight text-foreground">
             TheUKCATPeople
           </span>
           <span className="hidden sm:inline text-[9px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
@@ -296,24 +296,24 @@ export default function Header() {
         <div className="hidden lg:block flex-1" />
 
         {/* Trainer links */}
-        <div className="hidden sm:flex items-center gap-1 border-l border-slate-200 pl-3 ml-1">
+        <div className="hidden sm:flex items-center gap-1 border-l border-border pl-3 ml-1">
           <Link
             to="/dashboard"
-            className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-primary hover:bg-slate-50 rounded-lg transition-colors whitespace-nowrap"
+            className="px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-primary hover:bg-secondary rounded-lg transition-colors whitespace-nowrap"
           >
             My progress
           </Link>
           <button
             type="button"
             onClick={() => openBugReport()}
-            className="px-3 py-1.5 text-sm font-medium text-slate-500 hover:text-primary hover:bg-slate-50 rounded-lg transition-colors"
+            className="px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-primary hover:bg-secondary rounded-lg transition-colors"
           >
             Feedback
           </button>
           {isAdmin && (
             <Link
               to="/admin"
-              className="px-3 py-1.5 text-sm font-medium text-slate-500 hover:text-primary hover:bg-slate-50 rounded-lg transition-colors"
+              className="px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-primary hover:bg-secondary rounded-lg transition-colors"
             >
               Admin
             </Link>
@@ -324,7 +324,7 @@ export default function Header() {
         <div className="hidden sm:flex items-center gap-2 pl-3">
           {user ? (
             <>
-              <span className="text-xs text-slate-500 font-medium max-w-[120px] truncate">
+              <span className="text-xs text-muted-foreground font-medium max-w-[120px] truncate">
                 {displayName}
               </span>
               <button
@@ -335,7 +335,7 @@ export default function Header() {
                   await signOut();
                   navigate("/");
                 }}
-                className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
+                className="px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors disabled:opacity-50"
               >
                 {signingOut ? "Signing out…" : "Sign out"}
               </button>
@@ -345,14 +345,14 @@ export default function Header() {
               <button
                 type="button"
                 onClick={() => openAuthModal("register")}
-                className="px-3 py-1.5 text-sm font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+                className="px-3 py-1.5 text-sm font-semibold text-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors"
               >
                 Register
               </button>
               <button
                 type="button"
                 onClick={() => openAuthModal("login")}
-                className="px-4 py-1.5 text-sm font-semibold bg-primary text-white hover:bg-primary/90 rounded-lg transition-colors shadow-sm"
+                className="px-4 py-1.5 text-sm font-semibold bg-primary text-white hover:bg-primary/90 rounded-lg transition-colors"
               >
                 Sign in
               </button>
@@ -363,7 +363,7 @@ export default function Header() {
         {/* Mobile hamburger */}
         <button
           type="button"
-          className="lg:hidden ml-auto p-2 -mr-2 text-slate-600 hover:text-slate-900"
+          className="lg:hidden ml-auto p-2 -mr-2 text-muted-foreground hover:text-foreground"
           onClick={() => setMobileMenuOpen((v) => !v)}
           aria-expanded={mobileMenuOpen}
           aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
@@ -374,7 +374,7 @@ export default function Header() {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-slate-100 bg-white shadow-lg max-h-[80vh] overflow-y-auto">
+        <div className="lg:hidden border-t border-border bg-white shadow-lg max-h-[80vh] overflow-y-auto">
           <nav className="px-4 py-3 space-y-1">
             {NAV.map((item) =>
               !item.groups ? (
@@ -383,7 +383,7 @@ export default function Header() {
                   href={item.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-primary transition-colors"
+                  className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-secondary hover:text-primary transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {item.label}
@@ -392,7 +392,7 @@ export default function Header() {
                 <div key={item.label}>
                   <button
                     type="button"
-                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-secondary transition-colors"
                     onClick={() =>
                       setMobileExpanded((v) => (v === item.label ? null : item.label))
                     }
@@ -401,18 +401,18 @@ export default function Header() {
                     {item.label}
                     <ChevronDown
                       className={cn(
-                        "w-4 h-4 text-slate-400 transition-transform duration-200",
+                        "w-4 h-4 text-muted-foreground transition-transform duration-200",
                         mobileExpanded === item.label && "rotate-180",
                       )}
                       aria-hidden
                     />
                   </button>
                   {mobileExpanded === item.label && (
-                    <div className="mt-1 ml-2 pl-3 border-l-2 border-slate-100 space-y-3 pb-2">
+                    <div className="mt-1 ml-2 pl-3 border-l-2 border-border space-y-3 pb-2">
                       {item.groups.map((group, gi) => (
                         <div key={gi}>
                           {group.heading && (
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1 px-1">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1 px-1">
                               {group.heading}
                             </p>
                           )}
@@ -422,7 +422,7 @@ export default function Header() {
                               href={link.href}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="block px-2 py-1.5 rounded-lg text-sm text-slate-600 hover:text-primary hover:bg-slate-50 transition-colors"
+                              className="block px-2 py-1.5 rounded-lg text-sm text-muted-foreground hover:text-primary hover:bg-secondary transition-colors"
                               onClick={() => setMobileMenuOpen(false)}
                             >
                               {link.label}
@@ -436,10 +436,10 @@ export default function Header() {
               ),
             )}
 
-            <div className="border-t border-slate-100 pt-3 mt-2 space-y-1">
+            <div className="border-t border-border pt-3 mt-2 space-y-1">
               <Link
                 to="/dashboard"
-                className="flex items-center px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-primary transition-colors"
+                className="flex items-center px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-secondary hover:text-primary transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 My progress
@@ -447,14 +447,14 @@ export default function Header() {
               <button
                 type="button"
                 onClick={() => { openBugReport(); setMobileMenuOpen(false); }}
-                className="w-full text-left flex items-center px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-primary transition-colors"
+                className="w-full text-left flex items-center px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-secondary hover:text-primary transition-colors"
               >
                 Feedback
               </button>
               {isAdmin && (
                 <Link
                   to="/admin"
-                  className="flex items-center px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                  className="flex items-center px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-secondary transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Admin
@@ -462,7 +462,7 @@ export default function Header() {
               )}
             </div>
 
-            <div className="border-t border-slate-100 pt-3 mt-2 flex gap-2">
+            <div className="border-t border-border pt-3 mt-2 flex gap-2">
               {user ? (
                 <button
                   type="button"
@@ -473,7 +473,7 @@ export default function Header() {
                     await signOut();
                     navigate("/");
                   }}
-                  className="flex-1 py-2.5 text-sm font-semibold text-slate-700 border border-slate-200 rounded-xl hover:bg-slate-50 disabled:opacity-50 transition-colors"
+                  className="flex-1 py-2.5 text-sm font-semibold text-foreground border border-border rounded-xl hover:bg-secondary disabled:opacity-50 transition-colors"
                 >
                   {signingOut ? "Signing out…" : "Sign out"}
                 </button>
@@ -482,14 +482,14 @@ export default function Header() {
                   <button
                     type="button"
                     onClick={() => { openAuthModal("register"); setMobileMenuOpen(false); }}
-                    className="flex-1 py-2.5 text-sm font-semibold text-slate-700 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+                    className="flex-1 py-2.5 text-sm font-semibold text-foreground border border-border rounded-xl hover:bg-secondary transition-colors"
                   >
                     Register
                   </button>
                   <button
                     type="button"
                     onClick={() => { openAuthModal("login"); setMobileMenuOpen(false); }}
-                    className="flex-1 py-2.5 text-sm font-semibold bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors shadow-sm"
+                    className="flex-1 py-2.5 text-sm font-semibold bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors"
                   >
                     Sign in
                   </button>

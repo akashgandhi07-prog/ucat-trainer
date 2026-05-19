@@ -90,7 +90,7 @@ export default function AppTopBar({ className = "" }: { className?: string }) {
             <button
               type="button"
               onClick={() => openAuthModal("login")}
-              className="text-[13px] font-semibold bg-primary text-primary-foreground px-3.5 py-1.5 rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
+              className="text-[13px] font-semibold bg-primary text-primary-foreground px-3.5 py-1.5 rounded-lg hover:bg-primary/90 transition-colors"
             >
               Sign in
             </button>

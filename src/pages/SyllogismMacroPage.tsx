@@ -34,7 +34,7 @@ export default function SyllogismMacroPage() {
     : undefined;
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50">
+    <div className="flex flex-col min-h-screen bg-secondary">
       <SEOHead
         title="UCAT syllogism macro drill (Decision Making)"
         description="Full-passage syllogism practice for UCAT Decision Making: five conclusions, sticky stimulus, Yes/No judgements. UK UCAT style."
@@ -50,7 +50,7 @@ export default function SyllogismMacroPage() {
             <BreadcrumbNav items={breadcrumbs} />
             <Link
               to="/ucat-decision-making-practice"
-              className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900"
+              className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Decision Making hub

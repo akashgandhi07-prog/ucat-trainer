@@ -23,9 +23,9 @@ interface LatestMockCardProps {
 }
 
 function sjtBandColor(band: number | null): string {
-  if (band == null) return "text-slate-400";
+  if (band == null) return "text-muted-foreground";
   if (band === 1) return "text-emerald-600";
-  if (band === 2) return "text-blue-600";
+  if (band === 2) return "text-primary";
   if (band === 3) return "text-amber-600";
   return "text-red-500";
 }
@@ -79,20 +79,20 @@ function trendSignal(_latest: MockScore, sameType: MockScore[]): "up" | "down" |
 
 function Skeleton() {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 animate-pulse">
+    <div className="bg-card rounded-xl border border-border p-5 animate-pulse">
       <div className="flex items-center justify-between mb-4">
         <div className="space-y-2">
-          <div className="h-4 w-24 bg-slate-100 rounded" />
-          <div className="h-3 w-36 bg-slate-100 rounded" />
+          <div className="h-4 w-24 bg-secondary rounded" />
+          <div className="h-3 w-36 bg-secondary rounded" />
         </div>
-        <div className="h-3 w-16 bg-slate-100 rounded" />
+        <div className="h-3 w-16 bg-secondary rounded" />
       </div>
       <div className="grid grid-cols-4 gap-3">
         {[0,1,2,3].map(i => (
-          <div key={i} className="bg-slate-50 rounded-xl p-3 h-16" />
+          <div key={i} className="bg-secondary rounded-xl p-3 h-16" />
         ))}
       </div>
-      <div className="mt-3 h-10 bg-slate-100 rounded-xl" />
+      <div className="mt-3 h-10 bg-secondary rounded-xl" />
     </div>
   );
 }
@@ -197,21 +197,21 @@ export default function LatestMockCard({ userId }: LatestMockCardProps) {
     editingTarget ? (
       <form onSubmit={saveTarget} className="flex flex-wrap items-center gap-2">
         <div className="flex items-center gap-1">
-          <label className="text-[11px] text-slate-500 whitespace-nowrap">Target:</label>
+          <label className="text-[11px] text-muted-foreground whitespace-nowrap">Target:</label>
           <input
             type="number" min={900} max={2700} step={10} placeholder="e.g. 2100"
             value={totalInput}
             onChange={e => { setTotalInput(e.target.value); setTargetError(null); }}
-            className="w-20 h-6 rounded border border-slate-200 bg-white px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-20 h-6 rounded border border-border bg-card px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
           />
-          <span className="text-[11px] text-slate-400">/ 2700</span>
+          <span className="text-[11px] text-muted-foreground">/ 2700</span>
         </div>
         <div className="flex items-center gap-1">
-          <label className="text-[11px] text-slate-500">SJT:</label>
+          <label className="text-[11px] text-muted-foreground">SJT:</label>
           <select
             value={sjtInput}
             onChange={e => { setSjtInput(e.target.value); setTargetError(null); }}
-            className="h-6 rounded border border-slate-200 bg-white px-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="h-6 rounded border border-border bg-card px-1 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
           >
             <option value="">Any</option>
             <option value="1">Band 1</option>
@@ -222,11 +222,11 @@ export default function LatestMockCard({ userId }: LatestMockCardProps) {
         </div>
         <div className="flex items-center gap-1">
           <button type="submit" disabled={targetSaving}
-            className="h-6 rounded bg-blue-600 px-2 text-[11px] font-medium text-white hover:bg-blue-700 disabled:opacity-50">
+            className="h-6 rounded bg-primary px-2 text-[11px] font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50">
             {targetSaving ? "…" : "Save"}
           </button>
           <button type="button" onClick={cancelEdit}
-            className="h-6 rounded border border-slate-200 px-2 text-[11px] text-slate-500 hover:bg-slate-50">
+            className="h-6 rounded border border-border px-2 text-[11px] text-muted-foreground hover:bg-secondary">
             Cancel
           </button>
         </div>
@@ -234,15 +234,15 @@ export default function LatestMockCard({ userId }: LatestMockCardProps) {
       </form>
     ) : (
       <button type="button" onClick={openEdit}
-        className="group flex items-center gap-1 rounded-full border border-dashed border-slate-300 bg-slate-50 px-2.5 py-0.5 text-[11px] text-slate-500 transition-colors hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700">
+        className="group flex items-center gap-1 rounded-full border border-dashed border-border bg-secondary px-2.5 py-0.5 text-[11px] text-muted-foreground transition-colors hover:border-primary/40 hover:bg-secondary hover:text-foreground">
         {hasTarget ? (
           <>
-            <span className="font-medium text-slate-700">
+            <span className="font-medium text-foreground">
               {targetTotal != null && `${targetTotal}/2700`}
               {targetTotal != null && targetSjt != null && " · "}
               {targetSjt != null && `SJT Band ${targetSjt}`}
             </span>
-            <span className="text-slate-400">target</span>
+            <span className="text-muted-foreground">target</span>
           </>
         ) : (
           <span>+ Set target</span>
@@ -257,17 +257,17 @@ export default function LatestMockCard({ userId }: LatestMockCardProps) {
 
   if (allScores.length === 0) {
     return (
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-3">
+      <div className="bg-card rounded-xl border border-border p-5 space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-slate-900">Mock Scores</h2>
-          <Link to="/mock-scores" className="text-sm text-blue-600 font-medium hover:underline">
+          <h2 className="text-base font-semibold text-foreground">Mock Scores</h2>
+          <Link to="/mock-scores" className="text-sm text-primary font-medium hover:underline">
             Track scores →
           </Link>
         </div>
         {targetChip}
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-muted-foreground">
           No mock scores logged yet.{" "}
-          <Link to="/mock-scores" className="text-blue-600 hover:underline">
+          <Link to="/mock-scores" className="text-primary hover:underline">
             Log your first mock
           </Link>{" "}
           to start tracking your progress.
@@ -304,14 +304,14 @@ export default function LatestMockCard({ userId }: LatestMockCardProps) {
   const trendColor = trend === "up" ? "text-emerald-600" : trend === "down" ? "text-red-500" : "text-amber-600";
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <div className="bg-card rounded-xl border border-border overflow-hidden">
       <div className="px-5 pt-5 pb-4">
         {/* Header */}
         <div className="flex items-start justify-between mb-3">
           <div className="space-y-1.5">
-            <h2 className="text-base font-semibold text-slate-900">Latest Mock</h2>
+            <h2 className="text-base font-semibold text-foreground">Latest Mock</h2>
             <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-muted-foreground">
                 {latest.mock_type === "full" ? "Full mock" : "Mini mock"} · {timeAgo(latest.logged_date)}
                 {previous ? ` · vs prev ${latest.mock_type}` : ""}
               </p>
@@ -321,7 +321,7 @@ export default function LatestMockCard({ userId }: LatestMockCardProps) {
             </div>
             {targetChip}
           </div>
-          <Link to="/mock-scores" className="text-sm text-blue-600 font-medium hover:underline shrink-0 mt-0.5">
+          <Link to="/mock-scores" className="text-sm text-primary font-medium hover:underline shrink-0 mt-0.5">
             All scores →
           </Link>
         </div>
@@ -333,18 +333,18 @@ export default function LatestMockCard({ userId }: LatestMockCardProps) {
             const val = latest[scoreKey] as number | null;
             const delta = key === "vr" ? vrDelta : key === "dm" ? dmDelta : qrDelta;
             return (
-              <div key={key} className="bg-slate-50 rounded-xl p-3 text-center">
-                <p className="text-xs font-medium text-slate-500 mb-1">{key.toUpperCase()}</p>
-                <p className="text-xl font-bold text-slate-900">
+              <div key={key} className="bg-secondary rounded-xl p-3 text-center">
+                <p className="text-xs font-medium text-muted-foreground mb-1">{key.toUpperCase()}</p>
+                <p className="text-xl font-bold text-foreground">
                   {val ?? <span className="text-slate-300">-</span>}
                   <DeltaBadge delta={delta} />
                 </p>
-                <p className="text-[10px] text-slate-400 mt-0.5">/ 900</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">/ 900</p>
               </div>
             );
           })}
-          <div className="bg-slate-50 rounded-xl p-3 text-center">
-            <p className="text-xs font-medium text-slate-500 mb-1">SJT</p>
+          <div className="bg-secondary rounded-xl p-3 text-center">
+            <p className="text-xs font-medium text-muted-foreground mb-1">SJT</p>
             <p className={`text-xl font-bold ${sjtBandColor(latest.score_sjt)}`}>
               {latest.score_sjt != null ? `Band ${latest.score_sjt}` : <span className="text-slate-300">-</span>}
               {sjtDelta != null && sjtDelta !== 0 && (
@@ -353,20 +353,20 @@ export default function LatestMockCard({ userId }: LatestMockCardProps) {
                 </span>
               )}
             </p>
-            <p className="text-[10px] text-slate-400 mt-0.5">1 = best</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">1 = best</p>
           </div>
         </div>
 
         {/* Total bar */}
         {total != null && (
-          <div className="mt-3 flex items-center justify-between bg-slate-900 text-white rounded-xl px-4 py-2.5">
-            <span className="text-sm font-medium text-slate-300">
+          <div className="mt-3 flex items-center justify-between bg-foreground text-card rounded-xl px-4 py-2.5">
+            <span className="text-sm font-medium text-card/70">
               {mainScores.length === 3 ? "Total (VR+DM+QR)" : `Total (${mainScores.length} section${mainScores.length !== 1 ? "s" : ""})`}
             </span>
             <div className="flex items-center gap-2">
               <span className="text-lg font-bold">
                 {total}
-                <span className="text-xs font-normal text-slate-400 ml-1">/ {maxOut}</span>
+                <span className="text-xs font-normal text-card/60 ml-1">/ {maxOut}</span>
                 {totalDelta != null && totalDelta !== 0 && (
                   <span className={`text-sm font-semibold ml-2 ${totalDelta > 0 ? "text-emerald-400" : "text-red-400"}`}>
                     {totalDelta > 0 ? "+" : ""}{totalDelta}
@@ -392,7 +392,7 @@ export default function LatestMockCard({ userId }: LatestMockCardProps) {
         <div className="mt-3 flex justify-end">
           <Link
             to="/mock-scores"
-            className="text-xs text-slate-400 hover:text-blue-600 hover:underline transition-colors"
+            className="text-xs text-muted-foreground hover:text-primary hover:underline transition-colors"
           >
             + Log another mock
           </Link>

@@ -83,13 +83,13 @@ const TYPE_SHORT: Partial<Record<SessionType, string>> = {
 }
 
 const TYPE_PILL: Record<string, string> = {
-  vr_practice:  'bg-blue-100 text-blue-800',
-  dm_practice:  'bg-green-100 text-green-800',
-  qr_practice:  'bg-amber-100 text-amber-800',
-  sjt_practice: 'bg-purple-100 text-purple-800',
-  full_mock:    'bg-red-100 text-red-800',
-  mini_mock:    'bg-pink-100 text-pink-800',
-  reflection:   'bg-slate-100 text-slate-700',
+  vr_practice:  'bg-secondary text-foreground',
+  dm_practice:  'bg-secondary text-foreground',
+  qr_practice:  'bg-secondary text-foreground',
+  sjt_practice: 'bg-secondary text-foreground',
+  full_mock:    'bg-foreground text-card',
+  mini_mock:    'bg-secondary text-foreground',
+  reflection:   'bg-secondary text-muted-foreground',
 }
 
 function sessionDisplayLabel(session: Pick<DBSession, 'session_type' | 'notes'>): string {
@@ -142,7 +142,7 @@ function BlockDayButton({
   }
 
   return (
-    <div className="border-t border-slate-100 px-5 py-3">
+    <div className="border-t border-border px-5 py-3">
       <button
         type="button"
         onClick={toggle}
@@ -164,10 +164,10 @@ function BlockDayButton({
 // ─── Day detail modal ─────────────────────────────────────────────────────────
 
 const SECTION_OPTS = [
-  { key: 'vr',  label: 'VR',  color: 'border-blue-400 bg-blue-50 text-blue-700' },
-  { key: 'dm',  label: 'DM',  color: 'border-green-400 bg-green-50 text-green-700' },
-  { key: 'qr',  label: 'QR',  color: 'border-amber-400 bg-amber-50 text-amber-700' },
-  { key: 'sjt', label: 'SJT', color: 'border-purple-400 bg-purple-50 text-purple-700' },
+  { key: 'vr',  label: 'VR',  color: 'border-border bg-secondary text-foreground' },
+  { key: 'dm',  label: 'DM',  color: 'border-border bg-secondary text-foreground' },
+  { key: 'qr',  label: 'QR',  color: 'border-border bg-secondary text-foreground' },
+  { key: 'sjt', label: 'SJT', color: 'border-border bg-secondary text-foreground' },
 ] as const
 
 type ExtraSection = 'vr' | 'dm' | 'qr' | 'sjt'
@@ -414,16 +414,16 @@ function DayDetailModal({
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className={`px-5 py-4 border-b border-slate-100 flex items-start justify-between shrink-0 ${isExamDay ? 'bg-amber-50' : ''}`}>
+        <div className={`px-5 py-4 border-b border-border flex items-start justify-between shrink-0 ${isExamDay ? 'bg-secondary' : ''}`}>
           <div>
-            <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
               {date.toLocaleDateString('en-GB', { weekday: 'long' })}
             </p>
             <h2 className="text-lg font-bold text-slate-900">
               {date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
             </h2>
             {isExamDay && (
-              <span className="text-xs font-semibold text-amber-700 bg-amber-100 rounded-full px-2 py-0.5 mt-1 inline-block">
+              <span className="text-xs font-semibold text-muted-foreground bg-secondary rounded-full px-2 py-0.5 mt-1 inline-block">
                 Exam day
               </span>
             )}
@@ -434,7 +434,7 @@ function DayDetailModal({
               if (sessionSheet) setSessionSheet(null)
               else onClose()
             }}
-            className="text-slate-400 hover:text-slate-600 text-2xl leading-none mt-1 rounded-lg hover:bg-slate-100 px-1"
+            className="text-muted-foreground hover:text-foreground text-2xl leading-none mt-1 rounded-lg hover:bg-secondary px-1"
             aria-label={sessionSheet ? 'Close session editor' : 'Close'}
           >
             ×
@@ -456,7 +456,7 @@ function DayDetailModal({
             ) : activeSessions.length > 0 ? (
               <div className="space-y-2">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Sessions</p>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Sessions</p>
                   <p className="text-xs text-slate-400 text-right leading-snug">
                     {isPastOrToday && activeSessions.length > 0 && (
                       <span>{completedCount}/{activeSessions.length} logged · ~{timeProgressPct}% of planned time · </span>
@@ -566,7 +566,7 @@ function DayDetailModal({
                 {hasMockSession && (
                   <Link
                     to="/mock-scores"
-                    className="block w-full rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-center text-xs font-semibold text-blue-700 hover:bg-blue-100"
+                    className="block w-full rounded-lg border border-border bg-secondary px-3 py-2 text-center text-xs font-semibold text-primary hover:bg-secondary/80"
                   >
                     Log mock score
                   </Link>
@@ -578,7 +578,7 @@ function DayDetailModal({
           </div>
 
           {isPastOrToday && !readOnly && (
-            <div className="border-t border-slate-100 px-5 py-4 space-y-3 bg-slate-50">
+            <div className="border-t border-border px-5 py-4 space-y-3 bg-slate-50">
               <div>
                 <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Extra study done</p>
                 <p className="text-xs text-slate-400 mt-0.5">
@@ -590,10 +590,10 @@ function DayDetailModal({
                   const section = key as ExtraSection
                   const value = Math.max(0, Number(extraStudy[section] ?? 0))
                   return (
-                    <div key={section} className="rounded-lg border border-slate-200 bg-white p-2">
+                    <div key={section} className="rounded-lg border border-border bg-white p-2">
                       <div className="flex items-center justify-between mb-1.5">
                         <span className={`text-[11px] font-bold rounded-full border px-2 py-0.5 ${color}`}>{label}</span>
-                        <span className="text-[11px] text-slate-500">{value}m</span>
+                        <span className="text-[11px] text-muted-foreground">{value}m</span>
                       </div>
                       <input
                         type="number"
@@ -604,7 +604,7 @@ function DayDetailModal({
                           const next = Number(e.target.value)
                           setExtraStudy(prev => ({ ...prev, [section]: Number.isFinite(next) ? Math.max(0, next) : 0 }))
                         }}
-                        className="w-full h-8 rounded-md border border-slate-200 px-2 text-xs text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full h-8 rounded-md border border-border px-2 text-xs text-center focus:outline-none focus:ring-2 focus:ring-primary"
                       />
                     </div>
                   )
@@ -614,7 +614,7 @@ function DayDetailModal({
                 type="button"
                 onClick={saveExtraStudy}
                 disabled={savingExtra}
-                className="w-full rounded-lg border border-slate-200 bg-white text-slate-700 text-sm font-medium py-2 hover:bg-slate-100 disabled:opacity-50"
+                className="w-full rounded-lg border border-border bg-card text-foreground text-sm font-medium py-2 hover:bg-secondary disabled:opacity-50"
               >
                 {savingExtra ? 'Saving extra study…' : 'Save extra study minutes'}
               </button>
@@ -626,7 +626,7 @@ function DayDetailModal({
           )}
 
           {isFutureDay && !isExamDay && !readOnly && (
-            <div className="border-t border-slate-100 px-5 py-4 space-y-3">
+            <div className="border-t border-border px-5 py-4 space-y-3">
               <div>
                 <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Adjust future focus</p>
                 <p className="text-xs text-slate-400 mt-0.5">
@@ -635,7 +635,7 @@ function DayDetailModal({
               </div>
 
               <div className="grid grid-cols-2 gap-2">
-                <div className="rounded-lg border border-slate-200 bg-white p-2.5 space-y-1">
+                <div className="rounded-lg border border-border bg-white p-2.5 space-y-1">
                   <label className="text-[11px] font-semibold text-slate-600">Weekday hours (full target near exam)</label>
                   <input
                     type="number"
@@ -644,19 +644,19 @@ function DayDetailModal({
                     step={0.5}
                     value={rebuildSchoolH}
                     onChange={e => setRebuildSchoolH(e.target.value)}
-                    className="w-full h-8 rounded-md border border-slate-200 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full h-8 rounded-md border border-border px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                   {hoursSuggestion?.weekday != null && (
                     <button
                       type="button"
                       onClick={() => setRebuildSchoolH(String(hoursSuggestion.weekday))}
-                      className="text-[11px] text-blue-600 hover:underline font-medium"
+                      className="text-[11px] text-primary hover:underline font-medium"
                     >
                       Use recent weekday average (~{hoursSuggestion.weekday}h)
                     </button>
                   )}
                 </div>
-                <div className="rounded-lg border border-slate-200 bg-white p-2.5 space-y-1">
+                <div className="rounded-lg border border-border bg-white p-2.5 space-y-1">
                   <label className="text-[11px] font-semibold text-slate-600">Weekend hours (full target near exam)</label>
                   <input
                     type="number"
@@ -665,13 +665,13 @@ function DayDetailModal({
                     step={0.5}
                     value={rebuildWeekendH}
                     onChange={e => setRebuildWeekendH(e.target.value)}
-                    className="w-full h-8 rounded-md border border-slate-200 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full h-8 rounded-md border border-border px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                   {hoursSuggestion?.weekend != null && (
                     <button
                       type="button"
                       onClick={() => setRebuildWeekendH(String(hoursSuggestion.weekend))}
-                      className="text-[11px] text-blue-600 hover:underline font-medium"
+                      className="text-[11px] text-primary hover:underline font-medium"
                     >
                       Use recent weekend average (~{hoursSuggestion.weekend}h)
                     </button>
@@ -684,7 +684,7 @@ function DayDetailModal({
               </p>
 
               <div>
-                <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-1">More practice on…</p>
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">More practice on…</p>
                 <div className="grid grid-cols-4 gap-2">
                   {SECTION_OPTS.map(({ key, label, color }) => (
                     <button
@@ -693,7 +693,7 @@ function DayDetailModal({
                       onClick={() => toggleNeedsMore(key)}
                       className={[
                         'rounded-lg border-2 py-2 text-xs font-bold transition-all',
-                        needsMore.has(key) ? color : 'border-slate-200 text-slate-400 hover:border-slate-300 bg-white',
+                        needsMore.has(key) ? color : 'border-border text-slate-400 hover:border-border bg-white',
                       ].join(' ')}
                     >
                       {label}
@@ -723,7 +723,7 @@ function DayDetailModal({
                 <button
                   onClick={handleRegenerate}
                   disabled={regenerating}
-                  className="w-full rounded-lg bg-blue-600 text-white text-sm font-semibold py-2.5 hover:bg-blue-700 disabled:opacity-50 transition-all"
+                  className="w-full rounded-lg bg-primary text-primary-foreground text-sm font-semibold py-2.5 hover:bg-primary/90 disabled:opacity-50 transition-all"
                 >
                   {regenerating ? 'Regenerating…' : `Regenerate plan from this week${needsMore.size > 0 ? ` · more ${Array.from(needsMore).join(', ').toUpperCase()}` : ''}`}
                 </button>
@@ -744,11 +744,11 @@ function DayDetailModal({
 
           {/* Edit availability */}
           {!readOnly && !isExamDay && (
-            <div className="border-t border-slate-100 px-5 py-4 space-y-3 bg-slate-50">
+            <div className="border-t border-border px-5 py-4 space-y-3 bg-slate-50">
               {!editMode ? (
                 <button
                   onClick={() => { setEditMode(true); setAvailabilityError('') }}
-                  className="w-full text-sm font-medium text-slate-500 hover:text-blue-600 py-1 transition-colors"
+                  className="w-full text-sm font-medium text-muted-foreground hover:text-primary py-1 transition-colors"
                 >
                   Edit availability for this day
                 </button>
@@ -767,8 +767,8 @@ function DayDetailModal({
                         onClick={() => setAvailability(opt.v)}
                         className={`rounded-lg border-2 py-2 text-xs font-semibold transition-all ${
                           availability === opt.v
-                            ? 'border-blue-500 bg-blue-50 text-blue-700'
-                            : 'border-slate-200 text-slate-500 hover:border-slate-300 bg-white'
+                            ? 'border-primary bg-primary/10 text-primary'
+                            : 'border-border text-muted-foreground hover:border-border bg-white'
                         }`}
                       >
                         <div className="font-bold">{opt.icon}</div>
@@ -779,26 +779,26 @@ function DayDetailModal({
 
                   {availability === 'reduced' && (
                     <div className="flex items-center gap-2">
-                      <label className="text-xs text-slate-500 shrink-0">Hours available:</label>
+                      <label className="text-xs text-muted-foreground shrink-0">Hours available:</label>
                       <input
                         type="number" min={0.5} max={8} step={0.5}
                         value={customHours}
                         onChange={e => setCustomHours(e.target.value)}
                         placeholder="e.g. 1.5"
-                        className="w-full h-8 rounded-lg border border-slate-200 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full h-8 rounded-lg border border-border px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                       />
                       <span className="text-xs text-slate-400 shrink-0">h</span>
                     </div>
                   )}
 
                   <div className="flex items-center gap-2">
-                    <label className="text-xs text-slate-500 shrink-0 whitespace-nowrap">Apply until:</label>
+                    <label className="text-xs text-muted-foreground shrink-0 whitespace-nowrap">Apply until:</label>
                     <input
                       type="date"
                       value={rangeEnd}
                       min={dateStr}
                       onChange={e => setRangeEnd(e.target.value)}
-                      className="flex-1 h-8 rounded-lg border border-slate-200 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="flex-1 h-8 rounded-lg border border-border px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                   </div>
                   <p className="text-xs text-slate-400">
@@ -811,11 +811,11 @@ function DayDetailModal({
 
                   <div className="flex gap-2 pt-1">
                     <button onClick={() => { setEditMode(false); setAvailabilityError('') }}
-                      className="flex-1 text-sm text-slate-500 hover:text-slate-700 py-2 rounded-lg border border-slate-200 hover:bg-slate-100">
+                      className="flex-1 text-sm text-muted-foreground hover:text-slate-700 py-2 rounded-lg border border-border hover:bg-slate-100">
                       Cancel
                     </button>
                     <button onClick={handleSave} disabled={saving}
-                      className="flex-1 text-sm bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium">
+                      className="flex-1 text-sm bg-primary text-white py-2 rounded-lg hover:bg-primary/90 disabled:opacity-50 font-medium">
                       {saving ? 'Saving…' : 'Save'}
                     </button>
                   </div>
@@ -933,12 +933,12 @@ export function RebuildAheadModal({
         role="dialog"
         aria-labelledby="rebuild-plan-title"
       >
-        <div className="px-5 py-4 border-b border-slate-100 flex items-start justify-between shrink-0">
+        <div className="px-5 py-4 border-b border-border flex items-start justify-between shrink-0">
           <div>
             <h2 id="rebuild-plan-title" className="text-lg font-bold text-slate-900">
               Rebuild plan ahead
             </h2>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Session blocks from the week of{' '}
               <span className="font-semibold text-slate-700">{startLabel}</span>{' '}
               forward are regenerated.
@@ -949,7 +949,7 @@ export function RebuildAheadModal({
             type="button"
             disabled={busy}
             onClick={() => !busy && onClose()}
-            className="text-slate-400 hover:text-slate-600 text-2xl leading-none mt-0.5 rounded-lg hover:bg-slate-100 px-1 shrink-0"
+            className="text-muted-foreground hover:text-foreground text-2xl leading-none mt-0.5 rounded-lg hover:bg-secondary px-1 shrink-0"
             aria-label="Close"
           >
             ×
@@ -967,7 +967,7 @@ export function RebuildAheadModal({
               max={examDate}
               value={fromDate < todayDate ? todayDate : fromDate}
               onChange={e => setFromDate(e.target.value)}
-              className="mt-1.5 w-full h-10 rounded-lg border border-slate-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1.5 w-full h-10 rounded-lg border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             />
             <p className="text-[11px] text-slate-400 mt-1">
               Sessions from this date forward will be regenerated. Leave as today unless you want to keep this week as-is.
@@ -975,7 +975,7 @@ export function RebuildAheadModal({
           </div>
 
           <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-2.5 space-y-1">
+            <div className="rounded-lg border border-border bg-slate-50/80 p-2.5 space-y-1">
               <label className="text-[11px] font-semibold text-slate-600">Weekday hours (full target near exam)</label>
               <input
                 type="number"
@@ -984,19 +984,19 @@ export function RebuildAheadModal({
                 step={0.5}
                 value={schoolH}
                 onChange={e => setSchoolH(e.target.value)}
-                className="w-full h-9 rounded-md border border-slate-200 bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full h-9 rounded-md border border-border bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
               {hoursSuggestion?.weekday != null && (
                 <button
                   type="button"
                   onClick={() => setSchoolH(String(hoursSuggestion.weekday))}
-                  className="text-[11px] text-blue-600 hover:underline font-medium text-left"
+                  className="text-[11px] text-primary hover:underline font-medium text-left"
                 >
                   Recent avg ~{hoursSuggestion.weekday}h
                 </button>
               )}
             </div>
-            <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-2.5 space-y-1">
+            <div className="rounded-lg border border-border bg-slate-50/80 p-2.5 space-y-1">
               <label className="text-[11px] font-semibold text-slate-600">Weekend hours (full target near exam)</label>
               <input
                 type="number"
@@ -1005,13 +1005,13 @@ export function RebuildAheadModal({
                 step={0.5}
                 value={weekendH}
                 onChange={e => setWeekendH(e.target.value)}
-                className="w-full h-9 rounded-md border border-slate-200 bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full h-9 rounded-md border border-border bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
               {hoursSuggestion?.weekend != null && (
                 <button
                   type="button"
                   onClick={() => setWeekendH(String(hoursSuggestion.weekend))}
-                  className="text-[11px] text-blue-600 hover:underline font-medium text-left"
+                  className="text-[11px] text-primary hover:underline font-medium text-left"
                 >
                   Recent avg ~{hoursSuggestion.weekend}h
                 </button>
@@ -1024,7 +1024,7 @@ export function RebuildAheadModal({
           </p>
 
           <div>
-            <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-2">More practice on…</p>
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">More practice on…</p>
             <div className="grid grid-cols-4 gap-2">
               {SECTION_OPTS.map(({ key, label, color }) => (
                 <button
@@ -1033,7 +1033,7 @@ export function RebuildAheadModal({
                   onClick={() => toggleNeedsMore(key)}
                   className={[
                     'rounded-lg border-2 py-2 text-xs font-bold transition-all',
-                    needsMore.has(key) ? color : 'border-slate-200 text-slate-400 hover:border-slate-300 bg-white',
+                    needsMore.has(key) ? color : 'border-border text-slate-400 hover:border-border bg-white',
                   ].join(' ')}
                 >
                   {label}
@@ -1066,7 +1066,7 @@ export function RebuildAheadModal({
               type="button"
               onClick={submit}
               disabled={busy}
-              className="w-full rounded-lg bg-blue-600 text-white text-sm font-semibold py-2.5 hover:bg-blue-700 disabled:opacity-50 transition-all"
+              className="w-full rounded-lg bg-primary text-primary-foreground text-sm font-semibold py-2.5 hover:bg-primary/90 disabled:opacity-50 transition-all"
             >
               {busy ? 'Regenerating…' : 'Apply & regenerate'}
             </button>
@@ -1132,7 +1132,7 @@ function ExamDateEditModal({
           <h2 id="edit-exam-date-title" className="text-lg font-bold text-slate-900">
             Edit exam date
           </h2>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-muted-foreground">
             Saving will update your dashboard date and rebuild the timetable from this week onward.
           </p>
         </div>
@@ -1147,7 +1147,7 @@ function ExamDateEditModal({
               max={UCAT_EXAM_WINDOW_END_ISO}
               value={examDate}
               onChange={e => setExamDate(e.target.value)}
-              className="mt-1.5 h-10 w-full rounded-lg border border-slate-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1.5 h-10 w-full rounded-lg border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
           <div>
@@ -1158,7 +1158,7 @@ function ExamDateEditModal({
               type="time"
               value={examTime}
               onChange={e => setExamTime(e.target.value)}
-              className="mt-1.5 h-10 w-full rounded-lg border border-slate-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1.5 h-10 w-full rounded-lg border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
           {error && <p className="text-xs text-red-600">{error}</p>}
@@ -1167,7 +1167,7 @@ function ExamDateEditModal({
               type="button"
               disabled={saving}
               onClick={onClose}
-              className="flex-1 rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+              className="flex-1 rounded-lg border border-border py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50"
             >
               Cancel
             </button>
@@ -1175,7 +1175,7 @@ function ExamDateEditModal({
               type="button"
               disabled={saving || !examDate}
               onClick={submit}
-              className="flex-1 rounded-lg bg-blue-600 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+              className="flex-1 rounded-lg bg-primary py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50"
             >
               {saving ? 'Rebuilding...' : 'Save and rebuild'}
             </button>
@@ -1234,11 +1234,11 @@ function DayCell({
         'relative flex flex-col min-h-[72px] sm:min-h-[80px] p-1.5 sm:p-2 text-left transition-all rounded-lg border',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400',
         !cell.inMonth ? 'opacity-30 cursor-default pointer-events-none' : 'cursor-pointer',
-        isSelected ? 'ring-2 ring-blue-500 border-blue-300 bg-blue-50' :
-        isToday ? 'border-blue-400 bg-blue-50/80' :
+        isSelected ? 'ring-2 ring-blue-500 border-border bg-secondary' :
+        isToday ? 'border-primary/40 bg-secondary/80' :
         isExamDay ? 'border-amber-400 bg-amber-50' :
         isRest ? 'border-slate-100 bg-stone-50' :
-        'border-slate-100 bg-white hover:border-blue-200 hover:shadow-sm',
+        'border-slate-100 bg-white hover:border-border hover:shadow-sm',
       ].join(' ')}
       type="button"
       disabled={!cell.inMonth}
@@ -1247,7 +1247,7 @@ function DayCell({
       <div className="flex items-center justify-between mb-1">
         <span className={[
           'text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full',
-          isToday ? 'bg-blue-500 text-white' :
+          isToday ? 'bg-secondary0 text-white' :
           isExamDay ? 'bg-amber-500 text-white' :
           'text-slate-600',
         ].join(' ')}>
@@ -1432,7 +1432,7 @@ export function PlanCalendar({ plan, planDays, sessions, extraStudyLogs, readOnl
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-bold text-slate-900">Revision Plan</h1>
-          <p className="text-sm text-slate-500 mt-0.5">
+          <p className="text-sm text-muted-foreground mt-0.5">
             Exam: {parseDate(examDate).toLocaleDateString('en-GB', {
               weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
             })}
@@ -1443,7 +1443,7 @@ export function PlanCalendar({ plan, planDays, sessions, extraStudyLogs, readOnl
               <button
                 type="button"
                 onClick={() => setShowExamDateEdit(true)}
-                className="ml-2 inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                className="ml-2 inline-flex items-center gap-1 rounded-md border border-border bg-white px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50"
               >
                 <Pencil className="h-3 w-3" aria-hidden="true" />
                 Edit
@@ -1455,7 +1455,7 @@ export function PlanCalendar({ plan, planDays, sessions, extraStudyLogs, readOnl
               Guest plan on this device only. Sign in to rebuild your timetable, edit future days and sync across devices. You can still download a PDF below.
             </p>
           ) : (
-            <p className="mt-2 text-xs text-slate-500 max-w-xl">
+            <p className="mt-2 text-xs text-muted-foreground max-w-xl">
               Tap any day to change availability or hours, log extra practice or rebuild from that week. Use{' '}
               <strong>Rebuild plan ahead</strong>
               {' '}for a full refresh from a date you choose.
@@ -1465,7 +1465,7 @@ export function PlanCalendar({ plan, planDays, sessions, extraStudyLogs, readOnl
         <div className="flex flex-wrap gap-2 shrink-0 justify-end">
           <Link
             to="/mock-scores"
-            className="text-xs bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-slate-600 hover:bg-slate-50 font-medium"
+            className="text-xs bg-white border border-border rounded-lg px-3 py-1.5 text-slate-600 hover:bg-slate-50 font-medium"
           >
             Log mock score
           </Link>
@@ -1473,7 +1473,7 @@ export function PlanCalendar({ plan, planDays, sessions, extraStudyLogs, readOnl
             <button
               type="button"
               onClick={() => setShowRebuildAhead(true)}
-              className="text-xs bg-blue-600 text-white rounded-lg px-3 py-1.5 hover:bg-blue-700 font-semibold shadow-sm transition-colors"
+              className="text-xs bg-primary text-white rounded-lg px-3 py-1.5 hover:bg-primary/90 font-semibold shadow-sm transition-colors"
             >
               Rebuild plan ahead
             </button>
@@ -1482,21 +1482,21 @@ export function PlanCalendar({ plan, planDays, sessions, extraStudyLogs, readOnl
             type="button"
             onClick={handleDownloadPdf}
             disabled={pdfExporting}
-            className="text-xs bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-slate-600 hover:bg-slate-50 font-medium disabled:opacity-50"
+            className="text-xs bg-white border border-border rounded-lg px-3 py-1.5 text-slate-600 hover:bg-slate-50 font-medium disabled:opacity-50"
           >
             {pdfExporting ? 'Generating…' : 'Download PDF'}
           </button>
           <button
             type="button"
             onClick={() => setCurrentMonth(new Date(today.getFullYear(), today.getMonth(), 1))}
-            className="text-xs bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-slate-600 hover:bg-slate-50 font-medium"
+            className="text-xs bg-white border border-border rounded-lg px-3 py-1.5 text-slate-600 hover:bg-slate-50 font-medium"
           >
             Today
           </button>
           <button
             type="button"
             onClick={() => setCurrentMonth(new Date(parseDate(examDate).getFullYear(), parseDate(examDate).getMonth(), 1))}
-            className="text-xs bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-slate-600 hover:bg-slate-50 font-medium"
+            className="text-xs bg-white border border-border rounded-lg px-3 py-1.5 text-slate-600 hover:bg-slate-50 font-medium"
           >
             Exam month
           </button>
@@ -1504,7 +1504,7 @@ export function PlanCalendar({ plan, planDays, sessions, extraStudyLogs, readOnl
       </div>
 
       {/* Month navigation + stats */}
-      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+      <div className="bg-white rounded-2xl border border-border overflow-hidden shadow-sm">
         <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
           <button
             onClick={() => setCurrentMonth(prevMonth)}
@@ -1560,17 +1560,17 @@ export function PlanCalendar({ plan, planDays, sessions, extraStudyLogs, readOnl
         </div>
 
         {/* Legend */}
-        <div className="px-4 py-3 border-t border-slate-100 flex flex-wrap gap-x-4 gap-y-1">
+        <div className="px-4 py-3 border-t border-border flex flex-wrap gap-x-4 gap-y-1">
           {([
-            ['VR', 'bg-blue-500'],
-            ['DM', 'bg-green-500'],
-            ['QR', 'bg-amber-500'],
-            ['SJT', 'bg-purple-500'],
-            ['Full Mock', 'bg-red-500'],
-            ['Mini Mock', 'bg-pink-500'],
-            ['Reflection', 'bg-slate-400'],
+            ['VR', 'bg-foreground'],
+            ['DM', 'bg-foreground'],
+            ['QR', 'bg-foreground'],
+            ['SJT', 'bg-foreground'],
+            ['Full Mock', 'bg-foreground'],
+            ['Mini Mock', 'bg-muted-foreground'],
+            ['Reflection', 'bg-muted-foreground'],
           ] as [string, string][]).map(([label, dot]) => (
-            <span key={label} className="flex items-center gap-1.5 text-xs text-slate-500">
+            <span key={label} className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <span className={`w-2 h-2 rounded-full ${dot}`} />
               {label}
             </span>

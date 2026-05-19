@@ -6,17 +6,17 @@ import type { GMCDomainId } from "../../types/sjt";
 import { cn } from "../../lib/cn";
 
 const dotColor: Record<string, string> = {
-  blue: "bg-blue-500",
-  emerald: "bg-emerald-500",
-  amber: "bg-amber-500",
-  purple: "bg-purple-500",
+  blue:    "bg-primary",
+  emerald: "bg-primary",
+  amber:   "bg-muted-foreground",
+  purple:  "bg-muted-foreground",
 };
 
 const barColor: Record<string, string> = {
-  blue: "bg-blue-500",
-  emerald: "bg-emerald-500",
-  amber: "bg-amber-500",
-  purple: "bg-purple-500",
+  blue:    "bg-primary",
+  emerald: "bg-primary",
+  amber:   "bg-muted-foreground",
+  purple:  "bg-muted-foreground",
 };
 
 function pctLabel(pct: number): { text: string; color: string } {

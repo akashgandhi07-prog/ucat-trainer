@@ -120,7 +120,7 @@ export function SettingsView({
     <div className="p-6 md:p-10 max-w-2xl mx-auto space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-slate-900">Settings</h1>
-        <p className="text-slate-500 mt-1">Manage your exam details and plan preferences</p>
+        <p className="text-muted-foreground mt-1">Manage your exam details and plan preferences</p>
       </div>
 
       <Card>
@@ -151,16 +151,16 @@ export function SettingsView({
                 type="time"
                 value={examTime}
                 onChange={e => setExamTime(e.target.value)}
-                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="h-10 w-full rounded-lg border border-border bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
-            <label className="flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 cursor-pointer">
+            <label className="flex items-start gap-3 rounded-lg border border-border bg-slate-50 p-4 cursor-pointer">
               <input
                 type="checkbox"
                 checked={ucatSen}
                 onChange={e => setUcatSen(e.target.checked)}
-                className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary"
               />
               <span>
                 <span className="font-medium text-slate-900">UCATSEN (extra time)</span>
@@ -198,7 +198,7 @@ export function SettingsView({
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Add period form */}
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-3">
+          <div className="rounded-lg border border-border bg-slate-50 p-4 space-y-3">
             <div className="flex gap-2">
               <button
                 type="button"
@@ -206,7 +206,7 @@ export function SettingsView({
                 className={`flex-1 rounded-lg border-2 py-2 text-sm font-medium transition-all ${
                   taKind === 'busy'
                     ? 'border-red-400 bg-red-50 text-red-700'
-                    : 'border-slate-200 text-slate-500 hover:border-slate-400'
+                    : 'border-border text-muted-foreground hover:border-slate-400'
                 }`}
               >
                 Fully unavailable
@@ -217,29 +217,29 @@ export function SettingsView({
                 className={`flex-1 rounded-lg border-2 py-2 text-sm font-medium transition-all ${
                   taKind === 'holiday'
                     ? 'border-green-400 bg-green-50 text-green-700'
-                    : 'border-slate-200 text-slate-500 hover:border-slate-400'
+                    : 'border-border text-muted-foreground hover:border-slate-400'
                 }`}
               >
                 Holiday (more time)
               </button>
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               {taKind === 'busy'
                 ? 'No sessions - trips, festivals, commitments.'
                 : 'Free day hours applied - school holidays, time off.'}
             </p>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-xs text-slate-500 mb-1 block">Start</label>
+                <label className="text-xs text-muted-foreground mb-1 block">Start</label>
                 <input type="date" value={taStart} min={toISODate(new Date())} max={examDate}
                   onChange={e => setTaStart(e.target.value)}
-                  className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="h-9 w-full rounded-lg border border-border bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
               </div>
               <div>
-                <label className="text-xs text-slate-500 mb-1 block">End</label>
+                <label className="text-xs text-muted-foreground mb-1 block">End</label>
                 <input type="date" value={taEnd} min={taStart || toISODate(new Date())} max={examDate}
                   onChange={e => setTaEnd(e.target.value)}
-                  className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="h-9 w-full rounded-lg border border-border bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
               </div>
             </div>
             <div className="flex gap-2">
@@ -247,7 +247,7 @@ export function SettingsView({
                 placeholder={taKind === 'busy' ? 'Label (e.g. Festival)' : 'Label (e.g. Summer holidays)'}
                 value={taLabel}
                 onChange={e => setTaLabel(e.target.value)}
-                className="flex-1 h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="flex-1 h-9 rounded-lg border border-border bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
               <Button
                 onClick={addTimeAway}
                 disabled={!taStart || !taEnd || taEnd < taStart || taSaving}
@@ -288,7 +288,7 @@ export function SettingsView({
               })}
             </div>
           ) : (
-            <p className="text-sm text-slate-500 text-center py-3">No time away periods added yet.</p>
+            <p className="text-sm text-muted-foreground text-center py-3">No time away periods added yet.</p>
           )}
 
           {taError && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{taError}</p>}
@@ -302,9 +302,9 @@ export function SettingsView({
           <CardDescription>Powered by TheUKCATPeople</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-muted-foreground">
             This planner is built and maintained by TheUKCATPeople. Need help?{' '}
-            <a href="mailto:support@theukcatpeople.com" className="text-blue-600 hover:underline">
+            <a href="mailto:support@theukcatpeople.com" className="text-primary hover:underline">
               Get in touch
             </a>.
           </p>

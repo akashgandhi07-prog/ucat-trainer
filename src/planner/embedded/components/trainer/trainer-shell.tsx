@@ -19,16 +19,16 @@ export function TrainerShell({ pathWithQuery }: TrainerShellProps) {
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-100">
-      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3">
+      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-white px-4 py-3">
         <div className="flex min-w-0 items-center gap-3">
           <Link
             href="/"
-            className="text-sm font-semibold text-slate-900 hover:text-blue-700 truncate"
+            className="text-sm font-semibold text-slate-900 hover:text-foreground truncate"
           >
             TheUKCATPeople
           </Link>
           <span className="text-slate-300 hidden sm:inline">|</span>
-          <span className="text-xs text-slate-500 uppercase tracking-wide hidden sm:inline">
+          <span className="text-xs text-muted-foreground uppercase tracking-wide hidden sm:inline">
             Free skills drills
           </span>
         </div>
@@ -38,14 +38,14 @@ export function TrainerShell({ pathWithQuery }: TrainerShellProps) {
               href={iframeSrc}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap"
+              className="text-xs font-medium text-primary hover:text-foreground whitespace-nowrap"
             >
               Open trainer site
             </a>
           ) : null}
           <Link
             href="/dashboard"
-            className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 whitespace-nowrap"
+            className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-primary/90 whitespace-nowrap"
           >
             Study plan
           </Link>

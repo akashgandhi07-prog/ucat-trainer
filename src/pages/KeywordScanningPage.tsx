@@ -275,7 +275,7 @@ export default function KeywordScanningPage() {
     const isPerfect = foundCount === targets.length;
     const isNewBest = isPerfect && (bestTimeSeconds == null || elapsed < bestTimeSeconds);
     const skipLinkClass =
-      "absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-slate-900 font-medium rounded-lg ring-2 ring-blue-600 opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
+      "absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-foreground font-medium rounded-lg ring-2 ring-blue-600 opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
 
     return (
       <div className="flex flex-col min-h-screen">
@@ -295,28 +295,28 @@ export default function KeywordScanningPage() {
           </div>
           <div className="flex-1 flex items-center justify-center">
             <div className="w-full max-w-md mx-auto text-center">
-            <h2 className="text-xl font-semibold text-slate-900 mb-6">
+            <h2 className="text-xl font-semibold text-foreground mb-6">
               Keyword Scanning - Results
             </h2>
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4 mb-6">
+            <div className="bg-card rounded-xl border border-border p-6 space-y-4 mb-6">
               {isNewBest && (
                 <p className="text-sm font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
                   New best!
                 </p>
               )}
-              <p className="text-lg text-slate-700">
+              <p className="text-lg text-foreground">
                 Found {foundCount}/{targets.length} in {elapsed}s
               </p>
-              <p className="text-slate-600 text-sm">
+              <p className="text-muted-foreground text-sm">
                 Accuracy: {targets.length > 0 ? Math.round((foundCount / targets.length) * 100) : 0}%
               </p>
               {bestTimeSeconds != null && !isNewBest && (
-                <p className="text-slate-600 text-sm">
+                <p className="text-muted-foreground text-sm">
                   Best time ({keywordCount} keywords): {bestTimeSeconds}s. Try to beat it next time.
                 </p>
               )}
               {bestTimeSeconds != null && isNewBest && elapsed < bestTimeSeconds && (
-                <p className="text-slate-600 text-sm">
+                <p className="text-muted-foreground text-sm">
                   Previous best: {bestTimeSeconds}s
                 </p>
               )}
@@ -327,7 +327,7 @@ export default function KeywordScanningPage() {
               </p>
             )}
             {saving && (
-              <p className="mb-4 text-sm text-slate-600 inline-flex items-center gap-2" aria-live="polite">
+              <p className="mb-4 text-sm text-muted-foreground inline-flex items-center gap-2" aria-live="polite">
                 <span className="inline-block w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" aria-hidden />
                 Saving…
               </p>
@@ -354,7 +354,7 @@ export default function KeywordScanningPage() {
             <div className="mt-4">
               <Link
                 to="/"
-                className="min-h-[44px] inline-flex items-center justify-center py-2 text-sm text-slate-500 hover:text-blue-600"
+                className="min-h-[44px] inline-flex items-center justify-center py-2 text-sm text-muted-foreground hover:text-primary"
               >
                 Back to Home
               </Link>
@@ -368,10 +368,10 @@ export default function KeywordScanningPage() {
   }
 
   const skipLinkClass =
-    "absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-slate-900 font-medium rounded-lg ring-2 ring-blue-600 opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
+    "absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-foreground font-medium rounded-lg ring-2 ring-blue-600 opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50/50">
+    <div className="flex flex-col min-h-screen bg-secondary/50">
       <SEOHead
         title="UCAT Keyword Scanning Trainer"
         description="Find target words in dense passages. Free keyword scanning practice for UCAT Verbal Reasoning, built for UK applicants."
@@ -384,14 +384,14 @@ export default function KeywordScanningPage() {
       <Header />
       <main id="main-content" className="flex-1 py-10 px-4" tabIndex={-1}>
         <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 mb-5">
+          <div className="bg-card rounded-xl border border-border p-5 mb-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <p className="text-sm font-semibold text-slate-700">
+                <p className="text-sm font-semibold text-foreground">
                   Find these words
                 </p>
                 <span
-                  className="inline-flex items-center justify-center min-w-[4.5rem] px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600"
+                  className="inline-flex items-center justify-center min-w-[4.5rem] px-2.5 py-1 rounded-full text-xs font-semibold bg-secondary text-muted-foreground"
                   aria-live="polite"
                 >
                   {foundCount}/{targets.length} found
@@ -402,7 +402,7 @@ export default function KeywordScanningPage() {
                   setResultsElapsedSeconds(Math.round((Date.now() - startTime) / 1000));
                   setPhase("results");
                 }}
-                className="text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline px-2 py-1"
+                className="text-xs font-medium text-primary hover:text-primary hover:underline px-2 py-1"
               >
                 Finish & View Results
               </button>
@@ -414,8 +414,8 @@ export default function KeywordScanningPage() {
                   <span
                     key={target}
                     className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${found
-                      ? "bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-sm"
-                      : "bg-slate-50 text-slate-700 border border-slate-200"
+                      ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                      : "bg-secondary text-foreground border border-border"
                       }`}
                   >
                     {found && (
@@ -430,15 +430,15 @@ export default function KeywordScanningPage() {
             </div>
           </div>
           {targets.length < keywordCount && targets.length > 0 && (
-            <p className="text-xs text-slate-500 mb-3 px-0.5">
+            <p className="text-xs text-muted-foreground mb-3 px-0.5">
               Short passage: only {targets.length} keyword{targets.length !== 1 ? "s" : ""} available.
             </p>
           )}
           <div
-            className={`bg-white rounded-xl border shadow-sm p-6 transition-colors ${clickedWrong ? "border-red-300 ring-2 ring-red-100" : "border-slate-200"
+            className={`bg-card rounded-xl border p-6 transition-colors ${clickedWrong ? "border-red-300 ring-2 ring-red-100" : "border-border"
               }`}
           >
-            <div className="text-slate-800 leading-[1.7] space-y-5 text-[15px]">
+            <div className="text-foreground leading-[1.7] space-y-5 text-[15px]">
               {paragraphs.map((wordsInParagraph, pIdx) => (
                 <p key={pIdx} className="flex flex-wrap gap-x-2 gap-y-1">
                   {wordsInParagraph.map((word, wIdx) => {

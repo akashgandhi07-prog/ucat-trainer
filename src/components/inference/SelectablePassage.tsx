@@ -84,7 +84,7 @@ export default function SelectablePassage({
           <span
             key={`s-${lineIndex}-${match.index}`}
             onClick={handleSentenceClick}
-            className="cursor-pointer hover:bg-blue-100 transition-colors rounded-sm px-0.5 -mx-0.5"
+            className="cursor-pointer hover:bg-secondary transition-colors rounded-sm px-0.5 -mx-0.5"
           >
             {sentenceText}
           </span>
@@ -95,7 +95,7 @@ export default function SelectablePassage({
     return (
       <div
         ref={passageRef as RefObject<HTMLDivElement>}
-        className={`selectable-passage text-slate-800 leading-[1.7] text-[15px] whitespace-pre-wrap select-text ${className}`}
+        className={`selectable-passage text-foreground leading-[1.7] text-[15px] whitespace-pre-wrap select-text ${className}`}
         data-passage-text={passageText}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -130,7 +130,7 @@ export default function SelectablePassage({
   return (
     <div
       ref={passageRef as RefObject<HTMLDivElement>}
-      className={`text-slate-800 leading-[1.7] text-[15px] whitespace-pre-wrap select-text ${className}`}
+      className={`text-foreground leading-[1.7] text-[15px] whitespace-pre-wrap select-text ${className}`}
     >
       {segments.map((seg, i) => {
         const text = passageText.slice(seg.start, seg.end);

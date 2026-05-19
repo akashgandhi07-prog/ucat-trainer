@@ -10,33 +10,33 @@ const accentStyles: Record<
 > = {
   primary: {
     iconBox: "bg-primary/10 text-primary",
-    hoverBorder: "hover:border-primary/40",
+    hoverBorder: "hover:border-foreground/25",
     hoverTitle: "group-hover:text-primary",
     hoverChevron: "group-hover:text-primary",
   },
   blue: {
-    iconBox: "bg-blue-500/10 text-blue-600",
-    hoverBorder: "hover:border-blue-200",
-    hoverTitle: "group-hover:text-blue-700",
-    hoverChevron: "group-hover:text-blue-600",
+    iconBox: "bg-primary/10 text-primary",
+    hoverBorder: "hover:border-foreground/25",
+    hoverTitle: "group-hover:text-primary",
+    hoverChevron: "group-hover:text-primary",
   },
   amber: {
-    iconBox: "bg-amber-500/10 text-amber-600",
-    hoverBorder: "hover:border-amber-200",
-    hoverTitle: "group-hover:text-amber-700",
-    hoverChevron: "group-hover:text-amber-600",
+    iconBox: "bg-primary/10 text-primary",
+    hoverBorder: "hover:border-foreground/25",
+    hoverTitle: "group-hover:text-primary",
+    hoverChevron: "group-hover:text-primary",
   },
   emerald: {
-    iconBox: "bg-emerald-500/10 text-emerald-600",
-    hoverBorder: "hover:border-emerald-200",
-    hoverTitle: "group-hover:text-emerald-700",
-    hoverChevron: "group-hover:text-emerald-600",
+    iconBox: "bg-primary/10 text-primary",
+    hoverBorder: "hover:border-foreground/25",
+    hoverTitle: "group-hover:text-primary",
+    hoverChevron: "group-hover:text-primary",
   },
   violet: {
-    iconBox: "bg-violet-500/10 text-violet-600",
-    hoverBorder: "hover:border-violet-200",
-    hoverTitle: "group-hover:text-violet-700",
-    hoverChevron: "group-hover:text-violet-600",
+    iconBox: "bg-primary/10 text-primary",
+    hoverBorder: "hover:border-foreground/25",
+    hoverTitle: "group-hover:text-primary",
+    hoverChevron: "group-hover:text-primary",
   },
 };
 
@@ -76,8 +76,8 @@ export default function HubTrainerCard({
       type="button"
       onClick={onClick}
       className={cn(
-        "group relative flex h-full flex-col items-stretch text-left rounded-xl border bg-card shadow-sm",
-        "p-5 sm:p-6 transition-all duration-200 hover:shadow-md",
+        "group relative flex h-full flex-col items-stretch text-left rounded-xl border bg-card",
+        "p-5 sm:p-6 transition-all duration-200",
         selected
           ? "border-primary bg-training-active-muted shadow-md ring-1 ring-primary/20"
           : cn("border-border", styles.hoverBorder),
@@ -94,7 +94,7 @@ export default function HubTrainerCard({
         </span>
         <div className="flex shrink-0 items-center gap-2">
           {badge ? (
-            <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800">
+            <span className="inline-flex items-center rounded-full border border-border bg-secondary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
               {badge}
             </span>
           ) : null}

@@ -15,7 +15,7 @@ export function GuestSignInCta({ className = '' }: { className?: string }) {
       </div>
       <Link
         href="/auth/login?next=/dashboard"
-        className="inline-flex h-8 shrink-0 items-center justify-center rounded-lg bg-blue-600 px-3 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+        className="inline-flex h-8 shrink-0 items-center justify-center rounded-lg bg-primary px-3 text-sm font-medium text-white hover:bg-primary/90 transition-colors"
       >
         Sign in to save
       </Link>

@@ -17,7 +17,7 @@ function HubCard({
   icon: ReactNode;
 }) {
   const className =
-    "group flex flex-col rounded-xl border border-border bg-card p-5 shadow-sm hover:border-primary/50 hover:shadow-md transition-all text-left h-full";
+    "group flex flex-col rounded-xl border border-border bg-card p-5 hover:border-primary/50 hover:shadow-md transition-all text-left h-full";
 
   const inner = (
     <>

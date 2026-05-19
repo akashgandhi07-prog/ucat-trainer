@@ -26,14 +26,14 @@ const SESSION_LABELS: Record<string, string> = {
 };
 
 const SESSION_COLORS: Record<string, string> = {
-  vr_practice: "bg-blue-100 text-blue-800 border-blue-200",
-  dm_practice: "bg-violet-100 text-violet-800 border-violet-200",
-  qr_practice: "bg-amber-100 text-amber-800 border-amber-200",
-  sjt_practice: "bg-teal-100 text-teal-800 border-teal-200",
-  mini_mock: "bg-orange-100 text-orange-800 border-orange-200",
-  full_mock: "bg-red-100 text-red-800 border-red-200",
-  reflection: "bg-slate-100 text-slate-700 border-slate-200",
-  rest: "bg-slate-50 text-slate-500 border-slate-200",
+  vr_practice:  "bg-secondary text-foreground border-border",
+  dm_practice:  "bg-secondary text-foreground border-border",
+  qr_practice:  "bg-secondary text-foreground border-border",
+  sjt_practice: "bg-secondary text-foreground border-border",
+  mini_mock:    "bg-secondary text-foreground border-border",
+  full_mock:    "bg-foreground text-card border-foreground",
+  reflection:   "bg-secondary text-foreground border-border",
+  rest:         "bg-secondary text-muted-foreground border-border",
 };
 
 function todayISO(): string {
@@ -98,15 +98,15 @@ export default function TodayPlanStrip({ userId }: TodayPlanStripProps) {
   const totalMinutes = visibleSessions.reduce((s, r) => s + (r.duration_minutes ?? 0), 0);
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4">
+    <div className="bg-card rounded-xl border border-border px-5 py-4">
       <div className="flex items-center justify-between gap-4 mb-3">
         <div className="flex items-center gap-2">
-          <p className="text-sm font-semibold text-slate-900">Today&apos;s plan</p>
-          <span className="text-xs text-slate-400">· {totalMinutes} min</span>
+          <p className="text-sm font-semibold text-foreground">Today&apos;s plan</p>
+          <span className="text-xs text-muted-foreground">· {totalMinutes} min</span>
         </div>
         <Link
           to="/study-plan/today"
-          className="text-sm text-blue-600 font-medium hover:underline shrink-0"
+          className="text-sm text-primary font-medium hover:underline shrink-0"
         >
           Open plan →
         </Link>
@@ -115,7 +115,7 @@ export default function TodayPlanStrip({ userId }: TodayPlanStripProps) {
         {visibleSessions.map((s) => {
           const label = SESSION_LABELS[s.session_type] ?? s.session_type;
           const colorClass =
-            SESSION_COLORS[s.session_type] ?? "bg-slate-100 text-slate-700 border-slate-200";
+            SESSION_COLORS[s.session_type] ?? "bg-secondary text-foreground border-border";
           return (
             <span
               key={s.id}
@@ -135,14 +135,14 @@ export default function TodayPlanStrip({ userId }: TodayPlanStripProps) {
 
 function TodayPlanRestDay() {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-5 py-4 flex items-center justify-between gap-4">
+    <div className="bg-card rounded-xl border border-border px-5 py-4 flex items-center justify-between gap-4">
       <div>
-        <p className="text-sm font-semibold text-slate-900">Today&apos;s plan</p>
-        <p className="text-xs text-slate-500">Rest day or no sessions scheduled.</p>
+        <p className="text-sm font-semibold text-foreground">Today&apos;s plan</p>
+        <p className="text-xs text-muted-foreground">Rest day or no sessions scheduled.</p>
       </div>
       <Link
         to="/study-plan/today"
-        className="text-sm text-blue-600 font-medium hover:underline shrink-0"
+        className="text-sm text-primary font-medium hover:underline shrink-0"
       >
         View plan →
       </Link>

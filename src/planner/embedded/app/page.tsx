@@ -25,16 +25,16 @@ export default async function HomePage() {
       <nav className="flex items-center justify-between max-w-5xl mx-auto px-6 py-5">
         <div className="flex items-center gap-2">
           <div className="flex gap-1">
-            <div className="w-3 h-3 rounded-full bg-blue-500" />
+            <div className="w-3 h-3 rounded-full bg-secondary0" />
             <div className="w-3 h-3 rounded-full bg-green-500" />
             <div className="w-3 h-3 rounded-full bg-amber-500" />
-            <div className="w-3 h-3 rounded-full bg-purple-500" />
+            <div className="w-3 h-3 rounded-full bg-foreground" />
           </div>
           <span className="font-bold text-slate-900 tracking-tight text-lg">TheUKCATPeople</span>
         </div>
         <Link
           href="/onboarding"
-          className="rounded-lg bg-blue-600 text-white px-4 py-2 text-sm font-medium hover:bg-blue-700 transition-colors"
+          className="rounded-lg bg-primary text-white px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors"
         >
           Start free
         </Link>
@@ -46,7 +46,7 @@ export default async function HomePage() {
           <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1.5 text-sm text-emerald-800 font-medium mb-3">
             100% free · No subscription
           </div>
-          <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 border border-blue-200 px-3 py-1.5 text-sm text-blue-700 font-medium mb-6">
+          <div className="inline-flex items-center gap-2 rounded-full bg-secondary border border-border px-3 py-1.5 text-sm text-foreground font-medium mb-6">
             Built for UK medical school applicants
           </div>
           <h1 className="text-5xl md:text-6xl font-bold text-slate-900 leading-tight tracking-tight text-balance mb-6">
@@ -58,13 +58,13 @@ export default async function HomePage() {
           <div className="flex gap-4 flex-wrap">
             <Link
               href="/onboarding"
-              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 text-white px-6 py-3.5 text-base font-semibold hover:bg-blue-700 transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 rounded-xl bg-primary text-white px-6 py-3.5 text-base font-semibold hover:bg-primary/90 transition-colors shadow-sm"
             >
               Build my free plan →
             </Link>
             <Link
               href="/auth/login?role=tutor"
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 text-slate-700 px-6 py-3.5 text-base font-semibold hover:bg-slate-50 transition-colors"
+              className="inline-flex items-center gap-2 rounded-xl border border-border text-slate-700 px-6 py-3.5 text-base font-semibold hover:bg-slate-50 transition-colors"
             >
               I'm a tutor
             </Link>
@@ -74,26 +74,26 @@ export default async function HomePage() {
         {/* Feature grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-20">
           {[
-            { color: 'bg-blue-500', label: 'Verbal Reasoning', desc: 'Section-specific sessions weighted by your confidence score' },
+            { color: 'bg-secondary0', label: 'Verbal Reasoning', desc: 'Section-specific sessions weighted by your confidence score' },
             { color: 'bg-green-500', label: 'Decision Making', desc: 'Progressive mocks from mini to full as your exam approaches' },
             { color: 'bg-amber-500', label: 'Quantitative Reasoning', desc: 'Automatic plan adjustment after each mock and weekly reflection' },
-            { color: 'bg-purple-500', label: 'Situational Judgement', desc: 'Tutor visibility, notes, and override controls throughout' },
+            { color: 'bg-foreground', label: 'Situational Judgement', desc: 'Tutor visibility, notes, and override controls throughout' },
           ].map(f => (
-            <div key={f.label} className="rounded-xl bg-white border border-slate-200 p-5 shadow-sm">
+            <div key={f.label} className="rounded-xl bg-white border border-border p-5 shadow-sm">
               <div className={`w-3 h-3 rounded-full ${f.color} mb-3`} />
               <p className="font-semibold text-slate-900 text-sm mb-1.5">{f.label}</p>
-              <p className="text-sm text-slate-500 leading-relaxed">{f.desc}</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
             </div>
           ))}
         </div>
 
         {/* Phase explanation */}
-        <div className="mt-16 rounded-2xl bg-white border border-slate-200 p-8 shadow-sm">
+        <div className="mt-16 rounded-2xl bg-white border border-border p-8 shadow-sm">
           <h2 className="text-2xl font-bold text-slate-900 mb-6">How the plan adapts</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {[
               { phase: 'Foundations', weeks: '8+ weeks out', desc: 'Untimed section practice, building understanding', color: 'bg-slate-100 text-slate-700' },
-              { phase: 'Timed Practice', weeks: '6+ weeks out', desc: 'Full-speed section practice, first timed mocks', color: 'bg-blue-50 text-blue-700' },
+              { phase: 'Timed Practice', weeks: '6+ weeks out', desc: 'Full-speed section practice, first timed mocks', color: 'bg-secondary text-foreground' },
               { phase: 'Mini Mocks', weeks: 'Before full mocks', desc: 'Short section mocks, usually 4-5× per week', color: 'bg-pink-50 text-pink-700' },
               { phase: 'Full Mocks', weeks: 'Final stretch', desc: 'Full mocks ramp from 2 to 3 to 4, then up to 6', color: 'bg-red-50 text-red-700' },
               { phase: 'Final Week', weeks: 'Last 7 days', desc: 'Mock every day, light review, mandatory rest', color: 'bg-amber-50 text-amber-700' },
@@ -107,7 +107,7 @@ export default async function HomePage() {
           </div>
         </div>
 
-        <p className="mt-12 text-center text-sm text-slate-500 max-w-2xl mx-auto">
+        <p className="mt-12 text-center text-sm text-muted-foreground max-w-2xl mx-auto">
           Skills trainers, your study plan, and mock score tracking are free. Optional paid tutoring is separate and never required to use these tools.
         </p>
       </main>

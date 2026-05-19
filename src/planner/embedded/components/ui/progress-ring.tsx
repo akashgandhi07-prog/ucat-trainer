@@ -50,7 +50,7 @@ export function ProgressRing({
       {(label !== undefined) && (
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-lg font-bold leading-none text-slate-900">{label}</span>
-          {sublabel && <span className="text-xs text-slate-500 mt-0.5">{sublabel}</span>}
+          {sublabel && <span className="text-xs text-muted-foreground mt-0.5">{sublabel}</span>}
         </div>
       )}
     </div>

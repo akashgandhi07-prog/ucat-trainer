@@ -233,13 +233,13 @@ function DropdownPanel({
           key={gi}
           className={cn(
             "pt-5 pb-3 px-3",
-            gi > 0 && "border-l border-slate-100",
+            gi > 0 && "border-l border-border",
           )}
         >
           {group.heading && (
             <div className="flex items-center gap-1.5 mb-2 px-2">
               <span className="w-1.5 h-1.5 rounded-full bg-primary/60 shrink-0" />
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+              <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">
                 {group.heading}
               </p>
             </div>
@@ -254,15 +254,15 @@ function DropdownPanel({
                   className={cn(
                     "group flex items-start justify-between gap-3 rounded-xl px-2.5 py-2.5",
                     "transition-all duration-150",
-                    "hover:bg-slate-50 border border-transparent hover:border-slate-100/80",
+                    "hover:bg-secondary border border-transparent hover:border-border/80",
                   )}
                 >
                   <div className="min-w-0">
-                    <span className="block text-[13px] font-semibold text-slate-800 group-hover:text-primary transition-colors leading-tight">
+                    <span className="block text-[13px] font-semibold text-foreground group-hover:text-primary transition-colors leading-tight">
                       {item.label}
                     </span>
                     {item.description && (
-                      <span className="block text-[11px] text-slate-400 mt-0.5 leading-snug">
+                      <span className="block text-[11px] text-muted-foreground mt-0.5 leading-snug">
                         {item.description}
                       </span>
                     )}
@@ -320,7 +320,7 @@ function NavButton({ item }: { item: NavItem }) {
         href={item.href}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center px-2.5 py-1.5 text-[13px] font-medium text-slate-600 hover:text-primary rounded-lg hover:bg-slate-50 transition-colors whitespace-nowrap"
+        className="flex items-center px-2.5 py-1.5 text-[13px] font-medium text-muted-foreground hover:text-primary rounded-lg hover:bg-secondary transition-colors whitespace-nowrap"
       >
         {item.label}
       </a>
@@ -336,7 +336,7 @@ function NavButton({ item }: { item: NavItem }) {
           "flex items-center gap-0.5 px-2.5 py-1.5 text-[13px] font-medium rounded-lg transition-colors whitespace-nowrap",
           open
             ? "text-primary bg-primary/5"
-            : "text-slate-600 hover:text-primary hover:bg-slate-50",
+            : "text-muted-foreground hover:text-primary hover:bg-secondary",
         )}
       >
         {item.label}

@@ -30,89 +30,23 @@ const EXTERNAL_LINK_PROPS = {
   rel: "noopener noreferrer",
 };
 
-/** Visual identity per catalogue section: icon tile, open-state stripe, panel wash. */
-const CATALOG_SECTION_STYLE: Record<
-  string,
-  {
-    Icon: LucideIcon;
-    iconWrap: string;
-    headerBg: string;
-    headerHover: string;
-    stripe: string;
-    panelWash: string;
-    tileAccent: string;
-  }
-> = {
-  essentials: {
-    Icon: Layers,
-    iconWrap:
-      "border-sky-200/90 bg-sky-50 text-sky-800 shadow-sm shadow-sky-900/5 dark:border-sky-800/40 dark:bg-sky-950/50 dark:text-sky-200",
-    headerBg: "bg-sky-50",
-    headerHover: "hover:bg-sky-100/90",
-    stripe: "bg-gradient-to-b from-sky-500 to-sky-600",
-    panelWash: "from-sky-500/[0.07] via-transparent to-transparent",
-    tileAccent: "border-t-[3px] border-t-sky-500/90",
-  },
-  verbal: {
-    Icon: BookOpen,
-    iconWrap:
-      "border-blue-200/90 bg-blue-50 text-blue-800 shadow-sm shadow-blue-900/5 dark:border-blue-800/40 dark:bg-blue-950/50 dark:text-blue-200",
-    headerBg: "bg-blue-50",
-    headerHover: "hover:bg-blue-100/90",
-    stripe: "bg-gradient-to-b from-blue-500 to-blue-600",
-    panelWash: "from-blue-500/[0.07] via-transparent to-transparent",
-    tileAccent: "border-t-[3px] border-t-blue-500/90",
-  },
-  decision: {
-    Icon: Scale,
-    iconWrap:
-      "border-amber-200/90 bg-amber-50 text-amber-900 shadow-sm shadow-amber-900/5 dark:border-amber-800/40 dark:bg-amber-950/50 dark:text-amber-100",
-    headerBg: "bg-amber-50",
-    headerHover: "hover:bg-amber-100/90",
-    stripe: "bg-gradient-to-b from-amber-500 to-amber-600",
-    panelWash: "from-amber-500/[0.07] via-transparent to-transparent",
-    tileAccent: "border-t-[3px] border-t-amber-500/90",
-  },
-  quant: {
-    Icon: Calculator,
-    iconWrap:
-      "border-emerald-200/90 bg-emerald-50 text-emerald-900 shadow-sm shadow-emerald-900/5 dark:border-emerald-800/40 dark:bg-emerald-950/50 dark:text-emerald-100",
-    headerBg: "bg-emerald-50",
-    headerHover: "hover:bg-emerald-100/90",
-    stripe: "bg-gradient-to-b from-emerald-500 to-emerald-600",
-    panelWash: "from-emerald-500/[0.07] via-transparent to-transparent",
-    tileAccent: "border-t-[3px] border-t-emerald-500/90",
-  },
-  sjt: {
-    Icon: Heart,
-    iconWrap:
-      "border-rose-200/90 bg-rose-50 text-rose-900 shadow-sm shadow-rose-900/5 dark:border-rose-800/40 dark:bg-rose-950/50 dark:text-rose-100",
-    headerBg: "bg-rose-50",
-    headerHover: "hover:bg-rose-100/90",
-    stripe: "bg-gradient-to-b from-rose-500 to-rose-600",
-    panelWash: "from-rose-500/[0.07] via-transparent to-transparent",
-    tileAccent: "border-t-[3px] border-t-rose-500/90",
-  },
-  application: {
-    Icon: GraduationCap,
-    iconWrap:
-      "border-violet-200/90 bg-violet-50 text-violet-900 shadow-sm shadow-violet-900/5 dark:border-violet-800/40 dark:bg-violet-950/50 dark:text-violet-100",
-    headerBg: "bg-violet-50",
-    headerHover: "hover:bg-violet-100/90",
-    stripe: "bg-gradient-to-b from-violet-500 to-violet-600",
-    panelWash: "from-violet-500/[0.07] via-transparent to-transparent",
-    tileAccent: "border-t-[3px] border-t-violet-500/90",
-  },
-};
+/** Section icon map — identity via icon only, no per-section color. */
+const SECTION_ICONS: Record<string, LucideIcon> = {
+  essentials:  Layers,
+  verbal:      BookOpen,
+  decision:    Scale,
+  quant:       Calculator,
+  sjt:         Heart,
+  application: GraduationCap,
+}
 
-const DEFAULT_SECTION_STYLE = {
-  Icon: BookOpen,
-  iconWrap: "border-border bg-muted/60 text-foreground",
-  headerBg: "bg-muted",
-  headerHover: "hover:bg-muted/80",
-  stripe: "bg-primary",
-  panelWash: "from-primary/[0.06] via-transparent to-transparent",
-  tileAccent: "border-t-[3px] border-t-primary/80",
+const SECTION_STYLE = {
+  iconWrap:    "border-border bg-secondary text-foreground",
+  headerBg:    "bg-card",
+  headerHover: "hover:bg-secondary",
+  stripe:      "bg-primary",
+  panelWash:   "from-primary/[0.04] via-transparent to-transparent",
+  tileAccent:  "border-t-[3px] border-t-primary/60",
 };
 
 type UcatGuidesPanelProps = {
@@ -253,15 +187,9 @@ export default function UcatGuidesPanel({
     >
       <div className={cn(contentMaxWidthClass ?? "w-full")}>
         <div
-          className={cn(
-            "relative overflow-hidden rounded-2xl border border-primary/20 bg-card shadow-md",
-            "ring-1 ring-primary/10",
-          )}
+          className="relative overflow-hidden rounded-xl border border-border bg-card"
         >
-          <div
-            className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/[0.07] via-transparent to-amber-500/[0.05]"
-            aria-hidden
-          />
+          <div aria-hidden />
 
           <div
             className={cn(
@@ -274,7 +202,7 @@ export default function UcatGuidesPanel({
               <span
                 className={cn(
                   "inline-flex items-center gap-1.5 rounded-full font-semibold uppercase tracking-wide",
-                  "border border-amber-500/25 bg-amber-500/15 text-amber-800",
+                  "border border-border bg-secondary text-muted-foreground",
                   compact ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-[11px]",
                 )}
               >
@@ -295,7 +223,7 @@ export default function UcatGuidesPanel({
             <div className="flex items-start gap-3">
               <span
                 className={cn(
-                  "shrink-0 rounded-xl bg-primary text-primary-foreground shadow-sm",
+                  "shrink-0 rounded-xl bg-primary text-primary-foreground",
                   compact ? "p-2" : "p-2.5",
                 )}
                 aria-hidden
@@ -328,14 +256,13 @@ export default function UcatGuidesPanel({
               {catalogSections.map((section) => {
                 const isOpen = openSectionId === section.id;
                 const count = section.guides.length;
-                const ui = CATALOG_SECTION_STYLE[section.id] ?? DEFAULT_SECTION_STYLE;
-                const { Icon: SectionIcon, iconWrap, headerBg, headerHover, stripe, panelWash, tileAccent } =
-                  ui;
+                const SectionIcon = SECTION_ICONS[section.id] ?? BookOpen;
+                const { iconWrap, headerBg, headerHover, stripe, panelWash, tileAccent } = SECTION_STYLE;
                 return (
                   <div
                     key={section.id}
                     className={cn(
-                      "relative overflow-hidden rounded-xl border border-border/70 bg-card shadow-sm",
+                      "relative overflow-hidden rounded-xl border border-border/70 bg-card",
                       "ring-1 ring-black/[0.03] transition-[box-shadow,background-color] duration-200 dark:bg-card/50 dark:ring-white/[0.04]",
                       isOpen && "shadow-md ring-primary/10",
                     )}
@@ -384,7 +311,7 @@ export default function UcatGuidesPanel({
                       </span>
                       <span
                         className={cn(
-                          "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border/80 bg-background/90 text-muted-foreground shadow-sm transition-all duration-200",
+                          "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border/80 bg-background/90 text-muted-foreground transition-all duration-200",
                           "group-hover/trigger:border-primary/25 group-hover/trigger:bg-background",
                           isOpen && "rotate-0 border-primary/20 bg-muted/60 text-foreground",
                         )}
@@ -452,7 +379,7 @@ export default function UcatGuidesPanel({
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-muted/35",
                 compact
                   ? "text-xs"
-                  : "border border-primary/15 bg-primary/[0.06] px-3.5 py-2 text-sm shadow-sm hover:border-primary/25 hover:bg-primary/10",
+                  : "border border-primary/15 bg-primary/[0.06] px-3.5 py-2 text-sm hover:border-primary/25 hover:bg-primary/10",
               )}
               {...EXTERNAL_LINK_PROPS}
             >

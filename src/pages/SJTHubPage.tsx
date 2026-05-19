@@ -54,10 +54,10 @@ const TRAINERS = [
 
 
 const domainColors: Record<string, string> = {
-  blue: "bg-blue-500/10 text-blue-700 border-blue-200",
-  emerald: "bg-emerald-500/10 text-emerald-700 border-emerald-200",
-  amber: "bg-amber-500/10 text-amber-700 border-amber-200",
-  purple: "bg-purple-500/10 text-purple-700 border-purple-200",
+  blue:    "bg-secondary text-foreground border-border",
+  emerald: "bg-secondary text-foreground border-border",
+  amber:   "bg-secondary text-foreground border-border",
+  purple:  "bg-secondary text-foreground border-border",
 };
 
 export default function SJTHubPage() {
@@ -150,7 +150,7 @@ export default function SJTHubPage() {
                   href={GMP_MAIN_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline inline-flex items-center gap-0.5"
+                  className="text-primary hover:underline inline-flex items-center gap-0.5"
                 >
                   GMC Good Medical Practice
                   <ExternalLink className="w-3 h-3" aria-hidden />

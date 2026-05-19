@@ -63,17 +63,17 @@ export default async function TutorStudentPage({ params }: PageProps) {
   return (
     <div className="space-y-0">
       {/* Student header */}
-      <div className="bg-white border-b border-slate-200 px-6 md:px-10 py-6">
+      <div className="bg-white border-b border-border px-6 md:px-10 py-6">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-lg">
+            <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center text-foreground font-bold text-lg">
               {(student?.full_name || student?.email || '?')[0].toUpperCase()}
             </div>
             <div>
               <h1 className="text-2xl font-bold text-slate-900">
                 {student?.full_name || 'Student'}
               </h1>
-              <p className="text-slate-500">{student?.email ?? ''}</p>
+              <p className="text-muted-foreground">{student?.email ?? ''}</p>
             </div>
           </div>
         </div>
@@ -118,7 +118,7 @@ export default async function TutorStudentPage({ params }: PageProps) {
       />
 
       {/* Mock scores */}
-      <div className="border-t border-slate-200">
+      <div className="border-t border-border">
         <MockScoresView
           planId={planId}
           mockScores={mockScores ?? []}

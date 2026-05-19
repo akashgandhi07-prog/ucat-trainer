@@ -53,17 +53,17 @@ const SECTION_ICONS: Record<LandingTrainerSection, typeof BookOpen> = {
 };
 
 const SECTION_ACCENT: Record<LandingTrainerSection, string> = {
-  vr: "text-blue-600 bg-blue-50 border-blue-100",
-  dm: "text-amber-600 bg-amber-50 border-amber-100",
-  qr: "text-emerald-600 bg-emerald-50 border-emerald-100",
-  sjt: "text-purple-600 bg-purple-50 border-purple-100",
+  vr:  "text-primary bg-primary/8 border-primary/15",
+  dm:  "text-primary bg-primary/8 border-primary/15",
+  qr:  "text-primary bg-primary/8 border-primary/15",
+  sjt: "text-primary bg-primary/8 border-primary/15",
 };
 
 const SECTION_HEADER_BG: Record<LandingTrainerSection, string> = {
-  vr: "bg-blue-50 hover:bg-blue-100/80 border-blue-200/60",
-  dm: "bg-amber-50 hover:bg-amber-100/80 border-amber-200/60",
-  qr: "bg-emerald-50 hover:bg-emerald-100/80 border-emerald-200/60",
-  sjt: "bg-purple-50 hover:bg-purple-100/80 border-purple-200/60",
+  vr:  "bg-secondary hover:bg-secondary/80 border-border",
+  dm:  "bg-secondary hover:bg-secondary/80 border-border",
+  qr:  "bg-secondary hover:bg-secondary/80 border-border",
+  sjt: "bg-secondary hover:bg-secondary/80 border-border",
 };
 
 function LandingContainer({ children, className }: { children: ReactNode; className?: string }) {
@@ -111,36 +111,36 @@ const HERO_SECTIONS = [
     icon: BookOpen,
     label: "Verbal Reasoning",
     count: "4 drills",
-    accent: "bg-blue-50 border-blue-200 hover:border-blue-300 hover:bg-blue-100/70",
-    iconBg: "bg-blue-100",
-    iconColor: "text-blue-600",
+    accent: "bg-card border-border hover:border-foreground/25 hover:bg-secondary",
+    iconBg: "bg-primary/10",
+    iconColor: "text-primary",
     href: "/verbal",
   },
   {
     icon: Scale,
     label: "Decision Making",
     count: "5 drills",
-    accent: "bg-amber-50 border-amber-200 hover:border-amber-300 hover:bg-amber-100/70",
-    iconBg: "bg-amber-100",
-    iconColor: "text-amber-600",
+    accent: "bg-card border-border hover:border-foreground/25 hover:bg-secondary",
+    iconBg: "bg-primary/10",
+    iconColor: "text-primary",
     href: "/decision-making",
   },
   {
     icon: Calculator,
     label: "Quantitative Reasoning",
     count: "3 drills",
-    accent: "bg-emerald-50 border-emerald-200 hover:border-emerald-300 hover:bg-emerald-100/70",
-    iconBg: "bg-emerald-100",
-    iconColor: "text-emerald-600",
+    accent: "bg-card border-border hover:border-foreground/25 hover:bg-secondary",
+    iconBg: "bg-primary/10",
+    iconColor: "text-primary",
     href: "/quantitative",
   },
   {
     icon: Users,
     label: "Situational Judgement",
     count: "3 drills",
-    accent: "bg-purple-50 border-purple-200 hover:border-purple-300 hover:bg-purple-100/70",
-    iconBg: "bg-purple-100",
-    iconColor: "text-purple-600",
+    accent: "bg-card border-border hover:border-foreground/25 hover:bg-secondary",
+    iconBg: "bg-primary/10",
+    iconColor: "text-primary",
     href: "/ucat-sjt-practice",
   },
 ] as const;
@@ -174,9 +174,9 @@ export function LandingHero() {
             <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] font-extrabold tracking-tight text-foreground leading-[1.08]">
               The fastest &amp;{" "}
               <span className="relative inline-block">
-                <span className="relative z-10 text-emerald-600">free</span>
+                <span className="relative z-10 text-primary">free</span>
                 <span
-                  className="absolute -inset-x-1 -inset-y-0.5 z-0 rounded-md bg-emerald-100"
+                  className="absolute -inset-x-1 -inset-y-0.5 z-0 rounded-md bg-primary/10"
                   aria-hidden
                 />
               </span>{" "}
@@ -202,7 +202,7 @@ export function LandingHero() {
                 href={STRATEGY_CALL_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-emerald-500 bg-white px-7 py-3.5 text-sm font-bold text-emerald-700 hover:bg-emerald-50 active:scale-[0.98] transition-all"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-foreground/20 bg-card px-7 py-3.5 text-sm font-bold text-foreground hover:bg-secondary active:scale-[0.98] transition-all"
               >
                 Book a free strategy call
                 <ArrowUpRight className="h-4 w-4" aria-hidden />
@@ -309,7 +309,7 @@ export function LandingSectionHub({ onVerbal, onDecision, onQuant, onSjt }: Sect
     {
       onClick: onVerbal,
       icon: BookOpen,
-      accent: "bg-blue-50 text-blue-600 group-hover:bg-blue-100",
+      accent: "bg-primary/10 text-primary group-hover:bg-primary/15",
       title: "Verbal Reasoning",
       desc: "Speed reading, rapid recall, keyword scanning and inference.",
       label: "4 trainers",
@@ -317,7 +317,7 @@ export function LandingSectionHub({ onVerbal, onDecision, onQuant, onSjt }: Sect
     {
       onClick: onDecision,
       icon: Scale,
-      accent: "bg-amber-50 text-amber-600 group-hover:bg-amber-100",
+      accent: "bg-primary/10 text-primary group-hover:bg-primary/15",
       title: "Decision Making",
       desc: "Syllogisms, Venn logic, data reasoning and argument judgement.",
       label: "5 trainers",
@@ -325,7 +325,7 @@ export function LandingSectionHub({ onVerbal, onDecision, onQuant, onSjt }: Sect
     {
       onClick: onQuant,
       icon: Calculator,
-      accent: "bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100",
+      accent: "bg-primary/10 text-primary group-hover:bg-primary/15",
       title: "Quantitative Reasoning",
       desc: "Calculator keypad speed, mental maths fluency and unit conversion drills.",
       label: "3 trainers",
@@ -333,7 +333,7 @@ export function LandingSectionHub({ onVerbal, onDecision, onQuant, onSjt }: Sect
     {
       onClick: onSjt,
       icon: Users,
-      accent: "bg-purple-50 text-purple-600 group-hover:bg-purple-100",
+      accent: "bg-primary/10 text-primary group-hover:bg-primary/15",
       title: "Situational Judgement",
       desc: "Appropriateness rating, importance rating and ranking questions.",
       label: "3 trainers",
@@ -557,7 +557,7 @@ export function LandingPlanning({ plannerOn }: { plannerOn: boolean }) {
     {
       to: "/study-plan",
       icon: CalendarDays,
-      accent: "bg-violet-50 text-violet-600",
+      accent: "bg-primary/10 text-primary",
       title: "Study plan",
       desc: "Personalised timetable and daily revision slots. Free on this device.",
       cta: "Open study planner",
@@ -565,7 +565,7 @@ export function LandingPlanning({ plannerOn }: { plannerOn: boolean }) {
     {
       to: "/mock-scores",
       icon: LineChart,
-      accent: "bg-rose-50 text-rose-600",
+      accent: "bg-primary/10 text-primary",
       title: "Mock scores",
       desc: "Log free UCAT mock scores from Medify, official practice tests and other resources in one place.",
       cta: "Open mock tracker",
@@ -573,7 +573,7 @@ export function LandingPlanning({ plannerOn }: { plannerOn: boolean }) {
     {
       to: "/study-guides",
       icon: BookOpen,
-      accent: "bg-sky-50 text-sky-600",
+      accent: "bg-primary/10 text-primary",
       title: "Study guides",
       desc: "Concise topic guides covering every UCAT subtest - a quick reference alongside your practice.",
       cta: "Browse study guides",
@@ -823,7 +823,7 @@ export function LandingCredibility() {
             href={STRATEGY_CALL_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors"
           >
             Book a free strategy call
             <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />

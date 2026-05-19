@@ -40,7 +40,7 @@ function RecallModeExplainer() {
       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary mb-1">
         Recall mode
       </p>
-      <p className="text-sm text-slate-800 leading-relaxed">
+      <p className="text-sm text-foreground leading-relaxed">
         Recall mode focuses on whether you can remember exactly what the passage stated. The review after each run mainly points you back to the key sentence, rather than walking through a full exam-style reasoning chain.
       </p>
     </div>
@@ -246,7 +246,7 @@ export default function RapidRecallPage() {
   };
 
   const skipLinkClass =
-    "absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-slate-900 font-medium rounded-lg ring-2 ring-blue-600 opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
+    "absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-foreground font-medium rounded-lg ring-2 ring-blue-600 opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
 
   const base = getSiteBaseUrl();
   const canonicalUrl = base ? `${base}/ucat-rapid-recall-trainer` : undefined;
@@ -276,14 +276,14 @@ export default function RapidRecallPage() {
             <RecallModeExplainer />
             {showMoreTimeModal && (
               <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" aria-modal="true" role="dialog" aria-labelledby="rapid-more-time-title">
-                <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 text-center">
-                  <h2 id="rapid-more-time-title" className="text-lg font-semibold text-slate-900 mb-2">Time&apos;s up</h2>
-                  <p className="text-slate-600 mb-6">More time?</p>
+                <div className="bg-card rounded-xl shadow-xl max-w-sm w-full p-6 text-center">
+                  <h2 id="rapid-more-time-title" className="text-lg font-semibold text-foreground mb-2">Time&apos;s up</h2>
+                  <p className="text-muted-foreground mb-6">More time?</p>
                   <div className="flex gap-3 justify-center">
                     <button
                       type="button"
                       onClick={handleMoreTimeYes}
-                      className="min-h-[44px] px-5 py-2.5 bg-slate-100 text-slate-800 font-medium rounded-lg hover:bg-slate-200 transition-colors"
+                      className="min-h-[44px] px-5 py-2.5 bg-secondary text-foreground font-medium rounded-lg hover:bg-slate-200 transition-colors"
                     >
                       Yes
                     </button>
@@ -299,12 +299,12 @@ export default function RapidRecallPage() {
               </div>
             )}
             <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
-              <span className="text-sm font-medium text-slate-500">
+              <span className="text-sm font-medium text-muted-foreground">
                 {overtimeMode ? "Rapid Recall - overtime" : "Rapid Recall - read before time runs out"}
               </span>
               <span
                 className={`text-2xl font-bold tabular-nums shrink-0 ${
-                  overtimeMode ? "text-red-600" : secondsLeft <= 10 ? "text-red-600" : "text-slate-900"
+                  overtimeMode ? "text-red-600" : secondsLeft <= 10 ? "text-red-600" : "text-foreground"
                 }`}
               >
                 {overtimeMode
@@ -312,9 +312,9 @@ export default function RapidRecallPage() {
                   : `${Math.floor(secondsLeft / 60)}:${(secondsLeft % 60).toString().padStart(2, "0")}`}
               </span>
             </div>
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 max-h-[75vh] min-h-[50vh] overflow-y-auto overscroll-behavior-contain">
+            <div className="bg-card rounded-xl border border-border p-8 max-h-[75vh] min-h-[50vh] overflow-y-auto overscroll-behavior-contain">
               <QuestionMediaBlock media={passage.media} placement="stem" className="mb-4" />
-              <p className="text-slate-800 leading-relaxed whitespace-pre-wrap">
+              <p className="text-foreground leading-relaxed whitespace-pre-wrap">
                 {passageText}
               </p>
             </div>
@@ -322,7 +322,7 @@ export default function RapidRecallPage() {
               <button
                 type="button"
                 onClick={handleFinishReading}
-                className="min-h-[44px] px-4 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg shadow-sm transition-colors"
+                className="min-h-[44px] px-4 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors"
               >
                 Finish & start questions
               </button>
@@ -347,20 +347,20 @@ export default function RapidRecallPage() {
         {phase === "results" && (
           <div className="w-full max-w-2xl mx-auto">
             <RecallModeExplainer />
-            <h2 className="text-xl font-semibold text-slate-900 mb-6">
+            <h2 className="text-xl font-semibold text-foreground mb-6">
               Rapid Recall - Results
             </h2>
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4 mb-6">
-              <p className="text-lg text-slate-700">
+            <div className="bg-card rounded-xl border border-border p-6 space-y-4 mb-6">
+              <p className="text-lg text-foreground">
                 <span className="font-medium">Score:</span> {quizCorrect}/{quizTotal} correct
               </p>
-              <p className="text-slate-600 text-sm">
+              <p className="text-muted-foreground text-sm">
                 Time limit: {timeLimitSeconds}s
               </p>
               <button
                 type="button"
                 onClick={() => setPassageModalOpen(true)}
-                className="min-h-[44px] px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg transition-colors"
+                className="min-h-[44px] px-4 py-2 text-sm font-medium text-foreground bg-secondary hover:bg-slate-200 border border-border rounded-lg transition-colors"
               >
                 View passage
               </button>
@@ -379,7 +379,7 @@ export default function RapidRecallPage() {
                 const canPushPace = nextTimeSuggestion < timeLimitSeconds;
                 return (
                   <>
-                    <p className="text-slate-700 text-sm mt-3 pt-3 border-t border-slate-200">
+                    <p className="text-foreground text-sm mt-3 pt-3 border-t border-border">
                       You spent {effectiveSeconds}s to read ~{wordCount} words ≈ {effectiveWpm} WPM.
                       {canPushPace && ` Next time try ${nextTimeSuggestion}s to push your pace.`}
                     </p>
@@ -388,11 +388,11 @@ export default function RapidRecallPage() {
               })()}
             </div>
             {questionBreakdown.length > 0 && (
-              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-3 mb-6 text-left">
-                <h3 className="text-sm font-semibold text-slate-700 mb-1">
+              <div className="bg-card rounded-xl border border-border p-6 space-y-3 mb-6 text-left">
+                <h3 className="text-sm font-semibold text-foreground mb-1">
                   Question breakdown
                 </h3>
-                <p className="text-xs text-slate-500 mb-3">
+                <p className="text-xs text-muted-foreground mb-3">
                   See how you answered each statement based on the passage.
                 </p>
                 <div className="space-y-3">
@@ -447,7 +447,7 @@ export default function RapidRecallPage() {
                         }`}
                       >
                         <div className="flex items-center justify-between gap-2 mb-1.5">
-                          <span className="text-xs font-semibold text-slate-700">
+                          <span className="text-xs font-semibold text-foreground">
                             Q{index + 1}
                           </span>
                           <span
@@ -468,10 +468,10 @@ export default function RapidRecallPage() {
                             )}
                           </span>
                         </div>
-                        <p className="text-sm text-slate-800 mb-1.5">
+                        <p className="text-sm text-foreground mb-1.5">
                           {item.statement}?
                         </p>
-                        <p className="text-xs text-slate-700">
+                        <p className="text-xs text-foreground">
                           Your answer:{" "}
                           {item.userAnswer === "true"
                             ? "True"
@@ -485,34 +485,34 @@ export default function RapidRecallPage() {
                           </p>
                         )}
                         {(hasDiff || explanation) && (
-                          <div className="mt-2 pt-2 border-t border-slate-200/70 space-y-1.5">
+                          <div className="mt-2 pt-2 border-t border-border/70 space-y-1.5">
                             {hasDiff ? (
                               <>
-                                <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">What changed</p>
+                                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">What changed</p>
                                 <div>
-                                  <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wide mb-0.5">Statement (what you saw)</p>
-                                  <p className="text-xs text-slate-700 bg-red-50 border-l-2 border-red-400 pl-2 py-1 rounded-r">
+                                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-0.5">Statement (what you saw)</p>
+                                  <p className="text-xs text-foreground bg-red-50 border-l-2 border-red-400 pl-2 py-1 rounded-r">
                                     {highlightIn(item.statement, item.replacedFragment!, "bg-red-200 text-red-900 font-semibold rounded px-0.5 not-italic")}
                                   </p>
                                 </div>
                                 <div>
-                                  <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wide mb-0.5">Original passage</p>
-                                  <p className="text-xs text-slate-700 bg-green-50 border-l-2 border-green-500 pl-2 py-1 rounded-r">
+                                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-0.5">Original passage</p>
+                                  <p className="text-xs text-foreground bg-green-50 border-l-2 border-green-500 pl-2 py-1 rounded-r">
                                     {highlightIn(item.passageSnippet!, item.originalFragment!, "bg-green-200 text-green-900 font-semibold rounded px-0.5 not-italic")}
                                   </p>
                                 </div>
                                 {item.distortionLabel && (
-                                  <p className="text-[11px] text-slate-500">
-                                    Trap: <span className="font-medium text-slate-600">{item.distortionLabel}</span>
+                                  <p className="text-[11px] text-muted-foreground">
+                                    Trap: <span className="font-medium text-muted-foreground">{item.distortionLabel}</span>
                                   </p>
                                 )}
                               </>
                             ) : (
                               <>
-                                <p className="text-[11px] font-semibold text-slate-500 mb-0.5">
+                                <p className="text-[11px] font-semibold text-muted-foreground mb-0.5">
                                   Why the answer is {item.correctAnswerLabel}
                                 </p>
-                                <p className="text-xs text-slate-700">{explanation}</p>
+                                <p className="text-xs text-foreground">{explanation}</p>
                               </>
                             )}
                           </div>
@@ -529,7 +529,7 @@ export default function RapidRecallPage() {
               </p>
             )}
             {saving && (
-              <p className="mb-4 text-sm text-slate-600 inline-flex items-center gap-2" aria-live="polite">
+              <p className="mb-4 text-sm text-muted-foreground inline-flex items-center gap-2" aria-live="polite">
                 <span className="inline-block w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" aria-hidden />
                 Saving…
               </p>
@@ -570,7 +570,7 @@ export default function RapidRecallPage() {
                     }}
                     className={`min-h-[44px] px-6 py-3 font-medium rounded-lg transition-colors ${
                       canPushPace
-                        ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                        ? "bg-secondary text-foreground hover:bg-slate-200"
                         : "bg-primary text-primary-foreground hover:bg-primary/90"
                     }`}
                   >
@@ -585,7 +585,7 @@ export default function RapidRecallPage() {
               }
             />
             <div className="mt-4">
-              <Link to="/" className="min-h-[44px] inline-flex items-center justify-center py-2 text-sm text-slate-500 hover:text-blue-600">
+              <Link to="/" className="min-h-[44px] inline-flex items-center justify-center py-2 text-sm text-muted-foreground hover:text-primary">
                 Back to Home
               </Link>
             </div>

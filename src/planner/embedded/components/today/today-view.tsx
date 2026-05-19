@@ -219,10 +219,10 @@ export function TodayView({
 
   function PlannerToolbarLinks() {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 flex flex-wrap gap-2 items-center shadow-sm">
+      <div className="rounded-xl border border-border bg-white px-4 py-3 flex flex-wrap gap-2 items-center shadow-sm">
         <Link
           to="/study-plan/plan"
-          className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          className="inline-flex items-center rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
         >
           Calendar · edit days and hours
         </Link>
@@ -231,7 +231,7 @@ export function TodayView({
             type="button"
             onClick={() => void handleDownloadPlannerPdf()}
             disabled={pdfBusy}
-            className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            className="inline-flex items-center rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
           >
             {pdfBusy ? 'Preparing PDF…' : 'Download PDF'}
           </button>
@@ -241,19 +241,19 @@ export function TodayView({
             <button
               type="button"
               onClick={() => setShowRebuild(true)}
-              className="inline-flex items-center rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+              className="inline-flex items-center rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white hover:bg-primary/90"
             >
               Rebuild plan ahead
             </button>
             <Link
               to="/study-plan/plan?rebuild=1"
-              className="text-xs text-slate-500 underline underline-offset-2 hover:text-slate-700"
+              className="text-xs text-muted-foreground underline underline-offset-2 hover:text-slate-700"
             >
               Open rebuild wizard on calendar
             </Link>
           </>
         ) : guestMode ? (
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted-foreground">
             Sign in to rebuild your timetable or edit future weeks from the calendar.
           </p>
         ) : null}
@@ -291,10 +291,10 @@ export function TodayView({
           <div className="text-center space-y-4 py-16">
           <div className="text-6xl">🛋️</div>
           <h1 className="text-2xl font-bold text-slate-900">Rest day</h1>
-          <p className="text-slate-500 text-lg">
+          <p className="text-muted-foreground text-lg">
             {formatDateLong(parseDate(todayDate))}
           </p>
-          <p className="text-slate-500 max-w-md mx-auto">
+          <p className="text-muted-foreground max-w-md mx-auto">
             Rest is an essential part of learning. Come back tomorrow ready to go.
           </p>
           <div className="inline-flex items-center gap-2 rounded-full bg-amber-50 border border-amber-200 px-4 py-2 text-sm text-amber-700 font-medium">
@@ -331,10 +331,10 @@ export function TodayView({
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm text-slate-500 font-medium">{formatDateLong(parseDate(todayDate))}</p>
+          <p className="text-sm text-muted-foreground font-medium">{formatDateLong(parseDate(todayDate))}</p>
           <h1 className="text-3xl font-bold text-slate-900 mt-1">Today's sessions</h1>
           {weeksLeft > 0 && (
-            <p className="text-sm text-slate-500 mt-1">{weeksLeft} week{weeksLeft !== 1 ? 's' : ''} until your exam</p>
+            <p className="text-sm text-muted-foreground mt-1">{weeksLeft} week{weeksLeft !== 1 ? 's' : ''} until your exam</p>
           )}
         </div>
         <div className="relative shrink-0 mt-1">
@@ -346,7 +346,7 @@ export function TodayView({
             {markedBusy ? '✅ Marked busy' : '🚫 Mark as busy'}
           </Button>
           {showBusyMenu && (
-            <div className="absolute right-0 top-10 z-50 w-52 bg-white rounded-xl border border-slate-200 shadow-xl p-3 space-y-1.5">
+            <div className="absolute right-0 top-10 z-50 w-52 bg-white rounded-xl border border-border shadow-xl p-3 space-y-1.5">
               <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide pb-1">Today's availability</p>
               {busyError && <p className="text-xs text-red-600 px-1">{busyError}</p>}
               <button
@@ -367,7 +367,7 @@ export function TodayView({
                 </button>
               ))}
               <button
-                className="w-full text-left text-sm px-2.5 py-1.5 rounded-lg text-blue-600 hover:bg-blue-50 font-medium disabled:opacity-50"
+                className="w-full text-left text-sm px-2.5 py-1.5 rounded-lg text-primary hover:bg-secondary font-medium disabled:opacity-50"
                 onClick={markDayAvailable}
                 disabled={busySaving}
               >
@@ -393,20 +393,20 @@ export function TodayView({
         <Card className="text-center">
           <CardContent className="py-5 flex flex-col items-center justify-center h-full gap-1">
             <div className="text-3xl font-bold text-slate-900">🔥 {streak}</div>
-            <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">day streak</p>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">day streak</p>
           </CardContent>
         </Card>
         <Card className="text-center">
           <CardContent className="py-5 flex flex-col items-center justify-center h-full gap-1">
             <div className="text-3xl font-bold text-slate-900">{weeklyCompletion}%</div>
-            <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">this week</p>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">this week</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Sessions checklist */}
       <div className="space-y-3">
-        <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Sessions</h2>
+        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Sessions</h2>
         <p className="text-xs text-slate-400 -mt-1">
           Tap any session to log time: full block, partial minutes, or not done.
         </p>
@@ -466,24 +466,24 @@ function SessionCard({
       type="button"
       className={`w-full flex items-center gap-4 rounded-xl border p-4 transition-all text-left cursor-pointer select-none ${
         !session.completed
-          ? 'bg-white border-slate-200 hover:border-blue-200 hover:shadow-sm'
+          ? 'bg-white border-border hover:border-border hover:shadow-sm'
           : isPartial || doneZero
             ? 'bg-amber-50 border-amber-200'
             : fullHit
               ? 'bg-slate-50 border-green-200'
-              : 'bg-slate-50 border-slate-200'
+              : 'bg-slate-50 border-border'
       }`}
       onClick={onOpen}
       disabled={saving}
     >
       <div
         className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
-          saving ? 'border-blue-400 animate-pulse' :
+          saving ? 'border-primary/40 animate-pulse' :
           fullHit ? 'border-green-500 bg-green-500 text-white' :
           isPartial ? 'border-amber-400 bg-amber-400 text-white' :
           doneZero ? 'border-amber-300 bg-amber-100 text-amber-900' :
           session.completed ? 'border-amber-200 bg-amber-100' :
-          'border-slate-300'
+          'border-border'
         }`}
       >
         {session.completed && (
@@ -502,7 +502,7 @@ function SessionCard({
           <p className="text-[10px] text-slate-400">Effort logged: {session.perceived_effort}/5 taxing</p>
         )}
         {session.notes && (
-          <p className="text-xs text-slate-500">{session.notes}</p>
+          <p className="text-xs text-muted-foreground">{session.notes}</p>
         )}
       </div>
 

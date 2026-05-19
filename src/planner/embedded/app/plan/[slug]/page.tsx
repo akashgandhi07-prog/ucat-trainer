@@ -59,19 +59,19 @@ export default async function PublicPlanPage({ params }: PageProps) {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Public header banner */}
-      <div className="bg-white border-b border-slate-200 px-6 py-4">
+      <div className="bg-white border-b border-border px-6 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="flex gap-0.5">
-              <div className="w-2 h-2 rounded-full bg-blue-500" />
+              <div className="w-2 h-2 rounded-full bg-secondary0" />
               <div className="w-2 h-2 rounded-full bg-green-500" />
               <div className="w-2 h-2 rounded-full bg-amber-500" />
-              <div className="w-2 h-2 rounded-full bg-purple-500" />
+              <div className="w-2 h-2 rounded-full bg-foreground" />
             </div>
             <span className="font-bold text-slate-900 text-sm">UCAT Planner</span>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-muted-foreground">
               {studentLabel}
               {' · '}
               Read-only view
@@ -79,14 +79,14 @@ export default async function PublicPlanPage({ params }: PageProps) {
             {canEdit ? (
               <Link
                 href={user ? '/dashboard/plan' : '/auth/login'}
-                className="text-sm font-medium text-blue-600 hover:text-blue-700 rounded-lg border border-blue-200 px-3 py-1.5 hover:bg-blue-50 transition-colors"
+                className="text-sm font-medium text-primary hover:text-foreground rounded-lg border border-border px-3 py-1.5 hover:bg-secondary transition-colors"
               >
                 Edit plan →
               </Link>
             ) : (
               <Link
                 href="/auth/login"
-                className="text-sm font-medium text-slate-600 hover:text-slate-900 rounded-lg border border-slate-200 px-3 py-1.5 hover:bg-slate-50 transition-colors"
+                className="text-sm font-medium text-slate-600 hover:text-slate-900 rounded-lg border border-border px-3 py-1.5 hover:bg-slate-50 transition-colors"
               >
                 Sign in
               </Link>

@@ -259,21 +259,21 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
         >
           <div className="flex items-center justify-between mb-4">
             <div>
-              <Dialog.Title id="auth-modal-title" className="text-lg font-semibold text-slate-900">
+              <Dialog.Title id="auth-modal-title" className="text-lg font-semibold text-foreground">
                 {title}
               </Dialog.Title>
               {isRegister && (
                 <div className="flex items-center gap-1.5 mt-1.5">
                   <div className={`h-1.5 w-8 rounded-full transition-colors ${registerStep >= 1 ? "bg-primary" : "bg-slate-200"}`} />
                   <div className={`h-1.5 w-8 rounded-full transition-colors ${registerStep >= 2 ? "bg-primary" : "bg-slate-200"}`} />
-                  <span className="text-xs text-slate-400 ml-1">Step {registerStep} of 2</span>
+                  <span className="text-xs text-muted-foreground ml-1">Step {registerStep} of 2</span>
                 </div>
               )}
             </div>
             <Dialog.Close asChild>
               <button
                 type="button"
-                className="min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-600 -m-2"
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center text-muted-foreground hover:text-muted-foreground -m-2"
                 aria-label="Close"
               >
                 ×
@@ -288,7 +288,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label htmlFor="auth-first-name" className="block text-sm font-medium text-slate-700 mb-1">
+                  <label htmlFor="auth-first-name" className="block text-sm font-medium text-foreground mb-1">
                     First name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -305,7 +305,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
                   )}
                 </div>
                 <div>
-                  <label htmlFor="auth-last-name" className="block text-sm font-medium text-slate-700 mb-1">
+                  <label htmlFor="auth-last-name" className="block text-sm font-medium text-foreground mb-1">
                     Last name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -322,7 +322,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
                 </div>
               </div>
               <div>
-                <label htmlFor="auth-subject" className="block text-sm font-medium text-slate-700 mb-1">
+                <label htmlFor="auth-subject" className="block text-sm font-medium text-foreground mb-1">
                   What are you applying for? <span className="text-red-500">*</span>
                 </label>
                 <Controller
@@ -341,7 +341,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
                 )}
               </div>
               <div>
-                <label htmlFor="auth-entry-year" className="block text-sm font-medium text-slate-700 mb-1">
+                <label htmlFor="auth-entry-year" className="block text-sm font-medium text-foreground mb-1">
                   Entry year <span className="text-red-500">*</span>
                 </label>
                 <Controller
@@ -374,7 +374,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
           {isRegister && registerStep === 2 && (
             <>
               <div>
-                <label htmlFor="auth-email" className="block text-sm font-medium text-slate-700 mb-1">
+                <label htmlFor="auth-email" className="block text-sm font-medium text-foreground mb-1">
                   Email <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -392,7 +392,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
                 )}
               </div>
               <div>
-                <label htmlFor="auth-password" className="block text-sm font-medium text-slate-700 mb-1">
+                <label htmlFor="auth-password" className="block text-sm font-medium text-foreground mb-1">
                   Password <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -407,10 +407,10 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
                 {errors.password && (
                   <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
                 )}
-                <p className="mt-1 text-xs text-slate-500">{getPasswordRequirementHint()}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{getPasswordRequirementHint()}</p>
               </div>
               <div>
-                <label htmlFor="auth-confirm-password" className="block text-sm font-medium text-slate-700 mb-1">
+                <label htmlFor="auth-confirm-password" className="block text-sm font-medium text-foreground mb-1">
                   Confirm password <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -432,7 +432,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
                   className="mt-0.5 h-4 w-4 shrink-0 rounded border-border accent-primary"
                   {...register("emailMarketingOptIn")}
                 />
-                <span className="text-[11px] leading-snug text-slate-500">
+                <span className="text-[11px] leading-snug text-muted-foreground">
                   Send me UCAT tips, course updates and revision advice from TheUKCATPeople. You can unsubscribe at any time.
                 </span>
               </label>
@@ -462,7 +462,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
           {!isRegister && (
             <>
               <div>
-                <label htmlFor="auth-email" className="block text-sm font-medium text-slate-700 mb-1">
+                <label htmlFor="auth-email" className="block text-sm font-medium text-foreground mb-1">
                   Email
                 </label>
                 <input
@@ -480,7 +480,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
               </div>
               {!isForgot && (
                 <div>
-                  <label htmlFor="auth-password" className="block text-sm font-medium text-slate-700 mb-1">
+                  <label htmlFor="auth-password" className="block text-sm font-medium text-foreground mb-1">
                     Password
                   </label>
                   <input
@@ -519,7 +519,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }: Au
             </>
           )}
 
-          <p className="text-center text-sm text-slate-500">
+          <p className="text-center text-sm text-muted-foreground">
             {isForgot ? (
               <button type="button" onClick={() => setMode("login")} className="text-primary hover:underline font-medium">
                 Back to sign in

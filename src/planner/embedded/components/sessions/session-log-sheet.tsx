@@ -102,7 +102,7 @@ function SessionLogBody({
         onClick={onClose}
       />
       <div
-        className="relative z-10 w-full max-w-md rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden"
+        className="relative z-10 w-full max-w-md rounded-2xl bg-white shadow-2xl border border-border overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
@@ -110,7 +110,7 @@ function SessionLogBody({
             <p id="session-log-title" className="text-base font-semibold text-slate-900">
               {label}
             </p>
-            <p className="text-sm text-slate-500 mt-0.5">
+            <p className="text-sm text-muted-foreground mt-0.5">
               Plan: {planned} min · you can log a different amount below
             </p>
           </div>
@@ -132,7 +132,7 @@ function SessionLogBody({
               className={`rounded-xl border-2 py-3 text-sm font-semibold transition-all ${
                 !markDone
                   ? 'border-slate-800 bg-slate-50 text-slate-900'
-                  : 'border-slate-200 text-slate-500 hover:border-slate-300'
+                  : 'border-border text-muted-foreground hover:border-border'
               }`}
             >
               Not done
@@ -143,14 +143,14 @@ function SessionLogBody({
               className={`rounded-xl border-2 py-3 text-sm font-semibold transition-all ${
                 markDone
                   ? 'border-green-600 bg-green-50 text-green-800'
-                  : 'border-slate-200 text-slate-500 hover:border-slate-300'
+                  : 'border-border text-muted-foreground hover:border-border'
               }`}
             >
               Done
             </button>
           </div>
           {!markDone && (
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               Tap <span className="font-medium text-slate-600">Done</span> if you did any of this session, even part of it.
               You will then enter how many minutes you really spent.
             </p>
@@ -158,7 +158,7 @@ function SessionLogBody({
 
           {markDone && (
             <div
-              className="rounded-xl border border-slate-200 bg-slate-50/80 p-4 space-y-4"
+              className="rounded-xl border border-border bg-slate-50/80 p-4 space-y-4"
               role="region"
               aria-labelledby="actual-time-heading"
             >
@@ -216,7 +216,7 @@ function SessionLogBody({
               </fieldset>
               <div className="rounded-xl border border-slate-100 bg-slate-50/90 px-3 py-3 space-y-2">
                 <p className="text-xs font-semibold text-slate-600">Effort check (one tap)</p>
-                <p className="text-[11px] text-slate-500 leading-snug">
+                <p className="text-[11px] text-muted-foreground leading-snug">
                   How taxing did this feel versus the time on the timer? Helps spot mismatch between stamina and perceptions.
                 </p>
                 <div className="flex flex-wrap gap-1.5">
@@ -235,8 +235,8 @@ function SessionLogBody({
                       onClick={() => setEffort(n)}
                       className={`rounded-lg border px-2 py-1.5 text-left text-[11px] font-medium transition-colors ${
                         effort === n
-                          ? 'border-blue-500 bg-blue-50 text-blue-900'
-                          : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                          ? 'border-primary bg-secondary text-foreground'
+                          : 'border-border bg-white text-slate-600 hover:border-border'
                       }`}
                     >
                       <span className="font-bold">{n}</span> {lbl}

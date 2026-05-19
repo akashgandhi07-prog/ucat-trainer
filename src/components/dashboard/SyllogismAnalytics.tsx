@@ -31,9 +31,9 @@ type Props = { sessions: SyllogismSession[] };
 export default function SyllogismAnalytics({ sessions }: Props) {
   if (sessions.length === 0) {
     return (
-      <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-        <h3 className="text-lg font-semibold text-slate-900 mb-2">Decision Making - Syllogisms</h3>
-        <p className="text-slate-600 text-sm">
+      <div className="bg-card rounded-xl border border-border p-6">
+        <h3 className="text-lg font-semibold text-foreground mb-2">Decision Making - Syllogisms</h3>
+        <p className="text-muted-foreground text-sm">
           No syllogism sessions yet. Complete a few foundations, micro or macro drills to see your accuracy and speed here.
         </p>
         <Link
@@ -98,21 +98,21 @@ export default function SyllogismAnalytics({ sessions }: Props) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-      <h3 className="text-lg font-semibold text-slate-900 mb-4">Decision Making - Syllogisms</h3>
+    <div className="bg-card rounded-xl border border-border p-6">
+      <h3 className="text-lg font-semibold text-foreground mb-4">Decision Making - Syllogisms</h3>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        <div className="bg-slate-50 rounded-lg p-4">
-          <p className="text-sm font-medium text-slate-500">Overall accuracy</p>
-          <p className="text-2xl font-bold text-slate-900">{overallAccuracyPct}%</p>
-          <p className="text-xs text-slate-500 mt-1">
+        <div className="bg-secondary rounded-lg p-4">
+          <p className="text-sm font-medium text-muted-foreground">Overall accuracy</p>
+          <p className="text-2xl font-bold text-foreground">{overallAccuracyPct}%</p>
+          <p className="text-xs text-muted-foreground mt-1">
             {totalCorrect} of {totalQuestions} correct across all sessions
           </p>
         </div>
-        <div className="bg-slate-50 rounded-lg p-4">
-          <p className="text-sm font-medium text-slate-500">Average time per decision</p>
+        <div className="bg-secondary rounded-lg p-4">
+          <p className="text-sm font-medium text-muted-foreground">Average time per decision</p>
           <p
-            className={`text-2xl font-bold ${isSlow ? "text-amber-600" : "text-slate-900"}`}
+            className={`text-2xl font-bold ${isSlow ? "text-amber-600" : "text-foreground"}`}
           >
             {averageTimePerDecision.toFixed(1)}s
           </p>
@@ -129,16 +129,16 @@ export default function SyllogismAnalytics({ sessions }: Props) {
           const pct = groupAccuracy[g];
           const displayPct = pct != null ? Math.round(pct * 100) : null;
           return (
-            <div key={g} className="bg-white rounded-lg border border-slate-200 p-4">
+            <div key={g} className="bg-white rounded-lg border border-border p-4">
               <div className="flex justify-between items-baseline mb-2">
-                <span className="text-sm font-medium text-slate-700">
+                <span className="text-sm font-medium text-foreground">
                   {LOGIC_GROUP_LABELS[g]}
                 </span>
-                <span className="text-sm text-slate-500">
+                <span className="text-sm text-muted-foreground">
                   {displayPct != null ? `${displayPct}%` : "No data"}
                 </span>
               </div>
-              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+              <div className="h-2 bg-secondary rounded-full overflow-hidden">
                 <div
                   className="h-full bg-primary rounded-full transition-all duration-300"
                   style={{ width: displayPct != null ? `${displayPct}%` : "0%" }}
@@ -150,7 +150,7 @@ export default function SyllogismAnalytics({ sessions }: Props) {
       </div>
 
       {weakestGroup != null && weakestPct < 100 && (
-        <p className="text-sm text-slate-700 border-t border-slate-200 pt-4">
+        <p className="text-sm text-foreground border-t border-border pt-4">
           Your weakest area is <strong>{LOGIC_GROUP_LABELS[weakestGroup]}</strong> logic (
           {Math.round(weakestPct)}%). Focus your revision on{" "}
           {weakestGroup === "categorical" && "universal statements and chained inferences."}
@@ -160,7 +160,7 @@ export default function SyllogismAnalytics({ sessions }: Props) {
         </p>
       )}
       {weightSum === 0 && (
-        <p className="text-sm text-slate-500 border-t border-slate-200 pt-4">
+        <p className="text-sm text-muted-foreground border-t border-border pt-4">
           Complete a few syllogism drills to unlock targeted advice by logic type.
         </p>
       )}

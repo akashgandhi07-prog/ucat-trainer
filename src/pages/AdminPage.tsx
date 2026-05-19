@@ -535,11 +535,11 @@ export default function AdminPage() {
   }, [user, isAdmin, dateRange]);
 
   const skipLinkClass =
-    "absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-slate-900 font-medium rounded-lg ring-2 ring-blue-600 opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
+    "absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-foreground font-medium rounded-lg ring-2 ring-blue-600 opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
 
   if (authLoading || (user && profile === null && loading)) {
     return (
-      <div className="flex flex-col min-h-screen bg-slate-50">
+      <div className="flex flex-col min-h-screen bg-secondary">
         <a href="#main-content" className={skipLinkClass}>
           Skip to main content
         </a>
@@ -549,7 +549,7 @@ export default function AdminPage() {
           className="flex-1 flex items-center justify-center px-4"
           tabIndex={-1}
         >
-          <p className="text-slate-600">Loading admin area…</p>
+          <p className="text-muted-foreground">Loading admin area…</p>
         </main>
         <Footer />
       </div>
@@ -558,7 +558,7 @@ export default function AdminPage() {
 
   if (!user) {
     return (
-      <div className="flex flex-col min-h-screen bg-slate-50">
+      <div className="flex flex-col min-h-screen bg-secondary">
         <a href="#main-content" className={skipLinkClass}>
           Skip to main content
         </a>
@@ -568,28 +568,28 @@ export default function AdminPage() {
           className="flex-1 max-w-2xl mx-auto px-4 py-8 flex items-center justify-center"
           tabIndex={-1}
         >
-          <div className="w-full bg-white rounded-xl border border-slate-200 shadow-sm p-6 text-center">
+          <div className="w-full bg-card rounded-xl border border-border p-6 text-center">
             {sessionLoadFailed ? (
               <>
                 <p className="text-red-700 font-medium mb-2">
                   We couldn&apos;t verify your admin access right now.
                 </p>
-                <p className="text-slate-700 text-sm mb-4">
+                <p className="text-foreground text-sm mb-4">
                   Check your connection, then try again.
                 </p>
                 <Link
                   to="/"
-                  className="min-h-[44px] inline-flex items-center justify-center px-4 py-2 text-blue-600 font-medium hover:underline"
+                  className="min-h-[44px] inline-flex items-center justify-center px-4 py-2 text-primary font-medium hover:underline"
                 >
                   Back to Home
                 </Link>
               </>
             ) : (
               <>
-                <p className="text-slate-900 font-medium mb-2">
+                <p className="text-foreground font-medium mb-2">
                   Sign in as an admin to view this page.
                 </p>
-                <p className="text-slate-700 text-sm mb-4">
+                <p className="text-foreground text-sm mb-4">
                   You&apos;ll need an admin account to access platform stats and feedback.
                 </p>
                 <button
@@ -610,7 +610,7 @@ export default function AdminPage() {
 
   if (!isAdmin) {
     return (
-      <div className="flex flex-col min-h-screen bg-slate-50">
+      <div className="flex flex-col min-h-screen bg-secondary">
         <a href="#main-content" className={skipLinkClass}>
           Skip to main content
         </a>
@@ -620,16 +620,16 @@ export default function AdminPage() {
           className="flex-1 max-w-2xl mx-auto px-4 py-8 flex items-center justify-center"
           tabIndex={-1}
         >
-          <div className="w-full bg-white rounded-xl border border-slate-200 shadow-sm p-6 text-center">
-            <p className="text-slate-900 font-medium mb-2">
+          <div className="w-full bg-card rounded-xl border border-border p-6 text-center">
+            <p className="text-foreground font-medium mb-2">
               You don&apos;t have access to the admin dashboard.
             </p>
-            <p className="text-slate-700 text-sm mb-4">
+            <p className="text-foreground text-sm mb-4">
               If you think this is a mistake, contact the site owner.
             </p>
             <Link
               to="/"
-              className="min-h-[44px] inline-flex items-center justify-center px-4 py-2 text-blue-600 font-medium hover:underline"
+              className="min-h-[44px] inline-flex items-center justify-center px-4 py-2 text-primary font-medium hover:underline"
             >
               Back to Home
             </Link>
@@ -754,7 +754,7 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-screen bg-slate-50">
+      <div className="flex flex-col min-h-screen bg-secondary">
         <a href="#main-content" className={skipLinkClass}>
           Skip to main content
         </a>
@@ -764,7 +764,7 @@ export default function AdminPage() {
           className="flex-1 flex items-center justify-center px-4"
           tabIndex={-1}
         >
-          <p className="text-slate-600">Loading admin dashboard…</p>
+          <p className="text-muted-foreground">Loading admin dashboard…</p>
         </main>
         <Footer />
       </div>
@@ -773,7 +773,7 @@ export default function AdminPage() {
 
   if (error) {
     return (
-      <div className="flex flex-col min-h-screen bg-slate-50">
+      <div className="flex flex-col min-h-screen bg-secondary">
         <a href="#main-content" className={skipLinkClass}>
           Skip to main content
         </a>
@@ -784,7 +784,7 @@ export default function AdminPage() {
           tabIndex={-1}
         >
           <p className="text-red-600 mb-4">{error}</p>
-          <Link to="/" className="text-blue-600 font-medium hover:underline">
+          <Link to="/" className="text-primary font-medium hover:underline">
             Back to Home
           </Link>
         </main>
@@ -794,29 +794,29 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50">
+    <div className="flex flex-col min-h-screen bg-secondary">
       <a href="#main-content" className={skipLinkClass}>
         Skip to main content
       </a>
       <Header />
       <main id="main-content" className="flex-1 max-w-6xl mx-auto px-4 py-8" tabIndex={-1}>
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-bold text-slate-900">Admin</h1>
-          <Link to="/" className="min-h-[44px] inline-flex items-center justify-center py-2 text-blue-600 font-medium hover:underline">
+          <h1 className="text-2xl font-bold text-foreground">Admin</h1>
+          <Link to="/" className="min-h-[44px] inline-flex items-center justify-center py-2 text-primary font-medium hover:underline">
             Back to Home
           </Link>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 mb-6">
-          <span className="text-sm font-medium text-slate-600">Date range:</span>
-          <div className="flex rounded-lg border border-slate-200 p-0.5 bg-slate-50">
+          <span className="text-sm font-medium text-muted-foreground">Date range:</span>
+          <div className="flex rounded-lg border border-border p-0.5 bg-secondary">
             {(["all", "7", "30", "90"] as const).map((r) => (
               <button
                 key={r}
                 type="button"
                 onClick={() => setDateRange(r)}
                 className={`min-h-[44px] px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                  dateRange === r ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+                  dateRange === r ? "bg-white text-foreground" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {r === "all" ? "All time" : `Last ${r} days`}
@@ -827,27 +827,27 @@ export default function AdminPage() {
 
         {stats && usageSummary && (
           <section className="mb-8" aria-label="Key metrics">
-            <h2 className="text-sm font-semibold text-slate-600 mb-3">Key metrics</h2>
+            <h2 className="text-sm font-semibold text-muted-foreground mb-3">Key metrics</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-              <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                <p className="text-sm font-medium text-slate-500">Total users</p>
-                <p className="text-2xl font-bold text-slate-900">{stats.total_users}</p>
+              <div className="bg-card rounded-xl border border-border p-5">
+                <p className="text-sm font-medium text-muted-foreground">Total users</p>
+                <p className="text-2xl font-bold text-foreground">{stats.total_users}</p>
               </div>
-              <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                <p className="text-sm font-medium text-slate-500">New sign-ups (in range)</p>
-                <p className="text-2xl font-bold text-slate-900">{usageSummary.summary.new_users}</p>
+              <div className="bg-card rounded-xl border border-border p-5">
+                <p className="text-sm font-medium text-muted-foreground">New sign-ups (in range)</p>
+                <p className="text-2xl font-bold text-foreground">{usageSummary.summary.new_users}</p>
               </div>
-              <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                <p className="text-sm font-medium text-slate-500">Active users (in range)</p>
-                <p className="text-2xl font-bold text-slate-900">{usageSummary.summary.active_users}</p>
+              <div className="bg-card rounded-xl border border-border p-5">
+                <p className="text-sm font-medium text-muted-foreground">Active users (in range)</p>
+                <p className="text-2xl font-bold text-foreground">{usageSummary.summary.active_users}</p>
               </div>
-              <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                <p className="text-sm font-medium text-slate-500">Total questions (in range)</p>
-                <p className="text-2xl font-bold text-slate-900">{Number(usageSummary.summary.total_questions).toLocaleString()}</p>
+              <div className="bg-card rounded-xl border border-border p-5">
+                <p className="text-sm font-medium text-muted-foreground">Total questions (in range)</p>
+                <p className="text-2xl font-bold text-foreground">{Number(usageSummary.summary.total_questions).toLocaleString()}</p>
               </div>
-              <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                <p className="text-sm font-medium text-slate-500">Total time (in range)</p>
-                <p className="text-2xl font-bold text-slate-900">{formatTimeSeconds(usageSummary.summary.total_time_seconds)}</p>
+              <div className="bg-card rounded-xl border border-border p-5">
+                <p className="text-sm font-medium text-muted-foreground">Total time (in range)</p>
+                <p className="text-2xl font-bold text-foreground">{formatTimeSeconds(usageSummary.summary.total_time_seconds)}</p>
               </div>
             </div>
           </section>
@@ -855,19 +855,19 @@ export default function AdminPage() {
 
         {registrations.length > 0 && (
           <section className="mb-10">
-            <h2 className="text-lg font-semibold text-slate-900 mb-3">Recent sign-ups</h2>
-            <p className="text-sm text-slate-600 mb-3">All registered users, newest first. Activity = total questions answered across all trainers.</p>
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+            <h2 className="text-lg font-semibold text-foreground mb-3">Recent sign-ups</h2>
+            <p className="text-sm text-muted-foreground mb-3">All registered users, newest first. Activity = total questions answered across all trainers.</p>
+            <div className="bg-card rounded-xl border border-border overflow-x-auto">
               <table className="w-full text-sm min-w-[640px]">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50">
-                    <th className="px-3 py-2 text-left font-medium text-slate-700 whitespace-nowrap">#</th>
-                    <th className="px-3 py-2 text-left font-medium text-slate-700 whitespace-nowrap">Name</th>
-                    <th className="px-3 py-2 text-left font-medium text-slate-700 whitespace-nowrap">Email</th>
-                    <th className="px-3 py-2 text-left font-medium text-slate-700 whitespace-nowrap">Signed up</th>
-                    <th className="px-3 py-2 text-left font-medium text-slate-700 whitespace-nowrap">Last login</th>
-                    <th className="px-3 py-2 text-right font-medium text-slate-700 whitespace-nowrap">Questions</th>
-                    <th className="px-3 py-2 text-right font-medium text-slate-700 whitespace-nowrap">Days active</th>
+                  <tr className="border-b border-border bg-secondary">
+                    <th className="px-3 py-2 text-left font-medium text-foreground whitespace-nowrap">#</th>
+                    <th className="px-3 py-2 text-left font-medium text-foreground whitespace-nowrap">Name</th>
+                    <th className="px-3 py-2 text-left font-medium text-foreground whitespace-nowrap">Email</th>
+                    <th className="px-3 py-2 text-left font-medium text-foreground whitespace-nowrap">Signed up</th>
+                    <th className="px-3 py-2 text-left font-medium text-foreground whitespace-nowrap">Last login</th>
+                    <th className="px-3 py-2 text-right font-medium text-foreground whitespace-nowrap">Questions</th>
+                    <th className="px-3 py-2 text-right font-medium text-foreground whitespace-nowrap">Days active</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -879,31 +879,31 @@ export default function AdminPage() {
                       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
                     })
                     .map((r, i) => (
-                      <tr key={r.user_id} className="border-b border-slate-100 hover:bg-slate-50">
-                        <td className="px-3 py-2 text-slate-400 text-xs tabular-nums">{i + 1}</td>
-                        <td className="px-3 py-2 text-slate-900 font-medium whitespace-nowrap">
-                          {r.display_name || <span className="text-slate-400 italic">-</span>}
+                      <tr key={r.user_id} className="border-b border-border hover:bg-secondary">
+                        <td className="px-3 py-2 text-muted-foreground text-xs tabular-nums">{i + 1}</td>
+                        <td className="px-3 py-2 text-foreground font-medium whitespace-nowrap">
+                          {r.display_name || <span className="text-muted-foreground italic">-</span>}
                         </td>
-                        <td className="px-3 py-2 text-slate-600 truncate max-w-[180px]" title={r.email || ""}>
+                        <td className="px-3 py-2 text-muted-foreground truncate max-w-[180px]" title={r.email || ""}>
                           {r.email || "-"}
                         </td>
-                        <td className="px-3 py-2 text-slate-600 whitespace-nowrap">
+                        <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">
                           {r.created_at ? new Date(r.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "-"}
                         </td>
-                        <td className="px-3 py-2 text-slate-600 whitespace-nowrap">
+                        <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">
                           {r.last_active_at
                             ? new Date(r.last_active_at).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })
-                            : <span className="text-slate-400">Never</span>}
+                            : <span className="text-muted-foreground">Never</span>}
                         </td>
                         <td className="px-3 py-2 text-right tabular-nums">
                           {r.total_questions > 0
-                            ? <span className="text-slate-900 font-medium">{r.total_questions.toLocaleString()}</span>
-                            : <span className="text-slate-400">0</span>}
+                            ? <span className="text-foreground font-medium">{r.total_questions.toLocaleString()}</span>
+                            : <span className="text-muted-foreground">0</span>}
                         </td>
                         <td className="px-3 py-2 text-right tabular-nums">
                           {r.days_active != null && r.days_active > 0
-                            ? <span className="text-slate-900">{r.days_active}</span>
-                            : <span className="text-slate-400">-</span>}
+                            ? <span className="text-foreground">{r.days_active}</span>
+                            : <span className="text-muted-foreground">-</span>}
                         </td>
                       </tr>
                     ))}
@@ -914,51 +914,51 @@ export default function AdminPage() {
         )}
 
         <section className="mb-10">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Statistics</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">Statistics</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-              <p className="text-sm font-medium text-slate-500">Total users</p>
-              <p className="text-3xl font-bold text-slate-900">{stats?.total_users ?? 0}</p>
+            <div className="bg-card rounded-xl border border-border p-5">
+              <p className="text-sm font-medium text-muted-foreground">Total users</p>
+              <p className="text-3xl font-bold text-foreground">{stats?.total_users ?? 0}</p>
             </div>
-            <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-              <p className="text-sm font-medium text-slate-500">Total sessions</p>
-              <p className="text-3xl font-bold text-slate-900">{stats?.total_sessions ?? 0}</p>
+            <div className="bg-card rounded-xl border border-border p-5">
+              <p className="text-sm font-medium text-muted-foreground">Total sessions</p>
+              <p className="text-3xl font-bold text-foreground">{stats?.total_sessions ?? 0}</p>
             </div>
-            <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-              <p className="text-sm font-medium text-slate-500">Bug reports</p>
-              <p className="text-3xl font-bold text-slate-900">{stats?.bug_reports_count ?? 0}</p>
+            <div className="bg-card rounded-xl border border-border p-5">
+              <p className="text-sm font-medium text-muted-foreground">Bug reports</p>
+              <p className="text-3xl font-bold text-foreground">{stats?.bug_reports_count ?? 0}</p>
             </div>
-            <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-              <p className="text-sm font-medium text-slate-500">Suggestions</p>
-              <p className="text-3xl font-bold text-slate-900">{stats?.suggestions_count ?? 0}</p>
+            <div className="bg-card rounded-xl border border-border p-5">
+              <p className="text-sm font-medium text-muted-foreground">Suggestions</p>
+              <p className="text-3xl font-bold text-foreground">{stats?.suggestions_count ?? 0}</p>
             </div>
-            <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-              <p className="text-sm font-medium text-slate-500">Speed reading sessions</p>
-              <p className="text-2xl font-bold text-slate-900">{stats?.sessions_speed_reading ?? 0}</p>
+            <div className="bg-card rounded-xl border border-border p-5">
+              <p className="text-sm font-medium text-muted-foreground">Speed reading sessions</p>
+              <p className="text-2xl font-bold text-foreground">{stats?.sessions_speed_reading ?? 0}</p>
             </div>
-            <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-              <p className="text-sm font-medium text-slate-500">Rapid recall sessions</p>
-              <p className="text-2xl font-bold text-slate-900">{stats?.sessions_rapid_recall ?? 0}</p>
+            <div className="bg-card rounded-xl border border-border p-5">
+              <p className="text-sm font-medium text-muted-foreground">Rapid recall sessions</p>
+              <p className="text-2xl font-bold text-foreground">{stats?.sessions_rapid_recall ?? 0}</p>
             </div>
-            <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-              <p className="text-sm font-medium text-slate-500">Keyword scanning sessions</p>
-              <p className="text-2xl font-bold text-slate-900">{stats?.sessions_keyword_scanning ?? 0}</p>
+            <div className="bg-card rounded-xl border border-border p-5">
+              <p className="text-sm font-medium text-muted-foreground">Keyword scanning sessions</p>
+              <p className="text-2xl font-bold text-foreground">{stats?.sessions_keyword_scanning ?? 0}</p>
             </div>
-            <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-              <p className="text-sm font-medium text-slate-500">Calculator sessions</p>
-              <p className="text-2xl font-bold text-slate-900">{stats?.sessions_calculator ?? 0}</p>
+            <div className="bg-card rounded-xl border border-border p-5">
+              <p className="text-sm font-medium text-muted-foreground">Calculator sessions</p>
+              <p className="text-2xl font-bold text-foreground">{stats?.sessions_calculator ?? 0}</p>
             </div>
-            <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-              <p className="text-sm font-medium text-slate-500">Inference trainer sessions</p>
-              <p className="text-2xl font-bold text-slate-900">{stats?.sessions_inference_trainer ?? 0}</p>
+            <div className="bg-card rounded-xl border border-border p-5">
+              <p className="text-sm font-medium text-muted-foreground">Inference trainer sessions</p>
+              <p className="text-2xl font-bold text-foreground">{stats?.sessions_inference_trainer ?? 0}</p>
             </div>
-            <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-              <p className="text-sm font-medium text-slate-500">Mental maths sessions</p>
-              <p className="text-2xl font-bold text-slate-900">{stats?.sessions_mental_maths ?? 0}</p>
+            <div className="bg-card rounded-xl border border-border p-5">
+              <p className="text-sm font-medium text-muted-foreground">Mental maths sessions</p>
+              <p className="text-2xl font-bold text-foreground">{stats?.sessions_mental_maths ?? 0}</p>
             </div>
-            <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-              <p className="text-sm font-medium text-slate-500">Syllogism sessions</p>
-              <p className="text-2xl font-bold text-slate-900">{stats?.syllogism_sessions_count ?? 0}</p>
+            <div className="bg-card rounded-xl border border-border p-5">
+              <p className="text-sm font-medium text-muted-foreground">Syllogism sessions</p>
+              <p className="text-2xl font-bold text-foreground">{stats?.syllogism_sessions_count ?? 0}</p>
             </div>
           </div>
         </section>
@@ -966,38 +966,38 @@ export default function AdminPage() {
         {usageSummary && (
           <>
             <section className="mb-10">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">Usage summary</h2>
+              <h2 className="text-lg font-semibold text-foreground mb-4">Usage summary</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                  <p className="text-sm font-medium text-slate-500">Total sessions</p>
-                  <p className="text-2xl font-bold text-slate-900">{usageSummary.summary.total_sessions}</p>
+                <div className="bg-card rounded-xl border border-border p-5">
+                  <p className="text-sm font-medium text-muted-foreground">Total sessions</p>
+                  <p className="text-2xl font-bold text-foreground">{usageSummary.summary.total_sessions}</p>
                 </div>
-                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                  <p className="text-sm font-medium text-slate-500">Total questions</p>
-                  <p className="text-2xl font-bold text-slate-900">{Number(usageSummary.summary.total_questions).toLocaleString()}</p>
+                <div className="bg-card rounded-xl border border-border p-5">
+                  <p className="text-sm font-medium text-muted-foreground">Total questions</p>
+                  <p className="text-2xl font-bold text-foreground">{Number(usageSummary.summary.total_questions).toLocaleString()}</p>
                 </div>
-                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                  <p className="text-sm font-medium text-slate-500">Total time spent</p>
-                  <p className="text-2xl font-bold text-slate-900">{formatTimeSeconds(usageSummary.summary.total_time_seconds)}</p>
+                <div className="bg-card rounded-xl border border-border p-5">
+                  <p className="text-sm font-medium text-muted-foreground">Total time spent</p>
+                  <p className="text-2xl font-bold text-foreground">{formatTimeSeconds(usageSummary.summary.total_time_seconds)}</p>
                 </div>
-                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                  <p className="text-sm font-medium text-slate-500">Active users (in range)</p>
-                  <p className="text-2xl font-bold text-slate-900">{usageSummary.summary.active_users}</p>
+                <div className="bg-card rounded-xl border border-border p-5">
+                  <p className="text-sm font-medium text-muted-foreground">Active users (in range)</p>
+                  <p className="text-2xl font-bold text-foreground">{usageSummary.summary.active_users}</p>
                 </div>
-                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                  <p className="text-sm font-medium text-slate-500">Guest sessions</p>
-                  <p className="text-2xl font-bold text-slate-900">{usageSummary.summary.guest_sessions}</p>
+                <div className="bg-card rounded-xl border border-border p-5">
+                  <p className="text-sm font-medium text-muted-foreground">Guest sessions</p>
+                  <p className="text-2xl font-bold text-foreground">{usageSummary.summary.guest_sessions}</p>
                 </div>
-                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                  <p className="text-sm font-medium text-slate-500">New sign-ups (in range)</p>
-                  <p className="text-2xl font-bold text-slate-900">{usageSummary.summary.new_users}</p>
+                <div className="bg-card rounded-xl border border-border p-5">
+                  <p className="text-sm font-medium text-muted-foreground">New sign-ups (in range)</p>
+                  <p className="text-2xl font-bold text-foreground">{usageSummary.summary.new_users}</p>
                 </div>
               </div>
             </section>
 
             <section className="mb-10">
               <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-                <h2 className="text-lg font-semibold text-slate-900">New users by date</h2>
+                <h2 className="text-lg font-semibold text-foreground">New users by date</h2>
                 <button
                   type="button"
                   onClick={() => {
@@ -1032,16 +1032,16 @@ export default function AdminPage() {
                     });
                     downloadText("new-users-by-date.csv", [headers.join(","), ...rows].join("\n"), "text/csv;charset=utf-8");
                   }}
-                  className="min-h-[44px] px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
+                  className="min-h-[44px] px-3 py-2 text-sm font-medium rounded-lg border border-border bg-white text-foreground hover:bg-secondary transition-colors"
                 >
                   Export CSV
                 </button>
               </div>
-              <p className="text-sm text-slate-600 mb-2">
+              <p className="text-sm text-muted-foreground mb-2">
                 Sign-ups in the selected date range, with full name and what they&apos;ve looked at and done (page views, drills, sessions).
               </p>
               {newUsers.length > 0 && (
-                <p className="text-sm text-slate-700 mb-4">
+                <p className="text-sm text-foreground mb-4">
                   {(() => {
                     const activated = newUsers.filter((u) => u.total_questions > 0).length;
                     const total = newUsers.length;
@@ -1050,14 +1050,14 @@ export default function AdminPage() {
                   })()}
                 </p>
               )}
-              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+              <div className="bg-card rounded-xl border border-border overflow-x-auto">
                 <table className="w-full text-sm min-w-[700px]">
                   <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50">
-                      <th className="px-4 py-2 text-left font-medium text-slate-700">Date</th>
-                      <th className="px-4 py-2 text-left font-medium text-slate-700">Full name</th>
-                      <th className="px-4 py-2 text-left font-medium text-slate-700">Email</th>
-                      <th className="px-4 py-2 text-left font-medium text-slate-700">Activity</th>
+                    <tr className="border-b border-border bg-secondary">
+                      <th className="px-4 py-2 text-left font-medium text-foreground">Date</th>
+                      <th className="px-4 py-2 text-left font-medium text-foreground">Full name</th>
+                      <th className="px-4 py-2 text-left font-medium text-foreground">Email</th>
+                      <th className="px-4 py-2 text-left font-medium text-foreground">Activity</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1081,17 +1081,17 @@ export default function AdminPage() {
                       ].filter(Boolean);
                       const activityText = activityParts.length ? activityParts.join(" · ") : "-";
                       return (
-                        <tr key={row.user_id} className="border-b border-slate-100 hover:bg-slate-50">
-                          <td className="px-4 py-2 text-slate-600 whitespace-nowrap">
+                        <tr key={row.user_id} className="border-b border-border hover:bg-secondary">
+                          <td className="px-4 py-2 text-muted-foreground whitespace-nowrap">
                             {row.created_at ? new Date(row.created_at).toLocaleDateString(undefined, { dateStyle: "medium" }) : "-"}
                           </td>
-                          <td className="px-4 py-2 text-slate-900 font-medium">
+                          <td className="px-4 py-2 text-foreground font-medium">
                             {row.full_name || "-"}
                           </td>
-                          <td className="px-4 py-2 text-slate-700 truncate max-w-[200px]" title={row.email || ""}>
+                          <td className="px-4 py-2 text-foreground truncate max-w-[200px]" title={row.email || ""}>
                             {row.email || "-"}
                           </td>
-                          <td className="px-4 py-2 text-slate-600 text-xs max-w-[400px]">
+                          <td className="px-4 py-2 text-muted-foreground text-xs max-w-[400px]">
                             {activityText}
                           </td>
                         </tr>
@@ -1100,7 +1100,7 @@ export default function AdminPage() {
                   </tbody>
                 </table>
                 {newUsers.length === 0 && (
-                  <p className="px-4 py-6 text-slate-500 text-center">No new users in this date range.</p>
+                  <p className="px-4 py-6 text-muted-foreground text-center">No new users in this date range.</p>
                 )}
               </div>
             </section>
@@ -1109,8 +1109,8 @@ export default function AdminPage() {
               <section className="mb-10">
                 <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
                   <div>
-                    <h2 className="text-lg font-semibold text-slate-900">All registrations (students)</h2>
-                    <p className="text-sm text-slate-600 mt-1">
+                    <h2 className="text-lg font-semibold text-foreground">All registrations (students)</h2>
+                    <p className="text-sm text-muted-foreground mt-1">
                       All registered users across all time, with per-trainer usage. Guest usage is shown separately below as
                       {" "}“Guest activity (anon)”.
                     </p>
@@ -1121,7 +1121,7 @@ export default function AdminPage() {
                       placeholder="Filter by name or email"
                       value={registrationFilterQuery}
                       onChange={(e) => setRegistrationFilterQuery(e.target.value)}
-                      className="min-w-[200px] px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-400"
+                      className="min-w-[200px] px-3 py-2 border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground"
                     />
                     <button
                       type="button"
@@ -1171,20 +1171,20 @@ export default function AdminPage() {
                           "text/csv;charset=utf-8"
                         );
                       }}
-                      className="min-h-[44px] px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
+                      className="min-h-[44px] px-3 py-2 text-sm font-medium rounded-lg border border-border bg-white text-foreground hover:bg-secondary transition-colors"
                     >
                       Export CSV
                     </button>
                   </div>
                 </div>
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+                <div className="bg-card rounded-xl border border-border overflow-x-auto">
                   <table className="w-full text-sm min-w-[900px]">
                     <thead>
-                      <tr className="border-b border-slate-200 bg-slate-50">
+                      <tr className="border-b border-border bg-secondary">
                         {REGISTRATION_TABLE_COLUMNS.map(({ key, label }) => (
                           <th
                             key={key}
-                            className="px-2 py-2 text-left font-medium text-slate-700 whitespace-nowrap cursor-pointer hover:bg-slate-100"
+                            className="px-2 py-2 text-left font-medium text-foreground whitespace-nowrap cursor-pointer hover:bg-secondary"
                             onClick={() => {
                               if (registrationSortKey === key) {
                                 setRegistrationSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -1206,25 +1206,25 @@ export default function AdminPage() {
                         registrationSortDir,
                         registrationFilterQuery
                       ).map((r) => (
-                        <tr key={r.user_id} className="border-b border-slate-100 hover:bg-slate-50">
+                        <tr key={r.user_id} className="border-b border-border hover:bg-secondary">
                           {REGISTRATION_TABLE_COLUMNS.map(({ key }) => {
                             if (key === "display_name") {
                               return (
-                                <td key={key} className="px-2 py-2 text-slate-900 font-medium">
+                                <td key={key} className="px-2 py-2 text-foreground font-medium">
                                   {r.display_name || "-"}
                                 </td>
                               );
                             }
                             if (key === "email") {
                               return (
-                                <td key={key} className="px-2 py-2 text-slate-700">
+                                <td key={key} className="px-2 py-2 text-foreground">
                                   {r.email || "-"}
                                 </td>
                               );
                             }
                             if (key === "created_at") {
                               return (
-                                <td key={key} className="px-2 py-2 text-slate-600 text-xs whitespace-nowrap">
+                                <td key={key} className="px-2 py-2 text-muted-foreground text-xs whitespace-nowrap">
                                   {r.created_at
                                     ? new Date(r.created_at).toLocaleDateString(undefined, { dateStyle: "medium" })
                                     : "-"}
@@ -1233,14 +1233,14 @@ export default function AdminPage() {
                             }
                             if (key === "last_active_at") {
                               return (
-                                <td key={key} className="px-2 py-2 text-slate-600 text-xs whitespace-nowrap">
+                                <td key={key} className="px-2 py-2 text-muted-foreground text-xs whitespace-nowrap">
                                   {r.last_active_at ? new Date(r.last_active_at).toLocaleString() : "-"}
                                 </td>
                               );
                             }
                             if (key === "total_time_seconds") {
                               return (
-                                <td key={key} className="px-2 py-2 text-right text-slate-700">
+                                <td key={key} className="px-2 py-2 text-right text-foreground">
                                   {formatTimeSeconds(r.total_time_seconds)}
                                 </td>
                               );
@@ -1269,9 +1269,9 @@ export default function AdminPage() {
             )}
 
             <section className="mb-10">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">Trainer usage (sessions, questions, time in range)</h2>
+              <h2 className="text-lg font-semibold text-foreground mb-4">Trainer usage (sessions, questions, time in range)</h2>
               {Object.keys(usageSummary.trainer_usage).length > 0 && (
-                <p className="text-sm text-slate-700 mb-3">
+                <p className="text-sm text-foreground mb-3">
                   Most used this period:{" "}
                   {Object.entries(usageSummary.trainer_usage)
                     .sort(([, a], [, b]) => (b as number) - (a as number))
@@ -1281,29 +1281,29 @@ export default function AdminPage() {
                   .
                 </p>
               )}
-              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="bg-card rounded-xl border border-border overflow-hidden">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50">
-                      <th className="px-4 py-2 text-left font-medium text-slate-700">Trainer</th>
-                      <th className="px-4 py-2 text-right font-medium text-slate-700">Sessions</th>
-                      <th className="px-4 py-2 text-right font-medium text-slate-700">Questions</th>
-                      <th className="px-4 py-2 text-right font-medium text-slate-700">Time spent</th>
+                    <tr className="border-b border-border bg-secondary">
+                      <th className="px-4 py-2 text-left font-medium text-foreground">Trainer</th>
+                      <th className="px-4 py-2 text-right font-medium text-foreground">Sessions</th>
+                      <th className="px-4 py-2 text-right font-medium text-foreground">Questions</th>
+                      <th className="px-4 py-2 text-right font-medium text-foreground">Time spent</th>
                     </tr>
                   </thead>
                   <tbody>
                     {Object.entries(usageSummary.trainer_usage)
                       .sort(([, a], [, b]) => (b as number) - (a as number))
                       .map(([key, count]) => (
-                        <tr key={key} className="border-b border-slate-100">
-                          <td className="px-4 py-2 text-slate-700">{key.replace(/_/g, " ")}</td>
-                          <td className="px-4 py-2 text-right font-medium text-slate-900">{String(count)}</td>
-                          <td className="px-4 py-2 text-right text-slate-700">
+                        <tr key={key} className="border-b border-border">
+                          <td className="px-4 py-2 text-foreground">{key.replace(/_/g, " ")}</td>
+                          <td className="px-4 py-2 text-right font-medium text-foreground">{String(count)}</td>
+                          <td className="px-4 py-2 text-right text-foreground">
                             {usageSummary.trainer_questions?.[key] != null
                               ? Number(usageSummary.trainer_questions[key]).toLocaleString()
                               : "-"}
                           </td>
-                          <td className="px-4 py-2 text-right text-slate-600">
+                          <td className="px-4 py-2 text-right text-muted-foreground">
                             {formatTimeSeconds(usageSummary.trainer_time_seconds?.[key])}
                           </td>
                         </tr>
@@ -1315,15 +1315,15 @@ export default function AdminPage() {
 
             {Object.keys(usageSummary.guest_activity).length > 0 && (
               <section className="mb-10">
-                <h2 className="text-lg font-semibold text-slate-900 mb-4">Guest activity (anon)</h2>
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <h2 className="text-lg font-semibold text-foreground mb-4">Guest activity (anon)</h2>
+                <div className="bg-card rounded-xl border border-border overflow-hidden">
                   <ul className="divide-y divide-slate-200 max-h-48 overflow-y-auto">
                     {Object.entries(usageSummary.guest_activity)
                       .sort(([, a], [, b]) => b - a)
                       .map(([eventName, count]) => (
                         <li key={eventName} className="px-4 py-2 flex justify-between text-sm">
-                          <span className="text-slate-700">{eventName}</span>
-                          <span className="font-medium text-slate-900">{count}</span>
+                          <span className="text-foreground">{eventName}</span>
+                          <span className="font-medium text-foreground">{count}</span>
                         </li>
                       ))}
                   </ul>
@@ -1333,16 +1333,16 @@ export default function AdminPage() {
 
             <section className="mb-10">
               <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-                <h2 className="text-lg font-semibold text-slate-900">Per-user activity</h2>
+                <h2 className="text-lg font-semibold text-foreground">Per-user activity</h2>
                 <div className="flex flex-wrap items-center gap-2">
-                  <label className="text-sm text-slate-600">
+                  <label className="text-sm text-muted-foreground">
                     Min questions:{" "}
                     <input
                       type="number"
                       min={0}
                       value={userFilterMinQuestions}
                       onChange={(e) => setUserFilterMinQuestions(Math.max(0, parseInt(e.target.value, 10) || 0))}
-                      className="w-20 px-2 py-1 border border-slate-200 rounded text-slate-900"
+                      className="w-20 px-2 py-1 border border-border rounded text-foreground"
                     />
                   </label>
                   <input
@@ -1350,7 +1350,7 @@ export default function AdminPage() {
                     placeholder="Filter by email"
                     value={userFilterEmail}
                     onChange={(e) => setUserFilterEmail(e.target.value)}
-                    className="min-w-[160px] px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder:text-slate-400"
+                    className="min-w-[160px] px-3 py-2 border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground"
                   />
                   <button
                     type="button"
@@ -1393,20 +1393,20 @@ export default function AdminPage() {
                       });
                       downloadText("admin-users-export.csv", [headers.join(","), ...rows].join("\n"), "text/csv;charset=utf-8");
                     }}
-                    className="min-h-[44px] px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
+                    className="min-h-[44px] px-3 py-2 text-sm font-medium rounded-lg border border-border bg-white text-foreground hover:bg-secondary transition-colors"
                   >
                     Export CSV
                   </button>
                 </div>
               </div>
-              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+              <div className="bg-card rounded-xl border border-border overflow-x-auto">
                 <table className="w-full text-sm min-w-[800px]">
                   <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50">
+                    <tr className="border-b border-border bg-secondary">
                       {USER_TABLE_COLUMNS.map(({ key, label }) => (
                         <th
                           key={key}
-                          className="px-2 py-2 text-left font-medium text-slate-700 whitespace-nowrap cursor-pointer hover:bg-slate-100"
+                          className="px-2 py-2 text-left font-medium text-foreground whitespace-nowrap cursor-pointer hover:bg-secondary"
                           onClick={() => {
                             if (userSortKey === key) setUserSortDir((d) => (d === "asc" ? "desc" : "asc"));
                             else setUserSortKey(key);
@@ -1420,18 +1420,18 @@ export default function AdminPage() {
                   </thead>
                   <tbody>
                     {filterAndSortUsers(usageSummary.users, userSortKey, userSortDir, userFilterMinQuestions, userFilterEmail).map((u) => (
-                      <tr key={u.user_id} className="border-b border-slate-100 hover:bg-slate-50">
+                      <tr key={u.user_id} className="border-b border-border hover:bg-secondary">
                         {USER_TABLE_COLUMNS.map(({ key }) => {
-                          if (key === "display_name") return <td key={key} className="px-2 py-2 text-slate-900 font-medium">{u.display_name || "-"}</td>;
-                          if (key === "email") return <td key={key} className="px-2 py-2 text-slate-700">{u.email || "-"}</td>;
-                          if (key === "last_active_at") return <td key={key} className="px-2 py-2 text-slate-600 text-xs">{u.last_active_at ? new Date(u.last_active_at).toLocaleString() : "-"}</td>;
+                          if (key === "display_name") return <td key={key} className="px-2 py-2 text-foreground font-medium">{u.display_name || "-"}</td>;
+                          if (key === "email") return <td key={key} className="px-2 py-2 text-foreground">{u.email || "-"}</td>;
+                          if (key === "last_active_at") return <td key={key} className="px-2 py-2 text-muted-foreground text-xs">{u.last_active_at ? new Date(u.last_active_at).toLocaleString() : "-"}</td>;
                           if (key === "accuracy") {
                             const total = u.session_questions ?? 0;
                             const correct = u.session_correct ?? 0;
                             const pct = total > 0 ? ((correct / total) * 100).toFixed(1) : "-";
                             return <td key={key} className="px-2 py-2 text-right">{pct}</td>;
                           }
-                          if (key === "total_time_seconds") return <td key={key} className="px-2 py-2 text-right text-slate-700">{formatTimeSeconds(u.total_time_seconds)}</td>;
+                          if (key === "total_time_seconds") return <td key={key} className="px-2 py-2 text-right text-foreground">{formatTimeSeconds(u.total_time_seconds)}</td>;
                           if (key === "days_active") return <td key={key} className="px-2 py-2 text-right">{u.days_active ?? "-"}</td>;
                           if (key === "last_wpm") return <td key={key} className="px-2 py-2 text-right">{u.last_wpm != null ? u.last_wpm : "-"}</td>;
                           const val = u[key];
@@ -1443,7 +1443,7 @@ export default function AdminPage() {
                   </tbody>
                 </table>
                 {filterAndSortUsers(usageSummary.users, userSortKey, userSortDir, userFilterMinQuestions, userFilterEmail).length === 0 && (
-                  <p className="px-4 py-6 text-slate-500 text-center">No users match the filters.</p>
+                  <p className="px-4 py-6 text-muted-foreground text-center">No users match the filters.</p>
                 )}
               </div>
             </section>
@@ -1453,59 +1453,59 @@ export default function AdminPage() {
         {analytics && (
           <section className="mb-10">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-              <h2 className="text-lg font-semibold text-slate-900">Analytics (events)</h2>
+              <h2 className="text-lg font-semibold text-foreground">Analytics (events)</h2>
               <button
                 type="button"
                 onClick={() => exportAnalyticsJson(analytics)}
-                className="min-h-[44px] px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
+                className="min-h-[44px] px-3 py-2 text-sm font-medium rounded-lg border border-border bg-white text-foreground hover:bg-secondary transition-colors"
               >
                 Export JSON
               </button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-              <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                <p className="text-sm font-medium text-slate-500">Unique sessions</p>
-                <p className="text-2xl font-bold text-slate-900">{analytics.unique_sessions}</p>
+              <div className="bg-card rounded-xl border border-border p-5">
+                <p className="text-sm font-medium text-muted-foreground">Unique sessions</p>
+                <p className="text-2xl font-bold text-foreground">{analytics.unique_sessions}</p>
               </div>
-              <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                <p className="text-sm font-medium text-slate-500">Unique users (logged in)</p>
-                <p className="text-2xl font-bold text-slate-900">{analytics.unique_users}</p>
+              <div className="bg-card rounded-xl border border-border p-5">
+                <p className="text-sm font-medium text-muted-foreground">Unique users (logged in)</p>
+                <p className="text-2xl font-bold text-foreground">{analytics.unique_users}</p>
               </div>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                <h3 className="text-sm font-semibold text-slate-700 px-4 py-3 border-b border-slate-200">Event counts</h3>
-                <p className="px-4 py-1 text-xs text-slate-500 border-b border-slate-100">What each event means (in selected date range)</p>
+              <div className="bg-card rounded-xl border border-border overflow-hidden">
+                <h3 className="text-sm font-semibold text-foreground px-4 py-3 border-b border-border">Event counts</h3>
+                <p className="px-4 py-1 text-xs text-muted-foreground border-b border-border">What each event means (in selected date range)</p>
                 <ul className="divide-y divide-slate-200 max-h-64 overflow-y-auto">
                   {Object.entries(analytics.event_counts ?? {}).length === 0 ? (
-                    <li className="px-4 py-3 text-slate-500 text-sm">No events in range</li>
+                    <li className="px-4 py-3 text-muted-foreground text-sm">No events in range</li>
                   ) : (
                     Object.entries(analytics.event_counts ?? {})
                       .sort(([, a], [, b]) => (b as number) - (a as number))
                       .map(([name, count]) => (
                         <li key={name} className="px-4 py-2 flex justify-between items-baseline gap-2 text-sm">
-                          <span className="text-slate-700 min-w-0">
+                          <span className="text-foreground min-w-0">
                             <span className="font-medium">{EVENT_LABELS[name] ?? name.replace(/_/g, " ")}</span>
-                            {EVENT_LABELS[name] && <span className="text-slate-400 text-xs ml-1">({name})</span>}
+                            {EVENT_LABELS[name] && <span className="text-muted-foreground text-xs ml-1">({name})</span>}
                           </span>
-                          <span className="font-medium text-slate-900 shrink-0">{String(count)}</span>
+                          <span className="font-medium text-foreground shrink-0">{String(count)}</span>
                         </li>
                       ))
                   )}
                 </ul>
               </div>
-              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                <h3 className="text-sm font-semibold text-slate-700 px-4 py-3 border-b border-slate-200">Trainer usage (by type)</h3>
+              <div className="bg-card rounded-xl border border-border overflow-hidden">
+                <h3 className="text-sm font-semibold text-foreground px-4 py-3 border-b border-border">Trainer usage (by type)</h3>
                 <ul className="divide-y divide-slate-200 max-h-64 overflow-y-auto">
                   {Object.entries(analytics.trainer_by_type ?? {}).length === 0 ? (
-                    <li className="px-4 py-3 text-slate-500 text-sm">No trainer events in range</li>
+                    <li className="px-4 py-3 text-muted-foreground text-sm">No trainer events in range</li>
                   ) : (
                     Object.entries(analytics.trainer_by_type ?? {})
                       .sort(([, a], [, b]) => (b as number) - (a as number))
                       .map(([type, count]) => (
                         <li key={type} className="px-4 py-2 flex justify-between text-sm">
-                          <span className="text-slate-700">{type.replace(/_/g, " ")}</span>
-                          <span className="font-medium text-slate-900">{String(count)}</span>
+                          <span className="text-foreground">{type.replace(/_/g, " ")}</span>
+                          <span className="font-medium text-foreground">{String(count)}</span>
                         </li>
                       ))
                   )}
@@ -1513,8 +1513,8 @@ export default function AdminPage() {
               </div>
             </div>
             {analytics.by_day?.length > 0 && (
-                <div className="mt-6 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-4">
-                  <h3 className="text-sm font-semibold text-slate-700 mb-3">Events over time</h3>
+                <div className="mt-6 bg-card rounded-xl border border-border overflow-hidden p-4">
+                  <h3 className="text-sm font-semibold text-foreground mb-3">Events over time</h3>
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={buildChartData(analytics.by_day)} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
@@ -1543,8 +1543,8 @@ export default function AdminPage() {
                 </div>
             )}
             {analytics.signups_by_day && analytics.signups_by_day.length > 0 && (
-              <div className="mt-6 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-4">
-                <h3 className="text-sm font-semibold text-slate-700 mb-3">New sign-ups over time</h3>
+              <div className="mt-6 bg-card rounded-xl border border-border overflow-hidden p-4">
+                <h3 className="text-sm font-semibold text-foreground mb-3">New sign-ups over time</h3>
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={analytics.signups_by_day} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
@@ -1559,28 +1559,28 @@ export default function AdminPage() {
               </div>
             )}
             {(!analytics.signups_by_day || analytics.signups_by_day.length === 0) && (
-              <p className="mt-4 text-sm text-slate-500">No sign-ups in this date range for the chart.</p>
+              <p className="mt-4 text-sm text-muted-foreground">No sign-ups in this date range for the chart.</p>
             )}
             {analytics.funnel && Object.keys(analytics.funnel).length > 0 && (
-              <div className="mt-6 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                <h3 className="text-sm font-semibold text-slate-700 px-4 py-3 border-b border-slate-200">Funnel (opened → started → completed / abandoned)</h3>
+              <div className="mt-6 bg-card rounded-xl border border-border overflow-hidden">
+                <h3 className="text-sm font-semibold text-foreground px-4 py-3 border-b border-border">Funnel (opened → started → completed / abandoned)</h3>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-slate-200 bg-slate-50">
-                        <th className="px-4 py-2 text-left font-medium text-slate-700">Trainer</th>
-                        <th className="px-4 py-2 text-right font-medium text-slate-700">Opened</th>
-                        <th className="px-4 py-2 text-right font-medium text-slate-700">Started</th>
-                        <th className="px-4 py-2 text-right font-medium text-slate-700">Completed</th>
-                        <th className="px-4 py-2 text-right font-medium text-slate-700">Abandoned</th>
+                      <tr className="border-b border-border bg-secondary">
+                        <th className="px-4 py-2 text-left font-medium text-foreground">Trainer</th>
+                        <th className="px-4 py-2 text-right font-medium text-foreground">Opened</th>
+                        <th className="px-4 py-2 text-right font-medium text-foreground">Started</th>
+                        <th className="px-4 py-2 text-right font-medium text-foreground">Completed</th>
+                        <th className="px-4 py-2 text-right font-medium text-foreground">Abandoned</th>
                       </tr>
                     </thead>
                     <tbody>
                       {Object.entries(analytics.funnel)
                         .sort(([a], [b]) => a.localeCompare(b))
                         .map(([type, counts]) => (
-                          <tr key={type} className="border-b border-slate-100">
-                            <td className="px-4 py-2 text-slate-700">{type.replace(/_/g, " ")}</td>
+                          <tr key={type} className="border-b border-border">
+                            <td className="px-4 py-2 text-foreground">{type.replace(/_/g, " ")}</td>
                             <td className="px-4 py-2 text-right font-medium">{counts.trainer_opened ?? 0}</td>
                             <td className="px-4 py-2 text-right font-medium">{counts.trainer_started ?? 0}</td>
                             <td className="px-4 py-2 text-right font-medium">{counts.trainer_completed ?? 0}</td>
@@ -1590,9 +1590,9 @@ export default function AdminPage() {
                     </tbody>
                   </table>
                 </div>
-                <div className="px-4 py-3 border-t border-slate-100 bg-slate-50/50">
-                  <p className="text-xs font-medium text-slate-600">Completed after start:</p>
-                  <p className="text-sm text-slate-700 mt-1">
+                <div className="px-4 py-3 border-t border-border bg-secondary/50">
+                  <p className="text-xs font-medium text-muted-foreground">Completed after start:</p>
+                  <p className="text-sm text-foreground mt-1">
                     {Object.entries(analytics.funnel)
                       .sort(([a], [b]) => a.localeCompare(b))
                       .map(([type, counts]) => {
@@ -1612,7 +1612,7 @@ export default function AdminPage() {
         <section className="mb-10">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h2 className="text-lg font-semibold text-slate-900">
+              <h2 className="text-lg font-semibold text-foreground">
                 Question feedback — all trainers
                 {questionFeedback.length > 0 && (
                   <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
@@ -1620,7 +1620,7 @@ export default function AdminPage() {
                   </span>
                 )}
               </h2>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Per-question error reports from every trainer. Use this to find and fix confusing or flawed items.
               </p>
             </div>
@@ -1630,7 +1630,7 @@ export default function AdminPage() {
                 onClick={() => exportQuestionFeedbackCsv(
                   questionFeedback.filter((r) => qfTrainerFilter === "all" || r.trainer_type === qfTrainerFilter)
                 )}
-                className="min-h-[44px] px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
+                className="min-h-[44px] px-3 py-2 text-sm font-medium rounded-lg border border-border bg-white text-foreground hover:bg-secondary transition-colors"
               >
                 Export CSV
               </button>
@@ -1639,7 +1639,7 @@ export default function AdminPage() {
                 onClick={() => exportQuestionFeedbackJson(
                   questionFeedback.filter((r) => qfTrainerFilter === "all" || r.trainer_type === qfTrainerFilter)
                 )}
-                className="min-h-[44px] px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
+                className="min-h-[44px] px-3 py-2 text-sm font-medium rounded-lg border border-border bg-white text-foreground hover:bg-secondary transition-colors"
               >
                 Export JSON
               </button>
@@ -1661,11 +1661,11 @@ export default function AdminPage() {
                       className={`min-h-[36px] px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                         qfTrainerFilter === t
                           ? "bg-slate-800 text-white border-slate-800"
-                          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                          : "bg-white text-foreground border-border hover:bg-secondary"
                       }`}
                     >
                       {t === "all" ? "All trainers" : t.replace(/_/g, " ")}
-                      <span className={`ml-1.5 ${qfTrainerFilter === t ? "text-slate-300" : "text-slate-400"}`}>
+                      <span className={`ml-1.5 ${qfTrainerFilter === t ? "text-slate-300" : "text-muted-foreground"}`}>
                         {count}
                       </span>
                     </button>
@@ -1675,9 +1675,9 @@ export default function AdminPage() {
             );
           })()}
 
-          <div className="mb-4 bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+          <div className="mb-4 bg-card rounded-xl border border-border overflow-x-auto">
             {questionFeedback.length === 0 ? (
-              <div className="px-6 py-10 text-center text-slate-500 text-sm">
+              <div className="px-6 py-10 text-center text-muted-foreground text-sm">
                 No question reports yet. Reports appear here when users flag an issue in any trainer.
               </div>
             ) : (
@@ -1735,26 +1735,26 @@ export default function AdminPage() {
                 return (
                   <table className="w-full text-sm min-w-[800px]">
                     <thead>
-                      <tr className="border-b border-slate-200 bg-slate-50">
-                        <th className="px-3 py-2 text-left font-medium text-slate-700">
+                      <tr className="border-b border-border bg-secondary">
+                        <th className="px-3 py-2 text-left font-medium text-foreground">
                           Trainer
                         </th>
-                        <th className="px-3 py-2 text-left font-medium text-slate-700">
+                        <th className="px-3 py-2 text-left font-medium text-foreground">
                           Question ID
                         </th>
-                        <th className="px-3 py-2 text-right font-medium text-slate-700">
+                        <th className="px-3 py-2 text-right font-medium text-foreground">
                           Reports
                         </th>
-                        <th className="px-3 py-2 text-right font-medium text-slate-700">
+                        <th className="px-3 py-2 text-right font-medium text-foreground">
                           Wrong
                         </th>
-                        <th className="px-3 py-2 text-right font-medium text-slate-700">
+                        <th className="px-3 py-2 text-right font-medium text-foreground">
                           Unclear
                         </th>
-                        <th className="px-3 py-2 text-right font-medium text-slate-700">
+                        <th className="px-3 py-2 text-right font-medium text-foreground">
                           Last reported
                         </th>
-                        <th className="px-3 py-2 text-right font-medium text-slate-700">
+                        <th className="px-3 py-2 text-right font-medium text-foreground">
                           Actions
                         </th>
                       </tr>
@@ -1769,26 +1769,26 @@ export default function AdminPage() {
                         const reports = individualReports(row.question_identifier);
                         return (
                           <>
-                            <tr key={key} className="border-b border-slate-100 hover:bg-slate-50">
-                              <td className="px-3 py-2 text-slate-700 whitespace-nowrap">
+                            <tr key={key} className="border-b border-border hover:bg-secondary">
+                              <td className="px-3 py-2 text-foreground whitespace-nowrap">
                                 {row.trainer_type.replace(/_/g, " ")}
                               </td>
                               <td className="px-3 py-2">
-                                <p className="text-slate-800 font-mono text-xs">{row.question_identifier}</p>
+                                <p className="text-foreground font-mono text-xs">{row.question_identifier}</p>
                                 {row.passage_id && (
-                                  <p className="text-slate-500 text-xs">Passage: {row.passage_id}</p>
+                                  <p className="text-muted-foreground text-xs">Passage: {row.passage_id}</p>
                                 )}
                               </td>
-                              <td className="px-3 py-2 text-right font-semibold text-slate-900">
+                              <td className="px-3 py-2 text-right font-semibold text-foreground">
                                 {row.total}
                               </td>
-                              <td className="px-3 py-2 text-right text-slate-800">
+                              <td className="px-3 py-2 text-right text-foreground">
                                 {row.issues.wrong_answer || "-"}
                               </td>
-                              <td className="px-3 py-2 text-right text-slate-800">
+                              <td className="px-3 py-2 text-right text-foreground">
                                 {row.issues.unclear_wording || "-"}
                               </td>
-                              <td className="px-3 py-2 text-right text-slate-700 whitespace-nowrap">
+                              <td className="px-3 py-2 text-right text-foreground whitespace-nowrap">
                                 {new Date(row.last_created_at).toLocaleDateString()}
                               </td>
                               <td className="px-3 py-2 text-right">
@@ -1802,7 +1802,7 @@ export default function AdminPage() {
                                         return next;
                                       })
                                     }
-                                    className="inline-flex items-center px-2 py-1 rounded text-xs font-medium border border-slate-200 text-slate-700 hover:bg-slate-50"
+                                    className="inline-flex items-center px-2 py-1 rounded text-xs font-medium border border-border text-foreground hover:bg-secondary"
                                   >
                                     {isExpanded ? "Hide" : "View"}
                                   </button>
@@ -1810,7 +1810,7 @@ export default function AdminPage() {
                                     type="button"
                                     onClick={() => handleDismissQuestionFeedback(row.question_identifier)}
                                     disabled={isDismissing || isDeleting}
-                                    className="inline-flex items-center px-2 py-1 rounded text-xs font-medium border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="inline-flex items-center px-2 py-1 rounded text-xs font-medium border border-border text-foreground hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
                                   >
                                     {isDismissing ? "Dismissing…" : "Dismiss all"}
                                   </button>
@@ -1831,22 +1831,22 @@ export default function AdminPage() {
                               </td>
                             </tr>
                             {isExpanded && (
-                              <tr key={`${key}--expanded`} className="bg-slate-50 border-b border-slate-200">
+                              <tr key={`${key}--expanded`} className="bg-secondary border-b border-border">
                                 <td colSpan={7} className="px-4 py-3">
-                                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
+                                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                                     Individual reports ({reports.length})
                                   </p>
                                   {reports.length === 0 ? (
-                                    <p className="text-xs text-slate-500">No reports found.</p>
+                                    <p className="text-xs text-muted-foreground">No reports found.</p>
                                   ) : (
                                     <ul className="space-y-1.5">
                                       {reports.map((rep) => (
-                                        <li key={rep.id} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700">
-                                          <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-medium mr-2">
+                                        <li key={rep.id} className="rounded-lg border border-border bg-white px-3 py-2 text-xs text-foreground">
+                                          <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-secondary text-foreground font-medium mr-2">
                                             {rep.issue_type.replace(/_/g, " ")}
                                           </span>
-                                          {rep.comment && <span className="text-slate-800">{rep.comment}</span>}
-                                          <span className="ml-2 text-slate-400">
+                                          {rep.comment && <span className="text-foreground">{rep.comment}</span>}
+                                          <span className="ml-2 text-muted-foreground">
                                             {new Date(rep.created_at).toLocaleString()}
                                           </span>
                                         </li>
@@ -1869,9 +1869,9 @@ export default function AdminPage() {
 
         <section>
           <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-            <h2 className="text-lg font-semibold text-slate-900">Bugs & feedback</h2>
+            <h2 className="text-lg font-semibold text-foreground">Bugs & feedback</h2>
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex rounded-lg border border-slate-200 p-0.5 bg-slate-50">
+              <div className="flex rounded-lg border border-border p-0.5 bg-secondary">
                 {(["active", "archived"] as const).map((view) => (
                   <button
                     key={view}
@@ -1879,8 +1879,8 @@ export default function AdminPage() {
                     onClick={() => setFeedbackView(view)}
                     className={`min-h-[44px] px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                       feedbackView === view
-                        ? "bg-white text-slate-900 shadow-sm"
-                        : "text-slate-600 hover:text-slate-900"
+                        ? "bg-white text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     {view === "active" ? "Active" : "Archived"}
@@ -1898,7 +1898,7 @@ export default function AdminPage() {
                       .filter((r) => feedbackFilter === "all" || r.type === feedbackFilter)
                   )
                 }
-                className="min-h-[44px] px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
+                className="min-h-[44px] px-3 py-2 text-sm font-medium rounded-lg border border-border bg-white text-foreground hover:bg-secondary transition-colors"
               >
                 Export CSV
               </button>
@@ -1913,11 +1913,11 @@ export default function AdminPage() {
                       .filter((r) => feedbackFilter === "all" || r.type === feedbackFilter)
                   )
                 }
-                className="min-h-[44px] px-3 py-2 text-sm font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
+                className="min-h-[44px] px-3 py-2 text-sm font-medium rounded-lg border border-border bg-white text-foreground hover:bg-secondary transition-colors"
               >
                 Export JSON
               </button>
-              <div className="flex rounded-lg border border-slate-200 p-0.5 bg-slate-50">
+              <div className="flex rounded-lg border border-border p-0.5 bg-secondary">
               {(["all", "bug", "suggestion"] as const).map((f) => (
                 <button
                   key={f}
@@ -1925,8 +1925,8 @@ export default function AdminPage() {
                   onClick={() => setFeedbackFilter(f)}
                   className={`min-h-[44px] px-3 py-2 text-sm font-medium rounded-md transition-colors flex items-center ${
                     feedbackFilter === f
-                      ? "bg-white text-slate-900 shadow-sm"
-                      : "text-slate-600 hover:text-slate-900"
+                      ? "bg-white text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {f === "all" ? "All" : f === "bug" ? "Bugs" : "Suggestions"}
@@ -1941,13 +1941,13 @@ export default function AdminPage() {
               .filter((r) => feedbackFilter === "all" || r.type === feedbackFilter);
             if (visibleFeedback.length === 0) {
               return (
-                <p className="text-slate-500">
+                <p className="text-muted-foreground">
                   {feedbackView === "active" ? "No feedback yet." : "No archived feedback."}
                 </p>
               );
             }
             return (
-              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="bg-card rounded-xl border border-border overflow-hidden">
                 <ul className="divide-y divide-slate-200">
                   {visibleFeedback.map((r) => (
                     <li key={r.id} className="p-4">
@@ -1962,7 +1962,7 @@ export default function AdminPage() {
                           {r.type === "bug" ? "Bug" : "Suggestion"}
                         </span>
                         {r.archived_at && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-secondary text-foreground">
                             Archived
                           </span>
                         )}
@@ -1970,7 +1970,7 @@ export default function AdminPage() {
                           type="button"
                           onClick={() => handleArchiveToggle(r.id, !r.archived_at)}
                           disabled={isFeedbackUpdating(r.id)}
-                          className="ml-auto inline-flex items-center px-2.5 py-1 rounded text-xs font-medium border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-60 disabled:cursor-not-allowed"
+                          className="ml-auto inline-flex items-center px-2.5 py-1 rounded text-xs font-medium border border-border text-foreground hover:bg-secondary disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                           {isFeedbackUpdating(r.id)
                             ? "Saving…"
@@ -1979,8 +1979,8 @@ export default function AdminPage() {
                             : "Archive"}
                         </button>
                       </div>
-                      <p className="text-sm text-slate-900 whitespace-pre-wrap">{r.description}</p>
-                      <p className="text-xs text-slate-500 mt-1">
+                      <p className="text-sm text-foreground whitespace-pre-wrap">{r.description}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
                         {r.page_url && <span>{r.page_url} · </span>}
                         {new Date(r.created_at).toLocaleString()}
                       </p>

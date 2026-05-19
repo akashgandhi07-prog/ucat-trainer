@@ -10,11 +10,11 @@ import { hubTrainerGridClass } from "./hubTrainerLayout";
 export type SkillsSectionAccent = "blue" | "amber" | "emerald" | "primary" | "purple";
 
 const accentStyles: Record<SkillsSectionAccent, { iconBox: string }> = {
-  blue: { iconBox: "bg-blue-500/10 text-blue-600" },
-  amber: { iconBox: "bg-amber-500/10 text-amber-600" },
-  emerald: { iconBox: "bg-emerald-500/10 text-emerald-600" },
+  blue:    { iconBox: "bg-primary/10 text-primary" },
+  amber:   { iconBox: "bg-primary/10 text-primary" },
+  emerald: { iconBox: "bg-primary/10 text-primary" },
   primary: { iconBox: "bg-primary/10 text-primary" },
-  purple: { iconBox: "bg-purple-500/10 text-purple-600" },
+  purple:  { iconBox: "bg-primary/10 text-primary" },
 };
 
 type SkillsSectionLayoutProps = {

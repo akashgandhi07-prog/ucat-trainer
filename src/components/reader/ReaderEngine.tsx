@@ -354,14 +354,14 @@ export default function ReaderEngine({
     <div className="w-full max-w-4xl mx-auto px-4 font-ucat">
       {showMoreTimeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" aria-modal="true" role="dialog" aria-labelledby="more-time-title">
-          <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 text-center">
-            <h2 id="more-time-title" className="text-lg font-semibold text-slate-900 mb-2">Time&apos;s up</h2>
-            <p className="text-slate-600 mb-6">More time?</p>
+          <div className="bg-card rounded-xl shadow-xl max-w-sm w-full p-6 text-center">
+            <h2 id="more-time-title" className="text-lg font-semibold text-foreground mb-2">Time&apos;s up</h2>
+            <p className="text-muted-foreground mb-6">More time?</p>
             <div className="flex gap-3 justify-center">
               <button
                 type="button"
                 onClick={handleMoreTimeYes}
-                className="min-h-[44px] px-5 py-2.5 bg-slate-100 text-slate-800 font-medium rounded-lg hover:bg-slate-200 transition-colors"
+                className="min-h-[44px] px-5 py-2.5 bg-secondary text-foreground font-medium rounded-lg hover:bg-slate-200 transition-colors"
               >
                 Yes
               </button>
@@ -378,12 +378,12 @@ export default function ReaderEngine({
       )}
       {showTimer && totalReadingSeconds > 0 && (
         <div className="flex flex-wrap justify-between items-center gap-2 mb-3">
-          <span className="text-sm font-medium text-slate-500">
+          <span className="text-sm font-medium text-muted-foreground">
             Speed reading
           </span>
           <span
             className={`text-2xl font-bold tabular-nums shrink-0 ${
-              overtimeMode ? "text-red-600" : isLowTime ? "text-red-600" : "text-slate-900"
+              overtimeMode ? "text-red-600" : isLowTime ? "text-red-600" : "text-foreground"
             }`}
             aria-live="polite"
             aria-label={overtimeMode ? `Overtime ${formatCountdown(overtimeSeconds)}` : isPlaying ? `${formatCountdown(remainingSeconds)} left` : `${formatCountdown(totalReadingSeconds)} total`}
@@ -401,23 +401,23 @@ export default function ReaderEngine({
       )}
       {isMobile ? (
         <>
-          <div className="mt-4 mb-4 p-3 bg-slate-50 rounded-xl border border-slate-200">
+          <div className="mt-4 mb-4 p-3 bg-secondary rounded-xl border border-border">
             <div className="flex flex-wrap items-center gap-3 mb-3">
-              <label className="flex items-center gap-1.5 text-sm text-slate-700 cursor-pointer">
+              <label className="flex items-center gap-1.5 text-sm text-foreground cursor-pointer">
                 <input
                   type="checkbox"
                   checked={highlightEnabled}
                   onChange={(e) => setHighlightEnabled(e.target.checked)}
-                  className="rounded border-slate-300"
+                  className="rounded border-border"
                 />
                 Highlight words
               </label>
-              <label className="flex items-center gap-1.5 text-sm text-slate-700 cursor-pointer">
+              <label className="flex items-center gap-1.5 text-sm text-foreground cursor-pointer">
                 <input
                   type="checkbox"
                   checked={showTimer}
                   onChange={(e) => setShowTimer(e.target.checked)}
-                  className="rounded border-slate-300"
+                  className="rounded border-border"
                 />
                 Show timer
               </label>
@@ -426,7 +426,7 @@ export default function ReaderEngine({
               <button
                 type="button"
                 onClick={handlePlayPause}
-                className="w-full min-h-[48px] px-4 py-2.5 bg-emerald-700 text-white text-base font-semibold rounded-full shadow-sm hover:bg-emerald-800 transition-colors flex items-center justify-center gap-1.5"
+                className="w-full min-h-[48px] px-4 py-2.5 bg-emerald-700 text-white text-base font-semibold rounded-full hover:bg-emerald-800 transition-colors flex items-center justify-center gap-1.5"
               >
                 <span aria-hidden>
                   {isPlaying ? "‖‖" : "▶"}
@@ -442,25 +442,25 @@ export default function ReaderEngine({
               </button>
             </div>
             <div className="flex items-center gap-3 justify-between">
-              <span className="text-xs text-slate-500">Reading speed</span>
+              <span className="text-xs text-muted-foreground">Reading speed</span>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={handleWpmDecrement}
                   disabled={isPlaying}
-                  className="min-w-[40px] min-h-[40px] rounded-lg border border-slate-200 bg-white text-slate-700 font-medium hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center"
+                  className="min-w-[40px] min-h-[40px] rounded-lg border border-border bg-white text-foreground font-medium hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center"
                   aria-label="Decrease WPM"
                 >
                   −
                 </button>
-                <span className="min-w-[4.5rem] text-center text-sm font-semibold text-slate-900">
+                <span className="min-w-[4.5rem] text-center text-sm font-semibold text-foreground">
                   {wpm} WPM
                 </span>
                 <button
                   type="button"
                   onClick={handleWpmIncrement}
                   disabled={isPlaying}
-                  className="min-w-[40px] min-h-[40px] rounded-lg border border-slate-200 bg-white text-slate-700 font-medium hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center"
+                  className="min-w-[40px] min-h-[40px] rounded-lg border border-border bg-white text-foreground font-medium hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center"
                   aria-label="Increase WPM"
                 >
                   +
@@ -475,46 +475,46 @@ export default function ReaderEngine({
         <>
           <QuestionMediaBlock media={passageMedia} placement="stem" className="mb-4" />
           {content}
-          <div className="flex flex-wrap items-center justify-between gap-4 mt-8 p-3 bg-slate-50 rounded-xl border border-slate-200">
+          <div className="flex flex-wrap items-center justify-between gap-4 mt-8 p-3 bg-secondary rounded-xl border border-border">
             <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={handleWpmDecrement}
                   disabled={isPlaying}
-                  className="min-w-[44px] min-h-[44px] rounded-lg border border-slate-200 bg-white text-slate-700 font-medium hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center"
+                  className="min-w-[44px] min-h-[44px] rounded-lg border border-border bg-white text-foreground font-medium hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center"
                   aria-label="Decrease WPM"
                 >
                   −
                 </button>
-                <span className="min-w-[5rem] text-center font-semibold text-slate-900">
+                <span className="min-w-[5rem] text-center font-semibold text-foreground">
                   {wpm} WPM
                 </span>
                 <button
                   type="button"
                   onClick={handleWpmIncrement}
                   disabled={isPlaying}
-                  className="min-w-[44px] min-h-[44px] rounded-lg border border-slate-200 bg-white text-slate-700 font-medium hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center"
+                  className="min-w-[44px] min-h-[44px] rounded-lg border border-border bg-white text-foreground font-medium hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center"
                   aria-label="Increase WPM"
                 >
                   +
                 </button>
               </div>
-              <label className="flex items-center gap-1.5 text-sm text-slate-700 cursor-pointer">
+              <label className="flex items-center gap-1.5 text-sm text-foreground cursor-pointer">
                 <input
                   type="checkbox"
                   checked={highlightEnabled}
                   onChange={(e) => setHighlightEnabled(e.target.checked)}
-                  className="rounded border-slate-300"
+                  className="rounded border-border"
                 />
                 Highlight words
               </label>
-              <label className="flex items-center gap-1.5 text-sm text-slate-700 cursor-pointer">
+              <label className="flex items-center gap-1.5 text-sm text-foreground cursor-pointer">
                 <input
                   type="checkbox"
                   checked={showTimer}
                   onChange={(e) => setShowTimer(e.target.checked)}
-                  className="rounded border-slate-300"
+                  className="rounded border-border"
                 />
                 Show timer
               </label>
@@ -523,7 +523,7 @@ export default function ReaderEngine({
               <button
                 type="button"
                 onClick={handlePlayPause}
-                className="min-h-[44px] px-4 py-2.5 bg-emerald-700 text-white font-medium rounded-lg shadow-sm hover:bg-emerald-800 transition-colors flex items-center justify-center gap-1.5"
+                className="min-h-[44px] px-4 py-2.5 bg-emerald-700 text-white font-medium rounded-lg hover:bg-emerald-800 transition-colors flex items-center justify-center gap-1.5"
               >
                 <span aria-hidden>
                   {isPlaying ? "‖‖" : "▶"}

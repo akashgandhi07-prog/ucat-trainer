@@ -90,8 +90,8 @@ export default function SJTAnalytics({ sessions }: Props) {
 
   if (sessions.length === 0) {
     return (
-      <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-        <p className="text-slate-500 mb-4">
+      <div className="bg-card rounded-xl border border-border p-5">
+        <p className="text-muted-foreground mb-4">
           No SJT sessions yet. Practice situational judgement to track your score across GMC
           domains.
         </p>
@@ -111,13 +111,13 @@ export default function SJTAnalytics({ sessions }: Props) {
     <div className="space-y-4">
       {/* Overview stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-          <p className="text-sm font-medium text-slate-500">Sessions</p>
-          <p className="text-3xl font-bold text-slate-900">{sessions.length}</p>
+        <div className="bg-card rounded-xl border border-border p-5">
+          <p className="text-sm font-medium text-muted-foreground">Sessions</p>
+          <p className="text-3xl font-bold text-foreground">{sessions.length}</p>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-          <p className="text-sm font-medium text-slate-500">Avg score</p>
-          <p className="text-3xl font-bold text-slate-900">
+        <div className="bg-card rounded-xl border border-border p-5">
+          <p className="text-sm font-medium text-muted-foreground">Avg score</p>
+          <p className="text-3xl font-bold text-foreground">
             {avgPct != null ? `${avgPct}%` : "-"}
           </p>
           {avgBand && (
@@ -129,13 +129,13 @@ export default function SJTAnalytics({ sessions }: Props) {
               <span className="text-xs font-semibold" style={{ color: avgBand.color }}>
                 {avgBand.band}
               </span>
-              <span className="text-[10px] text-slate-400">· {avgBand.description}</span>
+              <span className="text-[10px] text-muted-foreground">· {avgBand.description}</span>
             </div>
           )}
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm col-span-2 sm:col-span-1">
-          <p className="text-sm font-medium text-slate-500">Best score</p>
-          <p className="text-3xl font-bold text-slate-900">
+        <div className="bg-card rounded-xl border border-border p-5 col-span-2 sm:col-span-1">
+          <p className="text-sm font-medium text-muted-foreground">Best score</p>
+          <p className="text-3xl font-bold text-foreground">
             {bestPct != null ? `${bestPct}%` : "-"}
           </p>
           {bestPct != null && (() => {
@@ -151,28 +151,28 @@ export default function SJTAnalytics({ sessions }: Props) {
       </div>
 
       {/* Band legend */}
-      <div className="bg-slate-50 rounded-xl border border-slate-200 p-3">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-2">UCAT SJT bands (approximate)</p>
+      <div className="bg-secondary rounded-xl border border-border p-3">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">UCAT SJT bands (approximate)</p>
         <div className="flex flex-wrap gap-3">
           {SJT_BANDS.map((b) => (
             <div key={b.label} className="flex items-center gap-1.5">
               <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: b.color }} />
-              <span className="text-xs text-slate-700 font-medium">{b.label}</span>
-              <span className="text-[10px] text-slate-400">≥{b.pct}%</span>
+              <span className="text-xs text-foreground font-medium">{b.label}</span>
+              <span className="text-[10px] text-muted-foreground">≥{b.pct}%</span>
             </div>
           ))}
           <div className="flex items-center gap-1.5">
             <span className="inline-block w-2 h-2 rounded-full bg-red-500" />
-            <span className="text-xs text-slate-700 font-medium">Band 4</span>
-            <span className="text-[10px] text-slate-400">&lt;40%</span>
+            <span className="text-xs text-foreground font-medium">Band 4</span>
+            <span className="text-[10px] text-muted-foreground">&lt;40%</span>
           </div>
         </div>
       </div>
 
       {/* Score over time */}
       {chartData.length > 1 && (
-        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-          <h3 className="text-base font-medium text-slate-900 mb-4">Score over time</h3>
+        <div className="bg-card rounded-xl border border-border p-4">
+          <h3 className="text-base font-medium text-foreground mb-4">Score over time</h3>
           <div className="h-56 min-h-[180px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
@@ -222,20 +222,20 @@ export default function SJTAnalytics({ sessions }: Props) {
       )}
 
       {/* By question type */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-        <h3 className="text-sm font-medium text-slate-900 mb-3">By question type</h3>
+      <div className="bg-card rounded-xl border border-border p-4">
+        <h3 className="text-sm font-medium text-foreground mb-3">By question type</h3>
         <div className="grid grid-cols-3 gap-3">
           {(["appropriateness", "importance", "ranking"] as SJTQuestionType[]).map((type) => {
             const s = byType[type];
             return (
-              <div key={type} className="bg-slate-50 rounded-lg p-3 text-center">
-                <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-1">
+              <div key={type} className="bg-secondary rounded-lg p-3 text-center">
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">
                   {type.charAt(0).toUpperCase() + type.slice(1)}
                 </p>
-                <p className="text-xl font-bold text-slate-900">
+                <p className="text-xl font-bold text-foreground">
                   {s && s.count > 0 ? `${Math.round(s.total / s.count)}%` : "-"}
                 </p>
-                <p className="text-[10px] text-slate-400">
+                <p className="text-[10px] text-muted-foreground">
                   {s?.count ?? 0} session{(s?.count ?? 0) !== 1 ? "s" : ""}
                 </p>
               </div>
@@ -245,19 +245,19 @@ export default function SJTAnalytics({ sessions }: Props) {
       </div>
 
       {/* By GMC domain */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-        <h3 className="text-sm font-medium text-slate-900 mb-3">By GMC domain</h3>
+      <div className="bg-card rounded-xl border border-border p-4">
+        <h3 className="text-sm font-medium text-foreground mb-3">By GMC domain</h3>
         <div className="grid grid-cols-2 gap-3">
           {(Object.entries(GMC_DOMAIN_LABELS) as [GMCDomainId, string][]).map(
             ([domain, label]) => {
               const s = byDomain[domain];
               return (
-                <div key={domain} className="bg-slate-50 rounded-lg p-3">
-                  <p className="text-xs font-medium text-slate-600 mb-1">{label}</p>
-                  <p className="text-xl font-bold text-slate-900">
+                <div key={domain} className="bg-secondary rounded-lg p-3">
+                  <p className="text-xs font-medium text-muted-foreground mb-1">{label}</p>
+                  <p className="text-xl font-bold text-foreground">
                     {s && s.count > 0 ? `${Math.round(s.total / s.count)}%` : "-"}
                   </p>
-                  <p className="text-[10px] text-slate-400">
+                  <p className="text-[10px] text-muted-foreground">
                     {s?.count ?? 0} session{(s?.count ?? 0) !== 1 ? "s" : ""}
                   </p>
                 </div>

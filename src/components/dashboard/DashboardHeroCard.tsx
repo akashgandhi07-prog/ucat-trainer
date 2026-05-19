@@ -106,14 +106,14 @@ function getEncouragement({
 
 const toneStyles: Record<Tone, { bar: string; badge: string; text: string }> = {
   positive: {
-    bar: "bg-emerald-500",
-    badge: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    text: "text-emerald-700",
+    bar: "bg-training-success",
+    badge: "bg-secondary text-foreground border-border",
+    text: "text-training-success",
   },
   neutral: {
-    bar: "bg-blue-400",
-    badge: "bg-blue-50 text-blue-700 border-blue-200",
-    text: "text-blue-700",
+    bar: "bg-primary",
+    badge: "bg-secondary text-foreground border-border",
+    text: "text-foreground",
   },
   urgent: {
     bar: "bg-amber-500",
@@ -121,9 +121,9 @@ const toneStyles: Record<Tone, { bar: string; badge: string; text: string }> = {
     text: "text-amber-800",
   },
   warning: {
-    bar: "bg-orange-400",
-    badge: "bg-orange-50 text-orange-800 border-orange-200",
-    text: "text-orange-800",
+    bar: "bg-amber-400",
+    badge: "bg-amber-50 text-amber-800 border-amber-200",
+    text: "text-amber-800",
   },
 };
 
@@ -153,7 +153,7 @@ export default function DashboardHeroCard({
       : null;
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <div className="bg-card rounded-xl border border-border overflow-hidden">
       {/* Tone accent bar */}
       <div className={`h-1 w-full ${styles.bar}`} />
 
@@ -161,11 +161,11 @@ export default function DashboardHeroCard({
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           {/* Left: greeting + encouragement */}
           <div className="min-w-0">
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-1">
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1">
               {name !== "Future Clinician" ? `Hey, ${name.split(" ")[0]}.` : "Your dashboard."}
             </h2>
-            <p className="text-base font-semibold text-slate-800">{enc.headline}</p>
-            <p className="text-sm text-slate-500 mt-0.5">{enc.subtext}</p>
+            <p className="text-base font-semibold text-foreground">{enc.headline}</p>
+            <p className="text-sm text-muted-foreground mt-0.5">{enc.subtext}</p>
           </div>
 
           {/* Right: stat pills */}
@@ -178,7 +178,7 @@ export default function DashboardHeroCard({
               </span>
             )}
             {daysUntilExam != null ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full text-sm font-medium border border-slate-200 bg-slate-50 text-slate-700 overflow-hidden">
+              <span className="inline-flex items-center gap-1.5 rounded-full text-sm font-medium border border-border bg-secondary text-foreground overflow-hidden">
                 <span className="px-3 py-1.5">
                   {daysUntilExam === 0 ? "Exam today" : `${daysUntilExam}d to exam`}
                 </span>
@@ -186,7 +186,7 @@ export default function DashboardHeroCard({
                   <button
                     type="button"
                     onClick={onEditExamDate}
-                    className="px-2 py-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors border-l border-slate-200 text-xs"
+                    className="px-2 py-1.5 text-muted-foreground hover:text-muted-foreground hover:bg-secondary transition-colors border-l border-border text-xs"
                     aria-label="Edit exam date"
                   >
                     Edit
@@ -197,13 +197,13 @@ export default function DashboardHeroCard({
               <button
                 type="button"
                 onClick={onSetExamDate}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border border-dashed border-slate-300 bg-slate-50 text-slate-500 hover:bg-slate-100 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border border-dashed border-border bg-secondary text-muted-foreground hover:bg-secondary transition-colors"
               >
                 Set exam date
               </button>
             ) : null}
             {totalSessions > 0 && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border border-slate-200 bg-slate-50 text-slate-600">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border border-border bg-secondary text-muted-foreground">
                 <span>{totalSessions}</span>
                 <span>session{totalSessions !== 1 ? "s" : ""} total</span>
               </span>
@@ -214,11 +214,11 @@ export default function DashboardHeroCard({
         {/* Exam countdown bar */}
         {examProgress != null && daysUntilExam != null && daysUntilExam > 0 && (
           <div className="mt-4">
-            <div className="flex justify-between text-xs text-slate-500 mb-1.5">
+            <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
               <span>Exam preparation</span>
               <span>{daysUntilExam} day{daysUntilExam !== 1 ? "s" : ""} remaining</span>
             </div>
-            <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+            <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all duration-700 ${styles.bar}`}
                 style={{ width: `${examProgress}%` }}

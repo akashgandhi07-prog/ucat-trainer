@@ -69,7 +69,7 @@ export default function ResetPasswordPage() {
   };
 
   const inputClass =
-    "w-full border border-slate-200 rounded-lg px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent";
+    "w-full border border-border rounded-lg px-3 py-2 text-foreground placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent";
 
   return (
     <>
@@ -78,12 +78,12 @@ export default function ResetPasswordPage() {
         description="Set a new password for your UCAT Trainer account."
         noindex
       />
-      <div className="min-h-screen flex flex-col bg-slate-50">
+      <div className="min-h-screen flex flex-col bg-secondary">
         <Header />
         <main id="main-content" className="flex-1 flex items-center justify-center p-4 sm:p-6">
-          <div className="w-full max-w-md bg-white rounded-2xl shadow-lg border border-slate-200 p-6 sm:p-8">
-            <h1 className="text-xl font-semibold text-slate-900 mb-1">Set new password</h1>
-            <p className="text-sm text-slate-600 mb-6">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-lg border border-border p-6 sm:p-8">
+            <h1 className="text-xl font-semibold text-foreground mb-1">Set new password</h1>
+            <p className="text-sm text-muted-foreground mb-6">
               Choose a strong password. You’ll use it to sign in from now on.
             </p>
 
@@ -91,7 +91,7 @@ export default function ResetPasswordPage() {
               <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
                 {message}
                 <p className="mt-3">
-                  <a href="/" className="text-blue-600 hover:underline font-medium">
+                  <a href="/" className="text-primary hover:underline font-medium">
                     Return to home
                   </a>{" "}
                   or request a new reset link from the sign-in screen.
@@ -102,7 +102,7 @@ export default function ResetPasswordPage() {
             {hasSession === true && status !== "success" && (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label htmlFor="reset-password" className="block text-sm font-medium text-slate-700 mb-1">
+                  <label htmlFor="reset-password" className="block text-sm font-medium text-foreground mb-1">
                     New password *
                   </label>
                   <input
@@ -115,10 +115,10 @@ export default function ResetPasswordPage() {
                     autoComplete="new-password"
                     disabled={status === "loading"}
                   />
-                  <p className="mt-1 text-xs text-slate-500">{getPasswordRequirementHint()}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{getPasswordRequirementHint()}</p>
                 </div>
                 <div>
-                  <label htmlFor="reset-confirm" className="block text-sm font-medium text-slate-700 mb-1">
+                  <label htmlFor="reset-confirm" className="block text-sm font-medium text-foreground mb-1">
                     Confirm new password *
                   </label>
                   <input
@@ -161,7 +161,7 @@ export default function ResetPasswordPage() {
             )}
 
             {hasSession === null && (
-              <p className="text-slate-500 text-sm">Checking your link…</p>
+              <p className="text-muted-foreground text-sm">Checking your link…</p>
             )}
           </div>
         </main>

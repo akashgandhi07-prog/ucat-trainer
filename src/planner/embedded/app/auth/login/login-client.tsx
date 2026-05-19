@@ -46,14 +46,14 @@ export default function LoginClient({ invite: inviteProp }: { invite?: string })
         <div className="text-center space-y-2">
           <div className="inline-flex items-center gap-2 text-2xl font-bold tracking-tight text-slate-900">
             <div className="flex gap-1">
-              <div className="w-3 h-3 rounded-full bg-blue-500" />
+              <div className="w-3 h-3 rounded-full bg-secondary0" />
               <div className="w-3 h-3 rounded-full bg-green-500" />
               <div className="w-3 h-3 rounded-full bg-amber-500" />
-              <div className="w-3 h-3 rounded-full bg-purple-500" />
+              <div className="w-3 h-3 rounded-full bg-foreground" />
             </div>
             TheUKCATPeople
           </div>
-          <p className="text-sm text-slate-500">Free study plan and mock tracking for the UCAT</p>
+          <p className="text-sm text-muted-foreground">Free study plan and mock tracking for the UCAT</p>
         </div>
 
         <Card>

@@ -110,7 +110,7 @@ export default function SJTRatingQuiz({ question, onComplete, onProgress }: Prop
 
         {/* Left col: Scenario */}
         <div className="lg:sticky lg:top-4">
-          <div className="rounded-xl border border-border bg-card shadow-sm p-5">
+          <div className="rounded-xl border border-border bg-card p-5">
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Scenario</p>
             <p className="text-sm text-foreground leading-relaxed">{question.stem}</p>
             <QuestionMediaBlock media={question.media} placement="stem" className="mt-4" />
@@ -129,7 +129,7 @@ export default function SJTRatingQuiz({ question, onComplete, onProgress }: Prop
                 : currentScore === 0.5
                 ? "bg-amber-50 border-amber-200"
                 : "bg-destructive-muted border-destructive"
-              : "border-border bg-card shadow-sm"
+              : "border-border bg-card"
           )}>
             <div className="flex items-start gap-2">
               {itemPhase === "feedback" && (
@@ -166,7 +166,7 @@ export default function SJTRatingQuiz({ question, onComplete, onProgress }: Prop
                     className={cn(
                       "w-full text-left px-4 py-3 rounded-xl border text-sm font-medium transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary",
                       selected === r
-                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                        ? "bg-primary text-primary-foreground border-primary"
                         : "bg-card border-border text-foreground hover:bg-secondary"
                     )}
                   >

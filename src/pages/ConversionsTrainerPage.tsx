@@ -45,7 +45,7 @@ export default function ConversionsTrainerPage() {
         <div className="max-w-6xl mx-auto">
           <Link
             to="/ucat-quantitative-reasoning-practice"
-            className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 mb-6"
+            className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground mb-6"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Quantitative Reasoning

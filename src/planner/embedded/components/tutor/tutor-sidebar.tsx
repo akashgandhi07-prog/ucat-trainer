@@ -30,15 +30,15 @@ export function TutorSidebar({ tutor, students }: TutorSidebarProps) {
   }
 
   return (
-    <aside className="w-64 min-h-screen bg-white border-r border-slate-200 flex flex-col shrink-0">
+    <aside className="w-64 min-h-screen bg-white border-r border-border flex flex-col shrink-0">
       {/* Brand */}
       <div className="px-5 py-5 border-b border-slate-100">
         <Link href="/tutor" className="inline-flex items-center gap-2">
           <div className="flex gap-0.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+            <div className="w-2.5 h-2.5 rounded-full bg-secondary0" />
             <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
             <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-            <div className="w-2.5 h-2.5 rounded-full bg-purple-500" />
+            <div className="w-2.5 h-2.5 rounded-full bg-foreground" />
           </div>
           <span className="font-bold text-slate-900 tracking-tight">UCAT Planner</span>
         </Link>
@@ -56,7 +56,7 @@ export function TutorSidebar({ tutor, students }: TutorSidebarProps) {
           className={cn(
             'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
             pathname === '/tutor'
-              ? 'bg-blue-50 text-blue-700'
+              ? 'bg-secondary text-foreground'
               : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
           )}
         >
@@ -68,7 +68,7 @@ export function TutorSidebar({ tutor, students }: TutorSidebarProps) {
           className={cn(
             'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
             pathname === '/'
-              ? 'bg-blue-50 text-blue-700'
+              ? 'bg-secondary text-foreground'
               : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
           )}
         >
@@ -82,7 +82,7 @@ export function TutorSidebar({ tutor, students }: TutorSidebarProps) {
             className={cn(
               'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
               pathname === `/tutor/student/${plan.id}`
-                ? 'bg-blue-50 text-blue-700'
+                ? 'bg-secondary text-foreground'
                 : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
             )}
           >
@@ -109,7 +109,7 @@ export function TutorSidebar({ tutor, students }: TutorSidebarProps) {
       <div className="px-3 pb-3">
         <Link
           href="/tutor/invite"
-          className="flex items-center justify-center gap-2 w-full rounded-lg border border-dashed border-slate-300 py-2.5 text-sm text-slate-500 hover:border-blue-400 hover:text-blue-600 transition-colors"
+          className="flex items-center justify-center gap-2 w-full rounded-lg border border-dashed border-border py-2.5 text-sm text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors"
         >
           + Invite or share link
         </Link>
@@ -118,17 +118,17 @@ export function TutorSidebar({ tutor, students }: TutorSidebarProps) {
       {/* User */}
       <div className="px-3 py-4 border-t border-slate-100">
         <div className="flex items-center gap-3 px-3 py-2">
-          <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-semibold text-sm shrink-0">
+          <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-foreground font-semibold text-sm shrink-0">
             {(tutor.full_name || tutor.email || '?')[0].toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-slate-900 truncate">{tutor.full_name || 'Tutor'}</p>
-            <p className="text-xs text-slate-500 truncate">{tutor.email ?? ''}</p>
+            <p className="text-xs text-muted-foreground truncate">{tutor.email ?? ''}</p>
           </div>
         </div>
         <button
           onClick={handleSignOut}
-          className="w-full text-left flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors mt-1"
+          className="w-full text-left flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-slate-50 hover:text-slate-700 transition-colors mt-1"
         >
           <span>↩</span> Sign out
         </button>
