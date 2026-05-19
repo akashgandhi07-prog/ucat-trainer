@@ -89,20 +89,23 @@ function paraphrase(sentence: string): ParaphraseResult {
   const maxChanges = 2;
   for (const [re, synonyms] of shuffle(SYNONYM_MAP)) {
     if (changes >= maxChanges) break;
-    if (re.test(result)) {
-      const replacement = pick(synonyms);
-      if (!firstOriginal) {
-        const match = result.match(re);
-        if (match) {
-          firstOriginal = match[0];
-          firstReplaced = firstOriginal[0] === firstOriginal[0].toUpperCase()
-            ? replacement.charAt(0).toUpperCase() + replacement.slice(1)
-            : replacement;
-        }
-      }
-      result = result.replace(re, replacement);
-      changes++;
+    // Use exec so the regex position is reliable and we get the exact match
+    const globalRe = new RegExp(re.source, re.flags.includes("g") ? re.flags : re.flags + "g");
+    globalRe.lastIndex = 0;
+    const match = globalRe.exec(result);
+    if (!match) continue;
+    const replacement = pick(synonyms);
+    // Preserve the capitalisation of whatever character opened the match
+    const cased = match[0][0] === match[0][0].toUpperCase() && match[0][0] !== match[0][0].toLowerCase()
+      ? replacement.charAt(0).toUpperCase() + replacement.slice(1)
+      : replacement;
+    if (!firstOriginal) {
+      firstOriginal = match[0];
+      firstReplaced = cased;
     }
+    // Replace only the first occurrence so the fragment tracking stays accurate
+    result = result.slice(0, match.index) + cased + result.slice(match.index + match[0].length);
+    changes++;
   }
   return { text: result, originalFragment: firstOriginal, replacedFragment: firstReplaced };
 }
@@ -456,16 +459,20 @@ function buildQuestions(passageText: string, count: number, passageTitle?: strin
   }
 
   // Build TRUE questions (paraphrased - NOT verbatim)
-  for (let i = 0; i < shuffledSentences.length && questions.filter(q => q.correctAnswer === "true").length < numTrue; i++) {
+  // First pass: prefer sentences where a synonym swap was made (gives richer explanations)
+  const paraphraseResults = shuffledSentences.map((s, i) => ({ i, s, p: paraphrase(s) }));
+  const withSwap = paraphraseResults.filter(r => !usedIndices.has(r.i) && r.p.text !== r.s);
+  const withoutSwap = paraphraseResults.filter(r => !usedIndices.has(r.i) && r.p.text === r.s);
+  const truePool = [...withSwap, ...withoutSwap];
+  for (const { i, s, p } of truePool) {
+    if (questions.filter(q => q.correctAnswer === "true").length >= numTrue) break;
     if (usedIndices.has(i)) continue;
-    const sentence = shuffledSentences[i];
-    const paraphrased = paraphrase(sentence);
     questions.push({
-      displayedSentence: paraphrased.text,
+      displayedSentence: p.text,
       correctAnswer: "true",
-      passageSnippet: sentence,
-      originalFragment: paraphrased.originalFragment,
-      replacedFragment: paraphrased.replacedFragment,
+      passageSnippet: s,
+      originalFragment: p.originalFragment,
+      replacedFragment: p.replacedFragment,
     });
     usedIndices.add(i);
   }
