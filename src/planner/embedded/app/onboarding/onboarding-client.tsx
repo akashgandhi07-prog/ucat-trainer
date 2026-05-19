@@ -21,6 +21,17 @@ import { getUpsellProfileContext } from '../../../../lib/productUpsell'
 
 const TOTAL_STEPS = 7
 
+type ConfidenceKey = keyof OnboardingState['confidence']
+
+type RequiredAnswers = {
+  confidence: Record<ConfidenceKey, boolean>
+  schoolDayHours: boolean
+  weekendHours: boolean
+  timeAway: boolean
+  restDays: boolean
+  ucatSen: boolean
+}
+
 export type OnboardingProfilePrefill = {
   fullName?: string | null
   examDate?: string | null
@@ -52,6 +63,15 @@ const INITIAL_STATE: OnboardingState = {
   ucatSen: false,
 }
 
+const INITIAL_REQUIRED_ANSWERS: RequiredAnswers = {
+  confidence: { vr: false, dm: false, qr: false, sjt: false },
+  schoolDayHours: false,
+  weekendHours: false,
+  timeAway: false,
+  restDays: false,
+  ucatSen: false,
+}
+
 export default function OnboardingClient({
   initialInviteToken,
   profilePrefill,
@@ -64,6 +84,7 @@ export default function OnboardingClient({
 
   const [step, setStep] = useState(1)
   const [state, setState] = useState<OnboardingState>(INITIAL_STATE)
+  const [requiredAnswers, setRequiredAnswers] = useState<RequiredAnswers>(INITIAL_REQUIRED_ANSWERS)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
@@ -100,14 +121,24 @@ export default function OnboardingClient({
   }, [router])
 
   function update(partial: Partial<OnboardingState>) {
+    if ('currentSituation' in partial) {
+      setRequiredAnswers((answers) => ({
+        ...answers,
+        schoolDayHours: false,
+        weekendHours: false,
+      }))
+    }
     setState(s => ({ ...s, ...partial }))
   }
 
-  function nextStep() { setStep(s => Math.min(s + 1, TOTAL_STEPS)) }
+  function nextStep() {
+    if (!canAdvance(step, state, requiredAnswers)) return
+    setStep(s => Math.min(s + 1, TOTAL_STEPS))
+  }
   function prevStep() { setStep(s => Math.max(s - 1, 1)) }
 
   async function handleSubmit() {
-    if (!state.examDate || state.hasPriorExperience === null || !state.currentSituation) return
+    if (!allStepsComplete(state, requiredAnswers)) return
     setLoading(true)
     setError(null)
 
@@ -184,11 +215,53 @@ export default function OnboardingClient({
           <CardContent className="space-y-6">
             {step === 1 && <Step1 state={state} onUpdate={update} />}
             {step === 2 && <Step2 state={state} onUpdate={update} />}
-            {step === 3 && <Step3 state={state} onUpdate={update} warning={!!examDateWarning} />}
-            {step === 4 && <Step4 state={state} onUpdate={update} />}
-            {step === 5 && <Step5 state={state} onUpdate={update} />}
-            {step === 6 && <Step6 state={state} onUpdate={update} />}
-            {step === 7 && <Step7 state={state} onUpdate={update} />}
+            {step === 3 && (
+              <Step3
+                state={state}
+                onUpdate={update}
+                warning={!!examDateWarning}
+                ucatSenAnswered={requiredAnswers.ucatSen}
+                onUcatSenAnswer={() => setRequiredAnswers((answers) => ({ ...answers, ucatSen: true }))}
+              />
+            )}
+            {step === 4 && (
+              <Step4
+                state={state}
+                onUpdate={update}
+                answered={requiredAnswers.confidence}
+                onAnswer={(key) => setRequiredAnswers((answers) => ({
+                  ...answers,
+                  confidence: { ...answers.confidence, [key]: true },
+                }))}
+              />
+            )}
+            {step === 5 && (
+              <Step5
+                state={state}
+                onUpdate={update}
+                answered={{
+                  schoolDayHours: requiredAnswers.schoolDayHours,
+                  weekendHours: requiredAnswers.weekendHours,
+                }}
+                onAnswer={(key) => setRequiredAnswers((answers) => ({ ...answers, [key]: true }))}
+              />
+            )}
+            {step === 6 && (
+              <Step6
+                state={state}
+                onUpdate={update}
+                answered={requiredAnswers.timeAway}
+                onAnswer={() => setRequiredAnswers((answers) => ({ ...answers, timeAway: true }))}
+              />
+            )}
+            {step === 7 && (
+              <Step7
+                state={state}
+                onUpdate={update}
+                answered={requiredAnswers.restDays}
+                onAnswer={() => setRequiredAnswers((answers) => ({ ...answers, restDays: true }))}
+              />
+            )}
           </CardContent>
 
           <CardFooter className="flex justify-between">
@@ -198,11 +271,11 @@ export default function OnboardingClient({
             <div className="flex gap-3">
               {error && <p className="text-sm text-red-600 self-center">{error}</p>}
               {step < TOTAL_STEPS ? (
-                <Button onClick={nextStep} disabled={!canAdvance(step, state)}>
+                <Button onClick={nextStep} disabled={!canAdvance(step, state, requiredAnswers)}>
                   Continue →
                 </Button>
               ) : (
-                <Button onClick={handleSubmit} loading={loading} disabled={!canAdvance(step, state)}>
+                <Button onClick={handleSubmit} loading={loading} disabled={!canAdvance(step, state, requiredAnswers)}>
                   Generate my plan
                 </Button>
               )}
@@ -307,16 +380,17 @@ function Step2({ state, onUpdate }: StepProps) {
   return (
     <div className="space-y-6">
       <Input
-        label="Your name"
+        label="Your name *"
         placeholder="First name (or full name)"
         value={state.fullName}
         onChange={(e) => onUpdate({ fullName: e.target.value })}
         hint="So we can personalise your plan."
         autoFocus
+        required
       />
 
       <div>
-        <label className="text-sm font-semibold text-foreground mb-3 block">What's your current situation?</label>
+        <label className="text-sm font-semibold text-foreground mb-3 block">What's your current situation? *</label>
         <div className="grid grid-cols-2 gap-3">
           {SITUATIONS.map(({ value, label, sub }) => (
             <button
@@ -341,7 +415,7 @@ function Step2({ state, onUpdate }: StepProps) {
 
       {state.currentSituation === 'school' && (
         <div>
-          <label className="text-sm font-semibold text-foreground mb-3 block">Which year are you in?</label>
+          <label className="text-sm font-semibold text-foreground mb-3 block">Which year are you in? *</label>
           <div className="flex gap-3">
             {SCHOOL_YEARS.map(({ value, label }) => (
               <button
@@ -366,43 +440,68 @@ function Step2({ state, onUpdate }: StepProps) {
 
 // ─── Step 3: Exam date & time ─────────────────────────────────────────────────
 
-function Step3({ state, onUpdate, warning }: StepProps & { warning: boolean }) {
+function Step3({
+  state,
+  onUpdate,
+  warning,
+  ucatSenAnswered,
+  onUcatSenAnswer,
+}: StepProps & {
+  warning: boolean
+  ucatSenAnswered: boolean
+  onUcatSenAnswer: () => void
+}) {
   const today = toISODate(new Date())
   return (
     <div className="space-y-4">
       <Input
-        label="UCAT exam date"
+        label="UCAT exam date *"
         type="date"
         value={state.examDate ?? ''}
         min={today}
         onChange={e => onUpdate({ examDate: e.target.value || null })}
+        required
       />
       <div>
         <label className="text-sm font-medium text-foreground mb-1.5 block">
-          Exam time <span className="text-muted-foreground font-normal">(optional)</span>
+          Exam time *
         </label>
         <input
           type="time"
           value={state.examTime ?? ''}
           onChange={e => onUpdate({ examTime: e.target.value || null })}
           className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          required
         />
         <p className="text-xs text-muted-foreground mt-1">No sessions will be scheduled on exam day.</p>
       </div>
-      <label className="flex items-start gap-3 rounded-xl border border-border bg-muted p-4 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={state.ucatSen}
-          onChange={e => onUpdate({ ucatSen: e.target.checked })}
-          className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-ring"
-        />
-        <span>
-          <span className="font-medium text-foreground">I am taking UCATSEN (extra time)</span>
-          <span className="block text-sm text-muted-foreground mt-1">
-            Full mocks in your plan will be scheduled as 2h 30m to match your test conditions. Mock reflection blocks stay at about 2 hours.
-          </span>
-        </span>
-      </label>
+      <div>
+        <label className="text-sm font-medium text-foreground mb-1.5 block">
+          Are you taking UCATSEN (extra time)? *
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            { value: true, label: 'Yes', sub: 'Full mocks become 2h 30m.' },
+            { value: false, label: 'No', sub: 'Full mocks stay at about 2h.' },
+          ].map((option) => {
+            const selected = ucatSenAnswered && state.ucatSen === option.value
+            return (
+              <button
+                key={String(option.value)}
+                type="button"
+                onClick={() => {
+                  onUpdate({ ucatSen: option.value })
+                  onUcatSenAnswer()
+                }}
+                className={choiceCardClass(selected)}
+              >
+                <div className="font-semibold text-foreground text-sm">{option.label}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">{option.sub}</div>
+              </button>
+            )
+          })}
+        </div>
+      </div>
       {warning && (
         <div className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
           ⚠️ Your exam is fewer than 3 weeks away. Your plan will be compressed and mock-heavy from day one.
@@ -419,8 +518,16 @@ function Step3({ state, onUpdate, warning }: StepProps & { warning: boolean }) {
 
 // ─── Step 4: Confidence ───────────────────────────────────────────────────────
 
-function Step4({ state, onUpdate }: StepProps) {
-  const sections: { key: keyof OnboardingState['confidence']; label: string }[] = [
+function Step4({
+  state,
+  onUpdate,
+  answered,
+  onAnswer,
+}: StepProps & {
+  answered: Record<ConfidenceKey, boolean>
+  onAnswer: (key: ConfidenceKey) => void
+}) {
+  const sections: { key: ConfidenceKey; label: string }[] = [
     { key: 'vr',  label: 'Verbal Reasoning' },
     { key: 'dm',  label: 'Decision Making' },
     { key: 'qr',  label: 'Quantitative Reasoning' },
@@ -431,25 +538,50 @@ function Step4({ state, onUpdate }: StepProps) {
       <p className="text-sm text-muted-foreground">
         Rate how confident you feel in each section. Lower confidence = more sessions allocated.
       </p>
-      {sections.map(({ key, label }) => (
-        <Slider
-          key={key}
-          label={label}
-          value={state.confidence[key]}
-          min={1}
-          max={5}
-          lowLabel="Not confident"
-          highLabel="Very confident"
-          onChange={v => onUpdate({ confidence: { ...state.confidence, [key]: v } })}
-        />
-      ))}
+      {sections.map(({ key, label }) => {
+        const isAnswered = answered[key]
+        return (
+          <div key={key} className="space-y-2">
+            <Slider
+              label={`${label} *`}
+              value={state.confidence[key]}
+              min={1}
+              max={5}
+              lowLabel="Not confident"
+              highLabel="Very confident"
+              onChange={v => {
+                onUpdate({ confidence: { ...state.confidence, [key]: v } })
+                onAnswer(key)
+              }}
+            />
+            {!isAnswered && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onAnswer(key)}
+                className="h-8 px-3 text-xs"
+              >
+                Confirm {state.confidence[key]}
+              </Button>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }
 
 // ─── Step 5: Study hours (all student types) ─────────────────────────────────
 
-function Step5({ state, onUpdate }: StepProps) {
+function Step5({
+  state,
+  onUpdate,
+  answered,
+  onAnswer,
+}: StepProps & {
+  answered: { schoolDayHours: boolean; weekendHours: boolean }
+  onAnswer: (key: 'schoolDayHours' | 'weekendHours') => void
+}) {
   const sit = state.currentSituation
   const isFlexible = sit === 'gap_year' || sit === 'graduated_free'
   const isWorking = sit === 'graduated_working'
@@ -464,7 +596,12 @@ function Step5({ state, onUpdate }: StepProps) {
           options={[2, 3, 4, 5, 6, 8]}
           value={state.weekendHours}
           color="blue"
-          onChange={h => onUpdate({ schoolDayHours: h, weekendHours: h })}
+          answered={answered.weekendHours}
+          onChange={h => {
+            onUpdate({ schoolDayHours: h, weekendHours: h })
+            onAnswer('schoolDayHours')
+            onAnswer('weekendHours')
+          }}
         />
         <p className="text-xs text-muted-foreground">
           We'll start at about half this and ramp up each week. Pick an ambitious max - you can always lower it later.
@@ -478,24 +615,32 @@ function Step5({ state, onUpdate }: StepProps) {
       <div className="space-y-6">
         <div>
           <label className="text-sm font-semibold text-foreground mb-3 block">
-            On a really good work day, what's the maximum you could study?
+            On a really good work day, what's the maximum you could study? *
           </label>
           <HourPicker
             options={[0.5, 1, 1.5, 2, 2.5, 3]}
             value={state.schoolDayHours}
             color="blue"
-            onChange={h => onUpdate({ schoolDayHours: h })}
+            answered={answered.schoolDayHours}
+            onChange={h => {
+              onUpdate({ schoolDayHours: h })
+              onAnswer('schoolDayHours')
+            }}
           />
         </div>
         <div>
           <label className="text-sm font-semibold text-foreground mb-3 block">
-            On a really good day off or weekend, what's the maximum you could study?
+            On a really good day off or weekend, what's the maximum you could study? *
           </label>
           <HourPicker
             options={[2, 3, 4, 5, 6, 8]}
             value={state.weekendHours}
             color="green"
-            onChange={h => onUpdate({ weekendHours: h })}
+            answered={answered.weekendHours}
+            onChange={h => {
+              onUpdate({ weekendHours: h })
+              onAnswer('weekendHours')
+            }}
           />
         </div>
         <p className="text-xs text-muted-foreground">
@@ -510,24 +655,32 @@ function Step5({ state, onUpdate }: StepProps) {
     <div className="space-y-6">
       <div>
         <label className="text-sm font-semibold text-foreground mb-3 block">
-          On a really good school day (Mon-Fri during term), what's the maximum you could study?
+          On a really good school day (Mon-Fri during term), what's the maximum you could study? *
         </label>
         <HourPicker
           options={[1, 1.5, 2, 2.5, 3, 4]}
           value={state.schoolDayHours}
           color="blue"
-          onChange={h => onUpdate({ schoolDayHours: h })}
+          answered={answered.schoolDayHours}
+          onChange={h => {
+            onUpdate({ schoolDayHours: h })
+            onAnswer('schoolDayHours')
+          }}
         />
       </div>
       <div>
         <label className="text-sm font-semibold text-foreground mb-3 block">
-          On a really good weekend day or during holidays, what's the maximum you could study?
+          On a really good weekend day or during holidays, what's the maximum you could study? *
         </label>
         <HourPicker
           options={[2, 3, 4, 5, 6, 8]}
           value={state.weekendHours}
           color="green"
-          onChange={h => onUpdate({ weekendHours: h })}
+          answered={answered.weekendHours}
+          onChange={h => {
+            onUpdate({ weekendHours: h })
+            onAnswer('weekendHours')
+          }}
         />
         <p className="text-xs text-muted-foreground mt-2">
           We'll start at about half this and ramp up each week. Pick something ambitious.
@@ -539,7 +692,15 @@ function Step5({ state, onUpdate }: StepProps) {
 
 // ─── Step 6: Time away (unified for all student types) ────────────────────────
 
-function Step6({ state, onUpdate }: StepProps) {
+function Step6({
+  state,
+  onUpdate,
+  answered,
+  onAnswer,
+}: StepProps & {
+  answered: boolean
+  onAnswer: () => void
+}) {
   const [rangeStart, setRangeStart] = useState('')
   const [rangeEnd, setRangeEnd] = useState('')
   const [rangeLabel, setRangeLabel] = useState('')
@@ -550,6 +711,7 @@ function Step6({ state, onUpdate }: StepProps) {
     if (!rangeStart || !rangeEnd || rangeEnd < rangeStart) return
     const period: TimeAwayPeriod = { start: rangeStart, end: rangeEnd, kind, label: rangeLabel || undefined }
     onUpdate({ timeAwayPeriods: [...state.timeAwayPeriods, period] })
+    onAnswer()
     setRangeStart(''); setRangeEnd(''); setRangeLabel('')
   }
 
@@ -560,8 +722,20 @@ function Step6({ state, onUpdate }: StepProps) {
   return (
     <div className="space-y-5">
       <p className="text-sm text-muted-foreground">
-        Add any time away between now and your exam - school holidays, family trips, festivals, anything. We'll use these to schedule study intelligently around them.
+        Add any time away between now and your exam - school holidays, family trips, festivals, anything. We'll use these to schedule study intelligently around them. If there is none, confirm that below.
       </p>
+
+      <Button
+        type="button"
+        variant={answered && state.timeAwayPeriods.length === 0 ? 'default' : 'outline'}
+        onClick={() => {
+          onUpdate({ timeAwayPeriods: [] })
+          onAnswer()
+        }}
+        className="w-full"
+      >
+        I have no time away before my exam
+      </Button>
 
       <div className="rounded-lg border border-border bg-muted p-4 space-y-3">
         {/* Kind toggle */}
@@ -644,7 +818,9 @@ function Step6({ state, onUpdate }: StepProps) {
         </div>
       ) : (
         <p className="text-center text-sm text-muted-foreground py-4">
-          Nothing added yet - you can also manage time away from your plan once it's created.
+          {answered
+            ? 'No time away added.'
+            : 'Add time away or confirm that you have none before continuing.'}
         </p>
       )}
     </div>
@@ -653,19 +829,39 @@ function Step6({ state, onUpdate }: StepProps) {
 
 // ─── Step 7: Rest days ────────────────────────────────────────────────────────
 
-function Step7({ state, onUpdate }: StepProps) {
+function Step7({
+  state,
+  onUpdate,
+  answered,
+  onAnswer,
+}: StepProps & {
+  answered: boolean
+  onAnswer: () => void
+}) {
   function toggle(day: number) {
     const updated = state.restDays.includes(day)
       ? state.restDays.filter(d => d !== day)
       : [...state.restDays, day]
     onUpdate({ restDays: updated })
+    onAnswer()
   }
 
   return (
     <div className="space-y-5">
       <p className="text-sm text-muted-foreground">
-        Select any days that should <strong>always</strong> be rest days. Sessions will never be scheduled on them. Completely optional.
+        Select any days that should <strong>always</strong> be rest days. Sessions will never be scheduled on them. If you do not need fixed rest days, confirm that below.
       </p>
+      <Button
+        type="button"
+        variant={answered && state.restDays.length === 0 ? 'default' : 'outline'}
+        onClick={() => {
+          onUpdate({ restDays: [] })
+          onAnswer()
+        }}
+        className="w-full"
+      >
+        I do not need guaranteed rest days
+      </Button>
       <div className="grid grid-cols-7 gap-2">
         {DAY_NAMES_FULL.map((name, i) => (
           <button
@@ -683,8 +879,10 @@ function Step7({ state, onUpdate }: StepProps) {
         ))}
       </div>
       <p className="text-xs text-muted-foreground">
-        {state.restDays.length === 0
-          ? 'No rest days selected: sessions may be scheduled any day.'
+        {!answered
+          ? 'Choose at least one rest day or confirm that you do not need any.'
+          : state.restDays.length === 0
+          ? 'No guaranteed rest days selected: sessions may be scheduled any day.'
           : `${state.restDays.length} day${state.restDays.length > 1 ? 's' : ''} always kept free.`}
       </p>
     </div>
@@ -693,10 +891,11 @@ function Step7({ state, onUpdate }: StepProps) {
 
 // ─── Shared sub-components ────────────────────────────────────────────────────
 
-function HourPicker({ options, value, color, onChange }: {
+function HourPicker({ options, value, color, answered, onChange }: {
   options: number[]
   value: number
   color: 'blue' | 'green'
+  answered: boolean
   onChange: (h: number) => void
 }) {
   const active = color === 'blue'
@@ -704,18 +903,21 @@ function HourPicker({ options, value, color, onChange }: {
     : 'border-green-500 bg-green-50 text-green-700'
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      {options.map(h => (
-        <button
-          key={h}
-          type="button"
-          onClick={() => onChange(h)}
-          className={`flex-1 min-w-[3rem] rounded-lg border-2 py-2.5 text-sm font-semibold transition-all ${
-            value === h ? active : 'border-border text-muted-foreground hover:border-muted-foreground/40'
-          }`}
-        >
-          {h}h
-        </button>
-      ))}
+      {options.map(h => {
+        const selected = answered && value === h
+        return (
+          <button
+            key={h}
+            type="button"
+            onClick={() => onChange(h)}
+            className={`flex-1 min-w-[3rem] rounded-lg border-2 py-2.5 text-sm font-semibold transition-all ${
+              selected ? active : 'border-border text-muted-foreground hover:border-muted-foreground/40'
+            }`}
+          >
+            {h}h
+          </button>
+        )
+      })}
     </div>
   )
 }
@@ -748,13 +950,34 @@ const STEP_DESCRIPTIONS = [
   'We\'ll build your plan backwards from your exam date.',
   'Weaker sections get more sessions allocated. You can adjust these later.',
   'We\'ll ramp up from about half your max, so be ambitious.',
-  'Optional: add holidays, trips, festivals - anything that affects your availability.',
-  'Optional: skip if you\'re happy to study any day of the week.',
+  'Add holidays, trips, festivals - or confirm there is nothing to add.',
+  'Choose guaranteed rest days - or confirm you are happy to study any day.',
 ]
 
-function canAdvance(step: number, state: OnboardingState): boolean {
+function canAdvance(step: number, state: OnboardingState, requiredAnswers: RequiredAnswers): boolean {
   if (step === 1) return state.hasPriorExperience !== null
-  if (step === 2) return !!state.currentSituation && (state.currentSituation !== 'school' || !!state.schoolYear)
-  if (step === 3) return !!state.examDate
+  if (step === 2) {
+    return (
+      state.fullName.trim().length > 0 &&
+      !!state.currentSituation &&
+      (state.currentSituation !== 'school' || !!state.schoolYear)
+    )
+  }
+  if (step === 3) return !!state.examDate && !!state.examTime && requiredAnswers.ucatSen
+  if (step === 4) return Object.values(requiredAnswers.confidence).every(Boolean)
+  if (step === 5) {
+    if (state.currentSituation === 'gap_year' || state.currentSituation === 'graduated_free') {
+      return requiredAnswers.weekendHours
+    }
+    return requiredAnswers.schoolDayHours && requiredAnswers.weekendHours
+  }
+  if (step === 6) return requiredAnswers.timeAway
+  if (step === 7) return requiredAnswers.restDays
   return true
+}
+
+function allStepsComplete(state: OnboardingState, requiredAnswers: RequiredAnswers): boolean {
+  return Array.from({ length: TOTAL_STEPS }).every((_, index) =>
+    canAdvance(index + 1, state, requiredAnswers),
+  )
 }

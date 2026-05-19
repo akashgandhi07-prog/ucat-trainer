@@ -3,6 +3,7 @@ import { trackEvent } from '../lib/analytics';
 import { withRetry } from '../lib/retry';
 import { supabaseLog } from '../lib/logger';
 import { appendGuestSession } from '../lib/guestSessions';
+import { appendConversionTrainerDetailSession } from '../lib/conversionTrainerStorage';
 import type { MentalMathsSummaryStats } from '../hooks/useMentalMathsLogic';
 import { difficultyFromStageIndex } from '../components/mentalMaths/mentalMathsStages';
 
@@ -110,6 +111,64 @@ export async function saveMentalMathsSession(
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     supabaseLog.error("mental_maths_session_save_failed", { message, userId });
+    return false;
+  }
+}
+
+export type ConversionSessionStats = {
+  correct: number;
+  total: number;
+  timeSeconds: number;
+  categoryStats?: Record<string, { correct: number; total: number }>;
+  trapStats?: Record<string, number>;
+};
+
+export async function saveConversionSession(stats: ConversionSessionStats): Promise<boolean> {
+  const payload = {
+    training_type: 'unit_conversions' as const,
+    difficulty: 'medium' as const,
+    wpm: null,
+    correct: stats.correct,
+    total: stats.total,
+    time_seconds: Math.max(1, Math.round(stats.timeSeconds)),
+  };
+
+  try {
+    appendConversionTrainerDetailSession({
+      correct: stats.correct,
+      total: stats.total,
+      time_seconds: payload.time_seconds,
+      categoryStats: stats.categoryStats ?? {},
+      trapStats: stats.trapStats ?? {},
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    supabaseLog.error("conversion_detail_session_save_failed", { message });
+  }
+
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await withRetry(async () => {
+        const { error } = await supabase.from('sessions').insert({
+          ...payload,
+          user_id: user.id,
+        });
+        if (error) throw error;
+      });
+      supabaseLog.info("conversion_session_saved", {
+        userId: user.id,
+        correct: stats.correct,
+        total: stats.total,
+      });
+    } else {
+      appendGuestSession(payload);
+    }
+    trackEvent("trainer_completed", { training_type: "unit_conversions", difficulty: "medium" });
+    return true;
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    supabaseLog.error("conversion_session_save_failed", { message });
     return false;
   }
 }

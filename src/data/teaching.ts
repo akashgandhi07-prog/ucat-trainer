@@ -58,4 +58,12 @@ export const SKILL_TEACHING: Record<TrainingType, SkillTeaching> = {
       "Review your summary after each run to track progress.",
     ],
   },
+  unit_conversions: {
+    why: "UCAT Quantitative Reasoning often hides easy marks inside unit changes. This trainer builds the habit of setting up units before calculating.",
+    howToUse: [
+      "Read what unit the answer must be in before typing anything.",
+      "Convert the given values first, then calculate.",
+      "Use the explanation to check the shortcut, sense check and exact trap.",
+    ],
+  },
 };

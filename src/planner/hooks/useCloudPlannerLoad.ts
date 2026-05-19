@@ -51,9 +51,12 @@ export function useCloudPlannerLoad<T>(
     if (!userId) return
 
     const generation = ++generationRef.current
-    setState((prev) =>
-      prev.status === 'ready' ? { status: 'loading', data: prev.data } : { status: 'loading', data: null },
-    )
+    const loadingTimer = window.setTimeout(() => {
+      if (generationRef.current !== generation) return
+      setState((prev) =>
+        prev.status === 'ready' ? { status: 'loading', data: prev.data } : { status: 'loading', data: null },
+      )
+    }, 0)
 
     void (async () => {
       try {
@@ -89,6 +92,7 @@ export function useCloudPlannerLoad<T>(
     })()
 
     return () => {
+      window.clearTimeout(loadingTimer)
       generationRef.current += 1
     }
   }, [userId, refreshTick, retryKey])

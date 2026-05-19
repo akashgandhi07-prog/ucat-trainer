@@ -35,6 +35,11 @@ export const TIPS: Record<TrainingType, string[]> = {
     "Use percentage shortcuts: 10% is divide by 10; 5% is half of that.",
     "For estimation, round to one significant figure first, then refine.",
   ],
+  unit_conversions: [
+    "Write the target unit first; it stops you converting in the wrong direction.",
+    "For km to m, multiply by 1000; for ml to litres, divide by 1000.",
+    "For per-100 questions, multiply by the actual amount divided by 100.",
+  ],
 };
 
 function pickTip(tips: string[], seed?: number): string {

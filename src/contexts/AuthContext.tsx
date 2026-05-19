@@ -90,7 +90,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Use a ref for user so the onAuthStateChange closure always has the latest value
   const userRef = useRef(user);
-  /* eslint-disable-next-line react-hooks/refs -- intentional: keep ref in sync with user for listener closure */
   userRef.current = user;
 
   // Skip setState after AuthProvider truly unmounts. Reset on each mount so React Strict Mode
@@ -342,7 +341,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Fallback: if INITIAL_SESSION never fires (e.g. edge case / env), stop loading after a short delay
   const loadingRef = useRef(loading);
-  /* eslint-disable-next-line react-hooks/refs -- intentional: keep ref in sync for timeout callback */
   loadingRef.current = loading;
   useEffect(() => {
     const fallbackMs = 2500;

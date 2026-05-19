@@ -229,7 +229,7 @@ export function useSyllogismLogic(mode: SyllogismMode) {
       window.removeEventListener("pagehide", saveOnExit);
       saveOnExit(); // covers SPA navigation (component unmounts without pagehide)
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- intentionally reads via refs
+  }, []);
 
   const submitAnswer = useCallback(
     (answer: boolean) => {

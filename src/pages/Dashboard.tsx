@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
+import { Lock, Sparkles } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -39,6 +40,7 @@ import {
   ucatExamDayRangeInMonth,
 } from "../lib/ucatExamWindow";
 import { getGuestSessions } from "../lib/guestSessions";
+import { getConversionTrainerDetailSessions } from "../lib/conversionTrainerStorage";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 import { trackEvent } from "../lib/analytics";
 import { upsertProfile } from "../lib/profileApi";
@@ -94,6 +96,7 @@ type GuestDashboardSummary = {
   rapidRecallCount: number;
   keywordScanningCount: number;
   mentalMathsCount: number;
+  unitConversionsCount: number;
   averageWpm: number | null;
   rapidRecallAvgAccuracy: number | null;
   keywordScanningAvgAccuracy: number | null;
@@ -101,7 +104,7 @@ type GuestDashboardSummary = {
 
 function getTrainingType(s: SessionRow): TrainingType {
   const t = s.training_type;
-  if (t === "speed_reading" || t === "rapid_recall" || t === "keyword_scanning" || t === "calculator" || t === "inference_trainer" || t === "mental_maths")
+  if (t === "speed_reading" || t === "rapid_recall" || t === "keyword_scanning" || t === "calculator" || t === "inference_trainer" || t === "mental_maths" || t === "unit_conversions")
     return t;
   return "speed_reading";
 }
@@ -117,7 +120,7 @@ function formatSessionScore(session: SessionRow): string {
     const kps = session.wpm != null ? session.wpm : 0;
     return `${kps} KPS, ${pct}%`;
   }
-  if (type === "mental_maths") {
+  if (type === "mental_maths" || type === "unit_conversions") {
     return `${pct}%`;
   }
   return `${pct}%`;
@@ -150,6 +153,169 @@ function DashboardLoadingRefreshHint() {
     >
       Taking too long? Refresh the page
     </button>
+  );
+}
+
+function LockedDashboardPreview({
+  onCreateAccount,
+  onSignIn,
+}: {
+  onCreateAccount: () => void;
+  onSignIn: () => void;
+}) {
+  const teaserStats = [
+    { label: "Predicted weak area", value: "QR conversions", helper: "From accuracy trends" },
+    { label: "7-day consistency", value: "5/7 days", helper: "Daily practice map" },
+    { label: "Best recent score", value: "86%", helper: "Across all trainers" },
+    { label: "WPM trajectory", value: "+42", helper: "Last 3 sessions" },
+  ];
+  const chartBars = [38, 48, 44, 58, 63, 71, 78, 74, 83, 88];
+  const weakAreas = [
+    { label: "Unit conversions", value: 42, color: "bg-rose-500" },
+    { label: "Inference evidence", value: 57, color: "bg-amber-500" },
+    { label: "SJT appropriateness", value: 69, color: "bg-blue-500" },
+  ];
+  const activityRows = [
+    ["Today", "Mental Maths", "78%"],
+    ["Yesterday", "Decision Making", "82%"],
+    ["Mon", "Keyword Scanning", "91%"],
+    ["Sun", "SJT Ranking", "Band 1"],
+  ];
+
+  return (
+    <section className="relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-500 via-emerald-500 to-amber-500" />
+
+      <div className="p-5 sm:p-6">
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
+              <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+              Free account preview
+            </p>
+            <h2 className="mt-3 text-xl font-bold text-slate-900">
+              See the dashboard your sessions build.
+            </h2>
+            <p className="mt-1 max-w-2xl text-sm text-slate-600">
+              Sign up free to unlock trends, weak-area tracking, recent activity, planner links and cross-device progress.
+            </p>
+          </div>
+        </div>
+
+        <div className="relative">
+          <div
+            className="pointer-events-none select-none blur-[3px] sm:blur-[4px]"
+            aria-hidden="true"
+          >
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {teaserStats.map((stat) => (
+                <div key={stat.label} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                    {stat.label}
+                  </p>
+                  <p className="mt-1 text-2xl font-bold text-slate-900">{stat.value}</p>
+                  <p className="mt-1 text-xs text-slate-500">{stat.helper}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-[1.25fr_0.75fr]">
+              <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <div className="mb-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">WPM and accuracy trend</p>
+                    <p className="text-xs text-slate-500">Last 10 saved sessions</p>
+                  </div>
+                  <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                    Improving
+                  </span>
+                </div>
+                <div className="flex h-44 items-end gap-2 rounded-lg bg-slate-50 px-3 py-3">
+                  {chartBars.map((height, index) => (
+                    <div key={index} className="flex flex-1 flex-col items-center justify-end gap-1">
+                      <div
+                        className="w-full rounded-t-md bg-blue-500"
+                        style={{ height: `${height}%` }}
+                      />
+                      <span className="h-2 w-2 rounded-full bg-slate-300" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <p className="text-sm font-semibold text-slate-900">Weak-area breakdown</p>
+                <p className="mb-4 text-xs text-slate-500">Know what to practise next.</p>
+                <div className="space-y-4">
+                  {weakAreas.map((area) => (
+                    <div key={area.label}>
+                      <div className="mb-1 flex items-center justify-between text-xs">
+                        <span className="font-medium text-slate-700">{area.label}</span>
+                        <span className="text-slate-500">{area.value}%</span>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                        <div className={`h-full rounded-full ${area.color}`} style={{ width: `${area.value}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-50 text-left text-slate-500">
+                  <tr>
+                    <th className="px-4 py-3 font-medium">Date</th>
+                    <th className="px-4 py-3 font-medium">Trainer</th>
+                    <th className="px-4 py-3 font-medium">Score</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activityRows.map(([date, trainer, score]) => (
+                    <tr key={`${date}-${trainer}`} className="border-t border-slate-100">
+                      <td className="px-4 py-3 text-slate-500">{date}</td>
+                      <td className="px-4 py-3 font-medium text-slate-900">{trainer}</td>
+                      <td className="px-4 py-3 text-slate-700">{score}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="absolute -top-20 bottom-0 inset-x-0 flex items-start justify-center bg-white/55 px-4 pt-8 backdrop-blur-[1px] sm:pt-10">
+            <div className="max-w-md rounded-xl border border-slate-200 bg-white p-5 text-center shadow-lg">
+              <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <Sparkles className="h-5 w-5" aria-hidden="true" />
+              </div>
+              <p className="text-base font-semibold text-slate-900">
+                Unlock your full progress dashboard.
+              </p>
+              <p className="mt-1 text-sm text-slate-600">
+                Free account. Saved history. Better next-step recommendations.
+              </p>
+              <div className="mt-4 flex flex-col justify-center gap-2 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={onCreateAccount}
+                  className="min-h-[44px] rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                >
+                  Create free account
+                </button>
+                <button
+                  type="button"
+                  onClick={onSignIn}
+                  className="min-h-[44px] rounded-lg border border-border px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-secondary"
+                >
+                  Sign in
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -453,6 +619,7 @@ export default function Dashboard() {
     const rapid = guestSessions.filter((s) => s.training_type === "rapid_recall");
     const keyword = guestSessions.filter((s) => s.training_type === "keyword_scanning");
     const mentalMaths = guestSessions.filter((s) => s.training_type === "mental_maths");
+    const unitConversions = guestSessions.filter((s) => s.training_type === "unit_conversions");
     const wpmValues = speed.map((s) => s.wpm ?? 0).filter((n) => Number.isFinite(n) && n > 0);
     const averageWpm =
       wpmValues.length > 0
@@ -468,6 +635,7 @@ export default function Dashboard() {
       rapidRecallCount: rapid.length,
       keywordScanningCount: keyword.length,
       mentalMathsCount: mentalMaths.length,
+      unitConversionsCount: unitConversions.length,
       averageWpm,
       rapidRecallAvgAccuracy,
       keywordScanningAvgAccuracy,
@@ -490,6 +658,7 @@ export default function Dashboard() {
       calculator: [],
       inference_trainer: [],
       mental_maths: [],
+      unit_conversions: [],
     };
     for (const s of sessions) {
       m[getTrainingType(s)].push(s);
@@ -549,7 +718,7 @@ export default function Dashboard() {
       if (isValidTab(stored)) { hasSetSmartDefault.current = true; return; }
     } catch { /* ignore */ }
     const vrSessions = [...byType.speed_reading, ...byType.rapid_recall, ...byType.keyword_scanning, ...byType.inference_trainer];
-    const qrSessions = [...byType.calculator, ...byType.mental_maths];
+    const qrSessions = [...byType.calculator, ...byType.mental_maths, ...byType.unit_conversions];
     const candidates: { tab: DashboardTab; date: string }[] = [];
     if (vrSessions.length > 0) candidates.push({ tab: "vr", date: vrSessions[vrSessions.length - 1].created_at });
     if (qrSessions.length > 0) candidates.push({ tab: "qr", date: qrSessions[qrSessions.length - 1].created_at });
@@ -810,11 +979,80 @@ export default function Dashboard() {
       }),
     }));
 
+  // --- Unit Conversions Trainer ---
+  const unitConversionSessions = byType.unit_conversions;
+  const unitConversionAvgAccuracy =
+    unitConversionSessions.length > 0
+      ? Math.round(
+          unitConversionSessions.reduce(
+            (sum, s) => sum + (s.total > 0 ? (s.correct / s.total) * 100 : 0),
+            0,
+          ) / unitConversionSessions.length,
+        )
+      : 0;
+  const unitConversionBestAccuracy =
+    unitConversionSessions.length > 0
+      ? Math.max(
+          ...unitConversionSessions.map((s) =>
+            s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0,
+          ),
+        )
+      : 0;
+  const unitConversionAccDelta = useMemo(
+    () =>
+      computeRollingDelta(byType.unit_conversions, (s) =>
+        s.total > 0 ? (s.correct / s.total) * 100 : null,
+      ),
+    [byType.unit_conversions],
+  );
+  const unitConversionChartData: AccuracyChartPoint[] = unitConversionSessions
+    .slice(-10)
+    .map((s) => ({
+      date: s.created_at,
+      accuracy: s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0,
+      displayDate: new Date(s.created_at).toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+      }),
+    }));
+  const conversionDetailSessions = useMemo(
+    () => getConversionTrainerDetailSessions(),
+    [],
+  );
+  const conversionCategoryBreakdown = useMemo(() => {
+    const totals: Record<string, { correct: number; total: number }> = {};
+    for (const session of conversionDetailSessions) {
+      for (const [category, stats] of Object.entries(session.categoryStats)) {
+        const current = totals[category] ?? { correct: 0, total: 0 };
+        current.correct += stats.correct;
+        current.total += stats.total;
+        totals[category] = current;
+      }
+    }
+    return Object.entries(totals)
+      .map(([category, stats]) => ({
+        category,
+        accuracy: stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0,
+        correct: stats.correct,
+        total: stats.total,
+      }))
+      .sort((a, b) => a.accuracy - b.accuracy || b.total - a.total);
+  }, [conversionDetailSessions]);
+  const conversionTopTrap = useMemo(() => {
+    const totals: Record<string, number> = {};
+    for (const session of conversionDetailSessions) {
+      for (const [trap, count] of Object.entries(session.trapStats)) {
+        totals[trap] = (totals[trap] ?? 0) + count;
+      }
+    }
+    return Object.entries(totals).sort((a, b) => b[1] - a[1])[0] ?? null;
+  }, [conversionDetailSessions]);
+
   const recentActivity = useMemo((): RecentActivityItem[] => {
     const fromSessions: RecentActivityItem[] = sessions.map((s) => {
       const type = getTrainingType(s);
       const pct = s.total > 0 ? Math.round((s.correct / s.total) * 100) : null;
-      const hasPercentScore = ["rapid_recall", "keyword_scanning", "inference_trainer", "mental_maths", "calculator"].includes(type);
+      const hasPercentScore = ["rapid_recall", "keyword_scanning", "inference_trainer", "mental_maths", "calculator", "unit_conversions"].includes(type);
       return {
         id: s.id,
         created_at: s.created_at,
@@ -1024,8 +1262,8 @@ export default function Dashboard() {
 
     if (!guestSummary) {
       return (
-        <section className="mb-10">
-          <div className="bg-white border border-slate-200 rounded-xl p-6 text-center shadow-sm">
+        <div className="mb-10 space-y-6">
+          <section className="bg-white border border-slate-200 rounded-xl p-6 text-center shadow-sm">
             <p className="text-slate-900 font-medium mb-2">
               Sign in to see your full dashboard.
             </p>
@@ -1048,8 +1286,12 @@ export default function Dashboard() {
                 Sign in
               </button>
             </div>
-          </div>
-        </section>
+          </section>
+          <LockedDashboardPreview
+            onCreateAccount={() => openAuthModal("register")}
+            onSignIn={() => openAuthModal("login")}
+          />
+        </div>
       );
     }
 
@@ -1107,11 +1349,13 @@ export default function Dashboard() {
                 <p className="text-xs text-slate-500 mt-1">Avg accuracy: {guestSummary.keywordScanningAvgAccuracy}%</p>
               )}
             </div>
-            {/* Calculator (Guest Placeholder) */}
+            {/* QR guest summary */}
             <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-              <p className="text-sm font-medium text-slate-500">Calculator</p>
-              <p className="text-2xl font-bold text-slate-900">-</p>
-              <p className="text-xs text-slate-500 mt-1">Sign in to track</p>
+              <p className="text-sm font-medium text-slate-500">QR skills</p>
+              <p className="text-2xl font-bold text-slate-900">
+                {guestSummary.mentalMathsCount + guestSummary.unitConversionsCount}
+              </p>
+              <p className="text-xs text-slate-500 mt-1">Mental maths + conversions</p>
             </div>
           </div>
         </section>
@@ -1130,6 +1374,12 @@ export default function Dashboard() {
             </div>
           </section>
         )}
+        <section className="mb-10">
+          <LockedDashboardPreview
+            onCreateAccount={() => openAuthModal("register")}
+            onSignIn={() => openAuthModal("login")}
+          />
+        </section>
       </>
     );
   };
@@ -1160,7 +1410,7 @@ export default function Dashboard() {
 
     const vrCount = byType.speed_reading.length + byType.rapid_recall.length + byType.keyword_scanning.length + byType.inference_trainer.length;
     const dmCount = syllogismSessions.length;
-    const qrCount = byType.calculator.length + byType.mental_maths.length;
+    const qrCount = byType.calculator.length + byType.mental_maths.length + byType.unit_conversions.length;
     const sjtCount = sjtSessions.length;
 
     const TABS: { id: DashboardTab; label: string; shortLabel: string; count: number; path: string }[] = [
@@ -2092,6 +2342,142 @@ export default function Dashboard() {
                             </ResponsiveContainer>
                           </div>
                         </div>
+                      </>
+                    )}
+                  </section>
+
+                  <section>
+                    <h2 className="text-lg font-semibold text-slate-900 mb-4">
+                      {TRAINING_TYPE_LABELS.unit_conversions}
+                    </h2>
+                    {unitConversionSessions.length === 0 ? (
+                      <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                        <p className="text-slate-500">
+                          No Conversions sessions yet. Practise the unit traps that cost easy QR marks.
+                        </p>
+                        <Link
+                          to="/train/conversions"
+                          className="inline-flex mt-4 px-4 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
+                        >
+                          Go to Conversions Trainer
+                        </Link>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                            <p className="text-sm font-medium text-slate-500">Avg accuracy</p>
+                            <p className="text-3xl font-bold text-slate-900">
+                              {unitConversionAvgAccuracy}%
+                            </p>
+                            <StatDelta
+                              delta={unitConversionAccDelta.delta}
+                              direction={unitConversionAccDelta.direction}
+                              unit="%"
+                            />
+                          </div>
+                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                            <p className="text-sm font-medium text-slate-500">Best accuracy</p>
+                            <p className="text-3xl font-bold text-slate-900">
+                              {unitConversionBestAccuracy}%
+                            </p>
+                          </div>
+                          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                            <p className="text-sm font-medium text-slate-500">Sessions</p>
+                            <p className="text-3xl font-bold text-slate-900">
+                              {unitConversionSessions.length}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+                          <h3 className="text-base font-medium text-slate-900 mb-4">
+                            Accuracy progress (last 10 sessions)
+                          </h3>
+                          <div className="h-64 sm:h-72 min-h-[200px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <LineChart
+                                data={unitConversionChartData}
+                                margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
+                              >
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                <XAxis
+                                  dataKey="displayDate"
+                                  tick={{ fontSize: 12, fill: "#64748b" }}
+                                  stroke="#94a3b8"
+                                />
+                                <YAxis
+                                  tick={{ fontSize: 12, fill: "#64748b" }}
+                                  stroke="#94a3b8"
+                                  domain={[0, 100]}
+                                  tickFormatter={(v) => `${v}%`}
+                                />
+                                <Tooltip
+                                  contentStyle={{
+                                    backgroundColor: "#fff",
+                                    border: "1px solid #e2e8f0",
+                                    borderRadius: "8px",
+                                  }}
+                                  labelFormatter={(_, payload) =>
+                                    payload?.[0]?.payload?.displayDate ?? ""
+                                  }
+                                  formatter={(value: number | undefined) => [
+                                    `${value ?? 0}%`,
+                                    "Accuracy",
+                                  ]}
+                                />
+                                <Line
+                                  type="monotone"
+                                  dataKey="accuracy"
+                                  stroke="#059669"
+                                  strokeWidth={2}
+                                  dot={{ fill: "#059669", r: 4 }}
+                                  activeDot={{ r: 6 }}
+                                />
+                              </LineChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </div>
+                        {conversionCategoryBreakdown.length > 0 && (
+                          <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm mt-4">
+                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-4">
+                              <div>
+                                <h3 className="text-base font-medium text-slate-900">
+                                  Weak-area breakdown
+                                </h3>
+                                <p className="text-sm text-slate-500">
+                                  Based on the detailed conversion sessions saved on this device.
+                                </p>
+                              </div>
+                              {conversionTopTrap && (
+                                <div className="rounded-lg bg-amber-50 border border-amber-100 px-3 py-2 text-sm">
+                                  <p className="font-medium text-amber-900">Most common trap</p>
+                                  <p className="text-amber-800">
+                                    {conversionTopTrap[0]} · {conversionTopTrap[1]} miss
+                                    {conversionTopTrap[1] === 1 ? "" : "es"}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                            <div className="space-y-3">
+                              {conversionCategoryBreakdown.slice(0, 6).map((item) => (
+                                <div key={item.category}>
+                                  <div className="flex items-center justify-between gap-3 text-sm mb-1">
+                                    <span className="font-medium text-slate-700">{item.category}</span>
+                                    <span className="text-slate-500">
+                                      {item.accuracy}% · {item.correct}/{item.total}
+                                    </span>
+                                  </div>
+                                  <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                                    <div
+                                      className="h-full rounded-full bg-emerald-500"
+                                      style={{ width: `${item.accuracy}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </>
                     )}
                   </section>

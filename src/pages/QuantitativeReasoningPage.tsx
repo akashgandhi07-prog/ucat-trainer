@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Calculator, Brain } from "lucide-react";
+import { Calculator, Brain, Ruler } from "lucide-react";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import SkillsSectionLayout, {
@@ -41,14 +41,14 @@ export default function QuantitativeReasoningPage() {
       <Header />
       <SkillsSectionLayout
         title="Quantitative Reasoning"
-        description="Choose a trainer to build calculator fluency or mental maths speed."
+        description="Choose a trainer to build calculator fluency, mental maths speed, or unit conversion accuracy."
         icon={Calculator}
         accent="emerald"
         breadcrumbs={breadcrumbs}
       >
         <div className="space-y-8 sm:space-y-10">
         <SkillsSectionBlock title={HUB_SKILLS_TRAINERS_TITLE}>
-          <HubTrainerGrid trainerCount={2}>
+          <HubTrainerGrid trainerCount={3}>
             <HubTrainerCard
               title="Calculator Trainer"
               description="Master the on-screen calculator and keypad under time pressure."
@@ -62,6 +62,13 @@ export default function QuantitativeReasoningPage() {
               icon={Brain}
               accent="emerald"
               onClick={() => navigate("/train/mentalMaths")}
+            />
+            <HubTrainerCard
+              title="Conversions Trainer"
+              description="Practise metric units, time conversions, rates and per-100 setups."
+              icon={Ruler}
+              accent="emerald"
+              onClick={() => navigate("/train/conversions")}
             />
           </HubTrainerGrid>
         </SkillsSectionBlock>

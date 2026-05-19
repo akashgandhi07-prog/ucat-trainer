@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { SessionRow } from "../../types/session";
 import type { SyllogismSession } from "../../types/syllogisms";
 import type { SJTSessionsRow } from "../../types/sjt";
@@ -35,7 +36,7 @@ export default function WeekSummaryCard({
   syllogismSessions,
   sjtSessions,
 }: WeekSummaryCardProps) {
-  const now = Date.now();
+  const [now] = useState(() => Date.now());
   const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
   const weekStart = now - sevenDaysMs;
 

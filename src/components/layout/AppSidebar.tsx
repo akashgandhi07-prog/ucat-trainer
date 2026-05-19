@@ -188,8 +188,8 @@ export default function AppSidebar({
   useEffect(() => {
     let cancelled = false;
     if (!user) {
-      setStreak(0);
-      return;
+      const resetTimer = window.setTimeout(() => setStreak(0), 0);
+      return () => window.clearTimeout(resetTimer);
     }
     void supabase
       .from("sessions")

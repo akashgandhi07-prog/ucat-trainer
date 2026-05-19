@@ -156,7 +156,7 @@ export default function InferenceTrainerPage() {
       window.removeEventListener("pagehide", saveOnExit);
       saveOnExit(); // covers SPA navigation (component unmounts without pagehide)
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- intentionally reads via latestRef
+  }, []);
 
   useEffect(() => {
     if (phase === "active") {

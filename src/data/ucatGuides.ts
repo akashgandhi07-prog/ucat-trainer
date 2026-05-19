@@ -339,6 +339,7 @@ export function getCatalogSectionIdForTrainingType(type: TrainingType): string {
   switch (type) {
     case "calculator":
     case "mental_maths":
+    case "unit_conversions":
       return "quant";
     case "speed_reading":
     case "rapid_recall":
@@ -357,6 +358,7 @@ const GUIDES_BY_TRAINING_TYPE: Partial<Record<TrainingType, UcatGuide[]>> = {
   inference_trainer: [UCAT_GUIDES.vrInference, UCAT_GUIDES.vrTrueFalse],
   calculator: [UCAT_GUIDES.qrCalculator],
   mental_maths: [UCAT_GUIDES.qrPercentages, UCAT_GUIDES.qrRatios],
+  unit_conversions: [UCAT_GUIDES.qrRatios, UCAT_GUIDES.qrTaxFinancial, UCAT_GUIDES.qrComplete],
 };
 
 const CONTEXT_GUIDES: Record<UcatGuideContext, UcatGuide[]> = {

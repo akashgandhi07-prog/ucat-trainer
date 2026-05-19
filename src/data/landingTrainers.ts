@@ -26,7 +26,7 @@ export const LANDING_TRAINER_SECTION_META: Record<
   qr: {
     label: "Quantitative Reasoning",
     hubHref: "/quantitative",
-    summary: "On-screen calculator fluency and non-calculator mental maths.",
+    summary: "On-screen calculator fluency, mental maths and unit conversion traps.",
   },
   sjt: {
     label: "Situational Judgement",
@@ -123,6 +123,14 @@ export const LANDING_TRAINERS: readonly LandingTrainer[] = [
     tag: "No calculator",
     description: "Stages of arithmetic and estimation when the calculator is not an option.",
     href: "/ucat-mental-maths-trainer",
+  },
+  {
+    id: "unit-conversions",
+    section: "qr",
+    title: "Conversions trainer",
+    tag: "Unit traps",
+    description: "Drill metric units, time conversions, rates and per-100 setups with QR explanations.",
+    href: "/ucat-unit-conversions-trainer",
   },
   {
     id: "sjt-appropriateness",

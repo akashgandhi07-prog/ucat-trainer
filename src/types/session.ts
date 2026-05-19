@@ -35,7 +35,7 @@ export interface AuthState {
 export interface SessionRow {
   id: string;
   user_id: string;
-  training_type: "speed_reading" | "rapid_recall" | "keyword_scanning" | "calculator" | "inference_trainer" | "mental_maths";
+  training_type: "speed_reading" | "rapid_recall" | "keyword_scanning" | "calculator" | "inference_trainer" | "mental_maths" | "unit_conversions";
   difficulty?: "easy" | "medium" | "hard" | "stage_1" | "stage_2" | "stage_3" | "stage_4" | null;
   wpm: number | null;
   correct: number;
@@ -49,7 +49,7 @@ export interface SessionRow {
 /** Payload for inserting a row into sessions. Use this instead of Record<string, unknown>. */
 export interface SessionInsertPayload {
   user_id: string;
-  training_type: "speed_reading" | "rapid_recall" | "keyword_scanning" | "calculator" | "inference_trainer" | "mental_maths";
+  training_type: "speed_reading" | "rapid_recall" | "keyword_scanning" | "calculator" | "inference_trainer" | "mental_maths" | "unit_conversions";
   difficulty?: "easy" | "medium" | "hard" | "stage_1" | "stage_2" | "stage_3" | "stage_4" | null;
   wpm: number | null;
   correct: number;

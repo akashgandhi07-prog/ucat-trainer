@@ -57,6 +57,7 @@ const STRATEGIC_OBJECTIVES: Record<TrainingType, string> = {
   calculator: "Build numpad fluency. Keep a consistent hand position and practise common operations until they're automatic.",
   inference_trainer: "Identify the precise evidence. Look for the sentence that directly supports the inference asked.",
   mental_maths: "Build automaticity with times tables and percentages; then practise estimation under time pressure.",
+  unit_conversions: "Set the target unit first, then convert before calculating so unit traps do not steal easy QR marks.",
 };
 
 function getWpmStatusLabel(wpm: number): string {

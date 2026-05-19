@@ -108,10 +108,10 @@ export function validateAllDmTrainerQuestions(): DmTrainerValidationIssue[] {
 
   for (const type of DM_TRAINER_TYPES) {
     const config = DM_TRAINER_CONFIGS[type];
-    if (config.questions.length !== 5) {
+    if (config.questions.length < 5 || config.questions.length % 5 !== 0) {
       issues.push({
         questionId: type,
-        message: `${config.title} must have exactly 5 seed questions (found ${config.questions.length}).`,
+        message: `${config.title} must have reviewed questions in batches of 5 (found ${config.questions.length}).`,
       });
     }
     const ids = new Set<string>();

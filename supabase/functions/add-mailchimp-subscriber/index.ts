@@ -257,6 +257,14 @@ async function resolveYearDropdownMerge(
   if (!yearField) {
     yearField = fields.find((f) => f.tag === "MERGE18");
   }
+  // Last resort: any dropdown/radio whose choices contain 4-digit year values (20xx)
+  if (!yearField) {
+    yearField = fields.find((f) => {
+      const t = (f.type ?? "text").toLowerCase();
+      if (t !== "dropdown" && t !== "radio") return false;
+      return f.choices.some((c) => /\b20\d{2}\b/.test(c));
+    });
+  }
 
   const tag = yearField?.tag ?? envTag ?? "MERGE18";
   const choices = yearField?.choices ?? [];

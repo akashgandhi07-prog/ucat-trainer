@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "npx eslint .",
     "verify:qr-maths": "tsx scripts/verify-qr-question-maths.ts",
+    "verify:conversion-questions": "tsx scripts/verify-conversion-questions.ts",
     "verify:dm-trainers": "tsx scripts/verify-dm-trainer-questions.ts",
     "export:dm-trainers": "tsx scripts/exportDmTrainerQuestionsJson.ts",
     "seed:dm-trainers": "npm run export:dm-trainers && tsx scripts/seedDmTrainerQuestions.ts",

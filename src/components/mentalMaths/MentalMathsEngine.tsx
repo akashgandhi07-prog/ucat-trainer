@@ -249,6 +249,31 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
             Score: {logic.correctCount} / {logic.questionIndex + 1} · press Enter or click below
           </p>
         </div>
+        {q?.explanation && (
+          <div className="rounded-xl border border-slate-200 bg-white px-5 py-4 mb-4">
+            <h3 className="text-sm font-semibold text-slate-900 mb-3">Method</h3>
+            <div className="space-y-2 text-sm text-slate-700 leading-relaxed">
+              <p><span className="font-semibold text-slate-900">Target:</span> {q.explanation.method.target}</p>
+              <p><span className="font-semibold text-slate-900">Convert:</span> {q.explanation.method.convert}</p>
+              <p><span className="font-semibold text-slate-900">Calculate:</span> {q.explanation.method.calculate}</p>
+            </div>
+
+            <div className="mt-4 space-y-3 text-sm leading-relaxed">
+              <div>
+                <h3 className="font-semibold text-slate-900">Exam shortcut</h3>
+                <p className="text-slate-700 mt-1">{q.explanation.examShortcut}</p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-900">Sense check</h3>
+                <p className="text-slate-700 mt-1">{q.explanation.senseCheck}</p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-900">Common trap</h3>
+                <p className="text-slate-700 mt-1">{q.explanation.commonTrap}</p>
+              </div>
+            </div>
+          </div>
+        )}
         <button
           type="button"
           onClick={handleGoToNext}
