@@ -149,7 +149,11 @@ function distortNegation(s: string): DistortionResult {
       .replace(/\bnever\b/gi, "always")
       .replace(/\bno longer\b/gi, "still")
       .replace(/\bnot\b/gi, "");
-    const cleaned = result.replace(/\s{2,}/g, " ").trim();
+    const cleaned = result
+      .replace(/,\s*,/g, ",")       // ", ," → "," (e.g. ", not surprisingly," → ", surprisingly,")
+      .replace(/\(\s*\)/g, "")      // empty parens from removed "not"
+      .replace(/\s{2,}/g, " ")
+      .trim();
     if (cleaned === s) return { text: s, applied: false };
     return {
       text: cleaned, applied: true,
@@ -208,7 +212,9 @@ function distortScope(s: string): DistortionResult {
   const scopePhrases: [RegExp, string, string][] = [
     [/\bin some\b/gi, "in all", '"in some" → "in all"'],
     [/\bcertain\b/gi, "every", '"certain" → "every"'],
-    [/\bmost\b/gi, "all", '"most" → "all"'],
+    // Only replace "most" as a quantifier (e.g. "most countries"), NOT as a superlative.
+    // Chained negative lookbehinds exclude "the most" and "at most".
+    [/(?<!the )(?<!at )\bmost\b/gi, "all", '"most" → "all"'],
     [/\bseveral\b/gi, "all", '"several" → "all"'],
     [/\ba few\b/gi, "all", '"a few" → "all"'],
     [/\bspecific\b/gi, "universal", '"specific" → "universal"'],
@@ -265,6 +271,26 @@ function distortCertainty(s: string): DistortionResult {
   return { text: s, applied: false };
 }
 
+// Catch distortions that produce obviously broken grammar before showing to users
+function isGrammaticallyPlausible(original: string, distorted: string): boolean {
+  if (distorted === original) return false;
+  // Reject article + "all/always/will" combos that superlative replacement can produce
+  if (/\b(the|an?)\s+(all|always)\b/i.test(distorted)) return false;
+  // Reject adjacent commas left by negation removal
+  if (/,\s*,/.test(distorted)) return false;
+  // Reject double spaces (should be cleaned already, but belt-and-suspenders)
+  if (/\s{2,}/.test(distorted)) return false;
+  // Reject sentences that now start with a lowercase letter (negation removed from start)
+  if (/^[a-z]/.test(distorted.trim())) return false;
+  // Reject if the change made zero meaningful word-level difference
+  const origWords = original.toLowerCase().replace(/[^a-z\s]/g, "").split(/\s+/);
+  const distWords = distorted.toLowerCase().replace(/[^a-z\s]/g, "").split(/\s+/);
+  const commonLength = Math.min(origWords.length, distWords.length);
+  const diffs = origWords.slice(0, commonLength).filter((w, i) => distWords[i] !== w).length
+    + Math.abs(origWords.length - distWords.length);
+  return diffs > 0;
+}
+
 // Apply first successful distortion (randomised order)
 const DISTORTION_FNS = [
   distortQualifierToAbsolute,
@@ -278,8 +304,7 @@ function applyDistortion(sentence: string): DistortionResult {
   const fns = shuffle(DISTORTION_FNS);
   for (const fn of fns) {
     const result = fn(sentence);
-    // Verify the distortion actually changed the text
-    if (result.applied && result.text !== sentence) return result;
+    if (result.applied && isGrammaticallyPlausible(sentence, result.text)) return result;
   }
   return { text: sentence, applied: false };
 }
