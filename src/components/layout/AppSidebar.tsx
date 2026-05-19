@@ -186,11 +186,11 @@ export default function AppSidebar({
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     if (!user) {
       setStreak(0);
       return;
     }
-    let cancelled = false;
     void supabase
       .from("sessions")
       .select("created_at")

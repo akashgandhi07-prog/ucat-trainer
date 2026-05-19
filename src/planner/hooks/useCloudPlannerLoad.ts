@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { DBPlan } from '../embedded/types'
 import {
   fetchActivePlan,
@@ -43,7 +43,7 @@ export function useCloudPlannerLoad<T>(
   const [retryKey, setRetryKey] = useState(0)
   const generationRef = useRef(0)
   const loadRef = useRef(load)
-  loadRef.current = load
+  useLayoutEffect(() => { loadRef.current = load })
 
   const retry = useCallback(() => setRetryKey((k) => k + 1), [])
 

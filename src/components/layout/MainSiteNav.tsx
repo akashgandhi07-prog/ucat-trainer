@@ -8,19 +8,19 @@ import { cn } from "../../lib/cn";
 
 const BASE = "https://www.theukcatpeople.co.uk";
 
-export type MenuItem = {
+type MenuItem = {
   label: string;
   href: string;
   description?: string;
   badge?: string;
   badgeColor?: "green" | "amber" | "blue" | "rose";
 };
-export type MenuGroup = { heading?: string; items: MenuItem[] };
-export type NavItem =
+type MenuGroup = { heading?: string; items: MenuItem[] };
+type NavItem =
   | { label: string; href: string; groups?: undefined }
   | { label: string; href?: undefined; groups: MenuGroup[] };
 
-export const MAIN_NAV: NavItem[] = [
+const MAIN_NAV: NavItem[] = [
   {
     label: "Full Packages",
     groups: [
