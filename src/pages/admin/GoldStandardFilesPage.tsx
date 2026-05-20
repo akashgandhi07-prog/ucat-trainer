@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertCircle, Check, FileText, RefreshCw, Save } from "lucide-react";
+import { AlertCircle, Check, ExternalLink, FileText, RefreshCw, Save } from "lucide-react";
 
 type GoldStandardFile = {
   filename: string;
@@ -124,6 +124,15 @@ export default function GoldStandardFilesPage() {
             </h1>
           </div>
           <div className="flex items-center gap-2 text-sm text-slate-300">
+            <a
+              href="/__question-lab/master-plan"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-md border border-slate-700 px-3 py-2 font-medium text-slate-100 transition hover:border-cyan-300 hover:text-cyan-200"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Master plan
+            </a>
             {hasUnsavedChanges ? (
               <span className="rounded-md border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-amber-100">
                 Unsaved changes

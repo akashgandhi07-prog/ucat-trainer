@@ -9,6 +9,7 @@ import tailwindcss from '@tailwindcss/vite'
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url))
 const goldStandardsDir = path.join(rootDir, 'question-lab/gold-standards')
+const questionLabMasterPlanPath = path.join(rootDir, 'docs/QUESTION_LAB_MASTER_PLAN.md')
 
 const plannerEmbedded = path.resolve(rootDir, 'src/planner/embedded')
 const plannerShim = path.resolve(rootDir, 'src/planner/shim')
@@ -29,6 +30,20 @@ function goldStandardEditorPlugin(): Plugin {
     name: 'gold-standard-editor',
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
+        if (req.url === '/__question-lab/master-plan' && req.method === 'GET') {
+          try {
+            const content = await fs.readFile(questionLabMasterPlanPath, 'utf8')
+            res.statusCode = 200
+            res.setHeader('Content-Type', 'text/markdown;charset=utf-8')
+            res.end(content)
+          } catch (error) {
+            sendJson(res, 500, {
+              error: error instanceof Error ? error.message : 'Unable to load master plan.',
+            })
+          }
+          return
+        }
+
         if (!req.url?.startsWith('/__question-lab/gold-standards')) {
           next()
           return
