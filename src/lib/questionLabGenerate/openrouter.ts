@@ -8,6 +8,20 @@ export type OpenRouterConfig = {
 /** Per-request cap so one slow model cannot hang the edge function indefinitely. */
 const OPENROUTER_FETCH_MS = 120_000;
 
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit,
+  ms: number,
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export async function callOpenRouter(
   config: OpenRouterConfig,
   model: string,
@@ -16,22 +30,25 @@ export async function callOpenRouter(
 ): Promise<string> {
   let res: Response;
   try {
-    res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${config.apiKey}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://theukcatpeople.com",
-        "X-Title": "UKCAT Question Lab",
+    res = await fetchWithTimeout(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${config.apiKey}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://theukcatpeople.com",
+          "X-Title": "UKCAT Question Lab",
+        },
+        body: JSON.stringify({
+          model,
+          messages,
+          temperature: 0.3,
+          max_tokens: maxTokens,
+        }),
       },
-      body: JSON.stringify({
-        model,
-        messages,
-        temperature: 0.3,
-        max_tokens: maxTokens,
-      }),
-      signal: AbortSignal.timeout(OPENROUTER_FETCH_MS),
-    });
+      OPENROUTER_FETCH_MS,
+    );
   } catch (err) {
     const name = err instanceof Error ? err.name : "";
     if (name === "TimeoutError" || name === "AbortError") {

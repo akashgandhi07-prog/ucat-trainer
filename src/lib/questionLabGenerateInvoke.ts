@@ -40,7 +40,7 @@ async function invokePhase(
   phase: GeneratePhase,
   body: PhasePayload,
   timeoutMs: number,
-): Promise<{ data: unknown; error: { message: string } | null }> {
+): Promise<{ data: unknown; error: unknown }> {
   const invokePromise = supabase.functions.invoke("generate-trainer-questions", {
     body: { phase, ...body },
   });
@@ -64,13 +64,33 @@ async function invokePhase(
   return result;
 }
 
-function parsePhaseError(data: unknown, error: { message: string } | null): string | null {
-  if (error?.message) return error.message;
-  const payload = data as { error?: string; ok?: boolean } | null;
-  if (payload && typeof payload === "object" && payload.error) {
-    return String(payload.error);
+/** Pull the real message from a 4xx/5xx edge response (supabase-js often only says "non-2xx"). */
+async function extractInvokeError(
+  data: unknown,
+  error: unknown,
+  phase: GeneratePhase,
+): Promise<string> {
+  const payload = data as { error?: string } | null;
+  if (payload?.error) return String(payload.error);
+
+  if (error && typeof error === "object") {
+    const e = error as { message?: string; context?: Response };
+    if (e.context && typeof e.context.json === "function") {
+      try {
+        const body = (await e.context.json()) as { error?: string };
+        if (body?.error) return String(body.error);
+      } catch {
+        /* response body already read or not JSON */
+      }
+    }
+    const msg = e.message ?? "";
+    if (msg && !/non-2xx/i.test(msg)) return msg;
+    if (/non-2xx/i.test(msg)) {
+      return `Step "${phase}" failed on the server. Open Supabase → Edge Functions → generate-trainer-questions → Logs. Common causes: missing OPENROUTER_API_KEY, or the function crashed on startup.`;
+    }
   }
-  return null;
+
+  return `Step "${phase}" failed. Check Edge Function logs in Supabase.`;
 }
 
 export type PhasedGenerateOptions = {
@@ -97,16 +117,24 @@ export async function invokeGenerateTrainerQuestionsPhased(
 
   log("Step 1 of 4: Calling OpenRouter (generate model) to draft questions…");
   const genRes = await invokePhase("generate", base, PHASE_TIMEOUT_MS.generate);
-  const genErr = parsePhaseError(genRes.data, genRes.error);
-  if (genErr) return { ok: false, error: genErr };
+  const genErr = await extractInvokeError(genRes.data, genRes.error, "generate");
+  if (genRes.error || (genRes.data as { error?: string } | null)?.error) {
+    log(`Step 1 failed: ${genErr}`);
+    return { ok: false, error: genErr };
+  }
 
   const gen = genRes.data as {
-    ok: true;
+    ok?: boolean;
     log?: string;
-    questions: Record<string, unknown>[];
-    generated: number;
+    questions?: Record<string, unknown>[];
+    generated?: number;
     generateModel?: string;
   };
+  if (gen?.ok !== true || !Array.isArray(gen.questions)) {
+    const unexpected = await extractInvokeError(genRes.data, genRes.error, "generate");
+    log(`Step 1 failed: ${unexpected}`);
+    return { ok: false, error: unexpected };
+  }
   log(
     gen.log ??
       `Step 1 done: received ${gen.questions?.length ?? 0} question(s) from the generate model.`,
@@ -118,8 +146,11 @@ export async function invokeGenerateTrainerQuestionsPhased(
     { ...base, questions: gen.questions },
     PHASE_TIMEOUT_MS.verify,
   );
-  const verifyErr = parsePhaseError(verifyRes.data, verifyRes.error);
-  if (verifyErr) return { ok: false, error: verifyErr };
+  const verifyErr = await extractInvokeError(verifyRes.data, verifyRes.error, "verify");
+  if (verifyRes.error || (verifyRes.data as { error?: string } | null)?.error) {
+    log(`Step 2 failed: ${verifyErr}`);
+    return { ok: false, error: verifyErr };
+  }
 
   const verify = verifyRes.data as {
     ok: true;
@@ -156,8 +187,11 @@ export async function invokeGenerateTrainerQuestionsPhased(
       },
       PHASE_TIMEOUT_MS.repair,
     );
-    const repairErr = parsePhaseError(repairRes.data, repairRes.error);
-    if (repairErr) return { ok: false, error: repairErr };
+    const repairErr = await extractInvokeError(repairRes.data, repairRes.error, "repair");
+    if (repairRes.error || (repairRes.data as { error?: string } | null)?.error) {
+      log(`Step 3 failed: ${repairErr}`);
+      return { ok: false, error: repairErr };
+    }
 
     const repair = repairRes.data as {
       ok: true;
@@ -182,8 +216,11 @@ export async function invokeGenerateTrainerQuestionsPhased(
     { ...base, drafts },
     PHASE_TIMEOUT_MS.import,
   );
-  const importErr = parsePhaseError(importRes.data, importRes.error);
-  if (importErr) return { ok: false, error: importErr };
+  const importErr = await extractInvokeError(importRes.data, importRes.error, "import");
+  if (importRes.error || (importRes.data as { error?: string } | null)?.error) {
+    log(`Step 4 failed: ${importErr}`);
+    return { ok: false, error: importErr };
+  }
 
   const imp = importRes.data as {
     ok: true;

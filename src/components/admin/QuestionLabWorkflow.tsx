@@ -221,7 +221,9 @@ export default function QuestionLabWorkflow() {
         setError(null);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Generation failed.");
+      const message = err instanceof Error ? err.message : "Generation failed.";
+      setError(message);
+      setGenerateLog((prev) => [...prev, `Error: ${message}`]);
     } finally {
       setGenerateBusy(false);
     }
