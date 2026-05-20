@@ -223,11 +223,13 @@ export async function generateAndVerifyQuestions(
   const drafts: ImportDraftPayload[] = [];
   const rawByLegacyId = new Map<string, Record<string, unknown>>();
 
-  for (const item of list.slice(0, count)) {
-    const raw = asRecord(item);
-    if (!raw) continue;
+  const toVerify = list
+    .slice(0, count)
+    .map((item) => asRecord(item))
+    .filter((raw): raw is Record<string, unknown> => raw !== null);
 
-    const result = await verifyRawQuestion(ctx, raw);
+  const verified = await Promise.all(toVerify.map((raw) => verifyRawQuestion(ctx, raw)));
+  for (const result of verified) {
     rawByLegacyId.set(result.outcome.legacyId, result.raw);
     outcomes.push(result.outcome);
     if (result.draft) drafts.push(result.draft);
@@ -247,23 +249,30 @@ export async function generateAndVerifyQuestions(
     repairAttempted = repairCandidates.length;
     const repairedList = await runAiRepairBatch(ctx, repairCandidates);
 
-    for (let i = 0; i < repairCandidates.length; i++) {
-      const candidate = repairCandidates[i];
-      const repairedRaw =
-        asRecord(repairedList[i]) ??
-        repairedList.find(
-          (r) =>
-            str(r.legacy_id) === candidate.outcome.legacyId ||
-            str(r.id) === candidate.outcome.legacyId,
-        );
+    const repairVerified = await Promise.all(
+      repairCandidates.map(async (candidate, i) => {
+        const repairedRaw =
+          asRecord(repairedList[i]) ??
+          repairedList.find(
+            (r) =>
+              str(r.legacy_id) === candidate.outcome.legacyId ||
+              str(r.id) === candidate.outcome.legacyId,
+          );
 
-      if (!repairedRaw) continue;
+        if (!repairedRaw) return { candidate, result: null as VerifyResult | null };
 
-      if (!str(repairedRaw.legacy_id) && !str(repairedRaw.id)) {
-        repairedRaw.legacy_id = candidate.outcome.legacyId;
-      }
+        if (!str(repairedRaw.legacy_id) && !str(repairedRaw.id)) {
+          repairedRaw.legacy_id = candidate.outcome.legacyId;
+        }
 
-      const result = await verifyRawQuestion(ctx, repairedRaw, 1);
+        const result = await verifyRawQuestion(ctx, repairedRaw, 1);
+        return { candidate, result };
+      }),
+    );
+
+    for (const { candidate, result } of repairVerified) {
+      if (!result) continue;
+
       rawByLegacyId.set(result.outcome.legacyId, result.raw);
 
       const idx = outcomes.findIndex((o) => o.legacyId === candidate.outcome.legacyId);

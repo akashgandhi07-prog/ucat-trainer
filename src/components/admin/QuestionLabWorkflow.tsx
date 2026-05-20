@@ -375,6 +375,10 @@ export default function QuestionLabWorkflow() {
               questions through one AI repair batch (except proven maths errors). Requires the
               Edge Function and OPENROUTER_API_KEY.
             </p>
+            <p className="text-xs text-violet-800/90">
+              Uses the <strong>Trainer</strong> selected below (e.g. DM · Venn Logic). Usually takes
+              2 to 4 minutes; keep this tab open until the spinner stops.
+            </p>
             <div className="flex flex-wrap gap-3 items-end">
               <label className="flex flex-col gap-1 text-sm">
                 <span className="font-medium text-violet-900">Skill tag (optional)</span>
@@ -410,7 +414,7 @@ export default function QuestionLabWorkflow() {
                 ) : (
                   <Sparkles className="w-4 h-4" />
                 )}
-                {generateBusy ? "Generating 5 drafts…" : "Generate 5 drafts"}
+                {generateBusy ? "Generating 5 drafts (2–4 min)…" : "Generate 5 drafts"}
               </button>
             </div>
             {generateResult && (
