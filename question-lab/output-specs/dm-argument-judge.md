@@ -41,26 +41,55 @@ Official UCAT explanations often just confirm the answer. Our explanations teach
 - Is not a true-but-irrelevant statement
 
 
+## Storage contract (product)
+
+On import, each question becomes a `trainer_questions` row:
+
+| Column | Your JSON field |
+|---|---|
+| `legacy_id` | `id` |
+| `stem` | `stem` |
+| `explanation` | `explanation` (student-facing, no meta commentary) |
+| `skill_tag` | `skillTag` |
+| `content` | MCQ payload below (import adds `optionsList` from `options`) |
+
+Students load active rows via `get_dm_trainer_drill('argument-judge')`. Option `label` values and `review` must live in `content` so the Argument Judge UI can rank arguments.
+
 ## JSON output (one question)
 
-Return a JSON array. Each DM MCQ object:
+Return a JSON array. Each object:
 
 ```json
 {
-  "id": "unique-kebab-id-001",
+  "id": "arg-strongest-for-001",
   "trainerType": "argument-judge",
-  "difficulty": "easy|medium|hard",
-  "skillTag": "kebab-skill-tag",
+  "difficulty": "medium",
+  "skillTag": "strongest-argument-for",
   "stem": "Scenario text",
-  "question": "Question line",
-  "options": [{"id":"A","text":"..."},{"id":"B","text":"..."},{"id":"C","text":"..."},{"id":"D","text":"..."}],
+  "question": "Which is the strongest argument for the claim?",
+  "options": [
+    {"id": "A", "text": "...", "label": "true-but-irrelevant"},
+    {"id": "B", "text": "...", "label": "directly-relevant"},
+    {"id": "C", "text": "...", "label": "partially-relevant"},
+    {"id": "D", "text": "...", "label": "unsupported-assumption"}
+  ],
   "correctAnswer": "B",
-  "explanation": "Step-by-step method and trap",
-  "commonTrap": "trap-tag",
-  "generalRule": "Reusable rule",
-  "wrongOptionReasons": {"A":"...","B":"...","C":"...","D":"..."},
-  "keyInsight": "Short hook"
+  "explanation": "Step-by-step comparison; name the trap",
+  "commonTrap": "irrelevant-true-statement",
+  "generalRule": "Strongest = directly addresses the claim with real impact",
+  "wrongOptionReasons": {"A": "...", "B": "Correct.", "C": "...", "D": "..."},
+  "keyInsight": "One sentence hook",
+  "review": {
+    "exactAim": "Identify the strongest argument for the stated claim",
+    "whyCorrect": "B directly addresses the claim with significant impact",
+    "whyAIsWrong": "True but does not address the claim",
+    "whyBIsWrong": "N/A (correct)",
+    "whyCIsWrong": "Only partially addresses the claim",
+    "whyDIsWrong": "Relies on an unsupported assumption",
+    "ambiguityRisk": "low",
+    "whySafeToInclude": "One clear strongest argument; distractors map to named flaws"
+  }
 }
 ```
 
-Replace argument-judge with: venn-logic, data-logic, or argument-judge.
+`label` must be one of: `directly-relevant`, `partially-relevant`, `true-but-irrelevant`, `too-narrow`, `unsupported-assumption`, `overclaim`, `vague`, `does-not-answer-aim`, `only-addresses-one-criterion`.

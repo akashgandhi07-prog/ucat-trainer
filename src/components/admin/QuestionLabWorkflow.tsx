@@ -20,6 +20,7 @@ import {
 } from "../../lib/questionLabAssets";
 import { loadTrainerBankForExport } from "../../lib/questionLabBankExport";
 import {
+  IMPORT_BATCH_SIZE,
   importDraftsToDatabase,
   parseImportJson,
   type ImportRpcResult,
@@ -98,6 +99,7 @@ export default function QuestionLabWorkflow() {
   );
   const [importResult, setImportResult] = useState<ImportRpcResult | null>(null);
   const [importBusy, setImportBusy] = useState(false);
+  const [importProgress, setImportProgress] = useState<string | null>(null);
 
   const meta = TRAINER_META[trainerType];
 
@@ -219,31 +221,52 @@ export default function QuestionLabWorkflow() {
   };
 
   const handleImport = async () => {
-    const parsed = parseImportJson(importJson, trainerType);
-    if (!parsed.ok) {
-      setError(parsed.message);
-      setImportPreview(parsed);
-      return;
-    }
+    setImportResult(null);
+    setImportProgress(null);
     setImportBusy(true);
     setError(null);
+
     try {
-      const result = await importDraftsToDatabase(parsed.items);
-      setImportResult(result);
+      let parsed: ReturnType<typeof parseImportJson>;
+      try {
+        parsed = parseImportJson(importJson, trainerType);
+      } catch {
+        setImportPreview({ ok: false, message: "Invalid JSON. Check the array is complete and valid." });
+        setError("Invalid JSON. Check the array is complete and valid.");
+        return;
+      }
+
+      if (!parsed.ok) {
+        setImportPreview(parsed);
+        setError(parsed.message);
+        return;
+      }
+
       setImportPreview(parsed);
+      const batchCount = Math.ceil(parsed.items.length / IMPORT_BATCH_SIZE);
+      setImportProgress(`Importing 0 of ${parsed.items.length} (${batchCount} batch${batchCount === 1 ? "" : "es"})…`);
+
+      const result = await importDraftsToDatabase(parsed.items, (done, total) => {
+        const batches = Math.ceil(total / IMPORT_BATCH_SIZE);
+        const batchDone = Math.ceil(done / IMPORT_BATCH_SIZE);
+        setImportProgress(
+          `Importing ${done} of ${total} (batch ${batchDone} of ${batches})…`,
+        );
+      });
+
+      setImportResult(result);
       if (result.created + result.updated === 0 && result.errors.length === 0) {
         setError("Nothing imported. Active questions were skipped (duplicate as draft to replace).");
+      } else if (result.errors.length > 0) {
+        setError(
+          `Imported ${result.created + result.updated}, but ${result.errors.length} row(s) had errors. Check console or try Preview.`,
+        );
       }
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message.includes("not found")
-            ? `${err.message} Apply the latest Supabase migration (admin_import_trainer_question_drafts).`
-            : err.message
-          : "Import failed.",
-      );
+      setError(err instanceof Error ? err.message : "Import failed.");
     } finally {
       setImportBusy(false);
+      setImportProgress(null);
     }
   };
 
@@ -407,8 +430,10 @@ export default function QuestionLabWorkflow() {
               ) : (
                 <>
                   <p className="text-sm text-zinc-600">
-                    Paste the JSON array from ChatGPT. We create <strong>drafts</strong> only. Review
-                    them in the Review Queue tab, then Activate.
+                    Paste the JSON array from ChatGPT (e.g. 20 questions in one{" "}
+                    <code className="text-xs bg-zinc-100 px-1 rounded">[...]</code> array). We create{" "}
+                    <strong>drafts</strong> only, in batches of {IMPORT_BATCH_SIZE}. Review them in the Review Queue
+                    tab, then Activate.
                   </p>
                   <textarea
                     value={importJson}
@@ -436,9 +461,12 @@ export default function QuestionLabWorkflow() {
                       ) : (
                         <Upload className="w-4 h-4" />
                       )}
-                      Import as drafts
+                      {importBusy && importProgress ? importProgress : "Import as drafts"}
                     </button>
                   </div>
+                  {importBusy && importProgress && (
+                    <p className="text-xs text-zinc-500">{importProgress}</p>
+                  )}
 
                   {importPreview?.ok && (
                     <div className="text-sm text-zinc-700">

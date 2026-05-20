@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { CONVERSION_QUESTIONS } from "../../data/conversionQuestions";
 import type { ConversionQuestion } from "../../data/conversionQuestions";
+import { fetchConversionDrill } from "../../lib/conversionTrainerApi";
 import { saveConversionSession } from "../../utils/analyticsStorage";
 
 type AnswerRecord = {
@@ -50,9 +51,9 @@ function scrollTrainerToTop() {
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 
-function createQuestionQueue(): ConversionQuestion[] {
+function createQuestionQueue(pool: ConversionQuestion[]): ConversionQuestion[] {
   const groups = new Map<ConversionQuestion["category"], ConversionQuestion[]>();
-  for (const question of CONVERSION_QUESTIONS) {
+  for (const question of pool) {
     const current = groups.get(question.category) ?? [];
     current.push(question);
     groups.set(question.category, current);
@@ -67,7 +68,7 @@ function createQuestionQueue(): ConversionQuestion[] {
 
   const queue: ConversionQuestion[] = [];
   const categories = Array.from(groups.keys());
-  while (queue.length < CONVERSION_QUESTIONS.length) {
+  while (queue.length < pool.length) {
     for (const category of categories) {
       const next = groups.get(category)?.pop();
       if (next) queue.push(next);
@@ -104,7 +105,11 @@ function getCommonTrapCopy(trap: string): string {
 }
 
 export default function ConversionTrainer() {
-  const [questions, setQuestions] = useState<ConversionQuestion[]>(() => createQuestionQueue());
+  const [questionPool, setQuestionPool] = useState<ConversionQuestion[]>(CONVERSION_QUESTIONS);
+  const [questions, setQuestions] = useState<ConversionQuestion[]>(() =>
+    createQuestionQueue(CONVERSION_QUESTIONS),
+  );
+  const [loading, setLoading] = useState(true);
   const [index, setIndex] = useState(0);
   const [input, setInput] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -115,6 +120,31 @@ export default function ConversionTrainer() {
 
   useEffect(() => {
     sessionStartedAtRef.current = Date.now();
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetchConversionDrill()
+      .then(({ questions: pool }) => {
+        if (cancelled) return;
+        if (pool.length >= 1) {
+          setQuestionPool(pool);
+          setQuestions(createQuestionQueue(pool));
+          setIndex(0);
+          setInput("");
+          setSubmitted(false);
+          setAnswers({});
+          setSavedAnswerCount(0);
+          lastSavedAnswerCountRef.current = 0;
+          sessionStartedAtRef.current = Date.now();
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const question = questions[index];
@@ -212,7 +242,7 @@ export default function ConversionTrainer() {
   };
 
   const handleRestart = () => {
-    setQuestions(createQuestionQueue());
+    setQuestions(createQuestionQueue(questionPool));
     setIndex(0);
     setInput("");
     setSubmitted(false);
@@ -222,6 +252,14 @@ export default function ConversionTrainer() {
     sessionStartedAtRef.current = Date.now();
     scrollTrainerToTop();
   };
+
+  if (loading || !question) {
+    return (
+      <div className="bg-card border border-border rounded-xl p-8 text-center text-muted-foreground">
+        Loading conversion questions…
+      </div>
+    );
+  }
 
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">

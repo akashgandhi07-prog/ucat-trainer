@@ -40,15 +40,32 @@ The tone is methodical. Every step should be visible. No mental arithmetic short
 Each question should have at least one distractor that reflects a realistic conversion error, not just a random wrong number.
 
 
+## Storage contract (product)
+
+On import, each question becomes a `trainer_questions` row with `trainer_type` `qr-conversions`. `stem` holds the prompt; `explanation` holds a short summary (usually `explanation.examShortcut`). Full teaching lives in `content.explanation`. Students load active rows via `get_qr_conversion_drill()`.
+
 ## JSON output (one question)
+
+Return a JSON array:
 
 ```json
 {
-  "id": "conv-xxx-001",
+  "id": "conv-metric-length-001",
   "category": "Metric length",
   "prompt": "Convert 3.6 km to metres.",
   "answer": 3600,
   "answerLabel": "3,600 m",
-  "explanation": {"examShortcut": "Full working", "commonTrap": "trap-tag"}
+  "explanation": {
+    "method": {
+      "target": "Convert km to m",
+      "convert": "× 1000 (km to m)",
+      "calculate": "3.6 × 1000 = 3600 m"
+    },
+    "examShortcut": "3.6 km = 3600 m",
+    "senseCheck": "Metres are smaller than km, so the number should increase",
+    "commonTrap": "multiplied-instead-of-divided"
+  }
 }
 ```
+
+`category` must match a conversion category in the app (e.g. `Metric length`, `Imperial length`, `Time`, `Speed`).

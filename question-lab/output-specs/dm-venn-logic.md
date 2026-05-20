@@ -152,7 +152,11 @@ The `generalRule` field must contain a formula or a named procedure — not a pi
 
 ---
 
-## 7. JSON Schema
+## 7. Storage contract (product)
+
+On import, each question becomes a `trainer_questions` row. `stem` and `explanation` are columns; MCQ fields live in `content` JSONB (import adds `optionsList` from `options`). Students load active rows via `get_dm_trainer_drill('venn-logic')` with full teaching fields.
+
+## 8. JSON Schema
 
 Return one object per question. All fields are required unless marked optional.
 
@@ -201,7 +205,7 @@ Return one object per question. All fields are required unless marked optional.
 
 ---
 
-## 8. Self-Check Before Finalising Any Question
+## 9. Self-Check Before Finalising Any Question
 
 Before outputting a question, verify:
 

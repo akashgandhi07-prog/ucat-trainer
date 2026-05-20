@@ -36,21 +36,36 @@ export type QLOptionId = "A" | "B" | "C" | "D";
 // ─── Content shapes (stored in trainer_questions.content JSONB) ───────────────
 
 /** DM Venn Logic, Data Logic, Argument Judge, QR Conversions (MCQ), VR Inference */
+export type McqOptionMeta = {
+  id: QLOptionId;
+  text: string;
+  label?: string;
+};
+
 export type McqContent = {
   question: string;
   options: Record<QLOptionId, string>;
+  /** Full options with optional argument-judge labels (canonical for RPC round-trip) */
+  optionsList?: McqOptionMeta[];
   correctAnswer: QLOptionId;
   commonTrap: string;
   workingSteps?: string[];
+  generalRule?: string;
+  wrongOptionReasons?: Partial<Record<QLOptionId, string>>;
+  keyInsight?: string;
+  review?: Record<string, unknown>;
 };
 
 /** QR Conversions — numeric answer variant */
 export type NumericContent = {
   question: string;
   correctAnswer: number;
-  tolerance?: number;   // acceptable margin, e.g. 0.01
+  tolerance?: number;
   units: string;
   workedSolution: string;
+  category?: string;
+  commonTrap?: string;
+  explanation?: Record<string, unknown>;
 };
 
 /** SJT Appropriateness and Importance */

@@ -46,26 +46,39 @@ The tone is teaching, not marking. Show the method so students can apply it to a
 Official UCAT explanations often only confirm the answer. Our explanations show why the method works and why each distractor fails.
 
 
+## Storage contract (product)
+
+On import, each question becomes a `trainer_questions` row. `stem` and `explanation` are top-level columns; everything else below goes in `content` JSONB. Import builds `optionsList` from your `options` array. Students see active rows via `get_dm_trainer_drill('data-logic')` including `generalRule`, `wrongOptionReasons`, `keyInsight`, and `review`.
+
 ## JSON output (one question)
 
-Return a JSON array. Each DM MCQ object:
+Return a JSON array. Each object:
 
 ```json
 {
-  "id": "unique-kebab-id-001",
+  "id": "data-pct-change-001",
   "trainerType": "data-logic",
-  "difficulty": "easy|medium|hard",
-  "skillTag": "kebab-skill-tag",
-  "stem": "Scenario text",
-  "question": "Question line",
-  "options": [{"id":"A","text":"..."},{"id":"B","text":"..."},{"id":"C","text":"..."},{"id":"D","text":"..."}],
+  "difficulty": "medium",
+  "skillTag": "percentage-change",
+  "stem": "Scenario with a text table",
+  "question": "What was the percentage change from 2020 to 2021?",
+  "options": [
+    {"id": "A", "text": "..."},
+    {"id": "B", "text": "..."},
+    {"id": "C", "text": "..."},
+    {"id": "D", "text": "..."}
+  ],
   "correctAnswer": "B",
-  "explanation": "Step-by-step method and trap",
-  "commonTrap": "trap-tag",
-  "generalRule": "Reusable rule",
-  "wrongOptionReasons": {"A":"...","B":"...","C":"...","D":"..."},
-  "keyInsight": "Short hook"
+  "explanation": "Identify values, show calculation, eliminate distractors",
+  "commonTrap": "wrong-denominator",
+  "generalRule": "Percentage change = (new − old) / old × 100",
+  "wrongOptionReasons": {"A": "...", "B": "Correct.", "C": "...", "D": "..."},
+  "keyInsight": "Always use the original value as the denominator",
+  "review": {
+    "ambiguityRisk": "low",
+    "whySafeToInclude": "Single correct operation; each wrong option from a named error"
+  }
 }
 ```
 
-Use trainerType "data-logic" for every question in this file.
+Use `trainerType` `"data-logic"` for every question in this file.

@@ -45,20 +45,27 @@ The tone is teaching priority-setting as a professional skill. The student shoul
 - Context changes rankings: the same factor can be very important in one scenario and minor in another
 
 
+## Storage contract (product)
+
+On import: `legacy_id` = `id`, `stem`, `skill_tag` = `domain`, `content` = `{ domain, items, pivotInsight? }`. `trainer_type` is `sjt-importance`. Ratings: `very_important`, `important`, `minor_importance`, `not_important`.
+
 ## JSON output (one question)
 
 ```json
 {
-  "id": "app-xxx-001",
-  "type": "appropriateness",
-  "domain": "colleagues_culture_safety",
-  "difficulty": "standard",
+  "id": "imp-xxx-001",
+  "domain": "patients_partnership_communication",
+  "difficulty": "medium",
   "stem": "Scenario",
   "pivotInsight": "Core dilemma",
   "items": [
-    {"id":"a","text":"...","correctRating":"very_appropriate","rationale":"...","whyNotAdjacent":"..."}
+    {
+      "id": "a",
+      "text": "Factor A",
+      "correctRating": "very_important",
+      "rationale": "Why this rating",
+      "whyNotAdjacent": "Why not one step up or down"
+    }
   ]
 }
 ```
-
-Use type "importance" for SJT Importance. trainer_type in DB is sjt-appropriateness or sjt-importance.

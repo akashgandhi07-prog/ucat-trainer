@@ -27,6 +27,11 @@ function dmToExportRow(q: DmTrainerQuestion, status = "local-files"): BankExport
   const content: Record<string, unknown> = {
     question: q.question,
     options: toOptionsRecord(q.options),
+    optionsList: q.options.map((opt) => ({
+      id: opt.id,
+      text: opt.text,
+      ...(opt.label ? { label: opt.label } : {}),
+    })),
     correctAnswer: q.correctAnswer,
     commonTrap: q.commonTrap,
     workingSteps: q.optionalWorkingSteps,

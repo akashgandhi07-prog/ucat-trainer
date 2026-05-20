@@ -75,8 +75,6 @@ export async function fetchDmTrainerDrill(
       .filter((q): q is DmTrainerQuestion => q != null);
 
     if (mapped.length >= 1) {
-      // Enrich Supabase questions with local teaching fields (generalRule, wrongOptionReasons,
-      // keyInsight) which aren't stored in the database yet.
       const localById = new Map(fallback.map((q) => [q.id, q]));
       const enriched = mapped.map((q) => {
         const local = localById.get(q.id);
@@ -86,6 +84,11 @@ export async function fetchDmTrainerDrill(
           generalRule: q.generalRule ?? local.generalRule,
           wrongOptionReasons: q.wrongOptionReasons ?? local.wrongOptionReasons,
           keyInsight: q.keyInsight ?? local.keyInsight,
+          review: q.review ?? local.review,
+          options: q.options.map((opt) => {
+            const localOpt = local.options.find((o) => o.id === opt.id);
+            return localOpt?.label && !opt.label ? { ...opt, label: localOpt.label } : opt;
+          }),
         };
       });
       return { questions: enriched, source: "supabase" };

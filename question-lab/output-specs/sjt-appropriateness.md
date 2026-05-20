@@ -49,20 +49,27 @@ Official UCAT explanations are often brief. Our explanations teach the reasoning
 - Do not act alone in serious situations
 
 
+## Storage contract (product)
+
+On import: `legacy_id` = `id`, `stem`, `skill_tag` = `domain`, `content` = `{ domain, items, pivotInsight? }`. `trainer_type` is `sjt-appropriateness`. Ratings use underscores: `very_appropriate`, `appropriate`, `inappropriate`, `very_inappropriate`.
+
 ## JSON output (one question)
 
 ```json
 {
   "id": "app-xxx-001",
-  "type": "appropriateness",
   "domain": "colleagues_culture_safety",
-  "difficulty": "standard",
+  "difficulty": "medium",
   "stem": "Scenario",
   "pivotInsight": "Core dilemma",
   "items": [
-    {"id":"a","text":"...","correctRating":"very_appropriate","rationale":"...","whyNotAdjacent":"..."}
+    {
+      "id": "a",
+      "text": "Response A",
+      "correctRating": "very_appropriate",
+      "rationale": "Why this rating",
+      "whyNotAdjacent": "Why not one step up or down"
+    }
   ]
 }
 ```
-
-Use type "importance" for SJT Importance. trainer_type in DB is sjt-appropriateness or sjt-importance.

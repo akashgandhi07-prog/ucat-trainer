@@ -1,5 +1,7 @@
+import type { QuestionExplanation } from "../components/mentalMaths/mathsAlgorithms";
+import type { ConversionQuestionCategory } from "../data/conversionQuestions";
 import type { QLDifficulty, QLQuestionKind, QLSection } from "../types/questionLab";
-import type { DmTrainerOptionId } from "../types/dmTrainers";
+import { buildMcqContentFromImportRaw } from "./mcqContent";
 import { TRAINER_META, type TrainerMeta } from "./questionLabAssets";
 import { supabase } from "./supabase";
 
@@ -28,8 +30,6 @@ export type ImportParseResult =
   | { ok: true; items: ImportDraftPayload[]; preview: ImportPreviewItem[] }
   | { ok: false; message: string; details?: string[] };
 
-const OPTION_IDS: DmTrainerOptionId[] = ["A", "B", "C", "D"];
-
 function asRecord(v: unknown): Record<string, unknown> | null {
   return v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
 }
@@ -53,68 +53,19 @@ function normalizeDifficulty(v: unknown, fallback: QLDifficulty = "medium"): QLD
   return fallback;
 }
 
-function optionsFromRaw(raw: unknown): Record<DmTrainerOptionId, string> | null {
-  if (Array.isArray(raw)) {
-    const record = {} as Record<DmTrainerOptionId, string>;
-    for (const item of raw) {
-      const row = asRecord(item);
-      if (!row) continue;
-      const id = str(row.id).toUpperCase() as DmTrainerOptionId;
-      const text = str(row.text);
-      if (OPTION_IDS.includes(id) && text) record[id] = text;
-    }
-    return OPTION_IDS.every((id) => record[id]) ? record : null;
-  }
-  const rec = asRecord(raw);
-  if (!rec) return null;
-  const record = {} as Record<DmTrainerOptionId, string>;
-  for (const id of OPTION_IDS) {
-    const text = str(rec[id]);
-    if (text) record[id] = text;
-  }
-  return OPTION_IDS.every((id) => record[id]) ? record : null;
-}
-
 function mapDmMcq(raw: Record<string, unknown>, meta: TrainerMeta): ImportDraftPayload | string {
   const legacy_id = str(raw.legacy_id) || str(raw.id);
   if (!legacy_id) return "Missing id or legacy_id";
 
   const stem = str(raw.stem);
-  const question = str(raw.question) || str(raw.content && asRecord(raw.content)?.question);
   const explanation = str(raw.explanation);
   const skill_tag = str(raw.skill_tag) || str(raw.skillTag);
-  if (!stem || !question || !explanation || !skill_tag) {
-    return "DM question needs stem, question, explanation, and skill_tag";
+  if (!stem || !explanation || !skill_tag) {
+    return "DM question needs stem, explanation, and skill_tag";
   }
 
-  const contentObj = asRecord(raw.content);
-  const options =
-    optionsFromRaw(raw.options) ??
-    optionsFromRaw(contentObj?.options) ??
-    null;
-  if (!options) return "DM question needs four options (A–D)";
-
-  const correctAnswer = (
-    str(raw.correctAnswer) ||
-    str(raw.correct_answer) ||
-    str(contentObj?.correctAnswer)
-  ).toUpperCase() as DmTrainerOptionId;
-  if (!OPTION_IDS.includes(correctAnswer)) return "Invalid correctAnswer";
-
-  const content: Record<string, unknown> = {
-    question,
-    options,
-    correctAnswer,
-    commonTrap: str(raw.commonTrap) || str(raw.common_trap) || str(contentObj?.commonTrap) || "unspecified-trap",
-  };
-
-  const working = raw.optionalWorkingSteps ?? raw.workingSteps ?? contentObj?.workingSteps;
-  if (Array.isArray(working) && working.length) content.workingSteps = working;
-
-  for (const key of ["generalRule", "wrongOptionReasons", "keyInsight", "review"] as const) {
-    if (raw[key] != null) content[key] = raw[key];
-    else if (contentObj?.[key] != null) content[key] = contentObj[key];
-  }
+  const built = buildMcqContentFromImportRaw(raw, asRecord(raw.content));
+  if ("error" in built) return built.error;
 
   return {
     legacy_id,
@@ -125,7 +76,7 @@ function mapDmMcq(raw: Record<string, unknown>, meta: TrainerMeta): ImportDraftP
     skill_tag,
     stem,
     explanation,
-    content,
+    content: built.content as unknown as Record<string, unknown>,
   };
 }
 
@@ -162,20 +113,58 @@ function mapSjt(raw: Record<string, unknown>, meta: TrainerMeta): ImportDraftPay
   };
 }
 
+function parseConversionExplanation(raw: unknown): QuestionExplanation {
+  const obj = asRecord(raw);
+  if (obj && typeof obj.method === "object") {
+    const method = asRecord(obj.method);
+    return {
+      method: {
+        target: str(method?.target),
+        convert: str(method?.convert),
+        calculate: str(method?.calculate),
+      },
+      examShortcut: str(obj.examShortcut) || str(obj.exam_shortcut),
+      senseCheck: str(obj.senseCheck) || str(obj.sense_check),
+      commonTrap: str(obj.commonTrap) || str(obj.common_trap),
+    };
+  }
+  const text = typeof raw === "string" ? raw.trim() : "";
+  return {
+    method: { target: "", convert: "", calculate: text },
+    examShortcut: text,
+    senseCheck: "",
+    commonTrap: "",
+  };
+}
+
 function mapConversion(raw: Record<string, unknown>, meta: TrainerMeta): ImportDraftPayload | string {
   const legacy_id = str(raw.legacy_id) || str(raw.id);
   if (!legacy_id) return "Missing id or legacy_id";
 
-  const prompt = str(raw.prompt) || str(raw.stem) || str(raw.question);
-  const answer = Number(raw.answer ?? raw.correctAnswer ?? asRecord(raw.content)?.correctAnswer);
+  const contentObj = asRecord(raw.content);
+  const prompt =
+    str(raw.prompt) || str(raw.stem) || str(raw.question) || str(contentObj?.question);
+  const answer = Number(
+    raw.answer ?? raw.correctAnswer ?? contentObj?.correctAnswer,
+  );
   if (!prompt || Number.isNaN(answer)) return "Conversion needs prompt and numeric correctAnswer";
 
-  const units = str(raw.answerLabel) || str(raw.units) || str(asRecord(raw.content)?.units) || "";
+  const category = (str(raw.category) ||
+    str(raw.skill_tag) ||
+    str(raw.skillTag) ||
+    str(contentObj?.category) ||
+    "Metric length") as ConversionQuestionCategory;
+  const units =
+    str(raw.answerLabel) || str(raw.units) || str(contentObj?.units) || "";
+  const explanation = parseConversionExplanation(raw.explanation ?? contentObj?.explanation);
+  if (!explanation.commonTrap) {
+    explanation.commonTrap =
+      str(raw.commonTrap) || str(contentObj?.commonTrap) || "unspecified-trap";
+  }
   const worked =
     str(raw.workedSolution) ||
-    str(asRecord(raw.explanation)?.examShortcut) ||
-    str(raw.explanation) ||
-    "";
+    str(contentObj?.workedSolution) ||
+    explanation.examShortcut;
 
   return {
     legacy_id,
@@ -183,15 +172,17 @@ function mapConversion(raw: Record<string, unknown>, meta: TrainerMeta): ImportD
     trainer_type: meta.trainerType,
     question_kind: meta.questionKind,
     difficulty: normalizeDifficulty(raw.difficulty),
-    skill_tag: str(raw.skill_tag) || str(raw.category) || "conversion",
+    skill_tag: category,
     stem: prompt,
-    explanation: worked || `Answer: ${answer}${units ? ` ${units}` : ""}`,
+    explanation: explanation.examShortcut || worked || `Answer: ${answer}${units ? ` ${units}` : ""}`,
     content: {
       question: prompt,
       correctAnswer: answer,
       units,
+      category,
       workedSolution: worked,
-      commonTrap: str(raw.commonTrap) || str(asRecord(raw.explanation)?.commonTrap) || "",
+      commonTrap: explanation.commonTrap,
+      explanation,
     },
   };
 }
@@ -203,11 +194,23 @@ export function parseImportJson(raw: string, trainerType: string): ImportParseRe
     return { ok: false, message: meta.importHint ?? "Import not supported for this trainer yet." };
   }
 
+  const trimmed = raw.trim();
+  if (!trimmed.startsWith("[") && !trimmed.startsWith("{") && !trimmed.startsWith("```")) {
+    return {
+      ok: false,
+      message: "Paste must start with [ (JSON array). You may have copied only part of the file.",
+    };
+  }
+
   let parsed: unknown;
   try {
-    parsed = parseJsonInput(raw);
+    parsed = parseJsonInput(trimmed);
   } catch {
-    return { ok: false, message: "Invalid JSON. Paste only the array from ChatGPT, or wrap in ```json```." };
+    return {
+      ok: false,
+      message:
+        "Invalid or incomplete JSON. Paste the full array from ChatGPT, including the opening [ and closing ].",
+    };
   }
 
   const list = Array.isArray(parsed)
@@ -263,12 +266,88 @@ export type ImportRpcResult = {
   errors: Array<{ index?: number; legacy_id?: string | null; message: string }>;
 };
 
+export const IMPORT_BATCH_SIZE = 10;
+const IMPORT_RPC_TIMEOUT_MS = 60_000;
+const IMPORT_AUTH_TIMEOUT_MS = 10_000;
+
+function withTimeout<T>(promise: PromiseLike<T>, ms: number, message: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(message)), ms);
+  });
+  return Promise.race([Promise.resolve(promise), timeout]).finally(() => {
+    if (timer) clearTimeout(timer);
+  });
+}
+
+function normalizeRpcResult(raw: unknown): ImportRpcResult {
+  const row = asRecord(raw);
+  return {
+    created: typeof row?.created === "number" ? row.created : 0,
+    updated: typeof row?.updated === "number" ? row.updated : 0,
+    skipped: Array.isArray(row?.skipped) ? (row.skipped as ImportRpcResult["skipped"]) : [],
+    errors: Array.isArray(row?.errors) ? (row.errors as ImportRpcResult["errors"]) : [],
+  };
+}
+
+function mergeRpcResults(a: ImportRpcResult, b: ImportRpcResult): ImportRpcResult {
+  return {
+    created: a.created + b.created,
+    updated: a.updated + b.updated,
+    skipped: [...a.skipped, ...b.skipped],
+    errors: [...a.errors, ...b.errors],
+  };
+}
+
+async function importDraftBatch(items: ImportDraftPayload[]): Promise<ImportRpcResult> {
+  const { data, error } = await withTimeout(
+    supabase.rpc("admin_import_trainer_question_drafts", { p_questions: items }),
+    IMPORT_RPC_TIMEOUT_MS,
+    `Import timed out (${items.length} questions in this batch). Refresh, use Preview, then try again.`,
+  );
+  if (error) {
+    const msg = error.message ?? "Import failed";
+    if (msg.includes("not found") || msg.includes("Could not find the function")) {
+      throw new Error(
+        `${msg} Apply the latest Supabase migration (admin_import_trainer_question_drafts).`,
+      );
+    }
+    if (msg.includes("Forbidden") || msg.includes("admin only")) {
+      throw new Error("You must be signed in as an admin to import.");
+    }
+    throw new Error(msg);
+  }
+  return normalizeRpcResult(data);
+}
+
 export async function importDraftsToDatabase(
   items: ImportDraftPayload[],
+  onProgress?: (done: number, total: number) => void,
 ): Promise<ImportRpcResult> {
-  const { data, error } = await supabase.rpc("admin_import_trainer_question_drafts", {
-    p_questions: items,
-  });
-  if (error) throw error;
-  return data as ImportRpcResult;
+  const {
+    data: { session },
+  } = await withTimeout(
+    supabase.auth.getSession(),
+    IMPORT_AUTH_TIMEOUT_MS,
+    "Sign-in check timed out. Refresh the page and try again while logged in as admin.",
+  );
+  if (!session) {
+    throw new Error("You are not signed in. Log in as admin and try again.");
+  }
+
+  if (items.length === 0) {
+    return { created: 0, updated: 0, skipped: [], errors: [] };
+  }
+
+  let combined: ImportRpcResult = { created: 0, updated: 0, skipped: [], errors: [] };
+  const total = items.length;
+
+  for (let i = 0; i < items.length; i += IMPORT_BATCH_SIZE) {
+    const batch = items.slice(i, i + IMPORT_BATCH_SIZE);
+    const batchResult = await importDraftBatch(batch);
+    combined = mergeRpcResults(combined, batchResult);
+    onProgress?.(Math.min(i + batch.length, total), total);
+  }
+
+  return combined;
 }

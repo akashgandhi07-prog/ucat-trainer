@@ -40,17 +40,23 @@ The tone is teaching comparative professional judgement. Students need to unders
 - Acting alone on something serious without telling anyone is usually near the bottom
 
 
+## Storage contract (product)
+
+On import: `legacy_id` = `id`, `stem`, `skill_tag` = `domain`, `content` = `{ domain, items, pivotInsight? }`. `trainer_type` is `sjt-ranking`. Exactly three responses, each with `rank` 1 (best), 2, or 3 (worst).
+
 ## JSON output (one question)
 
 ```json
 {
   "id": "rank-xxx-001",
-  "type": "ranking",
   "domain": "patients_partnership_communication",
-  "difficulty": "standard",
+  "difficulty": "medium",
   "stem": "Scenario",
+  "pivotInsight": "Core ordering principle",
   "items": [
-    {"id":"a","text":"...","rank":1,"rationale":"..."}
+    {"id": "a", "text": "Best action", "rank": 1, "rationale": "Why first"},
+    {"id": "b", "text": "Second", "rank": 2, "rationale": "Why second"},
+    {"id": "c", "text": "Worst", "rank": 3, "rationale": "Why last"}
   ]
 }
 ```
