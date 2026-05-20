@@ -11,6 +11,41 @@ type LoadState = "idle" | "loading" | "ready" | "error";
 type SaveState = "idle" | "saving" | "saved" | "error";
 
 const API_BASE = "/__question-lab/gold-standards";
+const bundledGoldStandards = import.meta.glob(
+  "../../../question-lab/gold-standards/*.md",
+  { eager: true, query: "?raw", import: "default" },
+) as Record<string, string>;
+
+function titleFromFilename(filename: string): string {
+  return filename
+    .replace(/\.md$/, "")
+    .split("-")
+    .map((word) => (["dm", "qr", "vr", "sjt"].includes(word) ? word.toUpperCase() : word.charAt(0).toUpperCase() + word.slice(1)))
+    .join(" ");
+}
+
+function bundledFiles(): GoldStandardFile[] {
+  return Object.keys(bundledGoldStandards)
+    .map((path) => {
+      const filename = path.split("/").pop() ?? "";
+      return { filename, slug: filename.replace(/\.md$/, ""), title: titleFromFilename(filename) };
+    })
+    .filter((file) => file.filename)
+    .sort((a, b) => a.filename.localeCompare(b.filename));
+}
+
+function bundledContent(filename: string): string | null {
+  const key = Object.keys(bundledGoldStandards).find((path) => path.endsWith(`/${filename}`));
+  return key ? bundledGoldStandards[key] : null;
+}
+
+async function readJson<T>(response: Response): Promise<T> {
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!response.ok || !contentType.includes("application/json")) {
+    throw new Error("Local editor API unavailable.");
+  }
+  return response.json() as Promise<T>;
+}
 
 function wordCount(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
@@ -39,20 +74,18 @@ export default function GoldStandardFilesPage() {
       setError(null);
       try {
         const response = await fetch(API_BASE);
-        if (!response.ok) throw new Error("Could not load gold-standard files.");
-        const data = (await response.json()) as { files: GoldStandardFile[] };
+        const data = await readJson<{ files: GoldStandardFile[] }>(response);
         if (cancelled) return;
         setFiles(data.files);
         setSelectedFilename((current) => current || data.files[0]?.filename || "");
         setLoadState("ready");
       } catch (err) {
         if (cancelled) return;
-        setLoadState("error");
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Could not load gold-standard files. This editor only works on the local Vite dev server.",
-        );
+        const files = bundledFiles();
+        setFiles(files);
+        setSelectedFilename((current) => current || files[0]?.filename || "");
+        setLoadState("ready");
+        setError(files.length ? null : err instanceof Error ? err.message : "Could not load gold-standard files.");
       }
     }
 
@@ -72,8 +105,7 @@ export default function GoldStandardFilesPage() {
       setError(null);
       try {
         const response = await fetch(`${API_BASE}/${selectedFilename}`);
-        if (!response.ok) throw new Error(`Could not load ${selectedFilename}.`);
-        const data = (await response.json()) as { content: string };
+        const data = await readJson<{ content: string }>(response);
         if (cancelled) return;
         setContent(data.content);
         setSavedContent(data.content);
@@ -81,8 +113,16 @@ export default function GoldStandardFilesPage() {
         setLoadState("ready");
       } catch (err) {
         if (cancelled) return;
-        setLoadState("error");
-        setError(err instanceof Error ? err.message : `Could not load ${selectedFilename}.`);
+        const fallback = bundledContent(selectedFilename);
+        if (fallback == null) {
+          setLoadState("error");
+          setError(err instanceof Error ? err.message : `Could not load ${selectedFilename}.`);
+          return;
+        }
+        setContent(fallback);
+        setSavedContent(fallback);
+        setSaveState("idle");
+        setLoadState("ready");
       }
     }
 
