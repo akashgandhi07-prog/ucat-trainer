@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   AlertCircle,
@@ -25,6 +25,11 @@ import Header from "../../components/layout/Header";
 import Footer from "../../components/layout/Footer";
 import QuestionLabQuestionEditor from "../../components/admin/QuestionLabQuestionEditor";
 import QuestionLabWorkflow from "../../components/admin/QuestionLabWorkflow";
+import {
+  deleteTrainerQuestion,
+  deleteTrainerQuestions,
+  isDeletableQuestion,
+} from "../../lib/questionLabDelete";
 import { saveTrainerQuestionEdit, type QuestionEditPatch } from "../../lib/questionLabEdit";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -217,6 +222,143 @@ async function withAdminActionTimeout<T>(action: () => Promise<T>, label: string
 
 function isActionLoading(actionLoading: string | null, action: string, id: string): boolean {
   return actionLoading === `${action}:${id}`;
+}
+
+function useQuestionSelection() {
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
+
+  const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
+
+  const toggleSelected = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const setSelectedMany = useCallback((ids: string[], on: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      for (const id of ids) {
+        if (on) next.add(id);
+        else next.delete(id);
+      }
+      return next;
+    });
+  }, []);
+
+  const isSelected = useCallback((id: string) => selectedIds.has(id), [selectedIds]);
+
+  return {
+    selectedIds,
+    selectedCount: selectedIds.size,
+    clearSelection,
+    toggleSelected,
+    setSelectedMany,
+    isSelected,
+  };
+}
+
+function BulkDeleteBar({
+  selectedCount,
+  busy,
+  onClear,
+  onDelete,
+}: {
+  selectedCount: number;
+  busy: boolean;
+  onClear: () => void;
+  onDelete: () => void;
+}) {
+  if (selectedCount === 0) return null;
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+      <p className="text-sm text-red-900">
+        {selectedCount} question{selectedCount !== 1 ? "s" : ""} selected
+      </p>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={onClear}
+          disabled={busy}
+          className="px-3 py-1.5 text-xs border border-red-200 rounded text-red-800 hover:bg-red-100 disabled:opacity-50"
+        >
+          Clear selection
+        </button>
+        <button
+          type="button"
+          onClick={onDelete}
+          disabled={busy}
+          className="flex items-center gap-1 px-3 py-1.5 bg-red-700 text-white text-xs rounded hover:bg-red-800 disabled:opacity-50"
+        >
+          {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+          Delete selected
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function DeletableCheckbox({
+  checked,
+  disabled,
+  onChange,
+}: {
+  checked: boolean;
+  disabled?: boolean;
+  onChange: () => void;
+}) {
+  return (
+    <input
+      type="checkbox"
+      checked={checked}
+      disabled={disabled}
+      onChange={(e) => {
+        e.stopPropagation();
+        onChange();
+      }}
+      onClick={(e) => e.stopPropagation()}
+      className="mt-1 h-4 w-4 shrink-0 rounded border-zinc-300 text-red-700 focus:ring-red-500"
+      aria-label="Select question for bulk delete"
+    />
+  );
+}
+
+function SectionSelectAll({
+  rows,
+  selectedIds,
+  onToggleAll,
+  disabled,
+}: {
+  rows: QuestionRow[];
+  selectedIds: Set<string>;
+  onToggleAll: (ids: string[], selected: boolean) => void;
+  disabled?: boolean;
+}) {
+  const deletableIds = useMemo(
+    () => rows.filter((r) => isDeletableQuestion(r.status)).map((r) => r.id),
+    [rows],
+  );
+
+  if (deletableIds.length === 0) return null;
+
+  const allSelected = deletableIds.every((id) => selectedIds.has(id));
+
+  return (
+    <label className="flex items-center gap-1.5 text-xs text-zinc-600 cursor-pointer">
+      <input
+        type="checkbox"
+        checked={allSelected}
+        disabled={disabled}
+        onChange={() => onToggleAll(deletableIds, !allSelected)}
+        className="h-3.5 w-3.5 rounded border-zinc-300 text-red-700 focus:ring-red-500"
+      />
+      Select all ({deletableIds.length})
+    </label>
+  );
 }
 
 function trainerQuestionsArgs(input: {
@@ -438,6 +580,8 @@ function QuestionsTab() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [page, setPage]               = useState(0);
   const PAGE_SIZE = 50;
+  const selection = useQuestionSelection();
+  const bulkDeleting = actionLoading === "bulk-delete";
 
   const load = useCallback(async (pageNum = 0) => {
     setLoading(true);
@@ -472,6 +616,50 @@ function QuestionsTab() {
   }, [section, trainerType, status, quality, difficulty, flagged, search]);
 
   useEffect(() => { load(0); }, [load]);
+
+  useEffect(() => {
+    const visible = new Set(rows.map((r) => r.id));
+    selection.setSelectedMany(
+      [...selection.selectedIds].filter((id) => !visible.has(id)),
+      false,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows]);
+
+  const handleBulkDelete = async () => {
+    const ids = [...selection.selectedIds].filter((id) => {
+      const row = rows.find((r) => r.id === id);
+      return row && isDeletableQuestion(row.status);
+    });
+    if (ids.length === 0) return;
+    if (
+      !window.confirm(
+        `Delete ${ids.length} question${ids.length !== 1 ? "s" : ""} permanently? Related reports and review history will be removed. This cannot be undone.`,
+      )
+    ) {
+      return;
+    }
+    setActionLoading("bulk-delete");
+    setActionError(null);
+    try {
+      const result = await withAdminActionTimeout(
+        () => deleteTrainerQuestions(ids),
+        "Bulk delete",
+      );
+      if (result.skipped > 0) {
+        setActionError(
+          `Deleted ${result.deleted}. ${result.skipped} could not be deleted (often active questions).`,
+        );
+      }
+      selection.clearSelection();
+      setExpandedId(null);
+      await load(page);
+    } catch (e) {
+      setActionError(errorMessage(e, "Bulk delete failed."));
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   const handleActivate = async (id: string) => {
     setActionLoading(`activate:${id}`);
@@ -558,7 +746,7 @@ function QuestionsTab() {
 
   const handleDelete = async (id: string) => {
     const target = rows.find((r) => r.id === id);
-    if (!target || (target.status !== "draft" && target.status !== "archived")) {
+    if (!target || !isDeletableQuestion(target.status)) {
       setActionError("Only drafts and archived questions can be deleted.");
       return;
     }
@@ -572,14 +760,8 @@ function QuestionsTab() {
     setActionLoading(`delete:${id}`);
     setActionError(null);
     try {
-      const { error: err } = await withAdminRpcTimeout(
-        () => supabase.rpc("admin_delete_trainer_question", { p_id: id }),
-        "Delete",
-      );
-      if (err) {
-        setActionError(err.message);
-        return;
-      }
+      await withAdminActionTimeout(() => deleteTrainerQuestion(id), "Delete");
+      selection.setSelectedMany([id], false);
       setExpandedId(null);
       await load(page);
     } catch (e) {
@@ -722,11 +904,28 @@ function QuestionsTab() {
 
       {/* Summary */}
       {!loading && !error && (
-        <p className="text-sm text-zinc-500">
-          {total} question{total !== 1 ? "s" : ""} matching filters
-          {total > PAGE_SIZE && ` · page ${page + 1} of ${totalPages}`}
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm text-zinc-500">
+            {total} question{total !== 1 ? "s" : ""} matching filters
+            {total > PAGE_SIZE && ` · page ${page + 1} of ${totalPages}`}
+          </p>
+          {rows.some((r) => isDeletableQuestion(r.status)) && (
+            <SectionSelectAll
+              rows={rows}
+              selectedIds={selection.selectedIds}
+              onToggleAll={selection.setSelectedMany}
+              disabled={!!actionLoading}
+            />
+          )}
+        </div>
       )}
+
+      <BulkDeleteBar
+        selectedCount={selection.selectedCount}
+        busy={bulkDeleting}
+        onClear={selection.clearSelection}
+        onDelete={handleBulkDelete}
+      />
 
       {/* Table */}
       <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">
@@ -741,14 +940,25 @@ function QuestionsTab() {
           <div className="divide-y divide-zinc-100">
             {rows.map((row) => {
               const isExpanded = expandedId === row.id;
+              const canSelect = isDeletableQuestion(row.status);
               return (
                 <div key={row.id}>
-                  <button
-                    onClick={() => setExpandedId(isExpanded ? null : row.id)}
-                    className="w-full text-left px-4 py-3 hover:bg-zinc-50 transition-colors"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="flex-1 min-w-0 space-y-1">
+                  <div className="flex items-start gap-3 px-4 py-3 hover:bg-zinc-50 transition-colors">
+                    {canSelect ? (
+                      <DeletableCheckbox
+                        checked={selection.isSelected(row.id)}
+                        disabled={!!actionLoading}
+                        onChange={() => selection.toggleSelected(row.id)}
+                      />
+                    ) : (
+                      <span className="w-4 shrink-0" aria-hidden />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setExpandedId(isExpanded ? null : row.id)}
+                      className="flex-1 min-w-0 text-left"
+                    >
+                      <div className="space-y-1">
                         <div className="flex items-center gap-2 flex-wrap">
                           {badge(STATUS_BADGE[row.status] ?? "bg-zinc-100 text-zinc-600", row.status)}
                           {badge(QUALITY_BADGE[row.quality_status] ?? "bg-zinc-100 text-zinc-600", row.quality_status.replace("_", " "))}
@@ -772,11 +982,11 @@ function QuestionsTab() {
                           <p className="text-xs text-zinc-400 font-mono">{row.legacy_id}</p>
                         )}
                       </div>
-                      <div className="shrink-0 text-zinc-400 mt-1">
-                        {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                      </div>
+                    </button>
+                    <div className="shrink-0 text-zinc-400 mt-1">
+                      {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                     </div>
-                  </button>
+                  </div>
                   {isExpanded && (
                     <ExpandedQuestion
                       row={row}
@@ -1140,6 +1350,12 @@ function ReviewQueueTab() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [actionError, setActionError]     = useState<string | null>(null);
   const [expandedId, setExpandedId]       = useState<string | null>(null);
+  const selection = useQuestionSelection();
+  const bulkDeleting = actionLoading === "bulk-delete";
+  const allQueueRows = useMemo(
+    () => [...drafts, ...needsReview, ...flagged],
+    [drafts, needsReview, flagged],
+  );
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -1179,6 +1395,50 @@ function ReviewQueueTab() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    const visible = new Set(allQueueRows.map((r) => r.id));
+    selection.setSelectedMany(
+      [...selection.selectedIds].filter((id) => !visible.has(id)),
+      false,
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allQueueRows]);
+
+  const handleBulkDelete = async () => {
+    const ids = [...selection.selectedIds].filter((id) => {
+      const row = allQueueRows.find((r) => r.id === id);
+      return row && isDeletableQuestion(row.status);
+    });
+    if (ids.length === 0) return;
+    if (
+      !window.confirm(
+        `Delete ${ids.length} question${ids.length !== 1 ? "s" : ""} permanently? Related reports and review history will be removed. This cannot be undone.`,
+      )
+    ) {
+      return;
+    }
+    setActionLoading("bulk-delete");
+    setActionError(null);
+    try {
+      const result = await withAdminActionTimeout(
+        () => deleteTrainerQuestions(ids),
+        "Bulk delete",
+      );
+      if (result.skipped > 0) {
+        setActionError(
+          `Deleted ${result.deleted}. ${result.skipped} could not be deleted (often active questions).`,
+        );
+      }
+      selection.clearSelection();
+      setExpandedId(null);
+      await load();
+    } catch (e) {
+      setActionError(errorMessage(e, "Bulk delete failed."));
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   const handleActivate = async (id: string) => {
     setActionLoading(`activate:${id}`);
@@ -1244,9 +1504,8 @@ function ReviewQueueTab() {
   };
 
   const handleDelete = async (id: string) => {
-    const allRows = [...drafts, ...needsReview, ...flagged];
-    const target = allRows.find((r) => r.id === id);
-    if (!target || (target.status !== "draft" && target.status !== "archived")) {
+    const target = allQueueRows.find((r) => r.id === id);
+    if (!target || !isDeletableQuestion(target.status)) {
       setActionError("Only drafts and archived questions can be deleted. Archive active questions first.");
       return;
     }
@@ -1260,14 +1519,8 @@ function ReviewQueueTab() {
     setActionLoading(`delete:${id}`);
     setActionError(null);
     try {
-      const { error: err } = await withAdminRpcTimeout(
-        () => supabase.rpc("admin_delete_trainer_question", { p_id: id }),
-        "Delete",
-      );
-      if (err) {
-        setActionError(err.message);
-        return;
-      }
+      await withAdminActionTimeout(() => deleteTrainerQuestion(id), "Delete");
+      selection.setSelectedMany([id], false);
       setExpandedId(null);
       await load();
     } catch (e) {
@@ -1278,8 +1531,7 @@ function ReviewQueueTab() {
   };
 
   const handleSaveEdit = async (id: string, patch: QuestionEditPatch) => {
-    const allRows = [...drafts, ...needsReview, ...flagged];
-    const target = allRows.find((r) => r.id === id);
+    const target = allQueueRows.find((r) => r.id === id);
     setActionLoading(`save:${id}`);
     setActionError(null);
     try {
@@ -1310,13 +1562,31 @@ function ReviewQueueTab() {
     );
   }
 
-  const Section = ({ title, count, color, children }: {
-    title: string; count: number; color: string; children: React.ReactNode;
+  const Section = ({
+    title,
+    count,
+    color,
+    sectionRows,
+    children,
+  }: {
+    title: string;
+    count: number;
+    color: string;
+    sectionRows: QuestionRow[];
+    children: React.ReactNode;
   }) => (
     <div className="bg-white border border-zinc-200 rounded-lg overflow-hidden">
-      <div className="px-4 py-3 border-b border-zinc-100 flex items-center gap-2">
-        <h3 className="text-sm font-semibold text-zinc-800">{title}</h3>
-        <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${color}`}>{count}</span>
+      <div className="px-4 py-3 border-b border-zinc-100 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-zinc-800">{title}</h3>
+          <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${color}`}>{count}</span>
+        </div>
+        <SectionSelectAll
+          rows={sectionRows}
+          selectedIds={selection.selectedIds}
+          onToggleAll={selection.setSelectedMany}
+          disabled={!!actionLoading}
+        />
       </div>
       {count === 0 ? (
         <p className="text-center text-sm text-zinc-400 py-6">None. All clear.</p>
@@ -1328,10 +1598,21 @@ function ReviewQueueTab() {
 
   const QueueRow = ({ row, actions }: { row: QuestionRow; actions: React.ReactNode }) => {
     const isExpanded = expandedId === row.id;
+    const canSelect = isDeletableQuestion(row.status);
     return (
       <div>
         <div className="flex items-start gap-3 px-4 py-3">
+          {canSelect ? (
+            <DeletableCheckbox
+              checked={selection.isSelected(row.id)}
+              disabled={!!actionLoading}
+              onChange={() => selection.toggleSelected(row.id)}
+            />
+          ) : (
+            <span className="w-4 shrink-0" aria-hidden />
+          )}
           <button
+            type="button"
             onClick={() => setExpandedId(isExpanded ? null : row.id)}
             className="flex-1 min-w-0 text-left"
           >
@@ -1381,7 +1662,7 @@ function ReviewQueueTab() {
     onClick: () => void;
     disabled: boolean;
   }) => {
-    if (row.status !== "draft" && row.status !== "archived") return null;
+    if (!isDeletableQuestion(row.status)) return null;
     return (
       <button
         onClick={onClick}
@@ -1402,7 +1683,19 @@ function ReviewQueueTab() {
         </div>
       )}
 
-      <Section title="Unchecked drafts" count={drafts.length} color="bg-zinc-200 text-zinc-700">
+      <BulkDeleteBar
+        selectedCount={selection.selectedCount}
+        busy={bulkDeleting}
+        onClear={selection.clearSelection}
+        onDelete={handleBulkDelete}
+      />
+
+      <Section
+        title="Unchecked drafts"
+        count={drafts.length}
+        color="bg-zinc-200 text-zinc-700"
+        sectionRows={drafts}
+      >
         {drafts.map((row) => (
           <QueueRow
             key={row.id}
@@ -1431,7 +1724,12 @@ function ReviewQueueTab() {
         ))}
       </Section>
 
-      <Section title="Needs review" count={needsReview.length} color="bg-amber-100 text-amber-700">
+      <Section
+        title="Needs review"
+        count={needsReview.length}
+        color="bg-amber-100 text-amber-700"
+        sectionRows={needsReview}
+      >
         {needsReview.map((row) => (
           <QueueRow
             key={row.id}
@@ -1460,7 +1758,12 @@ function ReviewQueueTab() {
         ))}
       </Section>
 
-      <Section title="Flagged by students" count={flagged.length} color="bg-red-100 text-red-700">
+      <Section
+        title="Flagged by students"
+        count={flagged.length}
+        color="bg-red-100 text-red-700"
+        sectionRows={flagged}
+      >
         {flagged.map((row) => (
           <QueueRow
             key={row.id}
