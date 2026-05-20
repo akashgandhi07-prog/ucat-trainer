@@ -79,7 +79,7 @@ export async function saveTrainerQuestionEdit(
     const msg = error.message ?? "Save failed.";
     if (msg.includes("schema cache")) {
       throw new Error(
-        `${msg} The database function exists but the API cache is stale. Wait a minute and try again, or reload the schema in Supabase Dashboard (Settings → API).`,
+        `${msg} If this persists, confirm VITE_SUPABASE_URL matches the project where Question Lab migrations were applied (ref qhhmcsdteqcuhvdqhkfo), then reload API schema in Supabase Dashboard (Settings → API).`,
       );
     }
     throw new Error(msg);
