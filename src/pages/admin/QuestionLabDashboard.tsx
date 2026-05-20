@@ -14,6 +14,7 @@ import {
   Loader2,
   RefreshCw,
   Search,
+  Trash2,
   Undo2,
   X,
   Zap,
@@ -251,6 +252,7 @@ function ExpandedQuestion({
   onArchive,
   onDuplicate,
   onSendToReview,
+  onDelete,
   onSaveEdit,
   actionLoading,
 }: {
@@ -259,6 +261,7 @@ function ExpandedQuestion({
   onArchive: (id: string) => void;
   onDuplicate: (id: string) => void;
   onSendToReview: (id: string) => void;
+  onDelete: (id: string) => void;
   onSaveEdit: (id: string, patch: QuestionEditPatch) => Promise<void>;
   actionLoading: string | null;
 }) {
@@ -268,9 +271,16 @@ function ExpandedQuestion({
   const duplicateLoading = isActionLoading(actionLoading, "duplicate", row.id);
   const archiveLoading = isActionLoading(actionLoading, "archive", row.id);
   const reviewLoading = isActionLoading(actionLoading, "review", row.id);
+  const deleteLoading = isActionLoading(actionLoading, "delete", row.id);
   const saveLoading = isActionLoading(actionLoading, "save", row.id);
+  const canDelete = row.status === "draft" || row.status === "archived";
   const anyLoading =
-    activateLoading || duplicateLoading || archiveLoading || reviewLoading || saveLoading;
+    activateLoading ||
+    duplicateLoading ||
+    archiveLoading ||
+    reviewLoading ||
+    deleteLoading ||
+    saveLoading;
 
   return (
     <div className="px-4 pb-4 pt-2 border-t border-zinc-200 space-y-3 text-sm">
@@ -391,6 +401,16 @@ function ExpandedQuestion({
           >
             {duplicateLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Copy className="w-3 h-3" />}
             Duplicate as Draft
+          </button>
+        )}
+        {canDelete && (
+          <button
+            onClick={() => onDelete(row.id)}
+            disabled={anyLoading}
+            className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-800 text-xs rounded hover:bg-red-100 border border-red-200 disabled:opacity-50"
+          >
+            {deleteLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+            Delete
           </button>
         )}
       </div>
@@ -531,6 +551,39 @@ function QuestionsTab() {
       await load(page);
     } catch (e) {
       setActionError(errorMessage(e, "Send to review queue failed."));
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    const target = rows.find((r) => r.id === id);
+    if (!target || (target.status !== "draft" && target.status !== "archived")) {
+      setActionError("Only drafts and archived questions can be deleted.");
+      return;
+    }
+    if (
+      !window.confirm(
+        "Delete this question permanently? Related reports and review history will be removed. This cannot be undone.",
+      )
+    ) {
+      return;
+    }
+    setActionLoading(`delete:${id}`);
+    setActionError(null);
+    try {
+      const { error: err } = await withAdminRpcTimeout(
+        () => supabase.rpc("admin_delete_trainer_question", { p_id: id }),
+        "Delete",
+      );
+      if (err) {
+        setActionError(err.message);
+        return;
+      }
+      setExpandedId(null);
+      await load(page);
+    } catch (e) {
+      setActionError(errorMessage(e, "Delete failed."));
     } finally {
       setActionLoading(null);
     }
@@ -731,6 +784,7 @@ function QuestionsTab() {
                       onArchive={handleArchive}
                       onDuplicate={handleDuplicate}
                       onSendToReview={handleSendToReview}
+                      onDelete={handleDelete}
                       onSaveEdit={handleSaveEdit}
                       actionLoading={actionLoading}
                     />
@@ -1189,6 +1243,40 @@ function ReviewQueueTab() {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    const allRows = [...drafts, ...needsReview, ...flagged];
+    const target = allRows.find((r) => r.id === id);
+    if (!target || (target.status !== "draft" && target.status !== "archived")) {
+      setActionError("Only drafts and archived questions can be deleted. Archive active questions first.");
+      return;
+    }
+    if (
+      !window.confirm(
+        "Delete this question permanently? Related reports and review history will be removed. This cannot be undone.",
+      )
+    ) {
+      return;
+    }
+    setActionLoading(`delete:${id}`);
+    setActionError(null);
+    try {
+      const { error: err } = await withAdminRpcTimeout(
+        () => supabase.rpc("admin_delete_trainer_question", { p_id: id }),
+        "Delete",
+      );
+      if (err) {
+        setActionError(err.message);
+        return;
+      }
+      setExpandedId(null);
+      await load();
+    } catch (e) {
+      setActionError(errorMessage(e, "Delete failed."));
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleSaveEdit = async (id: string, patch: QuestionEditPatch) => {
     const allRows = [...drafts, ...needsReview, ...flagged];
     const target = allRows.find((r) => r.id === id);
@@ -1267,6 +1355,7 @@ function ReviewQueueTab() {
             onArchive={() => {}}
             onDuplicate={handleDuplicate}
             onSendToReview={handleSendToReview}
+            onDelete={handleDelete}
             onSaveEdit={handleSaveEdit}
             actionLoading={actionLoading}
           />
@@ -1287,6 +1376,24 @@ function ReviewQueueTab() {
     </button>
   );
 
+  const DeleteBtn = ({ row, onClick, disabled }: {
+    row: QuestionRow;
+    onClick: () => void;
+    disabled: boolean;
+  }) => {
+    if (row.status !== "draft" && row.status !== "archived") return null;
+    return (
+      <button
+        onClick={onClick}
+        disabled={disabled}
+        className="flex items-center gap-1 px-2.5 py-1 bg-red-50 text-red-800 text-xs rounded hover:bg-red-100 border border-red-200 disabled:opacity-50"
+      >
+        <Trash2 className="w-3 h-3" />
+        Delete
+      </button>
+    );
+  };
+
   return (
     <div className="space-y-6">
       {(error || actionError) && (
@@ -1301,13 +1408,24 @@ function ReviewQueueTab() {
             key={row.id}
             row={row}
             actions={
-              isActionLoading(actionLoading, "activate", row.id) ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-400" />
-              ) : (
-                <ActionBtn onClick={() => handleActivate(row.id)} disabled={!!actionLoading}>
-                  <Zap className="w-3 h-3" /> Activate
-                </ActionBtn>
-              )
+              <>
+                {isActionLoading(actionLoading, "activate", row.id) ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-400" />
+                ) : (
+                  <ActionBtn onClick={() => handleActivate(row.id)} disabled={!!actionLoading}>
+                    <Zap className="w-3 h-3" /> Activate
+                  </ActionBtn>
+                )}
+                {isActionLoading(actionLoading, "delete", row.id) ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-red-300" />
+                ) : (
+                  <DeleteBtn
+                    row={row}
+                    onClick={() => handleDelete(row.id)}
+                    disabled={!!actionLoading}
+                  />
+                )}
+              </>
             }
           />
         ))}
@@ -1319,13 +1437,24 @@ function ReviewQueueTab() {
             key={row.id}
             row={row}
             actions={
-              isActionLoading(actionLoading, "duplicate", row.id) ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-400" />
-              ) : (
-                <ActionBtn onClick={() => handleDuplicate(row.id)} disabled={!!actionLoading}>
-                  <Copy className="w-3 h-3" /> Duplicate
-                </ActionBtn>
-              )
+              <>
+                {isActionLoading(actionLoading, "duplicate", row.id) ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-400" />
+                ) : (
+                  <ActionBtn onClick={() => handleDuplicate(row.id)} disabled={!!actionLoading}>
+                    <Copy className="w-3 h-3" /> Duplicate
+                  </ActionBtn>
+                )}
+                {isActionLoading(actionLoading, "delete", row.id) ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-red-300" />
+                ) : (
+                  <DeleteBtn
+                    row={row}
+                    onClick={() => handleDelete(row.id)}
+                    disabled={!!actionLoading}
+                  />
+                )}
+              </>
             }
           />
         ))}
