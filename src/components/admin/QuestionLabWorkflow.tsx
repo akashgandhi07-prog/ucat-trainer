@@ -85,9 +85,11 @@ export default function QuestionLabWorkflow() {
   const [copied, setCopied] = useState<CopyKey | null>(null);
   const [loading, setLoading] = useState<CopyKey | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [officialStats, setOfficialStats] = useState<{ count: number; isEmpty: boolean } | null>(
-    null,
-  );
+  const [officialStats, setOfficialStats] = useState<{
+    count: number;
+    isEmpty: boolean;
+    wordCount: number;
+  } | null>(null);
   const [bankHint, setBankHint] = useState<string | null>(null);
   const [importJson, setImportJson] = useState("");
   const [importOpen, setImportOpen] = useState(false);
@@ -109,7 +111,11 @@ export default function QuestionLabWorkflow() {
     void fetchOfficialExamplesFromApi(trainerType).then((md) => {
       if (cancelled || !md) return;
       const stats = countOfficialExamples(md);
-      setOfficialStats({ count: stats.count, isEmpty: stats.isEmpty });
+      setOfficialStats({
+        count: stats.count,
+        isEmpty: stats.isEmpty,
+        wordCount: stats.wordCount,
+      });
     });
     return () => {
       cancelled = true;
@@ -131,7 +137,7 @@ export default function QuestionLabWorkflow() {
       const stats = countOfficialExamples(text);
       if (stats.isEmpty) {
         throw new Error(
-          "Official examples file is still empty. Paste UCAT questions in Official examples first (link below).",
+          `Official examples look empty (${stats.wordCount} words after the divider). Add UCAT questions below the line in Official examples, then save.`,
         );
       }
       await copyText(text);
@@ -297,9 +303,10 @@ export default function QuestionLabWorkflow() {
             </p>
           </div>
         ) : officialStats ? (
-          <p className="text-xs text-zinc-500">
-            Official examples file looks ready (~{officialStats.count || "some"} example
-            {officialStats.count === 1 ? "" : "s"} detected).
+          <p className="text-xs text-green-800 bg-green-50 border border-green-200 rounded px-3 py-2">
+            Official examples look ready ({officialStats.wordCount.toLocaleString()} words
+            {officialStats.count > 0 ? ` · ~${officialStats.count} example${officialStats.count === 1 ? "" : "s"}` : ""}
+            ). You can copy to ChatGPT.
           </p>
         ) : null}
 
