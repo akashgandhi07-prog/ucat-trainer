@@ -802,9 +802,17 @@ export default function AdminPage() {
       <main id="main-content" className="flex-1 max-w-6xl mx-auto px-4 py-8" tabIndex={-1}>
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-bold text-foreground">Admin</h1>
-          <Link to="/" className="min-h-[44px] inline-flex items-center justify-center py-2 text-primary font-medium hover:underline">
-            Back to Home
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              to="/admin/question-lab"
+              className="min-h-[44px] inline-flex items-center justify-center px-4 py-2 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-secondary"
+            >
+              Question Lab
+            </Link>
+            <Link to="/" className="min-h-[44px] inline-flex items-center justify-center py-2 text-primary font-medium hover:underline">
+              Back to Home
+            </Link>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 mb-6">
