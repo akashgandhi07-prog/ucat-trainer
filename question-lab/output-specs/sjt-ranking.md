@@ -1,4 +1,10 @@
-# SJT Ranking — Output format
+# SJT Ranking: Output format
+
+## Explanation formatting (required)
+
+Use **line breaks between ranking points** in rationales where needed. **No em dash or en dash** (`—` `–`) in any student-facing text. See `_shared-explanation-formatting.md`.
+
+---
 
 ## What This Trainer Teaches
 

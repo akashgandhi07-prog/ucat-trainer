@@ -14,6 +14,7 @@ import {
   Loader2,
   RefreshCw,
   Search,
+  Undo2,
   X,
   Zap,
 } from "lucide-react";
@@ -21,7 +22,9 @@ import { useAuth } from "../../hooks/useAuth";
 import { supabase } from "../../lib/supabase";
 import Header from "../../components/layout/Header";
 import Footer from "../../components/layout/Footer";
+import QuestionLabQuestionEditor from "../../components/admin/QuestionLabQuestionEditor";
 import QuestionLabWorkflow from "../../components/admin/QuestionLabWorkflow";
+import { saveTrainerQuestionEdit, type QuestionEditPatch } from "../../lib/questionLabEdit";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -165,6 +168,8 @@ function errorMessage(err: unknown, fallback: string) {
   return fallback;
 }
 
+const ADMIN_RPC_TIMEOUT_MS = 30_000;
+
 async function withAuthSessionRetry<T>(
   request: () => ReturnType<typeof supabase.rpc>,
 ): Promise<{ data: T | null; error: { message: string } | null }> {
@@ -174,6 +179,43 @@ async function withAuthSessionRetry<T>(
     response = await request();
   }
   return response as { data: T | null; error: { message: string } | null };
+}
+
+async function withAdminRpcTimeout<T>(
+  request: () => ReturnType<typeof supabase.rpc>,
+  label: string,
+): Promise<{ data: T | null; error: { message: string } | null }> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () => reject(new Error(`${label} timed out. Refresh the page and try again.`)),
+      ADMIN_RPC_TIMEOUT_MS,
+    );
+  });
+  try {
+    return await Promise.race([withAuthSessionRetry<T>(request), timeout]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+async function withAdminActionTimeout<T>(action: () => Promise<T>, label: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () => reject(new Error(`${label} timed out. Refresh the page and try again.`)),
+      ADMIN_RPC_TIMEOUT_MS,
+    );
+  });
+  try {
+    return await Promise.race([action(), timeout]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+function isActionLoading(actionLoading: string | null, action: string, id: string): boolean {
+  return actionLoading === `${action}:${id}`;
 }
 
 function trainerQuestionsArgs(input: {
@@ -208,17 +250,27 @@ function ExpandedQuestion({
   onActivate,
   onArchive,
   onDuplicate,
+  onSendToReview,
+  onSaveEdit,
   actionLoading,
 }: {
   row: QuestionRow;
   onActivate: (id: string) => void;
   onArchive: (id: string) => void;
   onDuplicate: (id: string) => void;
+  onSendToReview: (id: string) => void;
+  onSaveEdit: (id: string, patch: QuestionEditPatch) => Promise<void>;
   actionLoading: string | null;
 }) {
   const content = row.content as Record<string, unknown>;
   const options = content.options as Record<string, string> | undefined;
-  const isLoading = actionLoading === row.id;
+  const activateLoading = isActionLoading(actionLoading, "activate", row.id);
+  const duplicateLoading = isActionLoading(actionLoading, "duplicate", row.id);
+  const archiveLoading = isActionLoading(actionLoading, "archive", row.id);
+  const reviewLoading = isActionLoading(actionLoading, "review", row.id);
+  const saveLoading = isActionLoading(actionLoading, "save", row.id);
+  const anyLoading =
+    activateLoading || duplicateLoading || archiveLoading || reviewLoading || saveLoading;
 
   return (
     <div className="px-4 pb-4 pt-2 border-t border-zinc-200 space-y-3 text-sm">
@@ -273,33 +325,50 @@ function ExpandedQuestion({
         </div>
       )}
 
+      {row.status !== "archived" && (
+        <QuestionLabQuestionEditor
+          key={`${row.id}-${row.updated_at}`}
+          row={row}
+          saving={saveLoading}
+          onSave={(patch) => onSaveEdit(row.id, patch)}
+        />
+      )}
+
       <div className="flex gap-2 pt-1 flex-wrap">
         {row.status === "draft" && (
           <button
             onClick={() => onActivate(row.id)}
-            disabled={isLoading}
+            disabled={anyLoading}
             className="flex items-center gap-1 px-3 py-1.5 bg-black text-white text-xs rounded hover:bg-zinc-800 disabled:opacity-50"
           >
-            {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
+            {activateLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
             Activate
           </button>
         )}
         {row.status === "active" && (
           <>
             <button
+              onClick={() => onSendToReview(row.id)}
+              disabled={anyLoading}
+              className="flex items-center gap-1 px-3 py-1.5 bg-amber-50 text-amber-900 text-xs rounded hover:bg-amber-100 border border-amber-200 disabled:opacity-50"
+            >
+              {reviewLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Undo2 className="w-3 h-3" />}
+              Send to review queue
+            </button>
+            <button
               onClick={() => onDuplicate(row.id)}
-              disabled={isLoading}
+              disabled={anyLoading}
               className="flex items-center gap-1 px-3 py-1.5 bg-zinc-100 text-zinc-700 text-xs rounded hover:bg-zinc-200 border border-zinc-300 disabled:opacity-50"
             >
-              {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Copy className="w-3 h-3" />}
+              {duplicateLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Copy className="w-3 h-3" />}
               Duplicate as Draft
             </button>
             <button
               onClick={() => onArchive(row.id)}
-              disabled={isLoading}
+              disabled={anyLoading}
               className="flex items-center gap-1 px-3 py-1.5 bg-zinc-100 text-zinc-700 text-xs rounded hover:bg-zinc-200 border border-zinc-300 disabled:opacity-50"
             >
-              {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Archive className="w-3 h-3" />}
+              {archiveLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Archive className="w-3 h-3" />}
               Archive
             </button>
           </>
@@ -307,20 +376,20 @@ function ExpandedQuestion({
         {row.status === "archived" && (
           <button
             onClick={() => onActivate(row.id)}
-            disabled={isLoading}
+            disabled={anyLoading}
             className="flex items-center gap-1 px-3 py-1.5 bg-zinc-100 text-zinc-700 text-xs rounded hover:bg-zinc-200 border border-zinc-300 disabled:opacity-50"
           >
-            {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
+            {activateLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
             Re-activate
           </button>
         )}
         {row.status !== "active" && (
           <button
             onClick={() => onDuplicate(row.id)}
-            disabled={isLoading}
+            disabled={anyLoading}
             className="flex items-center gap-1 px-3 py-1.5 bg-zinc-100 text-zinc-700 text-xs rounded hover:bg-zinc-200 border border-zinc-300 disabled:opacity-50"
           >
-            {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Copy className="w-3 h-3" />}
+            {duplicateLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Copy className="w-3 h-3" />}
             Duplicate as Draft
           </button>
         )}
@@ -385,33 +454,109 @@ function QuestionsTab() {
   useEffect(() => { load(0); }, [load]);
 
   const handleActivate = async (id: string) => {
-    setActionLoading(id);
+    setActionLoading(`activate:${id}`);
     setActionError(null);
-    const { error: err } = await supabase.rpc("admin_update_question_status", { p_id: id, p_status: "active" });
-    setActionLoading(null);
-    if (err) { setActionError(err.message); return; }
-    load(page);
+    try {
+      const { error: err } = await withAdminRpcTimeout(
+        () => supabase.rpc("admin_update_question_status", { p_id: id, p_status: "active" }),
+        "Activate",
+      );
+      if (err) {
+        setActionError(err.message);
+        return;
+      }
+      await load(page);
+    } catch (e) {
+      setActionError(errorMessage(e, "Activate failed."));
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   const handleArchive = async (id: string) => {
-    setActionLoading(id);
+    setActionLoading(`archive:${id}`);
     setActionError(null);
-    const { error: err } = await supabase.rpc("admin_update_question_status", { p_id: id, p_status: "archived" });
-    setActionLoading(null);
-    if (err) { setActionError(err.message); return; }
-    load(page);
+    try {
+      const { error: err } = await withAdminRpcTimeout(
+        () => supabase.rpc("admin_update_question_status", { p_id: id, p_status: "archived" }),
+        "Archive",
+      );
+      if (err) {
+        setActionError(err.message);
+        return;
+      }
+      await load(page);
+    } catch (e) {
+      setActionError(errorMessage(e, "Archive failed."));
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   const handleDuplicate = async (id: string) => {
-    setActionLoading(id);
+    setActionLoading(`duplicate:${id}`);
     setActionError(null);
-    const { data, error: err } = await supabase.rpc("admin_duplicate_question_as_draft", { p_id: id });
-    setActionLoading(null);
-    if (err) { setActionError(err.message); return; }
-    const result = data as { new_id: string } | null;
-    if (result?.new_id) {
-      load(page);
-      setExpandedId(result.new_id);
+    try {
+      const { data, error: err } = await withAdminRpcTimeout<{ new_id?: string }>(
+        () => supabase.rpc("admin_duplicate_question_as_draft", { p_id: id }),
+        "Duplicate as draft",
+      );
+      if (err) {
+        setActionError(err.message);
+        return;
+      }
+      const newId = data?.new_id;
+      await load(page);
+      if (newId) setExpandedId(newId);
+    } catch (e) {
+      setActionError(errorMessage(e, "Duplicate as draft failed."));
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleSendToReview = async (id: string) => {
+    setActionLoading(`review:${id}`);
+    setActionError(null);
+    try {
+      const { error: err } = await withAdminRpcTimeout(
+        () => supabase.rpc("admin_send_question_to_review_queue", { p_id: id }),
+        "Send to review queue",
+      );
+      if (err) {
+        setActionError(err.message);
+        return;
+      }
+      setExpandedId(null);
+      await load(page);
+    } catch (e) {
+      setActionError(errorMessage(e, "Send to review queue failed."));
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleSaveEdit = async (id: string, patch: QuestionEditPatch) => {
+    const target = rows.find((r) => r.id === id);
+    setActionLoading(`save:${id}`);
+    setActionError(null);
+    try {
+      await withAdminActionTimeout(
+        () =>
+          saveTrainerQuestionEdit(
+            id,
+            patch,
+            target?.status === "active",
+            target?.question_kind ?? "mcq",
+          ),
+        "Save",
+      );
+      await load(page);
+    } catch (e) {
+      setActionError(errorMessage(e, "Save failed."));
+      throw e;
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -568,7 +713,7 @@ function QuestionsTab() {
                           )}
                         </div>
                         <p className="text-sm text-zinc-800 truncate">
-                          {row.stem || (row.content as Record<string,unknown>).question as string || "—"}
+                          {row.stem || (row.content as Record<string,unknown>).question as string || "n/a"}
                         </p>
                         {row.legacy_id && (
                           <p className="text-xs text-zinc-400 font-mono">{row.legacy_id}</p>
@@ -585,6 +730,8 @@ function QuestionsTab() {
                       onActivate={handleActivate}
                       onArchive={handleArchive}
                       onDuplicate={handleDuplicate}
+                      onSendToReview={handleSendToReview}
+                      onSaveEdit={handleSaveEdit}
                       actionLoading={actionLoading}
                     />
                   )}
@@ -900,7 +1047,7 @@ function CsvReviewTab() {
                     {row.skill_tag && <span className="text-xs text-zinc-500">{row.skill_tag}</span>}
                   </div>
                   <p className="text-sm text-zinc-800 truncate">
-                    {row.stem || (row.content as Record<string,unknown>).question as string || "—"}
+                    {row.stem || (row.content as Record<string,unknown>).question as string || "n/a"}
                   </p>
                 </div>
               </label>
@@ -980,19 +1127,91 @@ function ReviewQueueTab() {
   useEffect(() => { load(); }, [load]);
 
   const handleActivate = async (id: string) => {
-    setActionLoading(id); setActionError(null);
-    const { error: err } = await supabase.rpc("admin_update_question_status", { p_id: id, p_status: "active" });
-    setActionLoading(null);
-    if (err) { setActionError(err.message); return; }
-    load();
+    setActionLoading(`activate:${id}`);
+    setActionError(null);
+    try {
+      const { error: err } = await withAdminRpcTimeout(
+        () => supabase.rpc("admin_update_question_status", { p_id: id, p_status: "active" }),
+        "Activate",
+      );
+      if (err) {
+        setActionError(err.message);
+        return;
+      }
+      await load();
+    } catch (e) {
+      setActionError(errorMessage(e, "Activate failed."));
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   const handleDuplicate = async (id: string) => {
-    setActionLoading(id); setActionError(null);
-    const { error: err } = await supabase.rpc("admin_duplicate_question_as_draft", { p_id: id });
-    setActionLoading(null);
-    if (err) { setActionError(err.message); return; }
-    load();
+    setActionLoading(`duplicate:${id}`);
+    setActionError(null);
+    try {
+      const { data, error: err } = await withAdminRpcTimeout<{ new_id?: string }>(
+        () => supabase.rpc("admin_duplicate_question_as_draft", { p_id: id }),
+        "Duplicate as draft",
+      );
+      if (err) {
+        setActionError(err.message);
+        return;
+      }
+      const newId = data?.new_id;
+      await load();
+      if (newId) setExpandedId(newId);
+    } catch (e) {
+      setActionError(errorMessage(e, "Duplicate as draft failed."));
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleSendToReview = async (id: string) => {
+    setActionLoading(`review:${id}`);
+    setActionError(null);
+    try {
+      const { error: err } = await withAdminRpcTimeout(
+        () => supabase.rpc("admin_send_question_to_review_queue", { p_id: id }),
+        "Send to review queue",
+      );
+      if (err) {
+        setActionError(err.message);
+        return;
+      }
+      setExpandedId(null);
+      await load();
+    } catch (e) {
+      setActionError(errorMessage(e, "Send to review queue failed."));
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleSaveEdit = async (id: string, patch: QuestionEditPatch) => {
+    const allRows = [...drafts, ...needsReview, ...flagged];
+    const target = allRows.find((r) => r.id === id);
+    setActionLoading(`save:${id}`);
+    setActionError(null);
+    try {
+      await withAdminActionTimeout(
+        () =>
+          saveTrainerQuestionEdit(
+            id,
+            patch,
+            target?.status === "active",
+            target?.question_kind ?? "mcq",
+          ),
+        "Save",
+      );
+      await load();
+    } catch (e) {
+      setActionError(errorMessage(e, "Save failed."));
+      throw e;
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   if (loading) {
@@ -1012,7 +1231,7 @@ function ReviewQueueTab() {
         <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${color}`}>{count}</span>
       </div>
       {count === 0 ? (
-        <p className="text-center text-sm text-zinc-400 py-6">None — all clear.</p>
+        <p className="text-center text-sm text-zinc-400 py-6">None. All clear.</p>
       ) : (
         <div className="divide-y divide-zinc-100">{children}</div>
       )}
@@ -1035,7 +1254,7 @@ function ReviewQueueTab() {
               {row.is_flagged && <span className="text-xs text-red-500 font-medium">⚑ {row.flag_count}</span>}
             </div>
             <p className="text-sm text-zinc-800 truncate">
-              {row.stem || (row.content as Record<string,unknown>).question as string || "—"}
+              {row.stem || (row.content as Record<string,unknown>).question as string || "n/a"}
             </p>
             {row.legacy_id && <p className="text-xs text-zinc-400 font-mono">{row.legacy_id}</p>}
           </button>
@@ -1047,6 +1266,8 @@ function ReviewQueueTab() {
             onActivate={handleActivate}
             onArchive={() => {}}
             onDuplicate={handleDuplicate}
+            onSendToReview={handleSendToReview}
+            onSaveEdit={handleSaveEdit}
             actionLoading={actionLoading}
           />
         )}
@@ -1080,11 +1301,13 @@ function ReviewQueueTab() {
             key={row.id}
             row={row}
             actions={
-              actionLoading === row.id
-                ? <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-400" />
-                : <ActionBtn onClick={() => handleActivate(row.id)} disabled={!!actionLoading}>
-                    <Zap className="w-3 h-3" /> Activate
-                  </ActionBtn>
+              isActionLoading(actionLoading, "activate", row.id) ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-400" />
+              ) : (
+                <ActionBtn onClick={() => handleActivate(row.id)} disabled={!!actionLoading}>
+                  <Zap className="w-3 h-3" /> Activate
+                </ActionBtn>
+              )
             }
           />
         ))}
@@ -1096,11 +1319,13 @@ function ReviewQueueTab() {
             key={row.id}
             row={row}
             actions={
-              actionLoading === row.id
-                ? <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-400" />
-                : <ActionBtn onClick={() => handleDuplicate(row.id)} disabled={!!actionLoading}>
-                    <Copy className="w-3 h-3" /> Duplicate
-                  </ActionBtn>
+              isActionLoading(actionLoading, "duplicate", row.id) ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-400" />
+              ) : (
+                <ActionBtn onClick={() => handleDuplicate(row.id)} disabled={!!actionLoading}>
+                  <Copy className="w-3 h-3" /> Duplicate
+                </ActionBtn>
+              )
             }
           />
         ))}
@@ -1112,11 +1337,13 @@ function ReviewQueueTab() {
             key={row.id}
             row={row}
             actions={
-              actionLoading === row.id
-                ? <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-400" />
-                : <ActionBtn onClick={() => handleDuplicate(row.id)} disabled={!!actionLoading}>
-                    <Copy className="w-3 h-3" /> Duplicate
-                  </ActionBtn>
+              isActionLoading(actionLoading, "duplicate", row.id) ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-400" />
+              ) : (
+                <ActionBtn onClick={() => handleDuplicate(row.id)} disabled={!!actionLoading}>
+                  <Copy className="w-3 h-3" /> Duplicate
+                </ActionBtn>
+              )
             }
           />
         ))}
@@ -1215,7 +1442,7 @@ function ReportsTab() {
           </div>
         ) : rows.length === 0 ? (
           <div className="text-center py-12 text-zinc-400 text-sm">
-            {statusFilter === "open" ? "No open reports — all clear." : "No reports found."}
+            {statusFilter === "open" ? "No open reports. All clear." : "No reports found."}
           </div>
         ) : (
           <div className="divide-y divide-zinc-100">

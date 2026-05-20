@@ -1,4 +1,10 @@
-# DM Data Logic — Output format
+# DM Data Logic: Output format
+
+## Explanation formatting (required)
+
+Use **line breaks between steps** (`Step 1:`, `Step 2:`, … with `\n\n` in JSON). **No em dash or en dash** (`—` `–`). See `_shared-explanation-formatting.md`.
+
+---
 
 ## What This Trainer Teaches
 
@@ -69,7 +75,7 @@ Return a JSON array. Each object:
     {"id": "D", "text": "..."}
   ],
   "correctAnswer": "B",
-  "explanation": "Identify values, show calculation, eliminate distractors",
+  "explanation": "Step 1: Identify the values needed...\n\nStep 2: Apply the operation...\n\nStep 3: State the answer...\n\nStep 4: Trap: ...",
   "commonTrap": "wrong-denominator",
   "generalRule": "Percentage change = (new − old) / old × 100",
   "wrongOptionReasons": {"A": "...", "B": "Correct.", "C": "...", "D": "..."},

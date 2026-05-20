@@ -1,4 +1,8 @@
-# DM Venn Logic — Question Generation Rules v2
+# DM Venn Logic: Question Generation Rules v2
+
+## Explanation formatting (required)
+
+Use **line breaks between steps** (`Step 1:`, `Step 2:`, … with `\n\n` in JSON). **No em dash or en dash** (`—` `–`). See `_shared-explanation-formatting.md`.
 
 ---
 
@@ -110,14 +114,16 @@ Do **not** just give the answer. The explanation must walk through the set logic
 
 ### Required structure
 
-1. **Name the sets and regions** — explicitly state what each region of the Venn represents before any arithmetic.
-2. **State the governing equation** — write it in general form first (e.g. `Total = Only A + Only B + Both + Neither`), then again with the formula expanded for three sets where needed.
-3. **Substitute known values** — show the substitution step explicitly; do not skip from equation to answer.
-4. **Solve** — show the algebraic step.
-5. **Name the trap** — identify the specific wrong method that leads to each wrong answer (e.g. "Students who chose B added 29 + 9 = 38, treating the two sets as mutually exclusive — but this assumes no one does both, which is not given").
+Output as **numbered steps with blank lines between them** (in JSON: `\n\n` after each step).
+
+1. **Step 1: Name the sets and regions.** State what each region represents before any arithmetic.
+2. **Step 2: State the governing equation.** General form first (e.g. `Total = Only A + Only B + Both + Neither`), then expanded for three sets where needed.
+3. **Step 3: Substitute known values.** Show substitution explicitly; do not skip from equation to answer.
+4. **Step 4: Solve.** Show the algebraic step.
+5. **Step 5: Name the trap.** Name the wrong method behind each distractor (e.g. "Students who chose B added 29 + 9 = 38, treating the sets as mutually exclusive, but overlap is not given").
 
 ### Tone
-Teaching, not marking. Write as if the student got it wrong and needs to understand why — not as a worked solution to be memorised.
+Teaching, not marking. Write as if the student got it wrong and needs to understand why, not as a worked solution to be memorised.
 
 ### What to avoid
 - Do not use "subtract all-three from each set total" as the explanation method for three-set problems, even when it produces the correct answer. It works only under specific conditions and teaches the wrong habit. Use full inclusion-exclusion explicitly.
@@ -176,7 +182,7 @@ Return one object per question. All fields are required unless marked optional.
     { "id": "D", "text": "..." }
   ],
   "correctAnswer": "A",
-  "explanation": "Step-by-step explanation following the 5-part structure in §4.",
+  "explanation": "Step 1: Name the sets...\n\nStep 2: State the equation...\n\nStep 3: Substitute...\n\nStep 4: Solve...\n\nStep 5: Trap: ...",
   "commonTrap": "double-count-trap",
   "generalRule": "Formula or named procedure — not a piece of advice.",
   "wrongOptionReasons": {
@@ -217,7 +223,7 @@ Before outputting a question, verify:
 - [ ] `generalRule` contains a formula or procedure, not advice.
 
 Rules for output:
-- explanations are FINAL student-facing text only
+- explanations are FINAL student-facing text only, with `\n\n` between steps, no em dash or en dash
 - never write: "let me", "recheck", "redesign", "note:", "wait", "actually", "this question requires revision"
 - for "must be true": test overlap at minimum and maximum, then eliminate each option; one correct answer only
 - if you fix a number, fix the stem silently; do not describe the fix in the explanation

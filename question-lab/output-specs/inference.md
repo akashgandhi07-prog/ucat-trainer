@@ -1,4 +1,10 @@
-# VR Inference — Output format
+# VR Inference: Output format
+
+## Explanation formatting (required)
+
+Use **line breaks between evidence points**. **No em dash or en dash** (`—` `–`). See `_shared-explanation-formatting.md`.
+
+---
 
 ## What This Trainer Teaches
 

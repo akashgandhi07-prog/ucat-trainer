@@ -1,4 +1,10 @@
-# QR Conversions — Output format
+# QR Conversions: Output format
+
+## Explanation formatting (required)
+
+Use **line breaks between method steps** (`target`, `convert`, `calculate` in `explanation.method`, plus `\n\n` in `examShortcut` if multi-step). **No em dash or en dash** (`—` `–`). See `_shared-explanation-formatting.md`.
+
+---
 
 ## What This Trainer Teaches
 

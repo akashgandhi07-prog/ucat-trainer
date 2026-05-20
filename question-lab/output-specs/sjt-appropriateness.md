@@ -1,4 +1,10 @@
-# SJT Appropriateness — Output format
+# SJT Appropriateness: Output format
+
+## Explanation formatting (required)
+
+Use **line breaks between points** in stem rationales where needed. **No em dash or en dash** (`—` `–`) in any student-facing text. See `_shared-explanation-formatting.md`.
+
+---
 
 ## What This Trainer Teaches
 

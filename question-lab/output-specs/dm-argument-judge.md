@@ -1,4 +1,10 @@
-# DM Argument Judge — Output format
+# DM Argument Judge: Output format
+
+## Explanation formatting (required)
+
+Use **line breaks between steps** (`Step 1:`, `Step 2:`, … with `\n\n` in JSON). **No em dash or en dash** (`—` `–`). See `_shared-explanation-formatting.md`.
+
+---
 
 ## What This Trainer Teaches
 
@@ -74,7 +80,7 @@ Return a JSON array. Each object:
     {"id": "D", "text": "...", "label": "unsupported-assumption"}
   ],
   "correctAnswer": "B",
-  "explanation": "Step-by-step comparison; name the trap",
+  "explanation": "Step 1: State the claim...\n\nStep 2: Compare each option...\n\nStep 3: Confirm the correct answer...\n\nStep 4: Trap: ...",
   "commonTrap": "irrelevant-true-statement",
   "generalRule": "Strongest = directly addresses the claim with real impact",
   "wrongOptionReasons": {"A": "...", "B": "Correct.", "C": "...", "D": "..."},

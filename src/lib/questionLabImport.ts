@@ -2,6 +2,11 @@ import type { QuestionExplanation } from "../components/mentalMaths/mathsAlgorit
 import type { ConversionQuestionCategory } from "../data/conversionQuestions";
 import type { QLDifficulty, QLQuestionKind, QLSection } from "../types/questionLab";
 import { buildMcqContentFromImportRaw } from "./mcqContent";
+import {
+  sanitizeQuestionContent,
+  sanitizeSjtItems,
+  sanitizeStudentFacingCopy,
+} from "./studentFacingCopy";
 import { TRAINER_META, type TrainerMeta } from "./questionLabAssets";
 import { supabase } from "./supabase";
 
@@ -67,6 +72,11 @@ function mapDmMcq(raw: Record<string, unknown>, meta: TrainerMeta): ImportDraftP
   const built = buildMcqContentFromImportRaw(raw, asRecord(raw.content));
   if ("error" in built) return built.error;
 
+  const content = sanitizeQuestionContent(
+    built.content as unknown as Record<string, unknown>,
+    meta.questionKind,
+  );
+
   return {
     legacy_id,
     section: meta.section,
@@ -74,9 +84,9 @@ function mapDmMcq(raw: Record<string, unknown>, meta: TrainerMeta): ImportDraftP
     question_kind: meta.questionKind,
     difficulty: normalizeDifficulty(raw.difficulty),
     skill_tag,
-    stem,
-    explanation,
-    content: built.content as unknown as Record<string, unknown>,
+    stem: sanitizeStudentFacingCopy(stem),
+    explanation: sanitizeStudentFacingCopy(explanation),
+    content,
   };
 }
 
@@ -91,12 +101,19 @@ function mapSjt(raw: Record<string, unknown>, meta: TrainerMeta): ImportDraftPay
     return "SJT question needs stem, domain, and items array";
   }
 
-  const content: Record<string, unknown> = {
-    domain,
-    items,
-  };
-  const pivot = str(raw.pivotInsight) || str(raw.pivot_insight) || str(asRecord(raw.content)?.pivotInsight);
-  if (pivot) content.pivotInsight = pivot;
+  const sanitizedItems = sanitizeSjtItems(items) ?? items;
+  const content: Record<string, unknown> = sanitizeQuestionContent(
+    {
+      domain,
+      items: sanitizedItems,
+      pivotInsight:
+        str(raw.pivotInsight) ||
+        str(raw.pivot_insight) ||
+        str(asRecord(raw.content)?.pivotInsight) ||
+        undefined,
+    },
+    meta.questionKind,
+  );
 
   const skill_tag = str(raw.skill_tag) || str(raw.skillTag) || domain;
 
@@ -107,8 +124,10 @@ function mapSjt(raw: Record<string, unknown>, meta: TrainerMeta): ImportDraftPay
     question_kind: meta.questionKind,
     difficulty: normalizeDifficulty(raw.difficulty),
     skill_tag,
-    stem,
-    explanation: str(raw.explanation) || "See item rationales in content.",
+    stem: sanitizeStudentFacingCopy(stem),
+    explanation: sanitizeStudentFacingCopy(
+      str(raw.explanation) || "See item rationales in content.",
+    ),
     content,
   };
 }
@@ -166,16 +185,8 @@ function mapConversion(raw: Record<string, unknown>, meta: TrainerMeta): ImportD
     str(contentObj?.workedSolution) ||
     explanation.examShortcut;
 
-  return {
-    legacy_id,
-    section: meta.section,
-    trainer_type: meta.trainerType,
-    question_kind: meta.questionKind,
-    difficulty: normalizeDifficulty(raw.difficulty),
-    skill_tag: category,
-    stem: prompt,
-    explanation: explanation.examShortcut || worked || `Answer: ${answer}${units ? ` ${units}` : ""}`,
-    content: {
+  const content = sanitizeQuestionContent(
+    {
       question: prompt,
       correctAnswer: answer,
       units,
@@ -184,6 +195,21 @@ function mapConversion(raw: Record<string, unknown>, meta: TrainerMeta): ImportD
       commonTrap: explanation.commonTrap,
       explanation,
     },
+    meta.questionKind,
+  );
+
+  return {
+    legacy_id,
+    section: meta.section,
+    trainer_type: meta.trainerType,
+    question_kind: meta.questionKind,
+    difficulty: normalizeDifficulty(raw.difficulty),
+    skill_tag: category,
+    stem: sanitizeStudentFacingCopy(prompt),
+    explanation: sanitizeStudentFacingCopy(
+      explanation.examShortcut || worked || `Answer: ${answer}${units ? ` ${units}` : ""}`,
+    ),
+    content,
   };
 }
 

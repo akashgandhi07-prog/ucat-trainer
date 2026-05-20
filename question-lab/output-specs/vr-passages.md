@@ -1,4 +1,10 @@
-# VR Passages — Output format
+# VR Passages: Output format
+
+## Explanation formatting (required)
+
+Use **line breaks between evidence points** per question. **No em dash or en dash** (`—` `–`). See `_shared-explanation-formatting.md`.
+
+---
 
 ## What This Trainer Teaches
 
