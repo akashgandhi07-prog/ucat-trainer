@@ -13,6 +13,7 @@ import RapidRecallPage from "./pages/RapidRecallPage";
 import KeywordScanningPage from "./pages/KeywordScanningPage";
 import InferenceTrainerPage from "./pages/InferenceTrainerPage";
 import AdminPage from "./pages/AdminPage";
+import GoldStandardFilesPage from "./pages/admin/GoldStandardFilesPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import CalculatorPage from "./pages/CalculatorPage";
 import MentalMathsPage from "./pages/MentalMathsPage";
@@ -103,6 +104,7 @@ function App() {
                     <Route path="/train/syllogism/micro" element={<SyllogismMicroPage />} />
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/admin" element={<AdminPage />} />
+                    <Route path="/admin/question-lab/gold-standards" element={<GoldStandardFilesPage />} />
 
                     <Route path="/study-plan" element={<StudyPlanPage />} />
                     <Route path="/study-plan/today" element={<StudyPlanTodayPage />} />
