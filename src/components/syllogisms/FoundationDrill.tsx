@@ -3,6 +3,7 @@ import { ArrowRight, Flag, XCircle, CheckCircle2 } from "lucide-react";
 import { useSyllogismLogic } from "./useSyllogismLogic";
 import QuestionFeedbackModal from "../feedback/QuestionFeedbackModal";
 import { PostDrillUpsell } from "../layout/ProductUpsell";
+import { useAuth } from "../../hooks/useAuth";
 
 const FOUNDATION_BATCH_SIZE = 12;
 
@@ -22,6 +23,7 @@ function getFeedbackLabel(isCorrect: boolean, actuallyFollows: boolean): string 
 }
 
 export default function FoundationDrill() {
+  const { loading: authLoading } = useAuth();
   const {
     questions,
     currentIndex,
@@ -53,8 +55,9 @@ export default function FoundationDrill() {
       : null;
 
   useEffect(() => {
+    if (authLoading) return;
     fetchFoundationQuestions(FOUNDATION_BATCH_SIZE);
-  }, [fetchFoundationQuestions]);
+  }, [authLoading, fetchFoundationQuestions]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -126,7 +129,7 @@ export default function FoundationDrill() {
 
           {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
 
-          {loading && questions.length === 0 && (
+          {(authLoading || loading) && questions.length === 0 && (
             <p className="text-sm text-muted-foreground">Loading questions...</p>
           )}
 

@@ -150,6 +150,30 @@ function downloadCsv(rows: QuestionRow[], filename: string) {
   URL.revokeObjectURL(url);
 }
 
+function errorMessage(err: unknown, fallback: string) {
+  if (err instanceof Error && err.message) return err.message;
+  if (
+    err &&
+    typeof err === "object" &&
+    "message" in err &&
+    typeof (err as { message: unknown }).message === "string"
+  ) {
+    return (err as { message: string }).message;
+  }
+  return fallback;
+}
+
+async function withAuthSessionRetry<T>(
+  request: () => ReturnType<typeof supabase.rpc>,
+): Promise<{ data: T | null; error: { message: string } | null }> {
+  let response = await request();
+  if (response.error) {
+    await supabase.auth.getSession().catch(() => null);
+    response = await request();
+  }
+  return response as { data: T | null; error: { message: string } | null };
+}
+
 // ─── QuestionRow expanded view ────────────────────────────────────────────────
 
 function ExpandedQuestion({
@@ -303,7 +327,7 @@ function QuestionsTab() {
     setLoading(true);
     setError(null);
     try {
-      const { data, error: rpcError } = await supabase.rpc("admin_get_trainer_questions", {
+      const { data, error: rpcError } = await withAuthSessionRetry<GetQuestionsResult>(() => supabase.rpc("admin_get_trainer_questions", {
         p_section:        section        || null,
         p_trainer_type:   trainerType    || null,
         p_status:         status         || null,
@@ -313,14 +337,14 @@ function QuestionsTab() {
         p_search:         search.trim()  || null,
         p_limit:          PAGE_SIZE,
         p_offset:         pageNum * PAGE_SIZE,
-      });
+      }));
       if (rpcError) throw rpcError;
       const result = data as GetQuestionsResult;
       setRows(result.rows ?? []);
       setTotal(result.total ?? 0);
       setPage(pageNum);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load questions.");
+      setError(errorMessage(err, "Failed to load questions."));
     } finally {
       setLoading(false);
     }
@@ -577,11 +601,13 @@ function CoverageTab() {
       setLoading(true);
       setError(null);
       try {
-        const { data, error: rpcError } = await supabase.rpc("admin_get_question_coverage");
+        const { data, error: rpcError } = await withAuthSessionRetry<Coverage>(() =>
+          supabase.rpc("admin_get_question_coverage"),
+        );
         if (rpcError) throw rpcError;
         setCoverage(data as Coverage);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load coverage.");
+        setError(errorMessage(err, "Failed to load coverage."));
       } finally {
         setLoading(false);
       }
@@ -718,17 +744,17 @@ function CsvReviewTab() {
     setError(null);
     setSelected(new Set());
     try {
-      const { data, error: rpcError } = await supabase.rpc("admin_get_trainer_questions", {
+      const { data, error: rpcError } = await withAuthSessionRetry<GetQuestionsResult>(() => supabase.rpc("admin_get_trainer_questions", {
         p_status:       status       || null,
         p_trainer_type: trainerType  || null,
         p_limit:        500,
         p_offset:       0,
-      });
+      }));
       if (rpcError) throw rpcError;
       const result = data as GetQuestionsResult;
       setRows(result.rows ?? []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load questions.");
+      setError(errorMessage(err, "Failed to load questions."));
     } finally {
       setLoading(false);
     }
@@ -882,9 +908,15 @@ function ReviewQueueTab() {
     setError(null);
     try {
       const [d, nr, fl] = await Promise.all([
-        supabase.rpc("admin_get_trainer_questions", { p_status: "draft",  p_limit: 200, p_offset: 0 }),
-        supabase.rpc("admin_get_trainer_questions", { p_quality_status: "needs_review", p_limit: 200, p_offset: 0 }),
-        supabase.rpc("admin_get_trainer_questions", { p_is_flagged: true, p_status: "active", p_limit: 200, p_offset: 0 }),
+        withAuthSessionRetry<GetQuestionsResult>(() =>
+          supabase.rpc("admin_get_trainer_questions", { p_status: "draft", p_limit: 200, p_offset: 0 }),
+        ),
+        withAuthSessionRetry<GetQuestionsResult>(() =>
+          supabase.rpc("admin_get_trainer_questions", { p_quality_status: "needs_review", p_limit: 200, p_offset: 0 }),
+        ),
+        withAuthSessionRetry<GetQuestionsResult>(() =>
+          supabase.rpc("admin_get_trainer_questions", { p_is_flagged: true, p_status: "active", p_limit: 200, p_offset: 0 }),
+        ),
       ]);
       if (d.error)  throw d.error;
       if (nr.error) throw nr.error;
@@ -893,7 +925,7 @@ function ReviewQueueTab() {
       setNeedsReview((nr.data as GetQuestionsResult).rows ?? []);
       setFlagged((fl.data as GetQuestionsResult).rows ?? []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load queue.");
+      setError(errorMessage(err, "Failed to load queue."));
     } finally {
       setLoading(false);
     }
@@ -1063,18 +1095,18 @@ function ReportsTab() {
   const load = useCallback(async (pageNum = 0) => {
     setLoading(true); setError(null);
     try {
-      const { data, error: rpcError } = await supabase.rpc("admin_get_question_reports", {
+      const { data, error: rpcError } = await withAuthSessionRetry<GetReportsResult>(() => supabase.rpc("admin_get_question_reports", {
         p_status: statusFilter || null,
         p_limit:  PAGE_SIZE,
         p_offset: pageNum * PAGE_SIZE,
-      });
+      }));
       if (rpcError) throw rpcError;
       const result = data as GetReportsResult;
       setRows(result.rows ?? []);
       setTotal(result.total ?? 0);
       setPage(pageNum);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load reports.");
+      setError(errorMessage(err, "Failed to load reports."));
     } finally {
       setLoading(false);
     }

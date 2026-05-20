@@ -52,7 +52,7 @@ export default function SJTTrainerSessionPage({
   introContent,
   renderQuiz,
 }: Props) {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [phase, setPhase] = useState<Phase>("intro");
   const {
     question,
@@ -62,7 +62,7 @@ export default function SJTTrainerSessionPage({
     advanceToNext,
     resetSession,
     retry,
-  } = useSJTQuestionSession(type);
+  } = useSJTQuestionSession(type, !authLoading);
 
   const [sessionScore, setSessionScore] = useState(0);
   const [sessionMax, setSessionMax] = useState(0);
@@ -204,8 +204,8 @@ export default function SJTTrainerSessionPage({
     resetSession();
   }, [resetSession, flushPartialIfNeeded]);
 
-  const showIntroSkeleton = phase === "intro" && loading && !question;
-  const noQuestions = !loading && !question && !error;
+  const showIntroSkeleton = phase === "intro" && (authLoading || loading) && !question;
+  const noQuestions = !authLoading && !loading && !question && !error;
 
   const quizHandlers: SJTQuizHandlers = {
     onComplete: handleComplete,

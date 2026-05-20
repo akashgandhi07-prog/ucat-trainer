@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { fetchRandomSJTQuestion, isAbortError } from "../lib/sjtApi";
 import type { SJTQuestion, SJTQuestionType } from "../types/sjt";
 
-export function useSJTQuestionSession(type: SJTQuestionType) {
+export function useSJTQuestionSession(type: SJTQuestionType, enabled = true) {
   const [question, setQuestion] = useState<SJTQuestion | null>(null);
   const [prefetched, setPrefetched] = useState<SJTQuestion | null>(null);
   const [loading, setLoading] = useState(true);
@@ -20,6 +20,7 @@ export function useSJTQuestionSession(type: SJTQuestionType) {
   );
 
   const loadInitial = useCallback(async () => {
+    if (!enabled) return;
     loadAbortRef.current?.abort();
     const controller = new AbortController();
     loadAbortRef.current = controller;
@@ -48,9 +49,10 @@ export function useSJTQuestionSession(type: SJTQuestionType) {
         setLoading(false);
       }
     }
-  }, [fetchOne]);
+  }, [enabled, fetchOne]);
 
   const prefetchNext = useCallback(async () => {
+    if (!enabled) return;
     if (prefetchingRef.current || prefetched) return;
 
     prefetchAbortRef.current?.abort();
@@ -69,9 +71,10 @@ export function useSJTQuestionSession(type: SJTQuestionType) {
     } finally {
       prefetchingRef.current = false;
     }
-  }, [fetchOne, prefetched]);
+  }, [enabled, fetchOne, prefetched]);
 
   useEffect(() => {
+    if (!enabled) return;
     seenIdsRef.current = [];
     setPrefetched(null);
     void loadInitial();
@@ -80,7 +83,7 @@ export function useSJTQuestionSession(type: SJTQuestionType) {
       loadAbortRef.current?.abort();
       prefetchAbortRef.current?.abort();
     };
-  }, [type]); // eslint-disable-line react-hooks/exhaustive-deps -- remount when trainer type changes only
+  }, [type, enabled, loadInitial]);
 
   // Recover from BFCache restoration (browser back/forward) or tab re-focus while stuck loading
   useEffect(() => {
@@ -108,6 +111,7 @@ export function useSJTQuestionSession(type: SJTQuestionType) {
   }, [loadInitial, question]);
 
   const advanceToNext = useCallback(async () => {
+    if (!enabled) return;
     if (prefetched) {
       setQuestion(prefetched);
       seenIdsRef.current = [...seenIdsRef.current, prefetched.id];
@@ -141,7 +145,7 @@ export function useSJTQuestionSession(type: SJTQuestionType) {
         setLoading(false);
       }
     }
-  }, [prefetched, fetchOne, prefetchNext]);
+  }, [enabled, prefetched, fetchOne, prefetchNext]);
 
   const resetSession = useCallback(() => {
     loadAbortRef.current?.abort();
@@ -150,8 +154,8 @@ export function useSJTQuestionSession(type: SJTQuestionType) {
     setPrefetched(null);
     setQuestion(null);
     setError(null);
-    void loadInitial();
-  }, [loadInitial]);
+    if (enabled) void loadInitial();
+  }, [enabled, loadInitial]);
 
   return {
     question,

@@ -14,7 +14,7 @@ export type DmTrainerPhase = "intro" | "drill" | "results";
 
 export function useDmSkillsTrainer(trainerType: DmTrainerType) {
   const config = getDmTrainerConfig(trainerType);
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   const [phase, setPhase] = useState<DmTrainerPhase>("intro");
   const [questions, setQuestions] = useState<DmTrainerQuestion[]>([]);
@@ -64,8 +64,9 @@ export function useDmSkillsTrainer(trainerType: DmTrainerType) {
   }, [trainerType]);
 
   useEffect(() => {
+    if (authLoading) return;
     void loadQuestions();
-  }, [loadQuestions]);
+  }, [authLoading, loadQuestions]);
 
   useEffect(() => {
     if (phase !== "drill") {

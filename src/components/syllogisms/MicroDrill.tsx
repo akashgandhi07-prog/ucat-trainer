@@ -3,6 +3,7 @@ import { useSyllogismLogic } from "./useSyllogismLogic";
 import QuestionFeedbackModal from "../feedback/QuestionFeedbackModal";
 import { PostDrillUpsell } from "../layout/ProductUpsell";
 import QuestionMediaBlock from "../media/QuestionMediaBlock";
+import { useAuth } from "../../hooks/useAuth";
 
 const MICRO_BATCH_SIZE = 10;
 
@@ -22,6 +23,7 @@ function getFeedbackLabel(isCorrect: boolean, actuallyFollows: boolean): string 
 }
 
 export default function MicroDrill() {
+  const { loading: authLoading } = useAuth();
   const {
     questions,
     currentIndex,
@@ -53,8 +55,9 @@ export default function MicroDrill() {
       : null;
 
   useEffect(() => {
+    if (authLoading) return;
     fetchMicroQuestions(MICRO_BATCH_SIZE);
-  }, [fetchMicroQuestions]);
+  }, [authLoading, fetchMicroQuestions]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -129,7 +132,7 @@ export default function MicroDrill() {
               <p className="mb-3 text-sm text-red-600">{error}</p>
             )}
 
-            {loading && questions.length === 0 && (
+            {(authLoading || loading) && questions.length === 0 && (
               <p className="text-sm text-muted-foreground">Loading questions…</p>
             )}
 

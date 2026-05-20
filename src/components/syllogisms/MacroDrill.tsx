@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useSyllogismLogic } from "./useSyllogismLogic";
 import QuestionFeedbackModal from "../feedback/QuestionFeedbackModal";
 import QuestionMediaBlock from "../media/QuestionMediaBlock";
+import { useAuth } from "../../hooks/useAuth";
 
 const DRAG_DATA_KEY = "application/x-syllogism-answer";
 
@@ -17,6 +18,7 @@ function getFeedbackLabel(isCorrect: boolean, actuallyFollows: boolean): string 
 }
 
 export default function MacroDrill() {
+  const { loading: authLoading } = useAuth();
   const {
     questions,
     userAnswers,
@@ -42,8 +44,9 @@ export default function MacroDrill() {
       : 0;
 
   useEffect(() => {
+    if (authLoading) return;
     fetchMacroBlock();
-  }, [fetchMacroBlock]);
+  }, [authLoading, fetchMacroBlock]);
 
   const stimulus = questions[0]?.stimulus_text ?? "";
 
@@ -145,7 +148,7 @@ export default function MacroDrill() {
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-1">
               Stimulus
             </h2>
-            {loading && !stimulus && (
+            {(authLoading || loading) && !stimulus && (
               <p className="text-base text-muted-foreground">Loading stimulus…</p>
             )}
             {stimulus && (
@@ -170,7 +173,7 @@ export default function MacroDrill() {
               Conclusions
             </h2>
 
-              {questions.length === 0 && loading && (
+              {questions.length === 0 && (authLoading || loading) && (
                 <p className="text-base text-muted-foreground">
                   Loading conclusions…
                 </p>
