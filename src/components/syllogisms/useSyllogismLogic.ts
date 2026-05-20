@@ -52,6 +52,7 @@ export function useSyllogismLogic(mode: SyllogismMode) {
   const [sessionFinished, setSessionFinished] = useState(false);
   const [lastSummary, setLastSummary] =
     useState<SyllogismSessionSummary | null>(null);
+  const [appendingMore, setAppendingMore] = useState(false);
 
   const startedAtRef = useRef<number>(0);
   const lastAnswerAtRef = useRef<number>(0);
@@ -204,6 +205,38 @@ export function useSyllogismLogic(mode: SyllogismMode) {
       }
     }
   }, []);
+
+  /** Foundation: fetch another batch and append (keeps timer and score running). */
+  const appendFoundationQuestions = useCallback(
+    async (count: number): Promise<number> => {
+      if (mode !== "foundation") return 0;
+
+      setAppendingMore(true);
+      setError(null);
+      try {
+        const list = await fetchSyllogismFoundationBatch(count);
+        if (list.length === 0) return 0;
+
+        let added = 0;
+        setQuestions((prev) => {
+          const existingIds = new Set(prev.map((q) => q.id));
+          const newQs = list.filter((q) => !existingIds.has(q.id));
+          added = newQs.length;
+          if (added === 0) return prev;
+          setUserAnswers((ua) => [...ua, ...newQs.map(() => null)]);
+          return [...prev, ...newQs];
+        });
+        return added;
+      } catch (e) {
+        console.error("Syllogism foundation append error", e);
+        setError(toErrorMessage(e));
+        return 0;
+      } finally {
+        setAppendingMore(false);
+      }
+    },
+    [mode],
+  );
 
   const fetchMacroBlock = useCallback(async () => {
     fetchAbortRef.current?.abort();
@@ -385,19 +418,49 @@ export function useSyllogismLogic(mode: SyllogismMode) {
     sessionFinished,
   ]);
 
-  /** Linear modes: move to next question or finish session if on last and answered. */
+  const goToPrevious = useCallback(() => {
+    if (!isLinearMode || currentIndex <= 0) return;
+    setCurrentIndex((i) => i - 1);
+  }, [isLinearMode, currentIndex]);
+
+  const goToNext = useCallback(() => {
+    if (!isLinearMode || currentIndex >= questions.length - 1) return;
+    setCurrentIndex((i) => i + 1);
+  }, [isLinearMode, currentIndex, questions.length]);
+
+  /** Linear modes: move to next question; foundation loads more at end until pool exhausted. */
   const advanceToNext = useCallback(() => {
-    if (!isLinearMode || questions.length === 0) return;
+    if (!isLinearMode || questions.length === 0 || sessionFinished) return;
     const hasAnswer = userAnswers[currentIndex] !== null;
     const justAnswered = justAnsweredIndexRef.current === currentIndex;
     if (!hasAnswer && !justAnswered) return;
     justAnsweredIndexRef.current = null;
     if (currentIndex === questions.length - 1) {
-      void finishSession();
+      if (mode === "foundation") {
+        void (async () => {
+          const added = await appendFoundationQuestions(12);
+          if (added > 0) {
+            setCurrentIndex((i) => i + 1);
+          } else {
+            await finishSession();
+          }
+        })();
+      } else {
+        void finishSession();
+      }
     } else {
       setCurrentIndex((i) => i + 1);
     }
-  }, [isLinearMode, questions.length, currentIndex, userAnswers, finishSession]);
+  }, [
+    isLinearMode,
+    mode,
+    questions.length,
+    currentIndex,
+    userAnswers,
+    sessionFinished,
+    finishSession,
+    appendFoundationQuestions,
+  ]);
 
   // Keep finishSessionRef pointing at the latest callback (avoids stale closure in exit handler).
   useEffect(() => {
@@ -423,7 +486,10 @@ export function useSyllogismLogic(mode: SyllogismMode) {
     submitAnswer,
     setAnswerForIndex,
     advanceToNext,
+    goToPrevious,
+    goToNext,
     finishSession,
+    appendingMore,
     getLatestUserAnswers,
   };
 }

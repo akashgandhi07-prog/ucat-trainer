@@ -1,21 +1,21 @@
 import { Link } from "react-router-dom";
 import QuestionLabMarkdownEditorPage from "../../components/admin/QuestionLabMarkdownEditorPage";
 
-const API_BASE = "/__question-lab/gold-standards";
-const bundledGoldStandards = import.meta.glob(
-  "../../../question-lab/gold-standards/*.md",
+const API_BASE = "/__question-lab/output-specs";
+const bundledSpecs = import.meta.glob(
+  "../../../question-lab/output-specs/*.md",
   { eager: true, query: "?raw", import: "default" },
 ) as Record<string, string>;
 
-export default function GoldStandardFilesPage() {
+export default function OutputSpecsFilesPage() {
   return (
     <QuestionLabMarkdownEditorPage
       apiBase={API_BASE}
-      bundledByPath={bundledGoldStandards}
+      bundledByPath={bundledSpecs}
       eyebrow="Question Lab"
-      title="Official UCAT examples"
-      description="Paste official questions and answers only. Pair with output format specs and the AI copy kit in Question Lab."
-      placeholder="Select a file and paste official UCAT examples below the divider."
+      title="Output format specs"
+      description="How each trainer question should look in our product (JSON fields, explanation style, constraints). Used with the AI copy kit in Question Lab."
+      placeholder="Select an output spec file to edit."
       headerLinks={
         <>
           <Link
@@ -25,10 +25,10 @@ export default function GoldStandardFilesPage() {
             Question Lab
           </Link>
           <Link
-            to="/admin/question-lab/output-specs"
+            to="/admin/question-lab/gold-standards"
             className="inline-flex items-center gap-2 rounded-md border border-slate-700 px-3 py-2 font-medium text-slate-100 transition hover:border-cyan-300 hover:text-cyan-200"
           >
-            Output formats
+            Official examples
           </Link>
           <a
             href="/__question-lab/master-plan"

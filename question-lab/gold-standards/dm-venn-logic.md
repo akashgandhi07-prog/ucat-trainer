@@ -1,48 +1,8 @@
-# DM Venn Logic — AI Reference Material
+# DM Venn Logic — Official UCAT examples
 
-## What This Trainer Teaches
+Paste official UCAT questions below. Include the full stem, all options, the correct answer, and the official explanation (any format is fine).
 
-Students learn to extract information from Venn diagrams and apply set logic to find specific counts. The core skill is inclusion-exclusion reasoning: avoiding double-counting overlaps when finding "exactly one", "at least one", or "neither" values.
-
-## Skills The AI Should Cover
-
-- Two-set Venn: find "only A", "only B", "both", "neither", "at least one", total
-- Three-set Venn: find "exactly one set", "exactly two sets", "all three", "none"
-- Missing-region problems: given totals and some regions, find the missing one
-- Table-to-Venn: information given as a table, student must identify the set structure
-- Proportion/percentage variants: some values given as percentages rather than counts
-
-Aim for roughly: 40% two-set, 40% three-set, 20% missing-region or harder variants.
-Difficulty split: 30% easy, 50% medium, 20% hard.
-
-## Our Explanation Style
-
-Do NOT just give the answer. The explanation must walk through the set logic step by step.
-
-Good explanation structure:
-1. Name the sets and what each region represents
-2. Show the key equation (e.g. Total = Only A + Only B + Both + Neither)
-3. Substitute the known values
-4. Solve for the unknown
-5. Name the trap (e.g. "Students who confused 'at least one' with 'exactly one' chose B")
-
-The tone is teaching, not marking. Write as if explaining to a student who got it wrong.
-
-Official UCAT explanations often just say "the answer is X because the diagram shows Y." Our explanations show the method so the student can replicate it on any Venn question.
-
-## Note On Images
-
-Venn diagram images cannot be generated automatically yet. Until image generation is available via OpenRouter, write questions where the diagram information is fully described in text (e.g. "In a group of 80 students, 45 study French, 32 study Spanish, and 18 study both."). Do not require a visual diagram to answer the question.
-
-## Official Examples
-
-Paste official UCAT Venn Logic questions here with their official answers. Include the full question stem, all four options, the correct answer, and any official explanation provided.
-
-The AI will use these to understand:
-- The typical wording and phrasing of UCAT Venn questions
-- The difficulty level and number complexity used in the real exam
-- Which question subtypes appear most frequently
-- Common traps built into real distractors
+Use one block per question. You do not need to rewrite explanations into our product style.
 
 ---
 

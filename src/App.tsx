@@ -14,6 +14,7 @@ import KeywordScanningPage from "./pages/KeywordScanningPage";
 import InferenceTrainerPage from "./pages/InferenceTrainerPage";
 import AdminPage from "./pages/AdminPage";
 import GoldStandardFilesPage from "./pages/admin/GoldStandardFilesPage";
+import OutputSpecsFilesPage from "./pages/admin/OutputSpecsFilesPage";
 import QuestionLabDashboard from "./pages/admin/QuestionLabDashboard";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import CalculatorPage from "./pages/CalculatorPage";
@@ -107,6 +108,7 @@ function App() {
                     <Route path="/admin" element={<AdminPage />} />
                     <Route path="/admin/question-lab" element={<QuestionLabDashboard />} />
                     <Route path="/admin/question-lab/gold-standards" element={<GoldStandardFilesPage />} />
+                    <Route path="/admin/question-lab/output-specs" element={<OutputSpecsFilesPage />} />
 
                     <Route path="/study-plan" element={<StudyPlanPage />} />
                     <Route path="/study-plan/today" element={<StudyPlanTodayPage />} />

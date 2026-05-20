@@ -38,7 +38,7 @@ export default function SyllogismFoundationPage() {
     <div className="flex flex-col min-h-screen bg-secondary">
       <SEOHead
         title="UCAT syllogism foundations trainer"
-        description="Learn the core UCAT syllogism rules with focused Yes/No drills before practising full Decision Making questions."
+        description="Build syllogism fluency with focused Yes/No drills before practising full Decision Making questions."
         canonicalUrl={canonicalUrl}
         breadcrumbs={breadcrumbs}
       />

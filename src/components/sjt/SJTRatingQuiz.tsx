@@ -248,7 +248,7 @@ export default function SJTRatingQuiz({ question, onComplete, onProgress }: Prop
 
           {/* Pivot insight on last item */}
           {itemPhase === "feedback" && isLastItem && question.pivotInsight && (
-            <div className="rounded-xl border border-border bg-secondary p-4">
+            <div className="border-t border-border pt-4">
               <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
                 Key insight for this scenario
               </p>

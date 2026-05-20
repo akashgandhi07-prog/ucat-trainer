@@ -21,6 +21,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { supabase } from "../../lib/supabase";
 import Header from "../../components/layout/Header";
 import Footer from "../../components/layout/Footer";
+import QuestionLabWorkflow from "../../components/admin/QuestionLabWorkflow";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -1384,10 +1385,18 @@ export default function QuestionLabDashboard() {
               to="/admin/question-lab/gold-standards"
               className="flex items-center gap-1 px-3 py-1.5 border border-zinc-200 rounded text-zinc-600 hover:bg-zinc-50"
             >
-              Gold Standards
+              Official examples
+            </Link>
+            <Link
+              to="/admin/question-lab/output-specs"
+              className="flex items-center gap-1 px-3 py-1.5 border border-zinc-200 rounded text-zinc-600 hover:bg-zinc-50"
+            >
+              Output formats
             </Link>
           </div>
         </div>
+
+        <QuestionLabWorkflow />
 
         {/* Tabs */}
         <div className="flex gap-1 mb-6 border-b border-zinc-200">

@@ -23,7 +23,9 @@ export function useDmSkillsTrainer(trainerType: DmTrainerType) {
   const [questionSource, setQuestionSource] = useState<"supabase" | "local" | null>(null);
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<DmTrainerSessionAnswer[]>([]);
+  const [answersByIndex, setAnswersByIndex] = useState<(DmTrainerSessionAnswer | null)[]>(
+    [],
+  );
   const [selected, setSelected] = useState<DmTrainerOptionId | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -33,11 +35,20 @@ export function useDmSkillsTrainer(trainerType: DmTrainerType) {
   const startTimeRef = useRef<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const retryModeRef = useRef(false);
+  const answersByIndexRef = useRef(answersByIndex);
 
   const activeQuestions = retryMode ? retryQueue : questions;
   const current = activeQuestions[currentIndex] ?? null;
   const total = activeQuestions.length;
-  const correctCount = answers.filter((a) => a.correct).length;
+  const answers = answersByIndex.filter(
+    (a): a is DmTrainerSessionAnswer => a != null,
+  );
+  const answeredCount = answersByIndex.filter((a) => a != null).length;
+  const correctCount = answersByIndex.filter((a) => a?.correct).length;
+
+  useEffect(() => {
+    answersByIndexRef.current = answersByIndex;
+  }, [answersByIndex]);
 
   useEffect(() => {
     retryModeRef.current = retryMode;
@@ -93,14 +104,14 @@ export function useDmSkillsTrainer(trainerType: DmTrainerType) {
     if (questions.length === 0) return;
     setPhase("drill");
     setCurrentIndex(0);
-    setAnswers([]);
+    setAnswersByIndex(questions.map(() => null));
     setSelected(null);
     setShowFeedback(false);
     setRetryMode(false);
     setRetryQueue([]);
     setElapsedSeconds(0);
     startTimeRef.current = Date.now();
-  }, [questions.length]);
+  }, [questions]);
 
   const submitAnswer = useCallback(
     (optionId: DmTrainerOptionId) => {
@@ -108,18 +119,44 @@ export function useDmSkillsTrainer(trainerType: DmTrainerType) {
       const correct = optionId === current.correctAnswer;
       setSelected(optionId);
       setShowFeedback(true);
-      setAnswers((prev) => [
-        ...prev,
-        {
+      setAnswersByIndex((prev) => {
+        const next = [...prev];
+        next[currentIndex] = {
           questionId: current.id,
           selected: optionId,
           correct,
           skillTag: current.skillTag,
-        },
-      ]);
+        };
+        return next;
+      });
     },
-    [current, showFeedback],
+    [current, showFeedback, currentIndex],
   );
+
+  const restoreQuestionView = useCallback((index: number) => {
+    const stored = answersByIndexRef.current[index];
+    if (stored) {
+      setSelected(stored.selected);
+      setShowFeedback(true);
+    } else {
+      setSelected(null);
+      setShowFeedback(false);
+    }
+  }, []);
+
+  const goToPrevious = useCallback(() => {
+    if (currentIndex <= 0) return;
+    const newIndex = currentIndex - 1;
+    setCurrentIndex(newIndex);
+    restoreQuestionView(newIndex);
+  }, [currentIndex, restoreQuestionView]);
+
+  const goToNextQuestion = useCallback(() => {
+    if (currentIndex >= total - 1) return;
+    const newIndex = currentIndex + 1;
+    setCurrentIndex(newIndex);
+    restoreQuestionView(newIndex);
+  }, [currentIndex, total, restoreQuestionView]);
 
   const goToNext = useCallback(() => {
     if (!showFeedback) return;
@@ -131,18 +168,18 @@ export function useDmSkillsTrainer(trainerType: DmTrainerType) {
       return;
     }
 
-    setAnswers((prev) => {
-      const summary = {
-        trainerType,
-        correct: prev.filter((a) => a.correct).length,
-        total: prev.length,
-        elapsedSeconds,
-        answers: prev,
-        completedAt: new Date().toISOString(),
-      };
-      void persistDmTrainerSession(user?.id ?? null, summary, retryModeRef.current);
-      return prev;
-    });
+    const completed = answersByIndexRef.current.filter(
+      (a): a is DmTrainerSessionAnswer => a != null,
+    );
+    const summary = {
+      trainerType,
+      correct: completed.filter((a) => a.correct).length,
+      total: completed.length,
+      elapsedSeconds,
+      answers: completed,
+      completedAt: new Date().toISOString(),
+    };
+    void persistDmTrainerSession(user?.id ?? null, summary, retryModeRef.current);
     setPhase("results");
   }, [showFeedback, currentIndex, total, trainerType, elapsedSeconds, user?.id]);
 
@@ -158,7 +195,7 @@ export function useDmSkillsTrainer(trainerType: DmTrainerType) {
     setRetryQueue(queue);
     setPhase("drill");
     setCurrentIndex(0);
-    setAnswers([]);
+    setAnswersByIndex(queue.map(() => null));
     setSelected(null);
     setShowFeedback(false);
     setElapsedSeconds(0);
@@ -168,7 +205,7 @@ export function useDmSkillsTrainer(trainerType: DmTrainerType) {
   const backToIntro = useCallback(() => {
     setPhase("intro");
     setCurrentIndex(0);
-    setAnswers([]);
+    setAnswersByIndex([]);
     setSelected(null);
     setShowFeedback(false);
     setRetryMode(false);
@@ -194,11 +231,14 @@ export function useDmSkillsTrainer(trainerType: DmTrainerType) {
     showFeedback,
     elapsedSeconds,
     answers,
+    answeredCount,
     correctCount,
     incorrectCount,
     retryMode,
     startDrill,
     submitAnswer,
+    goToPrevious,
+    goToNextQuestion,
     goToNext,
     restartDrill,
     retryIncorrect,

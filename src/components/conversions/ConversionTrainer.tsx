@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CheckCircle2, RotateCcw } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { CONVERSION_QUESTIONS } from "../../data/conversionQuestions";
 import type { ConversionQuestion } from "../../data/conversionQuestions";
 import { saveConversionSession } from "../../utils/analyticsStorage";
@@ -184,10 +184,31 @@ export default function ConversionTrainer() {
 
   const handleNext = () => {
     if (isLast) return;
-    setIndex((value) => value + 1);
-    setInput("");
-    setSubmitted(false);
+    goToIndex(index + 1);
+  };
+
+  const goToIndex = (nextIndex: number) => {
+    const nextQuestion = questions[nextIndex];
+    const prior = answers[nextQuestion.id];
+    setIndex(nextIndex);
+    if (prior) {
+      setSubmitted(true);
+      setInput("");
+    } else {
+      setInput("");
+      setSubmitted(false);
+    }
     scrollTrainerToTop();
+  };
+
+  const handlePrevious = () => {
+    if (index <= 0) return;
+    goToIndex(index - 1);
+  };
+
+  const handleNextQuestion = () => {
+    if (index >= questions.length - 1) return;
+    goToIndex(index + 1);
   };
 
   const handleRestart = () => {
@@ -206,13 +227,33 @@ export default function ConversionTrainer() {
     <div className="bg-card border border-border rounded-xl overflow-hidden">
       <div className="p-5 sm:p-8">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-          <span className="text-sm font-medium text-muted-foreground">Question {progress}</span>
+          <div className="flex items-center gap-1 text-sm font-medium text-muted-foreground">
+            <button
+              type="button"
+              onClick={handlePrevious}
+              disabled={index === 0}
+              aria-label="Previous question"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card text-foreground hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="min-w-[7rem] text-center">Question {progress}</span>
+            <button
+              type="button"
+              onClick={handleNextQuestion}
+              disabled={index >= questions.length - 1}
+              aria-label="Next question"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card text-foreground hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
           <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
             Score {correctCount}/{answeredCount}
           </span>
         </div>
 
-        <div className="rounded-xl bg-secondary/80 border border-border px-5 py-4 mb-5">
+        <div className="rounded-xl border border-border px-5 py-4 mb-5">
           <p className="text-xl font-semibold text-foreground">{question.prompt}</p>
         </div>
 
@@ -247,8 +288,8 @@ export default function ConversionTrainer() {
               </p>
             </div>
 
-            <div className="rounded-xl border border-border bg-white px-5 py-4 mb-4">
-              <h3 className="text-sm font-semibold text-foreground mb-3">Method</h3>
+            <div className="border-t border-border pt-4 mb-4 space-y-4">
+              <h3 className="text-sm font-semibold text-foreground">Method</h3>
               <div className="space-y-2 text-sm text-foreground leading-relaxed">
                 <p><span className="font-semibold text-foreground">Target:</span> {question.explanation.method.target}</p>
                 <p><span className="font-semibold text-foreground">Convert:</span> {question.explanation.method.convert}</p>
@@ -282,12 +323,12 @@ export default function ConversionTrainer() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="flex flex-wrap gap-3">
               {isLast ? (
                 <button
                   type="button"
                   onClick={handleRestart}
-                  className="min-h-[48px] rounded-xl border border-border bg-white text-foreground font-semibold hover:bg-secondary inline-flex items-center justify-center gap-2"
+                  className="min-h-[48px] rounded-xl border border-border bg-white text-foreground font-semibold hover:bg-secondary inline-flex items-center justify-center gap-2 px-5"
                 >
                   <RotateCcw className="h-4 w-4" />
                   Restart conversions
@@ -296,7 +337,7 @@ export default function ConversionTrainer() {
                 <button
                   type="button"
                   onClick={handleNext}
-                  className="min-h-[48px] rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90"
+                  className="min-h-[48px] rounded-xl bg-primary px-5 text-primary-foreground font-semibold hover:bg-primary/90"
                 >
                   Next question
                 </button>
@@ -305,7 +346,7 @@ export default function ConversionTrainer() {
                 type="button"
                 onClick={() => saveSession(answers, { force: true })}
                 disabled={answeredCount === 0 || savedAnswerCount === answeredCount}
-                className="min-h-[48px] rounded-xl border border-border bg-white text-foreground font-semibold hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
+                className="min-h-[48px] rounded-xl border border-border bg-white px-5 text-foreground font-semibold hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {savedAnswerCount === answeredCount ? "Checkpoint saved" : "Finish and log now"}
               </button>

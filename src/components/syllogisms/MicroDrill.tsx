@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useSyllogismLogic } from "./useSyllogismLogic";
 import QuestionFeedbackModal from "../feedback/QuestionFeedbackModal";
 import { PostDrillUpsell } from "../layout/ProductUpsell";
@@ -40,6 +41,8 @@ export default function MicroDrill() {
     fetchMicroQuestions,
     submitAnswer,
     advanceToNext,
+    goToPrevious,
+    goToNext,
   } = useSyllogismLogic("micro");
 
   const [feedbackOpen, setFeedbackOpen] = useState(false);
@@ -142,12 +145,32 @@ export default function MicroDrill() {
 
             {current && (
               <>
-                <div className="mb-4 text-sm text-muted-foreground flex items-center justify-between flex-wrap gap-2">
-                  <span>
-                    Question {currentIndex + 1} of {questions.length}
-                  </span>
+                <div className="mb-4 flex items-center justify-between flex-wrap gap-3">
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <button
+                      type="button"
+                      onClick={goToPrevious}
+                      disabled={currentIndex === 0}
+                      aria-label="Previous question"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card text-foreground hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <span className="min-w-[7rem] text-center">
+                      Question {currentIndex + 1} of {questions.length}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={goToNext}
+                      disabled={currentIndex >= questions.length - 1}
+                      aria-label="Next question"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card text-foreground hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
                   {questions.length > 0 && (
-                    <span className="font-medium text-foreground">
+                    <span className="text-sm font-medium text-foreground">
                       Score: {correctSoFar} / {answeredCount}
                     </span>
                   )}
@@ -156,7 +179,7 @@ export default function MicroDrill() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
                   Premises
                 </p>
-                <div className="mb-6 rounded-lg border border-border bg-secondary p-4">
+                <div className="mb-6 rounded-lg border border-border p-4">
                   <p className="text-base text-foreground">
                     {current.stimulus_text}
                   </p>
@@ -166,7 +189,7 @@ export default function MicroDrill() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
                   Does this conclusion follow from the premises?
                 </p>
-                <p className="text-lg font-semibold text-foreground mb-4 rounded-lg bg-secondary border border-border p-4">
+                <p className="text-lg font-semibold text-foreground mb-4 rounded-lg border border-border p-4">
                   {current.conclusion_text}
                 </p>
 
@@ -194,8 +217,7 @@ export default function MicroDrill() {
                 )}
 
                 {hasAnsweredCurrent && (
-                  <div className="mt-6 border-t border-border pt-4">
-                    <div className="rounded-lg border border-border bg-secondary p-4 space-y-3">
+                  <div className="mt-6 border-t border-border pt-4 space-y-3">
                       <p
                         className={
                           "text-sm font-semibold " +
@@ -204,34 +226,29 @@ export default function MicroDrill() {
                       >
                         {feedbackLabel}
                       </p>
-                      <div className="rounded-lg border border-border bg-white p-3">
-                        <p className="text-sm text-foreground">
-                          {current.explanation}
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => setFeedbackOpen(true)}
-                          className="mt-2 inline-flex items-center gap-1 rounded-full border border-border bg-secondary px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
-                        >
-                          <span aria-hidden>🚩</span>
-                          Report this question
-                        </button>
-                      </div>
+                      <p className="text-sm text-foreground leading-relaxed">
+                        {current.explanation}
+                      </p>
                       <button
                         type="button"
-                        onClick={() => {
-                          scrollTrainerToTop();
-                          advanceToNext();
-                        }}
-                        className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                        onClick={() => setFeedbackOpen(true)}
+                        className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground"
                       >
-                        Next question
+                        <span aria-hidden>🚩</span>
+                        Report this question
                       </button>
-                    </div>
-                    <button
-                      aria-hidden="true"
-                      className="hidden"
-                    />
+                      {!sessionFinished && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            scrollTrainerToTop();
+                            advanceToNext();
+                          }}
+                          className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                        >
+                          Next question
+                        </button>
+                      )}
                   </div>
                 )}
 
@@ -251,7 +268,7 @@ export default function MicroDrill() {
 
             {sessionFinished && lastSummary && (
               <div className="mt-6 border-t border-border pt-4">
-                <div className="rounded-lg border border-border bg-secondary p-4">
+                <div className="border-t border-border pt-4">
                   <h2 className="text-sm font-semibold text-foreground">
                     Session summary
                   </h2>

@@ -9,6 +9,7 @@ import tailwindcss from '@tailwindcss/vite'
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url))
 const goldStandardsDir = path.join(rootDir, 'question-lab/gold-standards')
+const outputSpecsDir = path.join(rootDir, 'question-lab/output-specs')
 const questionLabMasterPlanPath = path.join(rootDir, 'docs/QUESTION_LAB_MASTER_PLAN.md')
 
 const plannerEmbedded = path.resolve(rootDir, 'src/planner/embedded')
@@ -25,9 +26,125 @@ function isMarkdownFilename(filename: string): boolean {
   return /^[a-z0-9-]+\.md$/.test(filename)
 }
 
-function goldStandardEditorPlugin(): Plugin {
+function titleFromFilename(filename: string): string {
+  return filename
+    .replace(/\.md$/, '')
+    .split('-')
+    .map((word) =>
+      word === 'dm' || word === 'qr' || word === 'vr' || word === 'sjt'
+        ? word.toUpperCase()
+        : word.charAt(0).toUpperCase() + word.slice(1),
+    )
+    .join(' ')
+}
+
+type MarkdownDirConfig = {
+  urlPrefix: string
+  dir: string
+  redirectPath?: string
+}
+
+function registerMarkdownDirMiddleware(
+  configs: MarkdownDirConfig[],
+): (req: import('node:http').IncomingMessage, res: ServerResponse, next: () => void) => Promise<void> {
+  return async (req, res, next) => {
+    const matched = configs.find((c) => req.url?.startsWith(c.urlPrefix))
+    if (!matched) {
+      next()
+      return
+    }
+
+    const url = new URL(req.url!, 'http://localhost')
+    const parts = url.pathname.split('/').filter(Boolean)
+    const filename = parts[2]
+
+    try {
+      await fs.mkdir(matched.dir, { recursive: true })
+
+      if (!filename && req.method === 'GET') {
+        const acceptHeader = req.headers.accept ?? ''
+        if (acceptHeader.includes('text/html') && matched.redirectPath) {
+          res.statusCode = 302
+          res.setHeader('Location', matched.redirectPath)
+          res.end()
+          return
+        }
+
+        const entries = await fs.readdir(matched.dir, { withFileTypes: true })
+        const files = entries
+          .filter((entry) => entry.isFile() && isMarkdownFilename(entry.name))
+          .map((entry) => ({
+            filename: entry.name,
+            slug: entry.name.replace(/\.md$/, ''),
+            title: titleFromFilename(entry.name),
+          }))
+          .sort((a, b) => a.filename.localeCompare(b.filename))
+
+        sendJson(res, 200, { files })
+        return
+      }
+
+      if (!filename || !isMarkdownFilename(filename)) {
+        sendJson(res, 400, { error: 'Invalid markdown filename.' })
+        return
+      }
+
+      const filePath = path.join(matched.dir, filename)
+      if (!filePath.startsWith(matched.dir)) {
+        sendJson(res, 400, { error: 'Invalid file path.' })
+        return
+      }
+
+      if (req.method === 'GET') {
+        const content = await fs.readFile(filePath, 'utf8')
+        sendJson(res, 200, { filename, content })
+        return
+      }
+
+      if (req.method === 'PUT') {
+        let body = ''
+        req.setEncoding('utf8')
+        req.on('data', (chunk) => {
+          body += chunk
+        })
+        req.on('end', async () => {
+          try {
+            await fs.writeFile(filePath, body, 'utf8')
+            sendJson(res, 200, { filename, saved: true })
+          } catch (error) {
+            sendJson(res, 500, {
+              error: error instanceof Error ? error.message : 'Unable to save file.',
+            })
+          }
+        })
+        return
+      }
+
+      sendJson(res, 405, { error: 'Method not allowed.' })
+    } catch (error) {
+      sendJson(res, 500, {
+        error: error instanceof Error ? error.message : 'Unable to load markdown files.',
+      })
+    }
+  }
+}
+
+function questionLabEditorPlugin(): Plugin {
+  const markdownDirs: MarkdownDirConfig[] = [
+    {
+      urlPrefix: '/__question-lab/gold-standards',
+      dir: goldStandardsDir,
+      redirectPath: '/admin/question-lab/gold-standards',
+    },
+    {
+      urlPrefix: '/__question-lab/output-specs',
+      dir: outputSpecsDir,
+      redirectPath: '/admin/question-lab/output-specs',
+    },
+  ]
+
   return {
-    name: 'gold-standard-editor',
+    name: 'question-lab-editor',
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
         if (req.url === '/__question-lab/master-plan' && req.method === 'GET') {
@@ -44,89 +161,7 @@ function goldStandardEditorPlugin(): Plugin {
           return
         }
 
-        if (!req.url?.startsWith('/__question-lab/gold-standards')) {
-          next()
-          return
-        }
-
-        const url = new URL(req.url, 'http://localhost')
-        const parts = url.pathname.split('/').filter(Boolean)
-        const filename = parts[2]
-
-        try {
-          await fs.mkdir(goldStandardsDir, { recursive: true })
-
-          if (!filename && req.method === 'GET') {
-            const acceptHeader = req.headers.accept ?? ''
-            if (acceptHeader.includes('text/html')) {
-              res.statusCode = 302
-              res.setHeader('Location', '/admin/question-lab/gold-standards')
-              res.end()
-              return
-            }
-
-            const entries = await fs.readdir(goldStandardsDir, { withFileTypes: true })
-            const files = entries
-              .filter((entry) => entry.isFile() && isMarkdownFilename(entry.name))
-              .map((entry) => ({
-                filename: entry.name,
-                slug: entry.name.replace(/\.md$/, ''),
-                title: entry.name
-                  .replace(/\.md$/, '')
-                  .split('-')
-                  .map((word) => word.toUpperCase() === 'DM' || word.toUpperCase() === 'QR' || word.toUpperCase() === 'VR' || word.toUpperCase() === 'SJT'
-                    ? word.toUpperCase()
-                    : word.charAt(0).toUpperCase() + word.slice(1))
-                  .join(' '),
-              }))
-              .sort((a, b) => a.filename.localeCompare(b.filename))
-
-            sendJson(res, 200, { files })
-            return
-          }
-
-          if (!filename || !isMarkdownFilename(filename)) {
-            sendJson(res, 400, { error: 'Invalid gold-standard filename.' })
-            return
-          }
-
-          const filePath = path.join(goldStandardsDir, filename)
-          if (!filePath.startsWith(goldStandardsDir)) {
-            sendJson(res, 400, { error: 'Invalid gold-standard path.' })
-            return
-          }
-
-          if (req.method === 'GET') {
-            const content = await fs.readFile(filePath, 'utf8')
-            sendJson(res, 200, { filename, content })
-            return
-          }
-
-          if (req.method === 'PUT') {
-            let body = ''
-            req.setEncoding('utf8')
-            req.on('data', (chunk) => {
-              body += chunk
-            })
-            req.on('end', async () => {
-              try {
-                await fs.writeFile(filePath, body, 'utf8')
-                sendJson(res, 200, { filename, saved: true })
-              } catch (error) {
-                sendJson(res, 500, {
-                  error: error instanceof Error ? error.message : 'Unable to save gold-standard file.',
-                })
-              }
-            })
-            return
-          }
-
-          sendJson(res, 405, { error: 'Method not allowed.' })
-        } catch (error) {
-          sendJson(res, 500, {
-            error: error instanceof Error ? error.message : 'Unable to load gold-standard files.',
-          })
-        }
+        await registerMarkdownDirMiddleware(markdownDirs)(req, res, next)
       })
     },
   }
@@ -135,7 +170,7 @@ function goldStandardEditorPlugin(): Plugin {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, rootDir, '')
   return {
-    plugins: [goldStandardEditorPlugin(), react(), tailwindcss()],
+    plugins: [questionLabEditorPlugin(), react(), tailwindcss()],
     optimizeDeps: {
       include: ['react', 'react-dom', 'clsx', 'tailwind-merge', 'date-fns'],
     },

@@ -71,7 +71,7 @@ export default function SJTRankingQuiz({ question, onComplete, onProgress }: Pro
 
         {/* Pivot insight on desktop (below scenario in left col) */}
         {phase === "results" && question.pivotInsight && (
-          <div className="mt-4 hidden lg:block rounded-xl border border-border bg-secondary p-4">
+          <div className="mt-4 hidden lg:block border-t border-border pt-4">
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
               Key insight
             </p>
@@ -181,7 +181,7 @@ export default function SJTRankingQuiz({ question, onComplete, onProgress }: Pro
 
             {/* Pivot insight on mobile (below items) */}
             {question.pivotInsight && (
-              <div className="lg:hidden rounded-xl border border-border bg-secondary p-4">
+              <div className="lg:hidden border-t border-border pt-4">
                 <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
                   Key insight
                 </p>

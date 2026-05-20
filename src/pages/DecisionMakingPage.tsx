@@ -59,7 +59,7 @@ export default function DecisionMakingPage() {
           <HubTrainerGrid trainerCount={6}>
             <HubTrainerCard
               title="Syllogisms · Foundations"
-              description="Atomic rule drills for all, some, no, most and conditional traps before timed practice."
+              description="Quick Yes/No drills on premise and conclusion pairs before timed practice."
               icon={GraduationCap}
               accent="amber"
               onClick={() => navigate("/ucat-syllogism-foundations-trainer")}

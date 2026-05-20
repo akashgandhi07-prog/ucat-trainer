@@ -206,7 +206,7 @@ export default function InferenceQuiz({
       {/* Right: Question */}
       <div className="lg:flex-1 min-w-0">
         <div className="bg-card rounded-xl border border-border p-6">
-          <div className="mb-4 rounded-lg bg-secondary border border-border px-4 py-3">
+          <div className="mb-4 rounded-lg border border-border px-4 py-3">
             <p className="text-sm text-foreground font-medium">
               Please select the relevant section(s) of text as requested below.
             </p>

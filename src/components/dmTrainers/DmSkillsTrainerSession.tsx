@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ChevronRight, RotateCcw } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { cn } from "../../lib/cn";
 import { useDmSkillsTrainer } from "../../hooks/useDmSkillsTrainer";
 import type { DmTrainerOptionId, DmTrainerQuestion, DmTrainerType } from "../../types/dmTrainers";
@@ -28,7 +28,7 @@ type Props = {
   trainerType: DmTrainerType;
 };
 
-const DRILL_OPTION_GRID_CLASS = "grid w-full grid-cols-2 items-start gap-2.5";
+const DRILL_OPTION_GRID_CLASS = "flex flex-col gap-2.5";
 
 function optionSurfaceClasses(
   optId: DmTrainerOptionId,
@@ -131,11 +131,14 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
     showFeedback,
     elapsedSeconds,
     answers,
+    answeredCount,
     correctCount,
     incorrectCount,
     retryMode,
     startDrill,
     submitAnswer,
+    goToPrevious,
+    goToNextQuestion,
     goToNext,
     restartDrill,
     retryIncorrect,
@@ -213,16 +216,35 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
               {phase !== "drill" ? (
                 <p className="mt-1 text-sm text-muted-foreground">{config.skillSummary}</p>
               ) : current ? (
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Question {currentIndex + 1} of {total}
-                  {retryMode ? " (retry)" : ""}
-                  <span className="mx-1.5 text-muted-foreground" aria-hidden>
-                    ·
-                  </span>
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={goToPrevious}
+                      disabled={currentIndex === 0}
+                      aria-label="Previous question"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card text-foreground hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <span className="min-w-[7rem] text-center">
+                      Question {currentIndex + 1} of {total}
+                      {retryMode ? " (retry)" : ""}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={goToNextQuestion}
+                      disabled={currentIndex >= total - 1}
+                      aria-label="Next question"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card text-foreground hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
                   <span className="font-medium text-foreground">
-                    Score {correctCount}/{answers.length}
+                    Score {correctCount}/{answeredCount}
                   </span>
-                </p>
+                </div>
               ) : null}
             </div>
             {phase === "drill" && current ? (
@@ -288,7 +310,7 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
             <div className="space-y-3">
                 <div
                   className={cn(
-                    "rounded-lg border border-border bg-secondary",
+                    "rounded-lg border border-border",
                     showFeedback ? "px-3 py-2.5 sm:px-4 sm:py-3" : "p-4",
                   )}
                 >
@@ -316,7 +338,7 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
 
                 {showFeedback ? (
                   <>
-                    <div className="rounded-lg border border-border bg-secondary px-3 py-3 sm:px-4 space-y-3">
+                    <div className="border-t border-border pt-4 space-y-3">
                       <p
                         className={cn(
                           "text-sm font-semibold",
@@ -380,7 +402,7 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
                       )}
 
                       {current.keyInsight && (
-                        <div className="rounded-lg border border-border bg-secondary px-3 py-2.5">
+                        <div className="border-t border-border pt-3">
                           <p className="text-[11px] font-semibold uppercase tracking-wide text-foreground mb-1">
                             Key insight
                           </p>
@@ -401,7 +423,7 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
                       <button
                         type="button"
                         onClick={() => goToNext()}
-                        className="flex w-full min-h-[44px] items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+                        className="inline-flex min-h-[44px] items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
                       >
                         {currentIndex >= total - 1 ? "See results" : "Next question"}
                       </button>
