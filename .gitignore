@@ -35,6 +35,11 @@ dist-ssr
 .cursor-deploy-stringified.json
 .mcp-deploy-args.object.json
 .mcp-full-deploy-args.json
+scripts/.deploy-generate-payload.json
+scripts/.deploy-min-payload.json
+scripts/.mcp-deploy-args.json
+supabase/functions/generate-trainer-questions/index.deploy.ts
+supabase/functions/generate-trainer-questions/index.ts.bak
 
 # Supabase CLI local cache
 supabase/.temp/

@@ -1,0 +1,9 @@
+{
+  "imports": {
+    "@ql/": "../../../src/lib/questionLabGenerate/",
+    "@lab/": "../../../src/lib/",
+    "@types/": "../../../src/types/",
+    "@data/": "../../../src/data/",
+    "@components/": "../../../src/components/"
+  }
+}

@@ -8,6 +8,7 @@ import {
   ClipboardCopy,
   ExternalLink,
   Loader2,
+  Sparkles,
   Upload,
 } from "lucide-react";
 import {
@@ -25,6 +26,7 @@ import {
   parseImportJson,
   type ImportRpcResult,
 } from "../../lib/questionLabImport";
+import { invokeGenerateTrainerQuestions } from "../../lib/questionLabGenerateInvoke";
 import { buildAuditPrompt, buildGenerationPrompt } from "../../lib/questionLabPrompts";
 
 type CopyKey = "official" | "output" | "prompt" | "audit" | "bank";
@@ -100,6 +102,26 @@ export default function QuestionLabWorkflow() {
   const [importResult, setImportResult] = useState<ImportRpcResult | null>(null);
   const [importBusy, setImportBusy] = useState(false);
   const [importProgress, setImportProgress] = useState<string | null>(null);
+  const [generateBusy, setGenerateBusy] = useState(false);
+  const [generateResult, setGenerateResult] = useState<{
+    created: number;
+    updated: number;
+    flagged: number;
+    failed: number;
+    generated: number;
+    hint?: string;
+    repairAttempted?: number;
+    repairSucceeded?: number;
+    questions?: Array<{
+      legacy_id: string;
+      quality_status: string;
+      quality_notes: string;
+      imported?: boolean;
+    }>;
+  } | null>(null);
+  const [generateReportOpen, setGenerateReportOpen] = useState(false);
+  const [skillTagFilter, setSkillTagFilter] = useState("");
+  const [difficultyFilter, setDifficultyFilter] = useState("");
 
   const meta = TRAINER_META[trainerType];
 
@@ -128,7 +150,69 @@ export default function QuestionLabWorkflow() {
     setImportPreview(null);
     setImportResult(null);
     setImportJson("");
+    setGenerateResult(null);
+    setSkillTagFilter("");
+    setDifficultyFilter("");
   }, [trainerType]);
+
+  const handleGenerateDrafts = useCallback(async () => {
+    if (!meta?.supportsGenerate) return;
+    setGenerateBusy(true);
+    setError(null);
+    setGenerateResult(null);
+    try {
+      const [goldStandard, outputSpec] = await Promise.all([
+        fetchOfficialExamplesFromApi(trainerType),
+        fetchOutputSpecFromApi(trainerType),
+      ]);
+      if (!goldStandard?.trim()) throw new Error("No official examples file found.");
+      if (!outputSpec?.trim()) throw new Error("No output format file found.");
+      const stats = countOfficialExamples(goldStandard);
+      if (stats.isEmpty) {
+        throw new Error(
+          "Official examples look empty. Add UCAT questions below the line in Official examples first.",
+        );
+      }
+
+      const result = await invokeGenerateTrainerQuestions({
+        trainerType,
+        count: 5,
+        skillTag: skillTagFilter.trim() || undefined,
+        difficulty: difficultyFilter.trim() || undefined,
+        outputSpec,
+        goldStandard,
+      });
+
+      if (!result.ok) {
+        throw new Error(result.error);
+      }
+
+      setGenerateResult({
+        created: result.created,
+        updated: result.updated,
+        flagged: result.flagged,
+        failed: result.failed,
+        generated: result.generated,
+        hint: result.hint,
+        repairAttempted: result.repairAttempted,
+        repairSucceeded: result.repairSucceeded,
+        questions: result.questions,
+      });
+      setGenerateReportOpen(true);
+      if (result.imported === 0 && result.generated > 0) {
+        setError(
+          result.hint ??
+            "No questions imported. Expand the report below to see Blocked vs Review wording.",
+        );
+      } else {
+        setError(null);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Generation failed.");
+    } finally {
+      setGenerateBusy(false);
+    }
+  }, [trainerType, meta?.supportsGenerate, skillTagFilter, difficultyFilter]);
 
   const handleCopyOfficial = useCallback(async () => {
     setLoading("official");
@@ -276,10 +360,130 @@ export default function QuestionLabWorkflow() {
         <div>
           <h2 className="text-base font-semibold text-zinc-900">Write questions with AI</h2>
           <p className="text-sm text-zinc-600 mt-1 max-w-3xl">
-            Follow the steps below. You paste official UCAT questions once, use ChatGPT to generate
-            new ones, then import the JSON back here as drafts.
+            Generate drafts in one click (OpenRouter), or use the manual ChatGPT copy and paste flow
+            below. Both create drafts only. Activate from Review Queue.
           </p>
         </div>
+
+        {meta?.supportsGenerate ? (
+          <div className="rounded-lg border border-violet-200 bg-violet-50/60 p-4 space-y-3">
+            <p className="text-xs font-semibold text-violet-900 uppercase tracking-wide">
+              One-click generate (admin)
+            </p>
+            <p className="text-sm text-violet-950/80">
+              Generates drafts, auto-fixes small copy issues, then sends blocked or flagged
+              questions through one AI repair batch (except proven maths errors). Requires the
+              Edge Function and OPENROUTER_API_KEY.
+            </p>
+            <div className="flex flex-wrap gap-3 items-end">
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="font-medium text-violet-900">Skill tag (optional)</span>
+                <input
+                  type="text"
+                  value={skillTagFilter}
+                  onChange={(e) => setSkillTagFilter(e.target.value)}
+                  placeholder="e.g. two-set-find-overlap"
+                  className="border border-violet-200 rounded px-3 py-2 bg-white min-w-[200px]"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="font-medium text-violet-900">Difficulty (optional)</span>
+                <select
+                  value={difficultyFilter}
+                  onChange={(e) => setDifficultyFilter(e.target.value)}
+                  className="border border-violet-200 rounded px-3 py-2 bg-white min-w-[140px]"
+                >
+                  <option value="">Any</option>
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </label>
+              <button
+                type="button"
+                onClick={() => void handleGenerateDrafts()}
+                disabled={generateBusy || officialStats?.isEmpty}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded bg-violet-900 text-white text-sm font-medium hover:bg-violet-800 disabled:opacity-50"
+              >
+                {generateBusy ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Sparkles className="w-4 h-4" />
+                )}
+                {generateBusy ? "Generating 5 drafts…" : "Generate 5 drafts"}
+              </button>
+            </div>
+            {generateResult && (
+              <div className="space-y-2">
+                <p
+                  className={`text-sm rounded px-3 py-2 border ${
+                    generateResult.created + generateResult.updated > 0
+                      ? "text-green-900 bg-green-50 border-green-200"
+                      : "text-amber-900 bg-amber-50 border-amber-200"
+                  }`}
+                >
+                  Generated {generateResult.generated} · Imported{" "}
+                  {generateResult.created + generateResult.updated} draft
+                  {generateResult.created + generateResult.updated === 1 ? "" : "s"}
+                  {generateResult.flagged > 0 && (
+                    <span> · {generateResult.flagged} flagged for review</span>
+                  )}
+                  {generateResult.failed > 0 && (
+                    <span> · {generateResult.failed} blocked (not imported)</span>
+                  )}
+                  {(generateResult.repairAttempted ?? 0) > 0 && (
+                    <span>
+                      {" "}
+                      · AI repair fixed {generateResult.repairSucceeded ?? 0} of{" "}
+                      {generateResult.repairAttempted}
+                    </span>
+                  )}
+                  . Open <strong>Review Queue</strong> to edit or activate.
+                </p>
+                {generateResult.hint && (
+                  <p className="text-xs text-zinc-600">{generateResult.hint}</p>
+                )}
+                {generateResult.questions && generateResult.questions.length > 0 && (
+                  <details
+                    open={generateReportOpen}
+                    onToggle={(e) => setGenerateReportOpen(e.currentTarget.open)}
+                    className="text-sm border border-zinc-200 rounded bg-white"
+                  >
+                    <summary className="cursor-pointer px-3 py-2 font-medium text-zinc-800">
+                      Per-question report
+                    </summary>
+                    <ul className="px-3 pb-3 space-y-2 max-h-48 overflow-y-auto">
+                      {generateResult.questions.map((q) => (
+                        <li
+                          key={q.legacy_id}
+                          className="text-xs border border-zinc-100 rounded p-2 bg-zinc-50"
+                        >
+                          <span className="font-mono font-medium">{q.legacy_id}</span>
+                          {" · "}
+                          <span
+                            className={
+                              q.quality_status === "fail"
+                                ? "text-red-700"
+                                : q.quality_status === "needs_review"
+                                  ? "text-amber-800"
+                                  : "text-green-800"
+                            }
+                          >
+                            {q.quality_status.replace("_", " ")}
+                            {q.imported ? " · imported" : " · not imported"}
+                          </span>
+                          {q.quality_notes ? (
+                            <p className="mt-1 text-zinc-600">{q.quality_notes}</p>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+              </div>
+            )}
+          </div>
+        ) : null}
 
         <div className="flex flex-wrap gap-3 items-end">
           <label className="flex flex-col gap-1 text-sm">
@@ -333,7 +537,10 @@ export default function QuestionLabWorkflow() {
           </p>
         ) : null}
 
-        {/* Step 1–3 */}
+        {/* Step 1–3 · manual ChatGPT flow */}
+        <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">
+          Manual flow (ChatGPT copy and paste)
+        </p>
         <div className="grid gap-4 lg:grid-cols-3">
           <section className="rounded-lg border border-zinc-200 p-3 space-y-2 bg-zinc-50/50">
             <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Step 1 · ChatGPT learns from UCAT</p>

@@ -1,28 +1,12 @@
-import type { QuestionExplanation } from "../components/mentalMaths/mathsAlgorithms";
-import type { ConversionQuestionCategory } from "../data/conversionQuestions";
-import type { QLDifficulty, QLQuestionKind, QLSection } from "../types/questionLab";
-import { buildMcqContentFromImportRaw } from "./mcqContent";
+import { TRAINER_META } from "./questionLabAssets";
 import {
-  sanitizeQuestionContent,
-  sanitizeSjtItems,
-  sanitizeStudentFacingCopy,
-} from "./studentFacingCopy";
-import { TRAINER_META, type TrainerMeta } from "./questionLabAssets";
+  mapRawQuestionForImport,
+  normalizeImportDifficulty,
+  type ImportDraftPayload,
+} from "./questionLabMapImport";
 import { supabase } from "./supabase";
 
-export type ImportDraftPayload = {
-  legacy_id: string;
-  section: QLSection;
-  trainer_type: string;
-  question_kind: QLQuestionKind;
-  difficulty: QLDifficulty;
-  skill_tag: string;
-  stem: string;
-  explanation: string;
-  content: Record<string, unknown>;
-  quality_status?: string;
-  quality_notes?: string | null;
-};
+export type { ImportDraftPayload } from "./questionLabMapImport";
 
 export type ImportPreviewItem = {
   legacy_id: string;
@@ -48,169 +32,6 @@ function parseJsonInput(raw: string): unknown {
   const fence = text.match(/^```(?:json)?\s*([\s\S]*?)```$/i);
   if (fence) text = fence[1].trim();
   return JSON.parse(text) as unknown;
-}
-
-function normalizeDifficulty(v: unknown, fallback: QLDifficulty = "medium"): QLDifficulty {
-  const d = str(v).toLowerCase();
-  if (d === "easy" || d === "foundation") return "easy";
-  if (d === "hard" || d === "challenging") return "hard";
-  if (d === "medium" || d === "standard") return "medium";
-  return fallback;
-}
-
-function mapDmMcq(raw: Record<string, unknown>, meta: TrainerMeta): ImportDraftPayload | string {
-  const legacy_id = str(raw.legacy_id) || str(raw.id);
-  if (!legacy_id) return "Missing id or legacy_id";
-
-  const stem = str(raw.stem);
-  const explanation = str(raw.explanation);
-  const skill_tag = str(raw.skill_tag) || str(raw.skillTag);
-  if (!stem || !explanation || !skill_tag) {
-    return "DM question needs stem, explanation, and skill_tag";
-  }
-
-  const built = buildMcqContentFromImportRaw(raw, asRecord(raw.content));
-  if ("error" in built) return built.error;
-
-  const content = sanitizeQuestionContent(
-    built.content as unknown as Record<string, unknown>,
-    meta.questionKind,
-  );
-
-  return {
-    legacy_id,
-    section: meta.section,
-    trainer_type: meta.trainerType,
-    question_kind: meta.questionKind,
-    difficulty: normalizeDifficulty(raw.difficulty),
-    skill_tag,
-    stem: sanitizeStudentFacingCopy(stem),
-    explanation: sanitizeStudentFacingCopy(explanation),
-    content,
-  };
-}
-
-function mapSjt(raw: Record<string, unknown>, meta: TrainerMeta): ImportDraftPayload | string {
-  const legacy_id = str(raw.legacy_id) || str(raw.id);
-  if (!legacy_id) return "Missing id or legacy_id";
-
-  const stem = str(raw.stem);
-  const domain = str(raw.domain) || str(asRecord(raw.content)?.domain);
-  const items = raw.items ?? asRecord(raw.content)?.items;
-  if (!stem || !domain || !Array.isArray(items) || items.length < 3) {
-    return "SJT question needs stem, domain, and items array";
-  }
-
-  const sanitizedItems = sanitizeSjtItems(items) ?? items;
-  const content: Record<string, unknown> = sanitizeQuestionContent(
-    {
-      domain,
-      items: sanitizedItems,
-      pivotInsight:
-        str(raw.pivotInsight) ||
-        str(raw.pivot_insight) ||
-        str(asRecord(raw.content)?.pivotInsight) ||
-        undefined,
-    },
-    meta.questionKind,
-  );
-
-  const skill_tag = str(raw.skill_tag) || str(raw.skillTag) || domain;
-
-  return {
-    legacy_id,
-    section: meta.section,
-    trainer_type: meta.trainerType,
-    question_kind: meta.questionKind,
-    difficulty: normalizeDifficulty(raw.difficulty),
-    skill_tag,
-    stem: sanitizeStudentFacingCopy(stem),
-    explanation: sanitizeStudentFacingCopy(
-      str(raw.explanation) || "See item rationales in content.",
-    ),
-    content,
-  };
-}
-
-function parseConversionExplanation(raw: unknown): QuestionExplanation {
-  const obj = asRecord(raw);
-  if (obj && typeof obj.method === "object") {
-    const method = asRecord(obj.method);
-    return {
-      method: {
-        target: str(method?.target),
-        convert: str(method?.convert),
-        calculate: str(method?.calculate),
-      },
-      examShortcut: str(obj.examShortcut) || str(obj.exam_shortcut),
-      senseCheck: str(obj.senseCheck) || str(obj.sense_check),
-      commonTrap: str(obj.commonTrap) || str(obj.common_trap),
-    };
-  }
-  const text = typeof raw === "string" ? raw.trim() : "";
-  return {
-    method: { target: "", convert: "", calculate: text },
-    examShortcut: text,
-    senseCheck: "",
-    commonTrap: "",
-  };
-}
-
-function mapConversion(raw: Record<string, unknown>, meta: TrainerMeta): ImportDraftPayload | string {
-  const legacy_id = str(raw.legacy_id) || str(raw.id);
-  if (!legacy_id) return "Missing id or legacy_id";
-
-  const contentObj = asRecord(raw.content);
-  const prompt =
-    str(raw.prompt) || str(raw.stem) || str(raw.question) || str(contentObj?.question);
-  const answer = Number(
-    raw.answer ?? raw.correctAnswer ?? contentObj?.correctAnswer,
-  );
-  if (!prompt || Number.isNaN(answer)) return "Conversion needs prompt and numeric correctAnswer";
-
-  const category = (str(raw.category) ||
-    str(raw.skill_tag) ||
-    str(raw.skillTag) ||
-    str(contentObj?.category) ||
-    "Metric length") as ConversionQuestionCategory;
-  const units =
-    str(raw.answerLabel) || str(raw.units) || str(contentObj?.units) || "";
-  const explanation = parseConversionExplanation(raw.explanation ?? contentObj?.explanation);
-  if (!explanation.commonTrap) {
-    explanation.commonTrap =
-      str(raw.commonTrap) || str(contentObj?.commonTrap) || "unspecified-trap";
-  }
-  const worked =
-    str(raw.workedSolution) ||
-    str(contentObj?.workedSolution) ||
-    explanation.examShortcut;
-
-  const content = sanitizeQuestionContent(
-    {
-      question: prompt,
-      correctAnswer: answer,
-      units,
-      category,
-      workedSolution: worked,
-      commonTrap: explanation.commonTrap,
-      explanation,
-    },
-    meta.questionKind,
-  );
-
-  return {
-    legacy_id,
-    section: meta.section,
-    trainer_type: meta.trainerType,
-    question_kind: meta.questionKind,
-    difficulty: normalizeDifficulty(raw.difficulty),
-    skill_tag: category,
-    stem: sanitizeStudentFacingCopy(prompt),
-    explanation: sanitizeStudentFacingCopy(
-      explanation.examShortcut || worked || `Answer: ${answer}${units ? ` ${units}` : ""}`,
-    ),
-    content,
-  };
 }
 
 export function parseImportJson(raw: string, trainerType: string): ImportParseResult {
@@ -256,12 +77,7 @@ export function parseImportJson(raw: string, trainerType: string): ImportParseRe
       continue;
     }
 
-    let mapped: ImportDraftPayload | string;
-    if (meta.section === "dm") mapped = mapDmMcq(row, meta);
-    else if (meta.section === "sjt") mapped = mapSjt(row, meta);
-    else if (meta.trainerType === "qr-conversions") mapped = mapConversion(row, meta);
-    else mapped = `Row ${i + 1}: unsupported`;
-
+    const mapped = mapRawQuestionForImport(row, trainerType);
     if (typeof mapped === "string") {
       details.push(`Row ${i + 1} (${str(row.id) || "?"}): ${mapped}`);
       continue;
@@ -306,8 +122,12 @@ function withTimeout<T>(promise: PromiseLike<T>, ms: number, message: string): P
   });
 }
 
+function asRecordRpc(v: unknown): Record<string, unknown> | null {
+  return v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
+}
+
 function normalizeRpcResult(raw: unknown): ImportRpcResult {
-  const row = asRecord(raw);
+  const row = asRecordRpc(raw);
   return {
     created: typeof row?.created === "number" ? row.created : 0,
     updated: typeof row?.updated === "number" ? row.updated : 0,
@@ -377,3 +197,6 @@ export async function importDraftsToDatabase(
 
   return combined;
 }
+
+// Re-export for callers that need difficulty normalisation
+export { normalizeImportDifficulty };

@@ -1,0 +1,342 @@
+import { mapRawQuestionForImport, type ImportDraftPayload } from "../questionLabMapImport.ts";
+import { parseAuditVerdict } from "./audit.ts";
+import { buildAuditMessages, buildGenerateMessages, buildRepairMessages } from "./prompts.ts";
+import { callOpenRouter, type OpenRouterConfig } from "./openrouter.ts";
+import { eligibleForAiRepair, repairIssuesForPrompt } from "./repair.ts";
+import { pluginAbsentNeedsReview, pluginContextLine, runPlugins } from "./plugins/index.ts";
+import { getGenerateProfile } from "./profiles.ts";
+import type {
+  AuditVerdict,
+  GenerateTrainerQuestionsResult,
+  QuestionVerifyOutcome,
+  TrainerGenerateProfile,
+} from "./types.ts";
+import { autoFixGeneratedRaw } from "./autoFix.ts";
+import { parseAiJsonArray, asRecord, normaliseStemKey, str } from "./utils.ts";
+import { validateUniversal } from "./validateUniversal.ts";
+
+export type ProcessGeneratedInput = {
+  trainerType: string;
+  outputSpec: string;
+  goldStandard: string;
+  count?: number;
+  skillTag?: string;
+  difficulty?: string;
+  existingStems?: string[];
+  openRouter: OpenRouterConfig;
+  skipAudit?: boolean;
+};
+
+type VerifyContext = {
+  input: ProcessGeneratedInput;
+  profile: TrainerGenerateProfile;
+  stemKeys: Set<string>;
+  legacyIdsInBatch: Set<string>;
+};
+
+type VerifyResult = {
+  outcome: QuestionVerifyOutcome;
+  draft: ImportDraftPayload | null;
+  raw: Record<string, unknown>;
+};
+
+async function auditQuestion(
+  config: OpenRouterConfig,
+  profile: TrainerGenerateProfile,
+  outputSpec: string,
+  raw: Record<string, unknown>,
+  pluginSummary: string,
+): Promise<AuditVerdict> {
+  const messages = buildAuditMessages({
+    profile,
+    outputSpec,
+    questionJson: JSON.stringify(raw, null, 0),
+    pluginSummary,
+  });
+  const rawAudit = await callOpenRouter(config, config.auditModel, messages, 2_000);
+  return parseAuditVerdict(rawAudit);
+}
+
+async function verifyRawQuestion(
+  ctx: VerifyContext,
+  raw: Record<string, unknown>,
+  repairPass?: number,
+): Promise<VerifyResult> {
+  const { input, profile, stemKeys, legacyIdsInBatch } = ctx;
+  const { fixes: autoFixes } = autoFixGeneratedRaw(raw, profile);
+
+  const legacyId = str(raw.legacy_id) || str(raw.id) || "unknown";
+  const layer1Result = validateUniversal(raw, profile, stemKeys, legacyIdsInBatch);
+  const layer1 = layer1Result.hard;
+  const layer1Soft = layer1Result.soft;
+  const layer2 = runPlugins(raw, profile);
+  const pluginSummary = pluginContextLine(layer2, profile);
+
+  let layer3: AuditVerdict | null = null;
+  if (!input.skipAudit) {
+    try {
+      layer3 = await auditQuestion(
+        input.openRouter,
+        profile,
+        input.outputSpec,
+        raw,
+        pluginSummary,
+      );
+    } catch (err) {
+      layer3 = {
+        verdict: "needs_review",
+        issues: [err instanceof Error ? err.message : "Audit call failed."],
+      };
+    }
+  } else {
+    layer3 = { verdict: "pass", issues: [] };
+  }
+
+  const hardFail =
+    layer1.length > 0 || (layer2?.hardFail === true && layer2.ok === false);
+
+  const copyWantsReview = layer1Soft.length > 0;
+  const pluginWantsReview =
+    pluginAbsentNeedsReview(profile) ||
+    layer2?.reviewRecommended === true ||
+    layer2?.verified === false;
+
+  let qualityStatus: "pass" | "needs_review" | "fail" = "pass";
+  if (hardFail) qualityStatus = "fail";
+  else if (copyWantsReview || pluginWantsReview || layer3.verdict === "needs_review") {
+    qualityStatus = "needs_review";
+  }
+
+  const notes: string[] = [];
+  if (repairPass) notes.push(`AI repair pass ${repairPass}`);
+  if (autoFixes.length) notes.push(`Auto-fixed: ${autoFixes.join(", ")}`);
+  if (layer1.length) notes.push(`Blocked: ${layer1.join("; ")}`);
+  if (layer1Soft.length) notes.push(`Review wording: ${layer1Soft.join("; ")}`);
+  if (layer2 && !layer2.ok) notes.push(`L2: ${layer2.summary}`);
+  if (layer3.issues.length) notes.push(`L3: ${layer3.issues.join("; ")}`);
+  if (layer2?.ok && layer2.summary) notes.push(layer2.summary);
+
+  const baseOutcome: QuestionVerifyOutcome = {
+    legacyId,
+    hardPass: !hardFail,
+    qualityStatus,
+    qualityNotes: notes.join(" ") || "AI draft.",
+    layer1Issues: [...layer1, ...layer1Soft.map((s) => `(review) ${s}`)],
+    layer2,
+    layer3,
+  };
+
+  if (hardFail) {
+    return { outcome: baseOutcome, draft: null, raw };
+  }
+
+  const mapped = mapRawQuestionForImport(raw, profile.trainerType);
+  if (typeof mapped === "string") {
+    return {
+      outcome: {
+        ...baseOutcome,
+        hardPass: false,
+        qualityStatus: "fail",
+        qualityNotes: `${repairPass ? `AI repair pass ${repairPass}. ` : ""}Mapping: ${mapped}`,
+      },
+      draft: null,
+      raw,
+    };
+  }
+
+  mapped.quality_status = qualityStatus;
+  mapped.quality_notes = baseOutcome.qualityNotes;
+  return { outcome: baseOutcome, draft: mapped, raw };
+}
+
+async function runAiRepairBatch(
+  ctx: VerifyContext,
+  candidates: Array<{ raw: Record<string, unknown>; outcome: QuestionVerifyOutcome }>,
+): Promise<Record<string, unknown>[]> {
+  const items = candidates.map((c) => ({
+    legacyId: c.outcome.legacyId,
+    raw: c.raw,
+    issues: repairIssuesForPrompt(c.outcome),
+  }));
+
+  const messages = buildRepairMessages({
+    profile: ctx.profile,
+    outputSpec: ctx.input.outputSpec,
+    items,
+  });
+
+  const repairedRaw = await callOpenRouter(
+    ctx.input.openRouter,
+    ctx.input.openRouter.repairModel,
+    messages,
+    12_000,
+  );
+
+  return parseAiJsonArray(repairedRaw)
+    .map((item) => asRecord(item))
+    .filter((r): r is Record<string, unknown> => r !== null);
+}
+
+export async function generateAndVerifyQuestions(
+  input: ProcessGeneratedInput,
+): Promise<{
+  drafts: ImportDraftPayload[];
+  outcomes: QuestionVerifyOutcome[];
+  generated: number;
+  importedLegacyIds: Set<string>;
+  repairAttempted: number;
+  repairSucceeded: number;
+}> {
+  const profile = getGenerateProfile(input.trainerType);
+  if (!profile) throw new Error("This trainer does not support AI generation yet.");
+
+  const count = Math.min(input.count ?? profile.batchSize, profile.batchSize);
+  const ctx: VerifyContext = {
+    input,
+    profile,
+    stemKeys: new Set(
+      (input.existingStems ?? []).map((s) => normaliseStemKey(s)).filter(Boolean),
+    ),
+    legacyIdsInBatch: new Set<string>(),
+  };
+
+  const generateMessages = buildGenerateMessages({
+    profile,
+    outputSpec: input.outputSpec,
+    goldStandard: input.goldStandard,
+    count,
+    skillTag: input.skillTag,
+    difficulty: input.difficulty,
+    bankSnippet: input.existingStems?.length
+      ? input.existingStems.slice(0, 30).join("\n")
+      : undefined,
+  });
+
+  const generatedRaw = await callOpenRouter(
+    input.openRouter,
+    input.openRouter.generateModel,
+    generateMessages,
+  );
+
+  const list = parseAiJsonArray(generatedRaw);
+  const outcomes: QuestionVerifyOutcome[] = [];
+  const drafts: ImportDraftPayload[] = [];
+  const rawByLegacyId = new Map<string, Record<string, unknown>>();
+
+  for (const item of list.slice(0, count)) {
+    const raw = asRecord(item);
+    if (!raw) continue;
+
+    const result = await verifyRawQuestion(ctx, raw);
+    rawByLegacyId.set(result.outcome.legacyId, result.raw);
+    outcomes.push(result.outcome);
+    if (result.draft) drafts.push(result.draft);
+  }
+
+  const repairCandidates = outcomes
+    .filter((o) => eligibleForAiRepair(o))
+    .map((o) => ({ outcome: o, raw: rawByLegacyId.get(o.legacyId) }))
+    .filter((c): c is { outcome: QuestionVerifyOutcome; raw: Record<string, unknown> } =>
+      Boolean(c.raw),
+    );
+
+  let repairAttempted = 0;
+  let repairSucceeded = 0;
+
+  if (repairCandidates.length > 0) {
+    repairAttempted = repairCandidates.length;
+    const repairedList = await runAiRepairBatch(ctx, repairCandidates);
+
+    for (let i = 0; i < repairCandidates.length; i++) {
+      const candidate = repairCandidates[i];
+      const repairedRaw =
+        asRecord(repairedList[i]) ??
+        repairedList.find(
+          (r) =>
+            str(r.legacy_id) === candidate.outcome.legacyId ||
+            str(r.id) === candidate.outcome.legacyId,
+        );
+
+      if (!repairedRaw) continue;
+
+      if (!str(repairedRaw.legacy_id) && !str(repairedRaw.id)) {
+        repairedRaw.legacy_id = candidate.outcome.legacyId;
+      }
+
+      const result = await verifyRawQuestion(ctx, repairedRaw, 1);
+      rawByLegacyId.set(result.outcome.legacyId, result.raw);
+
+      const idx = outcomes.findIndex((o) => o.legacyId === candidate.outcome.legacyId);
+      if (idx >= 0) outcomes[idx] = result.outcome;
+
+      if (result.draft) {
+        const draftIdx = drafts.findIndex((d) => d.legacy_id === result.draft!.legacy_id);
+        if (draftIdx >= 0) drafts[draftIdx] = result.draft;
+        else drafts.push(result.draft);
+        if (result.outcome.qualityStatus !== "fail") repairSucceeded += 1;
+      } else {
+        const draftIdx = drafts.findIndex((d) => d.legacy_id === candidate.outcome.legacyId);
+        if (draftIdx >= 0) drafts.splice(draftIdx, 1);
+      }
+    }
+  }
+
+  return {
+    drafts,
+    outcomes,
+    generated: list.length,
+    importedLegacyIds: new Set(drafts.map((d) => d.legacy_id)),
+    repairAttempted,
+    repairSucceeded,
+  };
+}
+
+export function summariseGenerateResult(
+  generated: number,
+  outcomes: QuestionVerifyOutcome[],
+  importResult: {
+    created: number;
+    updated: number;
+    skipped: Array<{ legacy_id: string; reason: string }>;
+    errors: Array<{ legacy_id?: string | null; message: string }>;
+  },
+  importedLegacyIds: Set<string>,
+  repairAttempted: number,
+  repairSucceeded: number,
+): GenerateTrainerQuestionsResult {
+  const imported = importResult.created + importResult.updated;
+  const failed = outcomes.filter((o) => o.qualityStatus === "fail").length;
+  const flagged = outcomes.filter((o) => o.qualityStatus === "needs_review").length;
+
+  let hint: string | undefined;
+  if (imported === 0 && outcomes.length > 0) {
+    hint =
+      "Nothing imported. See each question below. Blocked items with wrong maths are not auto-repaired.";
+  } else if (failed > 0) {
+    hint = `${failed} still blocked after repair. Others are in Review Queue.`;
+  }
+  if (repairAttempted > 0) {
+    const repairLine = `AI repair pass: ${repairSucceeded} of ${repairAttempted} fixed and imported.`;
+    hint = hint ? `${hint} ${repairLine}` : repairLine;
+  }
+
+  return {
+    created: importResult.created,
+    updated: importResult.updated,
+    skipped: importResult.skipped,
+    importErrors: importResult.errors,
+    generated,
+    imported,
+    failed,
+    flagged,
+    repairAttempted,
+    repairSucceeded,
+    hint,
+    questions: outcomes.map((o) => ({
+      legacy_id: o.legacyId,
+      quality_status: o.qualityStatus,
+      quality_notes: o.qualityNotes,
+      imported: importedLegacyIds.has(o.legacyId),
+    })),
+  };
+}

@@ -1,106 +1,16 @@
-import type { QLQuestionKind, QLSection } from "../types/questionLab";
+import {
+  QUESTION_LAB_TRAINER_TYPES,
+  TRAINER_META,
+  TRAINER_TYPE_SLUG,
+  type TrainerMeta,
+} from "./questionLabTrainerMeta";
 
-/** Trainer type → repo filenames under question-lab/ */
-export const TRAINER_TYPE_SLUG: Record<string, string> = {
-  "venn-logic": "dm-venn-logic",
-  "data-logic": "dm-data-logic",
-  "argument-judge": "dm-argument-judge",
-  "sjt-appropriateness": "sjt-appropriateness",
-  "sjt-importance": "sjt-importance",
-  "sjt-ranking": "sjt-ranking",
-  inference: "inference",
-  "vr-passages": "vr-passages",
-  "qr-conversions": "qr-conversions",
+export {
+  QUESTION_LAB_TRAINER_TYPES,
+  TRAINER_META,
+  TRAINER_TYPE_SLUG,
+  type TrainerMeta,
 };
-
-export type TrainerMeta = {
-  trainerType: string;
-  label: string;
-  section: QLSection;
-  questionKind: QLQuestionKind;
-  supportsImport: boolean;
-  supportsLocalBank: boolean;
-  importHint?: string;
-};
-
-export const TRAINER_META: Record<string, TrainerMeta> = {
-  "venn-logic": {
-    trainerType: "venn-logic",
-    label: "DM · Venn Logic",
-    section: "dm",
-    questionKind: "mcq",
-    supportsImport: true,
-    supportsLocalBank: true,
-  },
-  "data-logic": {
-    trainerType: "data-logic",
-    label: "DM · Data Logic",
-    section: "dm",
-    questionKind: "mcq",
-    supportsImport: true,
-    supportsLocalBank: true,
-  },
-  "argument-judge": {
-    trainerType: "argument-judge",
-    label: "DM · Argument Judge",
-    section: "dm",
-    questionKind: "mcq",
-    supportsImport: true,
-    supportsLocalBank: true,
-  },
-  "sjt-appropriateness": {
-    trainerType: "sjt-appropriateness",
-    label: "SJT · Appropriateness",
-    section: "sjt",
-    questionKind: "appropriateness",
-    supportsImport: true,
-    supportsLocalBank: true,
-  },
-  "sjt-importance": {
-    trainerType: "sjt-importance",
-    label: "SJT · Importance",
-    section: "sjt",
-    questionKind: "importance",
-    supportsImport: true,
-    supportsLocalBank: true,
-  },
-  "sjt-ranking": {
-    trainerType: "sjt-ranking",
-    label: "SJT · Ranking",
-    section: "sjt",
-    questionKind: "ranking",
-    supportsImport: true,
-    supportsLocalBank: true,
-  },
-  inference: {
-    trainerType: "inference",
-    label: "VR · Inference",
-    section: "vr",
-    questionKind: "mcq",
-    supportsImport: false,
-    supportsLocalBank: true,
-    importHint: "Inference uses passage-linked spans. Import is not supported yet; add via the inference bank in code.",
-  },
-  "vr-passages": {
-    trainerType: "vr-passages",
-    label: "VR · Passages",
-    section: "vr",
-    questionKind: "true-false-ct",
-    supportsImport: false,
-    supportsLocalBank: false,
-    importHint: "Full passages need a dedicated import flow. Use DM trainers for now.",
-  },
-  "qr-conversions": {
-    trainerType: "qr-conversions",
-    label: "QR · Conversions",
-    section: "qr",
-    questionKind: "numeric",
-    supportsImport: true,
-    supportsLocalBank: true,
-  },
-};
-
-export const QUESTION_LAB_TRAINER_TYPES = Object.keys(TRAINER_META);
 
 const officialExamplesGlob = import.meta.glob(
   "../../question-lab/gold-standards/*.md",
@@ -140,31 +50,7 @@ export function getOutputSpecMarkdown(trainerType: string): string | null {
   return contentFromGlob(outputSpecsGlob, `${slug}.md`);
 }
 
-/** How many official examples appear to be pasted (after the --- divider). */
-export function countOfficialExamples(md: string): { count: number; isEmpty: boolean; wordCount: number } {
-  const parts = md.split(/\n---\n/);
-  let body = (parts.length > 1 ? parts.slice(1).join("\n---\n") : md).trim();
-  // Users often keep the template marker line; strip it before measuring content.
-  body = body
-    .replace(/\[Paste official examples below[^\]]*\]\s*/gi, "")
-    .replace(/^Here are official questions[^\n]*\n*/gim, "")
-    .trim();
-  const examples = (body.match(/^###\s+Example\b/gim) ?? []).length;
-  const numbered = (body.match(/^Example\s+\d+/gim) ?? []).length;
-  const wordCount = body.split(/\s+/).filter(Boolean).length;
-  const isEmpty = wordCount < 80;
-  const estimated =
-    examples > 0
-      ? examples
-      : numbered > 0
-        ? numbered
-        : wordCount >= 200
-          ? Math.min(12, Math.ceil(wordCount / 120))
-          : wordCount >= 80
-            ? 1
-            : 0;
-  return { count: estimated, isEmpty, wordCount };
-}
+export { countOfficialExamples } from "./questionLabGoldStats";
 
 export type BankExportRow = {
   id: string;

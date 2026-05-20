@@ -4,7 +4,7 @@ import type {
   DmTrainerOption,
   DmTrainerOptionId,
   DmTrainerReviewBase,
-} from "../types/dmTrainers";
+} from "../types/dmTrainers.ts";
 
 export type McqOptionDetail = {
   id: DmTrainerOptionId;
