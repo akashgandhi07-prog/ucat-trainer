@@ -8,8 +8,13 @@ import { getSiteBaseUrl } from "../lib/siteUrl";
 import { ArrowLeft } from "lucide-react";
 import { trackEvent } from "../lib/analytics";
 import UcatGuidesPanel from "../components/layout/UcatGuidesPanel";
+import { useAppShell } from "../contexts/AppShellContext";
+import { APP_CONTENT_X } from "../lib/appContentLayout";
+import { cn } from "../lib/cn";
 
 export default function SyllogismMicroPage() {
+  const inAppShell = useAppShell();
+
   useEffect(() => {
     trackEvent("trainer_opened", {
       training_type: "syllogism",
@@ -37,8 +42,8 @@ export default function SyllogismMicroPage() {
       />
       <Header />
       <div className="flex-1 flex flex-col">
-        <div className="px-4 pt-4 pb-2">
-          <div className="max-w-3xl mx-auto">
+        <div className={cn("pt-4 pb-2", inAppShell ? APP_CONTENT_X : "px-4")}>
+          <div className={cn("w-full", !inAppShell && "max-w-3xl mx-auto")}>
             <Link
               to="/decision-making"
               className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"
@@ -50,10 +55,13 @@ export default function SyllogismMicroPage() {
         </div>
         <MicroDrill />
       </div>
-      <UcatGuidesPanel
-        context="decisionHub"
-        contentMaxWidthClass="max-w-6xl mx-auto w-full"
-      />
+      <div className={cn(inAppShell ? APP_CONTENT_X : undefined, "pb-8 sm:pb-10")}>
+        <UcatGuidesPanel
+          embedded={inAppShell}
+          context="decisionHub"
+          contentMaxWidthClass={inAppShell ? "w-full" : "max-w-6xl mx-auto w-full"}
+        />
+      </div>
       <Footer />
     </div>
   );

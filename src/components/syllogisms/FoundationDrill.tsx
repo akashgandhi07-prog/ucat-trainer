@@ -4,6 +4,9 @@ import { useSyllogismLogic } from "./useSyllogismLogic";
 import QuestionFeedbackModal from "../feedback/QuestionFeedbackModal";
 import { PostDrillUpsell } from "../layout/ProductUpsell";
 import { useAuth } from "../../hooks/useAuth";
+import { useAppShell } from "../../contexts/AppShellContext";
+import { APP_CONTENT_X } from "../../lib/appContentLayout";
+import { cn } from "../../lib/cn";
 
 const FOUNDATION_BATCH_SIZE = 12;
 
@@ -24,6 +27,7 @@ function getFeedbackLabel(isCorrect: boolean, actuallyFollows: boolean): string 
 
 export default function FoundationDrill() {
   const { loading: authLoading } = useAuth();
+  const inAppShell = useAppShell();
   const {
     questions,
     currentIndex,
@@ -91,8 +95,8 @@ export default function FoundationDrill() {
   }, [handleKeyDown]);
 
   return (
-    <div className="px-4 pb-8">
-      <div className="w-full max-w-3xl mx-auto pt-4">
+    <div className={cn("pb-8", inAppShell ? APP_CONTENT_X : "px-4")}>
+      <div className={cn("w-full pt-4", !inAppShell && "max-w-3xl mx-auto")}>
         <div className="bg-card rounded-xl border border-border p-6 sm:p-8 overflow-hidden">
           <div className="flex items-baseline justify-between gap-4 mb-4">
             <div>

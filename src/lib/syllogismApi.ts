@@ -2,6 +2,8 @@ import { supabase } from "./supabase";
 import type { SyllogismQuestion, LogicGroup } from "../types/syllogisms";
 import { normaliseQuestionMedia } from "../types/questionMedia";
 
+const FETCH_TIMEOUT_MS = 10_000;
+
 function toErrorMessage(e: unknown): string {
   if (isAbortError(e)) {
     return "Failed to load syllogism questions. Please try again or check your connection.";
@@ -79,13 +81,24 @@ async function rpcRequest<T>(
     request = request.abortSignal(signal);
   }
 
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
   try {
-    const { data, error } = await request;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(
+        () => reject(new Error("Request timed out. Please check your connection and try again.")),
+        FETCH_TIMEOUT_MS,
+      );
+    });
+
+    const { data, error } = await Promise.race([request, timeoutPromise]);
+    clearTimeout(timeoutId);
     if (error) throw error;
     return data as T;
   } catch (e) {
     if (isAbortError(e)) throw e;
     throw new Error(toErrorMessage(e));
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 

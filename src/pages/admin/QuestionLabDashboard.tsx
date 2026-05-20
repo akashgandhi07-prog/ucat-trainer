@@ -78,6 +78,7 @@ type ReportRow = {
 };
 
 type GetReportsResult = { total: number; rows: ReportRow[] };
+type RpcArgs = Record<string, string | number | boolean>;
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -172,6 +173,32 @@ async function withAuthSessionRetry<T>(
     response = await request();
   }
   return response as { data: T | null; error: { message: string } | null };
+}
+
+function trainerQuestionsArgs(input: {
+  section?: string;
+  trainerType?: string;
+  status?: string;
+  quality?: string;
+  difficulty?: string;
+  flagged?: boolean | null;
+  search?: string;
+  limit: number;
+  offset: number;
+}): RpcArgs {
+  const args: RpcArgs = {
+    p_limit: input.limit,
+    p_offset: input.offset,
+  };
+  if (input.section) args.p_section = input.section;
+  if (input.trainerType) args.p_trainer_type = input.trainerType;
+  if (input.status) args.p_status = input.status;
+  if (input.quality) args.p_quality_status = input.quality;
+  if (input.difficulty) args.p_difficulty = input.difficulty;
+  if (input.flagged != null) args.p_is_flagged = input.flagged;
+  const search = input.search?.trim();
+  if (search) args.p_search = search;
+  return args;
 }
 
 // ─── QuestionRow expanded view ────────────────────────────────────────────────
@@ -327,17 +354,22 @@ function QuestionsTab() {
     setLoading(true);
     setError(null);
     try {
-      const { data, error: rpcError } = await withAuthSessionRetry<GetQuestionsResult>(() => supabase.rpc("admin_get_trainer_questions", {
-        p_section:        section        || null,
-        p_trainer_type:   trainerType    || null,
-        p_status:         status         || null,
-        p_quality_status: quality        || null,
-        p_difficulty:     difficulty     || null,
-        p_is_flagged:     flagged === "yes" ? true : flagged === "no" ? false : null,
-        p_search:         search.trim()  || null,
-        p_limit:          PAGE_SIZE,
-        p_offset:         pageNum * PAGE_SIZE,
-      }));
+      const { data, error: rpcError } = await withAuthSessionRetry<GetQuestionsResult>(() =>
+        supabase.rpc(
+          "admin_get_trainer_questions",
+          trainerQuestionsArgs({
+            section,
+            trainerType,
+            status,
+            quality,
+            difficulty,
+            flagged: flagged === "yes" ? true : flagged === "no" ? false : null,
+            search,
+            limit: PAGE_SIZE,
+            offset: pageNum * PAGE_SIZE,
+          }),
+        ),
+      );
       if (rpcError) throw rpcError;
       const result = data as GetQuestionsResult;
       setRows(result.rows ?? []);
@@ -744,12 +776,17 @@ function CsvReviewTab() {
     setError(null);
     setSelected(new Set());
     try {
-      const { data, error: rpcError } = await withAuthSessionRetry<GetQuestionsResult>(() => supabase.rpc("admin_get_trainer_questions", {
-        p_status:       status       || null,
-        p_trainer_type: trainerType  || null,
-        p_limit:        500,
-        p_offset:       0,
-      }));
+      const { data, error: rpcError } = await withAuthSessionRetry<GetQuestionsResult>(() =>
+        supabase.rpc(
+          "admin_get_trainer_questions",
+          trainerQuestionsArgs({
+            status,
+            trainerType,
+            limit: 500,
+            offset: 0,
+          }),
+        ),
+      );
       if (rpcError) throw rpcError;
       const result = data as GetQuestionsResult;
       setRows(result.rows ?? []);
@@ -909,13 +946,22 @@ function ReviewQueueTab() {
     try {
       const [d, nr, fl] = await Promise.all([
         withAuthSessionRetry<GetQuestionsResult>(() =>
-          supabase.rpc("admin_get_trainer_questions", { p_status: "draft", p_limit: 200, p_offset: 0 }),
+          supabase.rpc(
+            "admin_get_trainer_questions",
+            trainerQuestionsArgs({ status: "draft", limit: 200, offset: 0 }),
+          ),
         ),
         withAuthSessionRetry<GetQuestionsResult>(() =>
-          supabase.rpc("admin_get_trainer_questions", { p_quality_status: "needs_review", p_limit: 200, p_offset: 0 }),
+          supabase.rpc(
+            "admin_get_trainer_questions",
+            trainerQuestionsArgs({ quality: "needs_review", limit: 200, offset: 0 }),
+          ),
         ),
         withAuthSessionRetry<GetQuestionsResult>(() =>
-          supabase.rpc("admin_get_trainer_questions", { p_is_flagged: true, p_status: "active", p_limit: 200, p_offset: 0 }),
+          supabase.rpc(
+            "admin_get_trainer_questions",
+            trainerQuestionsArgs({ flagged: true, status: "active", limit: 200, offset: 0 }),
+          ),
         ),
       ]);
       if (d.error)  throw d.error;

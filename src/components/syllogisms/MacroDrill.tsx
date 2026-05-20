@@ -3,6 +3,9 @@ import { useSyllogismLogic } from "./useSyllogismLogic";
 import QuestionFeedbackModal from "../feedback/QuestionFeedbackModal";
 import QuestionMediaBlock from "../media/QuestionMediaBlock";
 import { useAuth } from "../../hooks/useAuth";
+import { useAppShell } from "../../contexts/AppShellContext";
+import { APP_CONTENT_X } from "../../lib/appContentLayout";
+import { cn } from "../../lib/cn";
 
 const DRAG_DATA_KEY = "application/x-syllogism-answer";
 
@@ -19,6 +22,7 @@ function getFeedbackLabel(isCorrect: boolean, actuallyFollows: boolean): string 
 
 export default function MacroDrill() {
   const { loading: authLoading } = useAuth();
+  const inAppShell = useAppShell();
   const {
     questions,
     userAnswers,
@@ -110,8 +114,8 @@ export default function MacroDrill() {
   }, [questions.length, getLatestUserAnswers, finishSession]);
 
   return (
-    <div className="px-4 pb-4">
-      <div className="w-full max-w-6xl mx-auto pt-2">
+    <div className={cn("pb-4", inAppShell ? APP_CONTENT_X : "px-4")}>
+      <div className={cn("w-full pt-2", !inAppShell && "max-w-6xl mx-auto")}>
         <header className="mb-2 flex items-baseline justify-between gap-4">
           <div>
             <h1 className="text-xl sm:text-2xl font-semibold text-foreground">
