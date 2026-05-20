@@ -64,7 +64,7 @@ export default function ConversionsTrainerPage() {
           <ConversionTrainer />
         </div>
       </main>
-      <UcatGuidesPanel context="trainer" trainingType="unit_conversions" />
+      <UcatGuidesPanel context="trainer" trainingType="unit_conversions" contentMaxWidthClass="max-w-6xl mx-auto w-full" />
       <Footer />
     </div>
   );

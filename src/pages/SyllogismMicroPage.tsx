@@ -49,14 +49,11 @@ export default function SyllogismMicroPage() {
           </div>
         </div>
         <MicroDrill />
-        <div className="max-w-3xl mx-auto px-4 pb-6">
-          <UcatGuidesPanel
-            context="decisionHub"
-            className="mt-0"
-            contentMaxWidthClass="max-w-3xl mx-auto w-full"
-          />
-        </div>
       </div>
+      <UcatGuidesPanel
+        context="decisionHub"
+        contentMaxWidthClass="max-w-6xl mx-auto w-full"
+      />
       <Footer />
     </div>
   );

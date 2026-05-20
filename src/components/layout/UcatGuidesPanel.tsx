@@ -181,6 +181,7 @@ export default function UcatGuidesPanel({
       className={cn(
         compact ? "mt-4" : "mt-8 sm:mt-10",
         embedded ? undefined : "px-4 sm:px-6 lg:px-8",
+        !compact && !embedded && "border-t border-border",
         className,
       )}
       aria-label={title}

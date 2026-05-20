@@ -107,7 +107,7 @@ export default function MentalMathsPage() {
           </div>
         </div>
       </main>
-      <UcatGuidesPanel context="trainer" trainingType="mental_maths" />
+      <UcatGuidesPanel context="trainer" trainingType="mental_maths" contentMaxWidthClass="max-w-6xl mx-auto w-full" />
       <TrainerFaqSection
         id="mental-maths-faq"
         title="UCAT mental maths trainer FAQs"

@@ -463,7 +463,7 @@ export default function KeywordScanningPage() {
           </div>
         </div>
       </main>
-      <UcatGuidesPanel context="trainer" trainingType="keyword_scanning" />
+      <UcatGuidesPanel context="trainer" trainingType="keyword_scanning" contentMaxWidthClass="max-w-6xl mx-auto w-full" />
       <TrainerFaqSection
         id="keyword-scanning-faq"
         title="Common questions about the UCAT keyword scanning trainer"

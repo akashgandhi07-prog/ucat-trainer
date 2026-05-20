@@ -508,7 +508,7 @@ export default function InferenceTrainerPage() {
         </main>
       )}
 
-      <UcatGuidesPanel context="trainer" trainingType="inference_trainer" />
+      <UcatGuidesPanel context="trainer" trainingType="inference_trainer" contentMaxWidthClass="max-w-6xl mx-auto w-full" />
       <TrainerFaqSection
         id="inference-faq"
         title="Common questions about the UCAT inference trainer"

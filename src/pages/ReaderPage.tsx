@@ -336,7 +336,7 @@ export default function ReaderPage() {
         )}
         </div>
       </main>
-      <UcatGuidesPanel context="trainer" trainingType="speed_reading" />
+      <UcatGuidesPanel context="trainer" trainingType="speed_reading" contentMaxWidthClass="max-w-6xl mx-auto w-full" />
       <TrainerFaqSection
         id="speed-reading-faq"
         title="Common questions about the UCAT speed reading trainer"

@@ -592,7 +592,7 @@ export default function RapidRecallPage() {
           </div>
         )}
       </main>
-      <UcatGuidesPanel context="trainer" trainingType="rapid_recall" />
+      <UcatGuidesPanel context="trainer" trainingType="rapid_recall" contentMaxWidthClass="max-w-6xl mx-auto w-full" />
       <TrainerFaqSection
         id="rapid-recall-faq"
         title="Common questions about the UCAT Rapid Recall trainer"
