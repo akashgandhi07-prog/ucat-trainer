@@ -177,7 +177,7 @@ function ExpandedQuestion({
           <p className="text-zinc-800 whitespace-pre-wrap">{row.stem}</p>
         </div>
       )}
-      {content.question && (
+      {!!content.question && (
         <div>
           <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-1">Question</p>
           <p className="text-zinc-800 whitespace-pre-wrap">{String(content.question)}</p>
@@ -203,7 +203,7 @@ function ExpandedQuestion({
           </ul>
         </div>
       )}
-      {content.commonTrap && (
+      {!!content.commonTrap && (
         <div>
           <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-1">Common Trap</p>
           <p className="text-zinc-700 whitespace-pre-wrap">{String(content.commonTrap)}</p>
