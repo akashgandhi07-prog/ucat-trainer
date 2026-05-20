@@ -211,3 +211,11 @@ Before outputting a question, verify:
 - [ ] For `must-be-true` questions: checked at least two different valid overlap configurations to confirm the correct answer holds for both and each wrong answer fails for at least one.
 - [ ] No combinatorics or probability reasoning is required to answer the question.
 - [ ] `generalRule` contains a formula or procedure, not advice.
+
+Rules for output:
+- explanations are FINAL student-facing text only
+- never write: "let me", "recheck", "redesign", "note:", "wait", "actually", "this question requires revision"
+- for "must be true": test overlap at minimum and maximum, then eliminate each option; one correct answer only
+- if you fix a number, fix the stem silently; do not describe the fix in the explanation
+- generate at most 5 questions per reply
+- return JSON array only
