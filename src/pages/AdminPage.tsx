@@ -1725,9 +1725,10 @@ export default function AdminPage() {
                     entry.last_created_at = row.created_at;
                   }
                 });
-                const aggregates = Array.from(aggregatesMap.values()).sort(
-                  (a, b) => b.total - a.total
-                );
+                const aggregates = Array.from(aggregatesMap.values()).sort((a, b) => {
+                  if (b.total !== a.total) return b.total - a.total;
+                  return b.last_created_at.localeCompare(a.last_created_at);
+                });
                 const individualReports = (identifier: string) =>
                   filteredFeedback.filter(
                     (r) => r.question_identifier === identifier
