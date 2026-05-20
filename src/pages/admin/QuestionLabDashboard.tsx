@@ -78,7 +78,7 @@ type ReportRow = {
 };
 
 type GetReportsResult = { total: number; rows: ReportRow[] };
-type RpcArgs = Record<string, string | number | boolean>;
+type RpcArgs = Record<string, string | number | boolean | null>;
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -187,17 +187,16 @@ function trainerQuestionsArgs(input: {
   offset: number;
 }): RpcArgs {
   const args: RpcArgs = {
+    p_section: input.section || null,
+    p_trainer_type: input.trainerType || null,
+    p_status: input.status || null,
+    p_quality_status: input.quality || null,
+    p_difficulty: input.difficulty || null,
+    p_is_flagged: input.flagged ?? null,
+    p_search: input.search?.trim() || null,
     p_limit: input.limit,
     p_offset: input.offset,
   };
-  if (input.section) args.p_section = input.section;
-  if (input.trainerType) args.p_trainer_type = input.trainerType;
-  if (input.status) args.p_status = input.status;
-  if (input.quality) args.p_quality_status = input.quality;
-  if (input.difficulty) args.p_difficulty = input.difficulty;
-  if (input.flagged != null) args.p_is_flagged = input.flagged;
-  const search = input.search?.trim();
-  if (search) args.p_search = search;
   return args;
 }
 
