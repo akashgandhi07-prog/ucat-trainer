@@ -8,6 +8,7 @@ import { isArgumentJudgeReview } from "../../types/dmTrainers";
 import { trackEvent, setActiveTrainer, clearActiveTrainer } from "../../lib/analytics";
 import QuestionFeedbackModal from "../feedback/QuestionFeedbackModal";
 import { getDmTrainerFeedbackContext } from "../../lib/dmTrainerFeedback";
+import FlagQuestionButton from "./FlagQuestionButton";
 import { scrollPageToTop } from "../../lib/scrollPageToTop";
 import { useAppShell } from "../../contexts/AppShellContext";
 import { APP_CONTENT_X } from "../../lib/appContentLayout";
@@ -407,6 +408,14 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
                       <p className="mt-1.5 text-center text-[11px] text-muted-foreground">
                         Space or Enter to continue
                       </p>
+                      {current.dbId && (
+                        <div className="mt-2 flex justify-center">
+                          <FlagQuestionButton
+                            dbId={current.dbId}
+                            questionLabel={current.id}
+                          />
+                        </div>
+                      )}
                     </div>
                   </>
                 ) : (

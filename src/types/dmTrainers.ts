@@ -38,6 +38,7 @@ export interface ArgumentJudgeReview extends DmTrainerReviewBase {
 
 export interface DmTrainerQuestion {
   id: string;
+  dbId?: string;    // trainer_questions UUID — used for submitting reports
   trainerType: DmTrainerType;
   difficulty: DmTrainerDifficulty;
   beta?: boolean;

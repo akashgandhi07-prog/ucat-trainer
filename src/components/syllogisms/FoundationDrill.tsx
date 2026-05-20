@@ -100,26 +100,13 @@ export default function FoundationDrill() {
                 Drill the tiny inference rules behind UCAT syllogisms before moving to full questions.
               </p>
             </div>
-            <div className="flex flex-col items-end gap-1 text-right">
-              <button
-                type="button"
-                onClick={() => {
-                  if (!current) return;
-                  setFeedbackOpen(true);
-                }}
-                className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
-              >
-                <Flag className="h-3.5 w-3.5" />
-                Report question
-              </button>
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Time
-                </p>
-                <p className="text-sm font-semibold text-foreground">
-                  {totalElapsedSeconds}s
-                </p>
-              </div>
+            <div className="text-right shrink-0">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Time
+              </p>
+              <p className="text-sm font-semibold text-foreground">
+                {totalElapsedSeconds}s
+              </p>
             </div>
           </div>
 
@@ -156,15 +143,6 @@ export default function FoundationDrill() {
                 )}
               </div>
 
-              <div className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
-                  Focus rule
-                </p>
-                <p className="mt-1 text-base font-semibold text-foreground">
-                  {current.rule_name ?? current.trick_type.replaceAll("_", " ")}
-                </p>
-              </div>
-
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
                 Premise
               </p>
@@ -175,8 +153,13 @@ export default function FoundationDrill() {
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
                 Does this conclusion have to follow?
               </p>
-              <p className="text-lg font-semibold text-foreground mb-4 rounded-lg bg-secondary border border-border p-4">
+              <p className="text-lg font-semibold text-foreground mb-2 rounded-lg bg-secondary border border-border p-4">
                 {current.conclusion_text}
+              </p>
+
+              <p className="text-xs text-muted-foreground mb-4">
+                <span className="font-medium">Rule being tested:</span>{" "}
+                {current.rule_name ?? current.trick_type.replaceAll("_", " ")}
               </p>
 
               {!hasAnsweredCurrent && (

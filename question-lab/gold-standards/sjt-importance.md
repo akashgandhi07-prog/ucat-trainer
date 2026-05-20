@@ -1,62 +1,59 @@
-# Gold Standard: SJT Importance
+# SJT Importance — AI Reference Material
 
-## Image/PDF Extraction Blueprint
+## What This Trainer Teaches
 
-Use this section when analysing official-style SJT importance questions from screenshots or PDFs. Do not paste exact official wording here long term. Extract the reusable priority pattern only.
+Students learn to rate how important each consideration is when deciding how to respond to a professional scenario. The rating scale is:
 
-For each source question, capture:
+- **Very important** — must be considered; directly affects the correct response
+- **Important** — worth considering but not the primary concern
+- **Of minor importance** — relevant but would not significantly change what you do
+- **Not important at all** — irrelevant to the professional decision
 
-- Source label: short private reference name, not copied question text
-- Scenario domain: safety, confidentiality, teamwork, honesty, communication, fairness
-- Role/context: student, colleague, patient-facing role, team setting
-- Decision being made: what factor or action must be prioritised
-- Importance logic: why each factor is very important, important, minor, or irrelevant
-- Common trap: prioritising convenience over safety, emotion over duty, speed over accuracy
-- Difficulty: easy, medium, or hard
-- What must vary: setting, people, wording, factors, stakes
+The core skill is prioritising correctly across competing professional concerns — not just knowing what matters in general, but knowing what matters *in this specific situation*.
 
-Template:
+## Domains To Cover
 
-```md
-### Pattern: [short name]
+- What consideration is most important when patient safety is at risk
+- When confidentiality competes with another duty
+- When a colleague's wellbeing is at stake
+- When efficiency or workload conflicts with thoroughness
+- When personal preference conflicts with professional duty
+- When information is uncertain or incomplete
 
-- Scenario domain:
-- Role/context:
-- Decision being made:
-- Importance logic:
-- Common trap:
-- Difficulty:
-- New original version must vary:
-```
+Aim for scenarios where the difficulty comes from distinguishing "very important" from "important" — the easy traps are things students think sound important but are irrelevant to this specific scenario.
+Difficulty split: 25% easy, 50% medium, 25% hard.
 
-## Purpose
+## Our Explanation Style
 
-Teach students to identify which factors matter most in a professional judgement scenario.
+Do NOT just state the ratings. The explanation must say why each factor is ranked where it is.
 
-## Required Qualities
+Good explanation structure:
+1. Summarise what decision is being made in the scenario
+2. For the "Very important" item: explain what would go wrong if this were ignored
+3. For the "Not important" item: explain why it sounds relevant but is not actually a factor here
+4. For middle items: explain the gradient — what makes one factor more pressing than another in this context
+5. Name the most common prioritisation mistake for this scenario type
 
-- Importance ratings are defensible and distinct
-- Explanation links priorities to patient safety, honesty, confidentiality, or teamwork
-- Distractors represent plausible but lower-priority concerns
+The tone is teaching priority-setting as a professional skill. The student should understand the reasoning, not just memorise the answers.
 
-## Required Fields
+## Key Prioritisation Rules
 
-- section: `sjt`
-- trainer_type: `sjt-importance`
-- question_kind: `importance`
-- difficulty
-- skill_tag
-- stem
-- explanation
-- content.domain
-- content.items
+- Safety-critical information is always very important
+- Procedural compliance matters but usually ranks below direct harm prevention
+- Personal feelings and preferences are rarely "very important" in professional decisions
+- "Important" does not mean irrelevant — it means worth considering but not the main driver
+- Context changes rankings: the same factor can be very important in one scenario and minor in another
 
-## Good Examples
+## Official Examples
 
-Add strong original examples from our SJT bank.
+Paste official UCAT SJT Importance questions here. Include the full scenario, all consideration items, the official ratings, and any official explanation.
 
-## Rejection Rules
+The AI will use these to understand:
+- The typical scenario and factor wording used in the real exam
+- The difficulty of distinguishing "very important" from "important"
+- Which domains and decision types appear most frequently
+- How factors are constructed to test whether students truly understand priorities
 
-- Reject if importance ratings overlap too much
-- Reject if the answer depends on opinion rather than professional judgement
-- Reject if official wording is copied
+---
+
+[Paste official examples below this line]

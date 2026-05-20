@@ -1,83 +1,49 @@
-# Gold Standard: DM Venn Logic
+# DM Venn Logic — AI Reference Material
 
-## Image/PDF Extraction Blueprint
+## What This Trainer Teaches
 
-Use this section when analysing official-style Venn diagram questions from screenshots or PDFs. Do not paste exact official wording, exact numbers, or screenshots here long term. Extract the reusable pattern only.
+Students learn to extract information from Venn diagrams and apply set logic to find specific counts. The core skill is inclusion-exclusion reasoning: avoiding double-counting overlaps when finding "exactly one", "at least one", or "neither" values.
 
-For each source question, capture:
+## Skills The AI Should Cover
 
-- Source label: short private reference name, not copied question text
-- Visual type: two-set Venn, three-set Venn, table-to-Venn, missing-region Venn
-- Set labels in generic terms: e.g. three activities, three subjects, three preferences
-- Given information: totals, set totals, overlap totals, region values, outside-set value
-- Task: exactly one set, at least one set, neither, one missing region, compare regions
-- Reasoning pattern: inclusion-exclusion, sum regions, subtract from total, avoid double counting
-- Common trap: exactly vs at least, pairwise overlap vs triple overlap, forgetting outside group
-- Difficulty: easy, medium, or hard
-- Visual requirements for a new original version
-- What must vary: context, labels, numbers, wording, answer, diagram layout
+- Two-set Venn: find "only A", "only B", "both", "neither", "at least one", total
+- Three-set Venn: find "exactly one set", "exactly two sets", "all three", "none"
+- Missing-region problems: given totals and some regions, find the missing one
+- Table-to-Venn: information given as a table, student must identify the set structure
+- Proportion/percentage variants: some values given as percentages rather than counts
 
-Template:
+Aim for roughly: 40% two-set, 40% three-set, 20% missing-region or harder variants.
+Difficulty split: 30% easy, 50% medium, 20% hard.
 
-```md
-### Pattern: [short name]
+## Our Explanation Style
 
-- Visual type:
-- Generic set labels:
-- Given information:
-- Task:
-- Reasoning pattern:
-- Common trap:
-- Difficulty:
-- Visual requirements:
-- New original version must vary:
-```
+Do NOT just give the answer. The explanation must walk through the set logic step by step.
 
-## Purpose
+Good explanation structure:
+1. Name the sets and what each region represents
+2. Show the key equation (e.g. Total = Only A + Only B + Both + Neither)
+3. Substitute the known values
+4. Solve for the unknown
+5. Name the trap (e.g. "Students who confused 'at least one' with 'exactly one' chose B")
 
-Teach students how to reason from Venn diagrams and set relationships in Decision Making.
+The tone is teaching, not marking. Write as if explaining to a student who got it wrong.
 
-## Required Qualities
+Official UCAT explanations often just say "the answer is X because the diagram shows Y." Our explanations show the method so the student can replicate it on any Venn question.
 
-- One unambiguous correct answer
-- Diagram or text is internally consistent
-- Explanation teaches the set logic, not just the answer
-- Distractors reflect realistic double-counting traps
-- No outside knowledge required
+## Note On Images
 
-## Required Fields
+Venn diagram images cannot be generated automatically yet. Until image generation is available via OpenRouter, write questions where the diagram information is fully described in text (e.g. "In a group of 80 students, 45 study French, 32 study Spanish, and 18 study both."). Do not require a visual diagram to answer the question.
 
-- section: `dm`
-- trainer_type: `venn-logic`
-- question_kind: `mcq`
-- difficulty
-- skill_tag
-- stem
-- explanation
-- content.question
-- content.options
-- content.correctAnswer
-- content.commonTrap
+## Official Examples
 
-## Good Examples
+Paste official UCAT Venn Logic questions here with their official answers. Include the full question stem, all four options, the correct answer, and any official explanation provided.
 
-Add 2-5 strong original questions from our bank.
+The AI will use these to understand:
+- The typical wording and phrasing of UCAT Venn questions
+- The difficulty level and number complexity used in the real exam
+- Which question subtypes appear most frequently
+- Common traps built into real distractors
 
-## Bad Examples
+---
 
-Add patterns to avoid.
-
-## Rejection Rules
-
-- Reject if two options are defensible
-- Reject if the diagram values do not add up
-- Reject if the explanation skips the key set operation
-- Reject if it relies on copied official wording or numbers
-
-## Review Checklist
-
-- Is the set relationship clear?
-- Is the correct answer uniquely correct?
-- Is the common trap realistic?
-- Does the explanation show the counting method?
-- Is the difficulty label fair?
+[Paste official examples below this line]

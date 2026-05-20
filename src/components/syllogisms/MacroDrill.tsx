@@ -120,31 +120,18 @@ export default function MacroDrill() {
               then submit.
             </p>
           </div>
-          <div className="flex flex-col items-end gap-1 text-right">
+          <div className="text-right shrink-0">
             {questions.length > 0 && !sessionFinished && (
-              <p className="text-sm font-medium text-muted-foreground">
+              <p className="text-xs font-medium text-muted-foreground mb-1">
                 Answered: {answeredCount} / {questions.length}
               </p>
             )}
-            <button
-              type="button"
-              onClick={() => {
-                if (questions.length === 0) return;
-                setFeedbackOpen(true);
-              }}
-              className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
-            >
-              <span aria-hidden>🚩</span>
-              Report block
-            </button>
-            <div>
-              <p className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-                Time
-              </p>
-              <p className="text-lg font-semibold text-foreground">
-                {totalElapsedSeconds}s
-              </p>
-            </div>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Time
+            </p>
+            <p className="text-lg font-semibold text-foreground">
+              {totalElapsedSeconds}s
+            </p>
           </div>
         </header>
 

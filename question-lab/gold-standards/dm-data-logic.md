@@ -1,82 +1,60 @@
-# Gold Standard: DM Data Logic
+# DM Data Logic — AI Reference Material
 
-## Image/PDF Extraction Blueprint
+## What This Trainer Teaches
 
-Use this section when analysing official-style data/table/chart questions from screenshots or PDFs. Do not paste exact official wording, exact numbers, or screenshots here long term. Extract the reusable pattern only.
+Students learn to read structured data (tables, charts, written statistics) and draw valid conclusions. The core skill is identifying the right values, performing the right operation, and avoiding common denominator and unit errors — all under time pressure.
 
-For each source question, capture:
+## Skills The AI Should Cover
 
-- Source label: short private reference name, not copied question text
-- Visual type: table, bar chart, line chart, pie chart, stacked chart, mixed data display
-- Axes/labels in generic terms: e.g. years, groups, categories, percentages, counts
-- Given information: visible values, totals, rates, proportions, missing values
-- Task: compare values, calculate percentage change, infer total, identify strongest claim
-- Reasoning pattern: ratio, proportion, weighted average, difference, percentage change, estimate
-- Common trap: wrong denominator, units mismatch, reading wrong axis, percentage-point confusion
-- Difficulty: easy, medium, or hard
-- Visual requirements for a new original version
-- What must vary: topic, labels, values, units, wording, answer
+- Percentage change: (new − old) / old × 100
+- Proportion/fraction of a total
+- Comparing across categories or time periods
+- Identifying the highest, lowest, or closest value
+- Two-step calculations: e.g. find a total then take a percentage
+- Reading written data tables (text-based, no image required)
 
-Template:
+Aim for roughly: 40% percentage/ratio questions, 30% comparison questions, 30% multi-step calculations.
+Difficulty split: 25% easy, 50% medium, 25% hard.
 
-```md
-### Pattern: [short name]
+## Note On Images
 
-- Visual type:
-- Generic axes/labels:
-- Given information:
-- Task:
-- Reasoning pattern:
-- Common trap:
-- Difficulty:
-- Visual requirements:
-- New original version must vary:
-```
+Bar charts, line charts, and pie charts cannot be generated automatically yet. Until image generation is available via OpenRouter, write all Data Logic questions using text-based data tables or written statistics only. Structure data clearly with plain text tables using markdown formatting. Do not require a visual chart to answer the question.
 
-## Purpose
+Example of acceptable data format:
 
-Teach students how to interpret structured data and make valid conclusions under Decision Making timing pressure.
+| Year | Sales (£000s) |
+|------|--------------|
+| 2020 | 120 |
+| 2021 | 145 |
+| 2022 | 138 |
 
-## Required Qualities
+When image generation becomes available, chart-based questions will be added.
 
-- One unambiguous correct answer
-- Data display is readable and internally consistent
-- Explanation identifies the relevant comparison or calculation
-- Distractors represent realistic denominator, unit, or comparison errors
+## Our Explanation Style
 
-## Required Fields
+Do NOT just give the answer. The explanation must identify the exact operation and show the working.
 
-- section: `dm`
-- trainer_type: `data-logic`
-- question_kind: `mcq`
-- difficulty
-- skill_tag
-- stem
-- explanation
-- content.question
-- content.options
-- content.correctAnswer
-- content.commonTrap
+Good explanation structure:
+1. Identify which values from the data are needed
+2. Name the operation (percentage change, ratio, proportion, etc.)
+3. Show the calculation with actual numbers substituted
+4. State the answer
+5. Name the trap (e.g. "Students who used 145 as the denominator instead of 120 chose C")
 
-## Good Examples
+The tone is teaching, not marking. Show the method so students can apply it to any data question.
 
-Add 2-5 strong original questions from our bank.
+Official UCAT explanations often only confirm the answer. Our explanations show why the method works and why each distractor fails.
 
-## Bad Examples
+## Official Examples
 
-Add patterns to avoid.
+Paste official UCAT Data Logic / Interpreting Information questions here with their official answers. Include the full question stem, all data provided, all four options, the correct answer, and any official explanation.
 
-## Rejection Rules
+The AI will use these to understand:
+- The typical complexity of data given in real UCAT questions
+- The types of calculations most frequently tested
+- How distractors are constructed from common errors
+- The wording patterns used in real stems
 
-- Reject if the chart/table cannot support the claimed answer
-- Reject if more than one option can be argued
-- Reject if the explanation hides the denominator or comparison step
-- Reject if it copies official wording, values, or visual design too closely
+---
 
-## Review Checklist
-
-- Is the data display clear?
-- Are units and denominators explicit?
-- Is the answer uniquely correct?
-- Are distractors plausible?
-- Does the explanation teach the transferable data skill?
+[Paste official examples below this line]

@@ -116,11 +116,11 @@ mock_attempts
 mock_answers
 ```
 
-## Gold Standards
+## Gold Standards (AI Reference Files)
 
-Gold standards define what good questions look like.
+Gold standard files are AI context — not a formal rubric system. Their purpose is to give an AI enough information to generate good new questions in the right style.
 
-Starter files:
+Files:
 
 ```text
 question-lab/gold-standards/dm-venn-logic.md
@@ -134,52 +134,33 @@ question-lab/gold-standards/inference.md
 question-lab/gold-standards/vr-passages.md
 ```
 
-Important rule:
+Each file contains:
 
-```text
-MD files are seed/bootstrap content.
-After they are loaded into question_gold_standards, the database becomes canonical.
-Do not maintain MD and database as two long-term sources of truth.
-```
+1. What the trainer teaches and which skills to cover
+2. Our explanation style — how we explain answers (different from official UCAT explanations which just confirm the answer; ours teach the method)
+3. Frequency and difficulty targets for question generation
+4. A section to paste official UCAT questions with their answers
 
-### Image/PDF Extraction Rule
+The AI uses the pasted official examples to understand question types, difficulty, phrasing, and trap construction — then generates new questions in our trainer style with our explanation approach.
 
-Official-style PDFs and screenshots should be used to extract patterns, not copied questions.
+### How To Use These Files
 
-Do not store long-term:
+1. Paste official UCAT questions (with answers) into the relevant file under "Official Examples"
+2. Feed the whole file to an AI (Claude, ChatGPT, etc.) with a generation prompt
+3. Review what the AI produces
+4. Add passing questions to the trainer bank
 
-- exact official wording
-- exact official numbers
-- official screenshots
-- near-copy rewritten questions
+The MD files stay as living reference material. They are not seeded into a database.
 
-Store:
+### Image Limitation
 
-- question type
-- visual type
-- what information is given
-- what the student must find
-- reasoning pattern
-- common trap
-- difficulty
-- visual requirements for a new original version
-- what must vary in a new original version
+Questions that require charts (bar charts, line charts, pie charts) or Venn diagram images cannot be generated automatically yet. Until image generation is available via OpenRouter:
 
-Example extracted Venn pattern:
+- DM Venn Logic: write questions where all set information is given in text, no image needed
+- DM Data Logic: write questions using markdown text tables, no charts
+- All other trainers: not affected
 
-```md
-### Pattern: Exactly One Set
-
-- Visual type: Three-circle Venn diagram
-- Generic set labels: three activities or preferences
-- Given information: total group size, set totals, pairwise overlaps
-- Task: find the number in exactly one set
-- Reasoning pattern: inclusion-exclusion and double-counting control
-- Common trap: confusing exactly one with at least one
-- Difficulty: medium
-- Visual requirements: clean three-set diagram with visible region counts
-- New original version must vary: context, labels, numbers, wording, answer
-```
+Image generation via OpenRouter will be added later to support chart-based Data Logic and diagram-based Venn questions.
 
 ## Data Model
 
@@ -610,6 +591,103 @@ where status = 'active'
 limit p_count;
 ```
 
+## Rollback And Deployment Safety
+
+There are two separate rollback worlds:
+
+```text
+GitHub/Vercel rollback = app code rollback
+Supabase rollback = database/content rollback
+```
+
+GitHub and Vercel make code rollback relatively easy:
+
+- every implementation step should be committed to Git
+- Vercel deploys each commit
+- if code breaks, redeploy a previous Vercel deployment or revert the commit
+
+Supabase must be handled more carefully:
+
+- schema migrations are not undone automatically when Git is rolled back
+- new tables, columns, RPCs, and copied question rows stay in Supabase until explicitly changed
+- content migrations need snapshots and a fallback path
+
+### Non-Destructive Migration Rule
+
+The first Question Lab implementation must not destructively replace the current production question system.
+
+Safe rollout pattern:
+
+```text
+create new tables alongside old tables
+copy data into new tables
+test dashboard and RPCs against copied data
+switch one trainer at a time
+monitor
+retire old paths later
+```
+
+Do not:
+
+- drop old tables during the first rollout
+- delete old seed files during the first rollout
+- overwrite existing question banks without snapshots
+- make old RPCs unrecoverable
+- remove production fallback before logging and unavailable-state handling exist
+
+### Required Rollback Tools
+
+Before switching a trainer to `trainer_questions`, create:
+
+1. JSON snapshot of old source data
+2. migration script that copies old rows into `trainer_questions`
+3. new RPC or feature-flagged RPC path
+4. documented rollback step to return the frontend/RPC to the old source
+
+Recommended snapshots:
+
+```text
+question-lab/snapshots/dm_trainer_questions.before-question-lab.json
+question-lab/snapshots/sjt_questions.before-question-lab.json
+```
+
+### Rollback Matrix
+
+| Area | Rollback method |
+|---|---|
+| React/dashboard code | Revert Git commit or redeploy previous Vercel deployment |
+| Vite/local MD editor | Revert Git commit |
+| New Supabase tables | Leave unused; do not drop during incident |
+| Old Supabase tables | Keep intact until new system is stable |
+| DM migration | Copy only; old data remains available |
+| RPC changes | Keep old RPC or create new RPC first |
+| Bad migrated question content | Archive new row and use old source or previous row |
+| Production Supabase outage | Show friendly unavailable state and log the failure |
+
+### Rollout Order For Safety
+
+Use this order when moving any trainer:
+
+1. create new tables
+2. snapshot old data
+3. copy old data into new tables
+4. build admin view against new tables
+5. create new active-only named-column RPC
+6. test locally
+7. test in staging/preview if available
+8. switch frontend for one trainer
+9. monitor errors and feedback
+10. only later retire the old source
+
+If anything goes wrong:
+
+```text
+switch frontend/RPC back to old source
+redeploy previous Vercel build if needed
+leave new Supabase tables dormant
+fix forward calmly
+```
+
 ## Dashboard Plan
 
 First proper dashboard:
@@ -804,20 +882,19 @@ export CSV -> review in ChatGPT/Claude subscription -> import CSV
 
 | Order | Work | Outcome |
 |---:|---|---|
-| 0 | Populate DM gold-standard MD files | Quality bar exists |
+| 0 | Populate gold-standard MD files with official examples | AI can generate good questions |
 | 1 | Define TypeScript content shapes | JSON content stays controlled |
 | 2 | Create `trainer_questions` and support tables | Single authored trainer store |
 | 3 | Add active-question edit protection | Live questions cannot be silently broken |
-| 4 | Seed gold standards into DB | One canonical quality bar |
-| 5 | Migrate DM into `trainer_questions` | First trainer bank unified |
-| 6 | Update DM RPCs | Secure active-only runtime delivery |
-| 7 | Build dashboard v1 | No command-line editing |
-| 8 | Add CSV export/import review | Cheap manual audit loop |
-| 9 | Add student reports | Students can flag issues |
-| 10 | Migrate SJT | Same workflow for SJT |
-| 11 | Add QR/images | Supports richer authored trainers |
-| 12 | Decide passage locking and migrate passages | Avoids evidence-span breakage |
-| 13 | Add `question_bank` and mock tables | Future timed mini mocks/full mocks |
+| 4 | Migrate DM into `trainer_questions` | First trainer bank unified |
+| 5 | Update DM RPCs | Secure active-only runtime delivery |
+| 6 | Build dashboard v1 | No command-line editing |
+| 7 | Add CSV export/import review | Cheap manual audit loop |
+| 8 | Add student reports | Students can flag issues |
+| 9 | Migrate SJT | Same workflow for SJT |
+| 10 | Add OpenRouter image generation | Enables chart-based Data Logic and Venn diagram questions |
+| 11 | Decide passage locking and migrate passages | Avoids evidence-span breakage |
+| 12 | Add `question_bank` and mock tables | Future timed mini mocks/full mocks |
 
 ## Minimal First Proper Build
 
@@ -831,14 +908,15 @@ Includes:
 
 - `src/types/questionLab.ts`
 - `trainer_questions`
-- `question_gold_standards`
 - `question_reviews`
 - `question_reports`
 - DM migration into `trainer_questions`
 - DM RPC reads active named columns from `trainer_questions`
 - active-question duplicate/archive replacement workflow
-- dashboard tabs: Trainer Questions, Gold Standards, Review Queue, Reports, Coverage, CSV Review
+- dashboard tabs: Trainer Questions, Review Queue, Reports, Coverage, CSV Review
 - production local fallback disabled only after logging/unavailable-state handling exists
+
+Note: `question_gold_standards` table is deferred. Gold standards live in MD files and are used as AI context for question generation, not as a database entity.
 
 Proof loop:
 
@@ -848,7 +926,7 @@ draft -> review -> active -> report if wrong -> duplicate/fix -> replace
 
 ## What To Populate Before Building More
 
-Populate these first:
+Paste official UCAT questions into the relevant files. DM first:
 
 ```text
 question-lab/gold-standards/dm-venn-logic.md
@@ -856,15 +934,9 @@ question-lab/gold-standards/dm-data-logic.md
 question-lab/gold-standards/dm-argument-judge.md
 ```
 
-Minimum useful content per file:
+As many examples as you have. Even 5–10 per file is enough for the AI to understand question style and generate new ones. You do not need to annotate or summarise them — just paste the question, options, correct answer, and any official explanation.
 
-- 10-20 extracted official-style patterns
-- 3-5 strong original examples from the current bank
-- common traps
-- rejection rules
-- review checklist
-
-Do not wait to perfect all nine gold-standard files. DM first is enough to build the first real dashboard.
+Do not wait to fill all nine files. DM first is enough to start generating and testing.
 
 ## Useful Commands
 
@@ -887,7 +959,7 @@ Do not wait to perfect all nine gold-standard files. DM first is enough to build
 | One table for everything? | No. Use `trainer_questions` and `question_bank`. |
 | Keep DM/SJT old tables forever? | No. Migrate and retire as active sources. |
 | Directly edit active questions? | No. Duplicate as draft and replace. |
-| MD and DB both canonical? | No. MD seeds DB; DB becomes canonical. |
+| MD and DB both canonical? | MD files are AI context. DB is canonical for questions. |
 | Procedural generators in Question Lab? | No. Keep generator code local. |
 | Images public? | No. Use private storage and signed URLs. |
 | Mocks use trainer questions? | No. Mocks use `question_bank`. |

@@ -1,63 +1,54 @@
-# Gold Standard: SJT Ranking
+# SJT Ranking — AI Reference Material
 
-## Image/PDF Extraction Blueprint
+## What This Trainer Teaches
 
-Use this section when analysing official-style SJT ranking questions from screenshots or PDFs. Do not paste exact official wording here long term. Extract the reusable ranking pattern only.
+Students learn to rank a set of responses to a professional scenario from most to least appropriate. The core skill is comparing responses against each other — not just rating them in isolation — and using professional judgement to place them in the right order.
 
-For each source question, capture:
+The format: given a scenario and 4–5 response options, rank all of them from most to least appropriate.
 
-- Source label: short private reference name, not copied question text
-- Scenario domain: safety, honesty, confidentiality, teamwork, communication, professionalism
-- Role/context: student, colleague, patient-facing role, team setting
-- Ranking task: best to worst, most appropriate to least appropriate, first to last
-- Ranking principle: why the top action comes first and why the bottom action is worst
-- Common trap: over-escalating first, doing nothing, acting outside competence, breaching trust
-- Difficulty: easy, medium, or hard
-- What must vary: setting, action options, order logic, wording
+## Domains To Cover
 
-Template:
+- Scenarios involving patient safety where actions must be sequenced correctly
+- Scenarios where escalation timing matters (do something yourself first vs go straight to senior)
+- Scenarios involving conflict with a colleague
+- Scenarios involving communication with a patient or relative
+- Scenarios involving competing duties (e.g. end a task vs attend to an urgent concern)
+- Scenarios where doing nothing is clearly worst
 
-```md
-### Pattern: [short name]
+Aim for scenarios where the top action and bottom action are clear, but the middle two create genuine difficulty.
+Difficulty split: 25% easy (clear ordering), 50% medium (middle positions ambiguous), 25% hard (all four positions genuinely close).
 
-- Scenario domain:
-- Role/context:
-- Ranking task:
-- Ranking principle:
-- Common trap:
-- Difficulty:
-- New original version must vary:
-```
+## Our Explanation Style
 
-## Purpose
+Do NOT just state the ranking order. The explanation must justify the relative positions.
 
-Teach students to order responses according to professional judgement and practical priority.
+Good explanation structure:
+1. State the correct ranking with a one-line label for each option (e.g. "1st: Tell the registrar immediately — safety comes first")
+2. Explain why option 1 beats option 2 (not just that it's better, but what principle makes it take priority)
+3. Explain why the last option is worst — what harm or breach it causes
+4. Address the hardest comparison: why the third-ranked option beats the fourth (this is where most students go wrong)
+5. Name the most common ordering mistake
 
-## Required Qualities
+The tone is teaching comparative professional judgement. Students need to understand the ordering logic so they can apply it to any ranking question.
 
-- Ranking order is defensible
-- Adjacent options are not too ambiguous
-- Explanation compares the ordering, not just the best option
-- Scenario is realistic
+## Key Ordering Principles
 
-## Required Fields
+- Address safety-critical issues before administrative concerns
+- Seek help/escalate when outside your competence — but try to handle it directly first when safe
+- Doing something imperfectly is usually ranked above doing nothing
+- Breaching confidentiality or acting dishonestly is almost always near the bottom
+- Acting alone on something serious without telling anyone is usually near the bottom
 
-- section: `sjt`
-- trainer_type: `sjt-ranking`
-- question_kind: `ranking`
-- difficulty
-- skill_tag
-- stem
-- explanation
-- content.domain
-- content.items
+## Official Examples
 
-## Good Examples
+Paste official UCAT SJT Ranking questions here. Include the full scenario, all response options, the official ranking order, and any official explanation.
 
-Add strong original examples from our SJT bank.
+The AI will use these to understand:
+- The typical scenario length and complexity used in the real exam
+- How response options are worded and how close they are in appropriateness
+- Which domains and ordering challenges appear most frequently
+- How the hardest middle-position decisions are set up
 
-## Rejection Rules
+---
 
-- Reject if two adjacent ranks could reasonably swap
-- Reject if the safest action is not clearly prioritised
-- Reject if official wording is copied
+[Paste official examples below this line]

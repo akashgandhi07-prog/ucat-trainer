@@ -1,66 +1,52 @@
-# Gold Standard: Inference
+# VR Inference — AI Reference Material
 
-## Image/PDF Extraction Blueprint
+## What This Trainer Teaches
 
-Use this section when analysing official-style inference questions from screenshots or PDFs. Do not paste exact official passage wording here long term. Extract the reusable inference pattern only.
+Students learn to make only the inference that is directly supported by the passage — nothing more, nothing less. The core skill is resisting overclaims: the correct answer is the one that the passage text actually supports, even if other options sound plausible or are true in the real world.
 
-For each source question, capture:
+The inference trainer focuses specifically on the inference question type within Verbal Reasoning, not the full True/False/Cannot Tell passage format (that is covered by the VR passages trainer).
 
-- Source label: short private reference name, not copied question text
-- Passage type: scientific, social, historical, policy, narrative, explanatory
-- Evidence style: explicit statement, implied relationship, contrast, causal claim, limitation
-- Task: must be true, most supported, cannot be inferred, strengthens/weakens
-- Reasoning pattern: direct evidence, cautious inference, eliminate overclaims, compare claims
-- Common trap: outside knowledge, overgeneralisation, confusing correlation and cause
-- Difficulty: easy, medium, or hard
-- Evidence requirement for a new original version
-- What must vary: topic, wording, passage content, claims, answer
+## Skills The AI Should Cover
 
-Template:
+- Must be true: identify the only option that is guaranteed by the passage
+- Most strongly supported: identify the option with the strongest textual backing
+- Cannot be concluded: identify which option goes beyond what the passage says
+- Causal inference: passage states a correlation; student must avoid assuming causation
+- Scope inference: passage says "some" or "most"; student must not generalise to "all"
+- Negative inference: what the passage implies is NOT the case
 
-```md
-### Pattern: [short name]
+Aim for roughly: 40% must-be-true, 30% most-strongly-supported, 30% cannot-be-concluded or scope/causal traps.
+Difficulty split: 25% easy (answer clearly stated), 50% medium (requires careful reading), 25% hard (requires holding multiple evidence points together).
 
-- Passage type:
-- Evidence style:
-- Task:
-- Reasoning pattern:
-- Common trap:
-- Difficulty:
-- Evidence requirement:
-- New original version must vary:
-```
+## Our Explanation Style
 
-## Purpose
+Do NOT just state which answer is correct. The explanation must point to the specific evidence in the passage that supports or eliminates each option.
 
-Teach students to make only the inference supported by the passage.
+Good explanation structure:
+1. Quote or closely paraphrase the relevant passage sentence(s)
+2. Show how that evidence supports the correct answer — and why it doesn't go further
+3. For each wrong option: say what makes it an overclaim, underclaim, or outside-the-passage claim
+4. Name the most common trap (e.g. "Students who chose B were using outside knowledge about the topic rather than what the passage says")
 
-## Required Qualities
+The tone is precise and evidence-focused. Every claim in the explanation should be traceable to the passage. Do not say "it is obvious" or "clearly" — show the reasoning.
 
-- Correct answer is supported by text evidence
-- Distractors include common overclaims
-- Explanation identifies the relevant evidence
-- No outside knowledge required
+## What Makes A Good Inference Question
 
-## Required Fields
+- The passage contains a clear evidence sentence that supports the correct answer
+- The correct answer uses careful, hedged language that matches the passage's scope (e.g. "suggests", "may", "some")
+- Wrong options include: a plausible real-world truth not in the passage, an overclaim beyond what the passage states, a reversal of what the passage says, a distortion of scope (all vs some)
+- No outside knowledge is needed to identify the correct answer
 
-- section: `vr`
-- trainer_type: `inference`
-- question_kind: `mcq`
-- difficulty
-- skill_tag
-- stem
-- explanation
-- content.question
-- content.options
-- content.correctAnswer
+## Official Examples
 
-## Good Examples
+Paste official UCAT Verbal Reasoning inference questions here. Include the full passage, the question stem, all four options, the correct answer, and any official explanation.
 
-Add strong original examples from our bank.
+The AI will use these to understand:
+- The typical passage length and complexity used in the real exam
+- The wording style of correct vs incorrect inference options
+- How distractors are constructed using outside knowledge or scope errors
+- The difficulty level and evidence style in real UCAT inference questions
 
-## Rejection Rules
+---
 
-- Reject if the answer requires outside knowledge
-- Reject if evidence text does not clearly support the answer
-- Reject if official passage wording is copied
+[Paste official examples below this line]

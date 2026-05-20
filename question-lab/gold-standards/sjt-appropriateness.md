@@ -1,66 +1,63 @@
-# Gold Standard: SJT Appropriateness
+# SJT Appropriateness — AI Reference Material
 
-## Image/PDF Extraction Blueprint
+## What This Trainer Teaches
 
-Use this section when analysing official-style SJT questions from screenshots or PDFs. Do not paste exact official wording here long term. Extract the reusable professionalism pattern only.
+Students learn to rate how appropriate each response is to a professional scenario involving a medical student or junior doctor. The rating scale is:
 
-For each source question, capture:
+- **A very appropriate thing to do** — directly addresses the situation in line with professional values
+- **Appropriate but not ideal** — helpful but not the best response; misses something
+- **Inappropriate but not awful** — unhelpful or slightly wrong but not dangerous
+- **A very inappropriate thing to do** — harmful, dishonest, unsafe, or a clear breach of duty
 
-- Source label: short private reference name, not copied question text
-- Scenario domain: patient safety, confidentiality, teamwork, honesty, workload, boundaries
-- Role/context: medical student, junior doctor, team member, peer, patient-facing situation
-- Core dilemma: what value or duty is being tested
-- Response action type: escalate, apologise, ignore, investigate, seek advice, challenge behaviour
-- Scoring logic: why each response is appropriate or inappropriate
-- Common trap: acting alone, breaching confidentiality, avoiding responsibility, over-escalating
-- Difficulty: easy, medium, or hard
-- What must vary: setting, people, wording, actions, details
+The core skill is applying professional values (patient safety, honesty, teamwork, confidentiality, duty of candour) to realistic dilemmas — without relying on niche GMC policy knowledge.
 
-Template:
+## Domains To Cover
 
-```md
-### Pattern: [short name]
+- Patient safety: error or risk not reported
+- Confidentiality: pressure to share information
+- Teamwork: colleague behaviour, conflict, bullying
+- Honesty: pressure to deceive patients or supervisors
+- Workload and boundaries: being asked to do something beyond competence
+- Communication: breaking bad news, consent, misunderstanding with patient
+- Professionalism: appearance, punctuality, social media
 
-- Scenario domain:
-- Role/context:
-- Core dilemma:
-- Response action type:
-- Scoring logic:
-- Common trap:
-- Difficulty:
-- New original version must vary:
-```
+Aim for roughly even coverage across domains. Include at least one question per domain.
+Difficulty split: 30% easy (clear good vs bad), 50% medium (nuanced), 20% hard (competing duties).
 
-## Purpose
+## Our Explanation Style
 
-Teach students to judge how appropriate a response is in a professional healthcare scenario.
+Do NOT just state the scores. The explanation must link each score to a professional principle.
 
-## Required Qualities
+Good explanation structure:
+1. Summarise the core dilemma in the scenario
+2. For the A-rated response: explain why this is very appropriate — what principle it upholds and why acting this way matters
+3. For the D-rated response: explain why this is very inappropriate — what harm or breach it causes
+4. For B and C responses: explain the gradient — what makes one slightly better or worse than the other
+5. Name the most common trap students fall into with this scenario type
 
-- Scenario is realistic and ethically coherent
-- Each response has a defensible score
-- Explanation links to professional principles
-- Avoids obscure policy knowledge
+The tone is mentoring, not just marking. The student should understand the professional logic, not just the score.
 
-## Required Fields
+Official UCAT explanations are often brief. Our explanations teach the reasoning framework.
 
-- section: `sjt`
-- trainer_type: `sjt-appropriateness`
-- question_kind: `appropriateness`
-- difficulty
-- skill_tag
-- stem
-- explanation
-- content.domain
-- content.items
+## Key Professional Principles To Reference
 
-## Good Examples
+- Patient safety always comes first
+- Honesty and duty of candour are non-negotiable
+- Acting within your own competence — escalate when uncertain
+- Confidentiality with defined exceptions (risk to self/others)
+- Teamwork: address concerns directly before escalating where safe to do so
+- Do not act alone in serious situations
 
-Add strong original examples from our SJT bank.
+## Official Examples
 
-## Rejection Rules
+Paste official UCAT SJT Appropriateness questions here. Include the full scenario, all response options, the official scores, and any official explanation.
 
-- Reject if scoring is arbitrary
-- Reject if several scores are equally defensible
-- Reject if the scenario depends on niche policy
-- Reject if official wording is copied
+The AI will use these to understand:
+- The typical scenario length and complexity used in the real exam
+- How response options are worded and graded
+- The domains and dilemmas most commonly tested
+- The difficulty of distinguishing A from B or C from D responses
+
+---
+
+[Paste official examples below this line]

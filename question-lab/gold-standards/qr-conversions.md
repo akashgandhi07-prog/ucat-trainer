@@ -1,68 +1,54 @@
-# Gold Standard: QR Conversions
+# QR Conversions — AI Reference Material
 
-## Image/PDF Extraction Blueprint
+## What This Trainer Teaches
 
-Use this section when analysing official-style QR conversion questions from screenshots or PDFs. Do not paste exact official wording, exact values, or screenshots here long term. Extract the reusable maths pattern only.
+Students learn to convert between units accurately and quickly. The core skill is knowing which direction to convert, applying the conversion factor correctly, and avoiding the most common errors: reversing the operation, mixing units mid-calculation, and rounding at the wrong step.
 
-For each source question, capture:
+## Skills The AI Should Cover
 
-- Source label: short private reference name, not copied question text
-- Visual type: text-only, table, chart, recipe, map, rate card, price list
-- Quantity types: currency, distance, time, weight, volume, rate, percentage
-- Given information: conversion factor, unit relationship, proportional rule, table value
-- Task: convert units, scale rate, compare converted values, calculate final amount
-- Reasoning pattern: multiply, divide, compound conversion, ratio scaling, unit cancellation
-- Common trap: reversing conversion, mixing units, rounding too early, wrong rate
-- Difficulty: easy, medium, or hard
-- Visual requirements for a new original version
-- What must vary: context, values, units, wording, answer
+- Single-step conversions: km to miles, kg to lbs, litres to pints, £ to $, cm to inches, etc.
+- Multi-step conversions: e.g. miles per hour to metres per second
+- Rate conversions: price per unit in one currency/unit to another
+- Scaling conversions: recipe scaling, map distance, fuel efficiency
+- Percentage and proportion conversions: e.g. converting a fraction to a percentage of a different base
 
-Template:
+Aim for roughly: 40% single-step, 35% multi-step or rate, 25% applied context (recipe, map, price list).
+Difficulty split: 30% easy (straightforward single conversion), 50% medium (two steps or awkward numbers), 20% hard (three steps or compound conversion).
 
-```md
-### Pattern: [short name]
+## Our Explanation Style
 
-- Visual type:
-- Quantity types:
-- Given information:
-- Task:
-- Reasoning pattern:
-- Common trap:
-- Difficulty:
-- Visual requirements:
-- New original version must vary:
-```
+Do NOT just give the answer. The explanation must show the full conversion working.
 
-## Purpose
+Good explanation structure:
+1. State the conversion factor being used (write it out explicitly)
+2. Show the calculation with units attached at every step (unit cancellation)
+3. State the answer with correct units
+4. Name the trap (e.g. "Students who divided instead of multiplied arrived at option A")
 
-Teach students to convert quantities quickly and accurately under QR timing pressure.
+Show the direction of conversion clearly: write "× 1.6" not just "multiply". Students who choose wrong distractors almost always used the conversion factor in the wrong direction or forgot a step.
 
-## Required Qualities
+The tone is methodical. Every step should be visible. No mental arithmetic shortcuts in the explanation — write it all out.
 
-- Units are explicit
-- Correct answer is uniquely calculable
-- Explanation shows the conversion direction
-- Distractors reflect realistic conversion errors
+## Common Traps To Build Into Distractors
 
-## Required Fields
+- Reversing the conversion (divide instead of multiply or vice versa)
+- Using the wrong conversion factor (e.g. 1 mile = 1.6 km confused with 1 km = 1.6 miles)
+- Stopping one step too early in a multi-step conversion
+- Rounding at an intermediate step causing the final answer to differ
+- Correct calculation but wrong units in the answer
 
-- section: `qr`
-- trainer_type: `qr-conversions`
-- question_kind: `mcq` or `numeric`
-- difficulty
-- skill_tag
-- stem
-- explanation
-- content.question
-- content.correctAnswer
-- content.workedSolution
+Each question should have at least one distractor that reflects a realistic conversion error, not just a random wrong number.
 
-## Good Examples
+## Official Examples
 
-Add strong original examples from our bank.
+Paste official UCAT QR conversion questions here. Include the full question stem, any data table or context provided, all four options, the correct answer, and any official worked solution.
 
-## Rejection Rules
+The AI will use these to understand:
+- The typical conversion types and unit pairs tested in the real exam
+- The complexity of context (simple text vs data table vs applied scenario)
+- How distractors are constructed from common errors
+- The wording patterns and calculation difficulty used in real stems
 
-- Reject if conversion direction is ambiguous
-- Reject if rounding changes the answer unfairly
-- Reject if official wording, values, or visual layout are copied
+---
+
+[Paste official examples below this line]

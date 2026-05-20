@@ -34,6 +34,7 @@ function mapQuestion(raw: unknown): DmTrainerQuestion | null {
 
   return {
     id,
+    dbId: typeof row.dbId === "string" ? row.dbId : undefined,
     trainerType: trainerType as DmTrainerQuestion["trainerType"],
     difficulty: (row.difficulty as DmTrainerQuestion["difficulty"]) ?? "medium",
     stem,

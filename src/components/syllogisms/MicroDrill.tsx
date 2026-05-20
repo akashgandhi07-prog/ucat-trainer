@@ -101,26 +101,13 @@ export default function MicroDrill() {
                   Decide whether the conclusion must follow from the premises.
                 </p>
               </div>
-              <div className="flex flex-col items-end gap-1 text-right">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!current) return;
-                    setFeedbackOpen(true);
-                  }}
-                  className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
-                >
-                  <span aria-hidden>🚩</span>
-                  Report question
-                </button>
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    Time
-                  </p>
-                  <p className="text-sm font-semibold text-foreground">
-                    {totalElapsedSeconds}s
-                  </p>
-                </div>
+              <div className="text-right shrink-0">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Time
+                </p>
+                <p className="text-sm font-semibold text-foreground">
+                  {totalElapsedSeconds}s
+                </p>
               </div>
             </div>
 
@@ -171,9 +158,6 @@ export default function MicroDrill() {
 
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
                   Does this conclusion follow from the premises?
-                </p>
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">
-                  Conclusion to evaluate
                 </p>
                 <p className="text-lg font-semibold text-foreground mb-4 rounded-lg bg-secondary border border-border p-4">
                   {current.conclusion_text}

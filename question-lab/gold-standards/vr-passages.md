@@ -1,64 +1,72 @@
-# Gold Standard: VR Passages
+# VR Passages — AI Reference Material
 
-## Image/PDF Extraction Blueprint
+## What This Trainer Teaches
 
-Use this section when analysing official-style VR passage questions from screenshots or PDFs. Do not paste exact official passages here long term. Extract reusable passage and question patterns only.
+Students learn to read passages efficiently and answer True/False/Cannot Tell questions accurately. The core skill is deciding whether a statement is:
 
-For each source passage/question set, capture:
+- **True** — directly supported by the passage
+- **False** — directly contradicted by the passage
+- **Cannot Tell** — the passage neither confirms nor denies it
 
-- Source label: short private reference name, not copied passage text
-- Passage type: scientific, historical, social, policy, biographical, explanatory
-- Passage structure: chronological, compare/contrast, claim/evidence, cause/effect, problem/solution
-- Question types: true/false/cannot tell, inference, main idea, detail lookup, author attitude
-- Evidence style: explicit line, dispersed evidence, contrast, qualification, exception
-- Common traps: outside knowledge, extreme wording, partial match, wrong paragraph
-- Difficulty: easy, medium, or hard
-- Passage requirements for a new original version
-- What must vary: topic, wording, facts, structure details, answer options
+The VR passages trainer uses full passages with multiple questions per passage, replicating the real UCAT VR format.
 
-Template:
+## Passage Types To Cover
 
-```md
-### Pattern: [short name]
+- Scientific/health: research findings, medical topics, biology, psychology
+- Social/policy: education, economics, public policy, social trends
+- Historical: events, figures, periods
+- Biographical: individuals and their contributions
+- Environmental: climate, nature, ecology
+- Cultural: arts, literature, language
 
-- Passage type:
-- Passage structure:
-- Question types:
-- Evidence style:
-- Common traps:
-- Difficulty:
-- Passage requirements:
-- New original version must vary:
-```
+Aim for variety. No more than 2–3 passages from the same domain. Mix passage structures: some will state facts directly, some will use hedged or qualified language, some will present conflicting viewpoints.
 
-## Purpose
+## Question Types Per Passage
 
-Define what strong VR passages and associated questions should look like for trainer or future UCAT-bank use.
+Each passage should have 4 questions. Aim for:
+- 1–2 straightforward True/False (evidence is explicit in the passage)
+- 1–2 Cannot Tell (statement is plausible but the passage does not address it)
+- Occasionally: 1 False (passage explicitly contradicts the statement)
 
-## Required Qualities
+Avoid making every question a Cannot Tell — this makes the trainer feel unfair. Avoid making every question True — this makes it too easy.
 
-- Passage is clear and self-contained
-- Questions are answerable from the passage alone
-- Evidence is traceable
-- Distractors reflect realistic reading mistakes
+## Our Explanation Style
 
-## Required Fields
+Do NOT just state True/False/Cannot Tell. The explanation must point to the specific evidence.
 
-- section: `vr`
-- trainer_type or question_type
-- difficulty
-- topic
-- passage body
-- question content
-- explanation/evidence
+Good explanation structure:
+1. State the verdict (True / False / Cannot Tell)
+2. Quote or closely paraphrase the key sentence(s) from the passage that decide the verdict
+3. For Cannot Tell: say what the passage does say and why it doesn't go far enough to confirm or deny
+4. For False: say exactly what the passage says that contradicts the statement
+5. Name the trap if relevant (e.g. "Students who chose True here were relying on general knowledge — the passage doesn't state this")
 
-## Good Examples
+The tone is precise. Every verdict should be traceable to a specific part of the passage.
 
-Add strong original examples from our bank.
+## What Makes A Good Passage
 
-## Rejection Rules
+- Self-contained: answerable without outside knowledge
+- 150–300 words: long enough to contain multiple evidence points, short enough to read under time pressure
+- Varied sentence complexity: not all simple sentences, not all dense academic prose
+- At least 4 distinct pieces of information that can each be turned into a question
+- No trick questions that rely on a single ambiguous word
 
-- Reject if the passage requires specialist knowledge
-- Reject if questions are answerable without reading
-- Reject if evidence spans are fragile or unclear
-- Reject if official passage wording is copied
+## What Makes A Good Question
+
+- Statement is clearly traceable to one part of the passage
+- Wrong answers include: something plausible but not in the passage (Cannot Tell trap), something that partially matches but goes further than the passage says (overclaim), something that mixes up two different facts from the passage
+- Wording of the statement is different from the passage (paraphrasing, not direct copy-paste) — this tests reading comprehension, not phrase matching
+
+## Official Examples
+
+Paste official UCAT Verbal Reasoning passages with their question sets here. Include the full passage, all 4 questions, all answer options, the correct answers, and any official explanations.
+
+The AI will use these to understand:
+- The typical passage length, topic, and reading complexity used in the real exam
+- How True/False/Cannot Tell options are constructed and worded
+- The ratio of True/False/Cannot Tell in real question sets
+- How distractors use plausible but unverified statements to trap students
+
+---
+
+[Paste official examples below this line]
