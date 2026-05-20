@@ -149,6 +149,162 @@ async function verifyRawQuestion(
   return { outcome: baseOutcome, draft: mapped, raw };
 }
 
+function buildVerifyContext(input: ProcessGeneratedInput): VerifyContext {
+  const profile = getGenerateProfile(input.trainerType);
+  if (!profile) throw new Error("This trainer does not support AI generation yet.");
+  return {
+    input,
+    profile,
+    stemKeys: new Set(
+      (input.existingStems ?? []).map((s) => normaliseStemKey(s)).filter(Boolean),
+    ),
+    legacyIdsInBatch: new Set<string>(),
+  };
+}
+
+function resolveBatchCount(input: ProcessGeneratedInput, profile: TrainerGenerateProfile): number {
+  return Math.min(input.count ?? profile.batchSize, profile.batchSize);
+}
+
+/** Step 1: single OpenRouter generate call. */
+export async function runGeneratePhase(input: ProcessGeneratedInput): Promise<{
+  questions: Record<string, unknown>[];
+  generated: number;
+  count: number;
+}> {
+  const profile = getGenerateProfile(input.trainerType);
+  if (!profile) throw new Error("This trainer does not support AI generation yet.");
+
+  const count = resolveBatchCount(input, profile);
+  const generateMessages = buildGenerateMessages({
+    profile,
+    outputSpec: input.outputSpec,
+    goldStandard: input.goldStandard,
+    count,
+    skillTag: input.skillTag,
+    difficulty: input.difficulty,
+    bankSnippet: input.existingStems?.length
+      ? input.existingStems.slice(0, 30).join("\n")
+      : undefined,
+  });
+
+  const generatedRaw = await callOpenRouter(
+    input.openRouter,
+    input.openRouter.generateModel,
+    generateMessages,
+  );
+
+  const list = parseAiJsonArray(generatedRaw);
+  const questions = list
+    .slice(0, count)
+    .map((item) => asRecord(item))
+    .filter((raw): raw is Record<string, unknown> => raw !== null);
+
+  return { questions, generated: list.length, count };
+}
+
+/** Step 2: copy/plugins + parallel audit model per question. */
+export async function runVerifyPhase(
+  input: ProcessGeneratedInput,
+  questions: Record<string, unknown>[],
+): Promise<{
+  outcomes: QuestionVerifyOutcome[];
+  drafts: ImportDraftPayload[];
+  repairCandidates: Array<{ outcome: QuestionVerifyOutcome; raw: Record<string, unknown> }>;
+  generated: number;
+}> {
+  const ctx = buildVerifyContext(input);
+  const outcomes: QuestionVerifyOutcome[] = [];
+  const drafts: ImportDraftPayload[] = [];
+  const rawByLegacyId = new Map<string, Record<string, unknown>>();
+
+  const verified = await Promise.all(questions.map((raw) => verifyRawQuestion(ctx, raw)));
+  for (const result of verified) {
+    rawByLegacyId.set(result.outcome.legacyId, result.raw);
+    outcomes.push(result.outcome);
+    if (result.draft) drafts.push(result.draft);
+  }
+
+  const repairCandidates = outcomes
+    .filter((o) => eligibleForAiRepair(o))
+    .map((o) => ({ outcome: o, raw: rawByLegacyId.get(o.legacyId)! }))
+    .filter((c) => Boolean(c.raw));
+
+  return {
+    outcomes,
+    drafts,
+    repairCandidates,
+    generated: questions.length,
+  };
+}
+
+/** Step 3: optional OpenRouter repair batch + re-verify. */
+export async function runRepairPhase(
+  input: ProcessGeneratedInput,
+  payload: {
+    outcomes: QuestionVerifyOutcome[];
+    drafts: ImportDraftPayload[];
+    repairCandidates: Array<{ outcome: QuestionVerifyOutcome; raw: Record<string, unknown> }>;
+  },
+): Promise<{
+  outcomes: QuestionVerifyOutcome[];
+  drafts: ImportDraftPayload[];
+  repairAttempted: number;
+  repairSucceeded: number;
+}> {
+  const ctx = buildVerifyContext(input);
+  let { outcomes, drafts, repairCandidates } = payload;
+  let repairAttempted = 0;
+  let repairSucceeded = 0;
+
+  if (repairCandidates.length === 0) {
+    return { outcomes, drafts, repairAttempted, repairSucceeded };
+  }
+
+  repairAttempted = repairCandidates.length;
+  const repairedList = await runAiRepairBatch(ctx, repairCandidates);
+
+  const repairVerified = await Promise.all(
+    repairCandidates.map(async (candidate, i) => {
+      const repairedRaw =
+        asRecord(repairedList[i]) ??
+        repairedList.find(
+          (r) =>
+            str(r.legacy_id) === candidate.outcome.legacyId ||
+            str(r.id) === candidate.outcome.legacyId,
+        );
+
+      if (!repairedRaw) return { candidate, result: null as VerifyResult | null };
+
+      if (!str(repairedRaw.legacy_id) && !str(repairedRaw.id)) {
+        repairedRaw.legacy_id = candidate.outcome.legacyId;
+      }
+
+      const result = await verifyRawQuestion(ctx, repairedRaw, 1);
+      return { candidate, result };
+    }),
+  );
+
+  for (const { candidate, result } of repairVerified) {
+    if (!result) continue;
+
+    const idx = outcomes.findIndex((o) => o.legacyId === candidate.outcome.legacyId);
+    if (idx >= 0) outcomes[idx] = result.outcome;
+
+    if (result.draft) {
+      const draftIdx = drafts.findIndex((d) => d.legacy_id === result.draft!.legacy_id);
+      if (draftIdx >= 0) drafts[draftIdx] = result.draft;
+      else drafts.push(result.draft);
+      if (result.outcome.qualityStatus !== "fail") repairSucceeded += 1;
+    } else {
+      const draftIdx = drafts.findIndex((d) => d.legacy_id === candidate.outcome.legacyId);
+      if (draftIdx >= 0) drafts.splice(draftIdx, 1);
+    }
+  }
+
+  return { outcomes, drafts, repairAttempted, repairSucceeded };
+}
+
 async function runAiRepairBatch(
   ctx: VerifyContext,
   candidates: Array<{ raw: Record<string, unknown>; outcome: QuestionVerifyOutcome }>,
@@ -177,6 +333,7 @@ async function runAiRepairBatch(
     .filter((r): r is Record<string, unknown> => r !== null);
 }
 
+/** Full pipeline in one call (used when phase is omitted). */
 export async function generateAndVerifyQuestions(
   input: ProcessGeneratedInput,
 ): Promise<{
@@ -187,116 +344,17 @@ export async function generateAndVerifyQuestions(
   repairAttempted: number;
   repairSucceeded: number;
 }> {
-  const profile = getGenerateProfile(input.trainerType);
-  if (!profile) throw new Error("This trainer does not support AI generation yet.");
-
-  const count = Math.min(input.count ?? profile.batchSize, profile.batchSize);
-  const ctx: VerifyContext = {
-    input,
-    profile,
-    stemKeys: new Set(
-      (input.existingStems ?? []).map((s) => normaliseStemKey(s)).filter(Boolean),
-    ),
-    legacyIdsInBatch: new Set<string>(),
-  };
-
-  const generateMessages = buildGenerateMessages({
-    profile,
-    outputSpec: input.outputSpec,
-    goldStandard: input.goldStandard,
-    count,
-    skillTag: input.skillTag,
-    difficulty: input.difficulty,
-    bankSnippet: input.existingStems?.length
-      ? input.existingStems.slice(0, 30).join("\n")
-      : undefined,
-  });
-
-  const generatedRaw = await callOpenRouter(
-    input.openRouter,
-    input.openRouter.generateModel,
-    generateMessages,
-  );
-
-  const list = parseAiJsonArray(generatedRaw);
-  const outcomes: QuestionVerifyOutcome[] = [];
-  const drafts: ImportDraftPayload[] = [];
-  const rawByLegacyId = new Map<string, Record<string, unknown>>();
-
-  const toVerify = list
-    .slice(0, count)
-    .map((item) => asRecord(item))
-    .filter((raw): raw is Record<string, unknown> => raw !== null);
-
-  const verified = await Promise.all(toVerify.map((raw) => verifyRawQuestion(ctx, raw)));
-  for (const result of verified) {
-    rawByLegacyId.set(result.outcome.legacyId, result.raw);
-    outcomes.push(result.outcome);
-    if (result.draft) drafts.push(result.draft);
-  }
-
-  const repairCandidates = outcomes
-    .filter((o) => eligibleForAiRepair(o))
-    .map((o) => ({ outcome: o, raw: rawByLegacyId.get(o.legacyId) }))
-    .filter((c): c is { outcome: QuestionVerifyOutcome; raw: Record<string, unknown> } =>
-      Boolean(c.raw),
-    );
-
-  let repairAttempted = 0;
-  let repairSucceeded = 0;
-
-  if (repairCandidates.length > 0) {
-    repairAttempted = repairCandidates.length;
-    const repairedList = await runAiRepairBatch(ctx, repairCandidates);
-
-    const repairVerified = await Promise.all(
-      repairCandidates.map(async (candidate, i) => {
-        const repairedRaw =
-          asRecord(repairedList[i]) ??
-          repairedList.find(
-            (r) =>
-              str(r.legacy_id) === candidate.outcome.legacyId ||
-              str(r.id) === candidate.outcome.legacyId,
-          );
-
-        if (!repairedRaw) return { candidate, result: null as VerifyResult | null };
-
-        if (!str(repairedRaw.legacy_id) && !str(repairedRaw.id)) {
-          repairedRaw.legacy_id = candidate.outcome.legacyId;
-        }
-
-        const result = await verifyRawQuestion(ctx, repairedRaw, 1);
-        return { candidate, result };
-      }),
-    );
-
-    for (const { candidate, result } of repairVerified) {
-      if (!result) continue;
-
-      rawByLegacyId.set(result.outcome.legacyId, result.raw);
-
-      const idx = outcomes.findIndex((o) => o.legacyId === candidate.outcome.legacyId);
-      if (idx >= 0) outcomes[idx] = result.outcome;
-
-      if (result.draft) {
-        const draftIdx = drafts.findIndex((d) => d.legacy_id === result.draft!.legacy_id);
-        if (draftIdx >= 0) drafts[draftIdx] = result.draft;
-        else drafts.push(result.draft);
-        if (result.outcome.qualityStatus !== "fail") repairSucceeded += 1;
-      } else {
-        const draftIdx = drafts.findIndex((d) => d.legacy_id === candidate.outcome.legacyId);
-        if (draftIdx >= 0) drafts.splice(draftIdx, 1);
-      }
-    }
-  }
+  const { questions, generated } = await runGeneratePhase(input);
+  const verify = await runVerifyPhase(input, questions);
+  const repaired = await runRepairPhase(input, verify);
 
   return {
-    drafts,
-    outcomes,
-    generated: list.length,
-    importedLegacyIds: new Set(drafts.map((d) => d.legacy_id)),
-    repairAttempted,
-    repairSucceeded,
+    drafts: repaired.drafts,
+    outcomes: repaired.outcomes,
+    generated,
+    importedLegacyIds: new Set(repaired.drafts.map((d) => d.legacy_id)),
+    repairAttempted: repaired.repairAttempted,
+    repairSucceeded: repaired.repairSucceeded,
   };
 }
 

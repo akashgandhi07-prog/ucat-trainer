@@ -1,5 +1,11 @@
 import { supabase } from "./supabase";
-import type { GenerateTrainerQuestionsResult } from "./questionLabGenerate/types";
+import { summariseGenerateResult } from "./questionLabGenerate/pipeline";
+import type { ImportDraftPayload } from "./questionLabMapImport";
+import type {
+  GeneratePhase,
+  GenerateTrainerQuestionsResult,
+  QuestionVerifyOutcome,
+} from "./questionLabGenerate/types";
 
 export type InvokeGenerateInput = {
   trainerType: string;
@@ -21,9 +27,193 @@ export type InvokeGenerateResponse =
       questions?: GenerateTrainerQuestionsResult["questions"];
     };
 
-/** Edge function runs several OpenRouter calls; allow up to 4 minutes before surfacing an error. */
-const INVOKE_TIMEOUT_MS = 240_000;
+const PHASE_TIMEOUT_MS: Record<GeneratePhase, number> = {
+  generate: 180_000,
+  verify: 180_000,
+  repair: 180_000,
+  import: 60_000,
+};
 
+type PhasePayload = Record<string, unknown>;
+
+async function invokePhase(
+  phase: GeneratePhase,
+  body: PhasePayload,
+  timeoutMs: number,
+): Promise<{ data: unknown; error: { message: string } | null }> {
+  const invokePromise = supabase.functions.invoke("generate-trainer-questions", {
+    body: { phase, ...body },
+  });
+
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeoutPromise = new Promise<{ data: null; error: { message: string } }>((resolve) => {
+    timeoutId = setTimeout(() => {
+      resolve({
+        data: null,
+        error: {
+          message: `Step "${phase}" timed out after ${Math.round(timeoutMs / 1000)}s.`,
+        },
+      });
+    }, timeoutMs);
+  });
+
+  const result = await Promise.race([invokePromise, timeoutPromise]).finally(() => {
+    if (timeoutId !== undefined) clearTimeout(timeoutId);
+  });
+
+  return result;
+}
+
+function parsePhaseError(data: unknown, error: { message: string } | null): string | null {
+  if (error?.message) return error.message;
+  const payload = data as { error?: string; ok?: boolean } | null;
+  if (payload && typeof payload === "object" && payload.error) {
+    return String(payload.error);
+  }
+  return null;
+}
+
+export type PhasedGenerateOptions = {
+  onLog?: (line: string) => void;
+};
+
+/** Runs generate → verify → repair → import with live progress lines for the admin UI. */
+export async function invokeGenerateTrainerQuestionsPhased(
+  input: InvokeGenerateInput,
+  options?: PhasedGenerateOptions,
+): Promise<InvokeGenerateResponse> {
+  const log = (line: string) => options?.onLog?.(line);
+
+  const base = {
+    trainerType: input.trainerType,
+    count: input.count ?? 5,
+    skillTag: input.skillTag || undefined,
+    difficulty: input.difficulty || undefined,
+    outputSpec: input.outputSpec,
+    goldStandard: input.goldStandard,
+  };
+
+  log("Starting pipeline for " + input.trainerType + "…");
+
+  log("Step 1 of 4: Calling OpenRouter (generate model) to draft questions…");
+  const genRes = await invokePhase("generate", base, PHASE_TIMEOUT_MS.generate);
+  const genErr = parsePhaseError(genRes.data, genRes.error);
+  if (genErr) return { ok: false, error: genErr };
+
+  const gen = genRes.data as {
+    ok: true;
+    log?: string;
+    questions: Record<string, unknown>[];
+    generated: number;
+    generateModel?: string;
+  };
+  log(
+    gen.log ??
+      `Step 1 done: received ${gen.questions?.length ?? 0} question(s) from the generate model.`,
+  );
+
+  log("Step 2 of 4: Copy checks, trap plugins, and audit model (parallel per question)…");
+  const verifyRes = await invokePhase(
+    "verify",
+    { ...base, questions: gen.questions },
+    PHASE_TIMEOUT_MS.verify,
+  );
+  const verifyErr = parsePhaseError(verifyRes.data, verifyRes.error);
+  if (verifyErr) return { ok: false, error: verifyErr };
+
+  const verify = verifyRes.data as {
+    ok: true;
+    log?: string;
+    outcomes: QuestionVerifyOutcome[];
+    drafts: ImportDraftPayload[];
+    repairCandidates: Array<{
+      legacyId: string;
+      raw: Record<string, unknown>;
+      outcome: QuestionVerifyOutcome;
+    }>;
+    generated: number;
+    auditModel?: string;
+  };
+  log(verify.log ?? "Step 2 done: verification finished.");
+
+  let outcomes = verify.outcomes;
+  let drafts = verify.drafts;
+  let repairAttempted = 0;
+  let repairSucceeded = 0;
+
+  const repairCount = verify.repairCandidates?.length ?? 0;
+  if (repairCount > 0) {
+    log(
+      `Step 3 of 4: Calling OpenRouter (repair model) for ${repairCount} flagged draft(s)…`,
+    );
+    const repairRes = await invokePhase(
+      "repair",
+      {
+        ...base,
+        outcomes,
+        drafts,
+        repairCandidates: verify.repairCandidates,
+      },
+      PHASE_TIMEOUT_MS.repair,
+    );
+    const repairErr = parsePhaseError(repairRes.data, repairRes.error);
+    if (repairErr) return { ok: false, error: repairErr };
+
+    const repair = repairRes.data as {
+      ok: true;
+      log?: string;
+      outcomes: QuestionVerifyOutcome[];
+      drafts: ImportDraftPayload[];
+      repairAttempted: number;
+      repairSucceeded: number;
+    };
+    outcomes = repair.outcomes;
+    drafts = repair.drafts;
+    repairAttempted = repair.repairAttempted;
+    repairSucceeded = repair.repairSucceeded;
+    log(repair.log ?? "Step 3 done: repair pass finished.");
+  } else {
+    log("Step 3 of 4: Skipped (no drafts needed AI repair).");
+  }
+
+  log("Step 4 of 4: Saving importable drafts to Review Queue…");
+  const importRes = await invokePhase(
+    "import",
+    { ...base, drafts },
+    PHASE_TIMEOUT_MS.import,
+  );
+  const importErr = parsePhaseError(importRes.data, importRes.error);
+  if (importErr) return { ok: false, error: importErr };
+
+  const imp = importRes.data as {
+    ok: true;
+    log?: string;
+    created: number;
+    updated: number;
+    skipped: Array<{ legacy_id: string; reason: string }>;
+    errors: Array<{ legacy_id?: string | null; message: string }>;
+  };
+  log(imp.log ?? "Step 4 done: import finished.");
+
+  const importedLegacyIds = new Set(drafts.map((d) => d.legacy_id));
+  const result = summariseGenerateResult(
+    verify.generated,
+    outcomes,
+    {
+      created: imp.created,
+      updated: imp.updated,
+      skipped: imp.skipped ?? [],
+      errors: imp.errors ?? [],
+    },
+    importedLegacyIds,
+    repairAttempted,
+    repairSucceeded,
+  );
+
+  return { ok: true, ...result };
+}
+
+/** Single edge call (no live step log). Prefer invokeGenerateTrainerQuestionsPhased in the admin UI. */
 export async function invokeGenerateTrainerQuestions(
   input: InvokeGenerateInput,
 ): Promise<InvokeGenerateResponse> {
@@ -38,6 +228,7 @@ export async function invokeGenerateTrainerQuestions(
     },
   });
 
+  const INVOKE_TIMEOUT_MS = 240_000;
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
   const timeoutPromise = new Promise<{ data: null; error: { message: string } }>((resolve) => {
     timeoutId = setTimeout(() => {
@@ -45,7 +236,7 @@ export async function invokeGenerateTrainerQuestions(
         data: null,
         error: {
           message:
-            "Generation timed out after 4 minutes. The server may still be running. Wait a minute, refresh Review Queue, or try again with fewer questions (we are improving speed).",
+            "Generation timed out after 4 minutes. Refresh Review Queue or try again.",
         },
       });
     }, INVOKE_TIMEOUT_MS);
@@ -61,7 +252,7 @@ export async function invokeGenerateTrainerQuestions(
       return {
         ok: false,
         error:
-          "The generate request took too long and was stopped. This often means the Edge Function hit its time limit while calling OpenRouter. Try again in a minute, or check Supabase Edge Function logs.",
+          "The generate request took too long. Try again or check Supabase Edge Function logs.",
       };
     }
     return {

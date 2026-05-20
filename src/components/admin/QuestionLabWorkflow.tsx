@@ -26,7 +26,7 @@ import {
   parseImportJson,
   type ImportRpcResult,
 } from "../../lib/questionLabImport";
-import { invokeGenerateTrainerQuestions } from "../../lib/questionLabGenerateInvoke";
+import { invokeGenerateTrainerQuestionsPhased } from "../../lib/questionLabGenerateInvoke";
 import { buildAuditPrompt, buildGenerationPrompt } from "../../lib/questionLabPrompts";
 
 type CopyKey = "official" | "output" | "prompt" | "audit" | "bank";
@@ -103,6 +103,7 @@ export default function QuestionLabWorkflow() {
   const [importBusy, setImportBusy] = useState(false);
   const [importProgress, setImportProgress] = useState<string | null>(null);
   const [generateBusy, setGenerateBusy] = useState(false);
+  const [generateLog, setGenerateLog] = useState<string[]>([]);
   const [generateResult, setGenerateResult] = useState<{
     created: number;
     updated: number;
@@ -160,6 +161,7 @@ export default function QuestionLabWorkflow() {
     setGenerateBusy(true);
     setError(null);
     setGenerateResult(null);
+    setGenerateLog([]);
     try {
       const [goldStandard, outputSpec] = await Promise.all([
         fetchOfficialExamplesFromApi(trainerType),
@@ -174,14 +176,21 @@ export default function QuestionLabWorkflow() {
         );
       }
 
-      const result = await invokeGenerateTrainerQuestions({
-        trainerType,
-        count: 5,
-        skillTag: skillTagFilter.trim() || undefined,
-        difficulty: difficultyFilter.trim() || undefined,
-        outputSpec,
-        goldStandard,
-      });
+      const result = await invokeGenerateTrainerQuestionsPhased(
+        {
+          trainerType,
+          count: 5,
+          skillTag: skillTagFilter.trim() || undefined,
+          difficulty: difficultyFilter.trim() || undefined,
+          outputSpec,
+          goldStandard,
+        },
+        {
+          onLog: (line) => {
+            setGenerateLog((prev) => [...prev, line]);
+          },
+        },
+      );
 
       if (!result.ok) {
         throw new Error(result.error);
@@ -198,6 +207,10 @@ export default function QuestionLabWorkflow() {
         repairSucceeded: result.repairSucceeded,
         questions: result.questions,
       });
+      setGenerateLog((prev) => [
+        ...prev,
+        `Finished: ${result.created + result.updated} draft(s) in Review Queue.`,
+      ]);
       setGenerateReportOpen(true);
       if (result.imported === 0 && result.generated > 0) {
         setError(
@@ -414,9 +427,29 @@ export default function QuestionLabWorkflow() {
                 ) : (
                   <Sparkles className="w-4 h-4" />
                 )}
-                {generateBusy ? "Generating 5 drafts (2–4 min)…" : "Generate 5 drafts"}
+                {generateBusy ? "Running pipeline…" : "Generate 5 drafts"}
               </button>
             </div>
+            {(generateBusy || generateLog.length > 0) && (
+              <div
+                className="rounded border border-violet-200 bg-white/90 px-3 py-2 max-h-40 overflow-y-auto"
+                aria-live="polite"
+                aria-busy={generateBusy}
+              >
+                <p className="text-xs font-semibold text-violet-900 mb-1.5">Progress log</p>
+                {generateLog.length === 0 ? (
+                  <p className="text-xs text-violet-800/80">Waiting for first step…</p>
+                ) : (
+                  <ol className="text-xs text-violet-950 space-y-1 list-decimal list-inside">
+                    {generateLog.map((line, i) => (
+                      <li key={`${i}-${line.slice(0, 24)}`} className="leading-snug">
+                        {line}
+                      </li>
+                    ))}
+                  </ol>
+                )}
+              </div>
+            )}
             {generateResult && (
               <div className="space-y-2">
                 <p

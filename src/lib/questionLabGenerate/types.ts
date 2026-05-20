@@ -39,6 +39,13 @@ export type QuestionVerifyOutcome = {
   layer3: AuditVerdict | null;
 };
 
+export type GeneratePhase = "generate" | "verify" | "repair" | "import";
+
+export type RepairCandidateWire = {
+  legacyId: string;
+  raw: Record<string, unknown>;
+};
+
 export type GenerateTrainerQuestionsResult = {
   created: number;
   updated: number;

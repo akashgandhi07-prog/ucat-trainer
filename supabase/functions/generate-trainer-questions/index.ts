@@ -27,8 +27,13 @@ import "../../../src/lib/studentFacingCopy.ts";
 import "../../../src/types/dmTrainers.ts";
 import "../../../src/types/questionLab.ts";
 import { countOfficialExamples } from "../../../src/lib/questionLabGoldStats.ts";
+import type { ImportDraftPayload } from "../../../src/lib/questionLabMapImport.ts";
+import type { GeneratePhase, QuestionVerifyOutcome } from "../../../src/lib/questionLabGenerate/types.ts";
 import {
   generateAndVerifyQuestions,
+  runGeneratePhase,
+  runRepairPhase,
+  runVerifyPhase,
   summariseGenerateResult,
 } from "../../../src/lib/questionLabGenerate/pipeline.ts";
 import { getGenerateProfile } from "../../../src/lib/questionLabGenerate/profiles.ts";
@@ -47,12 +52,21 @@ function json(body: unknown, status = 200): Response {
 }
 
 type RequestBody = {
+  phase?: GeneratePhase;
   trainerType?: string;
   count?: number;
   skillTag?: string;
   difficulty?: string;
   outputSpec?: string;
   goldStandard?: string;
+  questions?: Record<string, unknown>[];
+  outcomes?: QuestionVerifyOutcome[];
+  drafts?: ImportDraftPayload[];
+  repairCandidates?: Array<{
+    legacyId: string;
+    raw: Record<string, unknown>;
+    outcome: QuestionVerifyOutcome;
+  }>;
 };
 
 Deno.serve(async (req) => {
@@ -158,7 +172,131 @@ Deno.serve(async (req) => {
     Deno.env.get("OPENROUTER_GENERATE_MODEL") ??
     "deepseek/deepseek-chat";
 
+  const processInput = {
+    trainerType,
+    outputSpec,
+    goldStandard,
+    count: body.count ?? profileGen.batchSize,
+    skillTag: body.skillTag,
+    difficulty: body.difficulty,
+    existingStems,
+    openRouter: {
+      apiKey: openRouterKey,
+      generateModel,
+      auditModel,
+      repairModel,
+    },
+  };
+
+  const phase = body.phase;
+
   try {
+    if (phase === "generate") {
+      const { questions, generated, count } = await runGeneratePhase(processInput);
+      return json({
+        ok: true,
+        phase: "generate",
+        log: `OpenRouter generate model returned ${questions.length} question(s) (parsed ${generated} from JSON).`,
+        questions,
+        generated,
+        count,
+        generateModel,
+      });
+    }
+
+    if (phase === "verify") {
+      const questions = body.questions;
+      if (!Array.isArray(questions) || questions.length === 0) {
+        return json({ error: "questions array is required for verify phase." }, 400);
+      }
+      const verify = await runVerifyPhase(processInput, questions);
+      const repairWire = verify.repairCandidates.map((c) => ({
+        legacyId: c.outcome.legacyId,
+        raw: c.raw,
+        outcome: c.outcome,
+      }));
+      return json({
+        ok: true,
+        phase: "verify",
+        log: `Checked ${verify.outcomes.length} draft(s): ${verify.drafts.length} importable, ${repairWire.length} sent for repair.`,
+        outcomes: verify.outcomes,
+        drafts: verify.drafts,
+        repairCandidates: repairWire,
+        generated: verify.generated,
+        auditModel,
+      });
+    }
+
+    if (phase === "repair") {
+      const outcomes = body.outcomes;
+      const drafts = body.drafts;
+      const repairWire = body.repairCandidates;
+      if (!Array.isArray(outcomes) || !Array.isArray(drafts) || !Array.isArray(repairWire)) {
+        return json({
+          error: "outcomes, drafts, and repairCandidates are required for repair phase.",
+        }, 400);
+      }
+      const candidates = repairWire.map((c) => ({
+        outcome: c.outcome,
+        raw: c.raw,
+      }));
+      const repaired = await runRepairPhase(processInput, {
+        outcomes,
+        drafts,
+        repairCandidates: candidates,
+      });
+      return json({
+        ok: true,
+        phase: "repair",
+        log:
+          repaired.repairAttempted > 0
+            ? `Repair model updated ${repaired.repairSucceeded} of ${repaired.repairAttempted} draft(s).`
+            : "No repair pass needed.",
+        outcomes: repaired.outcomes,
+        drafts: repaired.drafts,
+        repairAttempted: repaired.repairAttempted,
+        repairSucceeded: repaired.repairSucceeded,
+        repairModel,
+      });
+    }
+
+    if (phase === "import") {
+      const drafts = body.drafts;
+      if (!Array.isArray(drafts)) {
+        return json({ error: "drafts array is required for import phase." }, 400);
+      }
+      if (drafts.length === 0) {
+        return json({
+          ok: true,
+          phase: "import",
+          log: "No importable drafts (all blocked or failed checks).",
+          created: 0,
+          updated: 0,
+          skipped: [],
+          errors: [],
+        });
+      }
+      const { data: importData, error: importError } = await supabase.rpc(
+        "admin_import_trainer_question_drafts",
+        { p_questions: drafts },
+      );
+      if (importError) {
+        return json({ error: importError.message }, 500);
+      }
+      const created = typeof importData?.created === "number" ? importData.created : 0;
+      const updated = typeof importData?.updated === "number" ? importData.updated : 0;
+      return json({
+        ok: true,
+        phase: "import",
+        log: `Saved to Review Queue: ${created} created, ${updated} updated.`,
+        created,
+        updated,
+        skipped: Array.isArray(importData?.skipped) ? importData.skipped : [],
+        errors: Array.isArray(importData?.errors) ? importData.errors : [],
+      });
+    }
+
+    // Full pipeline (legacy single call)
     const {
       drafts,
       outcomes,
@@ -166,21 +304,7 @@ Deno.serve(async (req) => {
       importedLegacyIds,
       repairAttempted,
       repairSucceeded,
-    } = await generateAndVerifyQuestions({
-      trainerType,
-      outputSpec,
-      goldStandard,
-      count: body.count ?? profileGen.batchSize,
-      skillTag: body.skillTag,
-      difficulty: body.difficulty,
-      existingStems,
-      openRouter: {
-        apiKey: openRouterKey,
-        generateModel,
-        auditModel,
-        repairModel,
-      },
-    });
+    } = await generateAndVerifyQuestions(processInput);
 
     let importResult = {
       created: 0,
@@ -192,7 +316,7 @@ Deno.serve(async (req) => {
     if (drafts.length > 0) {
       const { data: importData, error: importError } = await supabase.rpc(
         "admin_import_trainer_question_drafts",
-        { p_questions: drafts }
+        { p_questions: drafts },
       );
       if (importError) {
         return json({ error: importError.message }, 500);
@@ -211,7 +335,7 @@ Deno.serve(async (req) => {
       importResult,
       importedLegacyIds,
       repairAttempted,
-      repairSucceeded
+      repairSucceeded,
     );
 
     return json({ ok: true, ...result });
