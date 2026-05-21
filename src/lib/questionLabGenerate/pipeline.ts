@@ -247,7 +247,7 @@ export async function runGeneratePhase(input: ProcessGeneratedInput): Promise<{
     input.openRouter,
     input.openRouter.generateModel,
     generateMessages,
-    { temperature: 0.15 },
+    { temperature: 0.15, maxTokens: 8_000 },
   );
 
   const list = parseAiJsonArray(generatedRaw);
