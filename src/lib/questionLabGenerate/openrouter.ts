@@ -5,8 +5,11 @@ export type OpenRouterConfig = {
   repairModel: string;
 };
 
-/** Per-request cap so one slow model cannot hang the edge function indefinitely. */
+/** Default per-request cap so one slow model cannot hang the edge function indefinitely. */
 const OPENROUTER_FETCH_MS = 120_000;
+
+/** Tighter cap for audit calls: 5 run in parallel so each must finish fast. */
+export const OPENROUTER_AUDIT_FETCH_MS = 50_000;
 
 async function fetchWithTimeout(
   url: string,
@@ -25,6 +28,8 @@ async function fetchWithTimeout(
 export type OpenRouterCallOptions = {
   maxTokens?: number;
   temperature?: number;
+  /** Override the per-request network timeout (default 120 s). */
+  timeoutMs?: number;
 };
 
 export async function callOpenRouter(
@@ -40,6 +45,7 @@ export async function callOpenRouter(
       : maxTokensOrOpts;
   const maxTokens = opts.maxTokens ?? 16_000;
   const temperature = opts.temperature ?? 0.3;
+  const fetchMs = opts.timeoutMs ?? OPENROUTER_FETCH_MS;
   let res: Response;
   try {
     res = await fetchWithTimeout(
@@ -59,13 +65,13 @@ export async function callOpenRouter(
           max_tokens: maxTokens,
         }),
       },
-      OPENROUTER_FETCH_MS,
+      fetchMs,
     );
   } catch (err) {
     const name = err instanceof Error ? err.name : "";
     if (name === "TimeoutError" || name === "AbortError") {
       throw new Error(
-        `OpenRouter timed out after ${OPENROUTER_FETCH_MS / 1000}s (${model}). Try again or use a faster model.`,
+        `OpenRouter timed out after ${fetchMs / 1000}s (${model}). Try again or use a faster model.`,
       );
     }
     throw err;

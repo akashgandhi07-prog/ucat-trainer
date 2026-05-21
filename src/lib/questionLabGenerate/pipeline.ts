@@ -2,7 +2,7 @@ import { mapRawQuestionForImport, type ImportDraftPayload } from "../questionLab
 import { applyAuditAccuracyCaps, formatAuditScores, parseAuditVerdict } from "./audit.ts";
 import { classifyFailures, formatFailureCategories, type FailureCategory } from "./failureCategories.ts";
 import { buildAuditMessages, buildGenerateMessages, buildRepairMessages } from "./prompts.ts";
-import { callOpenRouter, type OpenRouterConfig } from "./openrouter.ts";
+import { callOpenRouter, OPENROUTER_AUDIT_FETCH_MS, type OpenRouterConfig } from "./openrouter.ts";
 import { eligibleForAiRepair, repairIssuesForPrompt } from "./repair.ts";
 import { pluginContextLine, runPlugins } from "./plugins/index.ts";
 import { getGenerateProfile } from "./profiles.ts";
@@ -57,6 +57,7 @@ async function auditQuestion(
   const rawAudit = await callOpenRouter(config, config.auditModel, messages, {
     maxTokens: 2_000,
     temperature: 0.2,
+    timeoutMs: OPENROUTER_AUDIT_FETCH_MS,
   });
   return parseAuditVerdict(rawAudit);
 }
