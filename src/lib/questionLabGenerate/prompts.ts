@@ -32,7 +32,7 @@ export function buildGenerateMessages(input: {
     "- Before writing each question, solve it yourself and ensure exactly one correct answer.",
     "- Each wrong option must come from a named wrong method (see output spec distractor rules).",
     "- requiresVisual must be false.",
-    "- Explanations are final student-facing text with Step 1:, Step 2:, etc. and \\n\\n between steps.",
+    "- Explanations use Step 1:, Step 2:, etc. Put a blank line BEFORE each Step label (Step 2 onward must not sit at the end of the previous sentence). Put a blank line after each Step N: before the step body.",
     "- Never write: let me, recheck, redesign, note:, wait, actually, requires revision.",
     "",
     "Hidden verification fields (required on every question, stripped before students see them):",
@@ -121,7 +121,7 @@ export function buildRepairMessages(input: {
     "- Re-solve the question: align stem, all options, correctAnswer, and every explanation step.",
     "- If audit cited a calculation error, fix the numbers and the keyed answer, not just the prose.",
     "- UK English. No em or en dash. No AI voice (let me, certainly, delve, furthermore, in conclusion).",
-    "- Explanations: Step 1:, Step 2:, with \\n\\n between steps.",
+    "- Explanations: blank line before each Step 2+ label, and blank line after each Step N: before its body.",
     "- Do not add commentary outside JSON.",
   ].join("\n");
 

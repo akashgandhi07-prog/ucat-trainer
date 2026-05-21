@@ -12,6 +12,7 @@ import FlagQuestionButton from "./FlagQuestionButton";
 import { scrollPageToTop } from "../../lib/scrollPageToTop";
 import { useAppShell } from "../../contexts/AppShellContext";
 import { APP_CONTENT_X } from "../../lib/appContentLayout";
+import { formatExplanationForDisplay } from "../../lib/studentFacingCopy";
 
 const OPTION_KEYS: Record<string, DmTrainerOptionId> = {
   "1": "A",
@@ -360,10 +361,14 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
                             <span className="font-semibold">Exact aim: </span>
                             {argReview.exactAim}
                           </p>
-                          <p className="text-sm text-foreground leading-relaxed">{current.explanation}</p>
+                          <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                            {formatExplanationForDisplay(current.explanation)}
+                          </p>
                         </>
                       ) : (
-                        <p className="text-sm text-foreground leading-relaxed">{current.explanation}</p>
+                        <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                          {formatExplanationForDisplay(current.explanation)}
+                        </p>
                       )}
 
                       {current.wrongOptionReasons && (

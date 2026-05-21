@@ -15,10 +15,24 @@ export function sanitizeStudentFacingCopy(text: string): string {
   return ensureExplanationLineBreaks(out.trim());
 }
 
+/** Put a blank line before each Step label that follows content on the same line. */
 export function ensureExplanationLineBreaks(text: string): string {
-  if (!text || text.includes("\n")) return text;
-  if (!/Step\s+\d+/i.test(text)) return text;
-  return text.replace(/\s*(?=Step\s+\d+\s*:)/gi, "\n\n").trim();
+  if (!text || !/Step\s+\d+/i.test(text)) return text;
+
+  let out = text.replace(/\r\n/g, "\n");
+
+  // Line break BEFORE "Step N:" when it is glued to the previous sentence (not already on its own line).
+  out = out.replace(/([^\n])\s*(?=Step\s+\d+\s*:)/gi, "$1\n\n");
+
+  // Line break AFTER "Step N:" when the step body starts on the same line.
+  out = out.replace(/Step\s+(\d+)\s*:\s*(?=\S)/gi, "Step $1:\n\n");
+
+  return out.replace(/\n{3,}/g, "\n\n").trim();
+}
+
+/** Use when rendering stored explanations (fixes legacy inline Step 2+ labels). */
+export function formatExplanationForDisplay(text: string): string {
+  return ensureExplanationLineBreaks(text);
 }
 
 export function hasForbiddenDash(text: string): boolean {

@@ -33,6 +33,7 @@ import {
   isDeletableQuestion,
 } from "../../lib/questionLabDelete";
 import { saveTrainerQuestionEdit, type QuestionEditPatch } from "../../lib/questionLabEdit";
+import { formatExplanationForDisplay } from "../../lib/studentFacingCopy";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -441,7 +442,9 @@ function ExpandedQuestion({
       {row.explanation && (
         <div>
           <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-1">Explanation</p>
-          <p className="text-zinc-700 whitespace-pre-wrap">{row.explanation}</p>
+          <p className="text-zinc-700 whitespace-pre-wrap">
+            {formatExplanationForDisplay(row.explanation)}
+          </p>
         </div>
       )}
       {row.quality_notes && (
