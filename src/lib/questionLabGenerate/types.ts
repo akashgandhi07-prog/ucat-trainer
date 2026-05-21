@@ -79,6 +79,7 @@ export type GenerateTrainerQuestionsResult = {
     quality_status: string;
     quality_notes: string;
     accuracy_percent?: number;
+    audit_rationale?: string;
     imported?: boolean;
   }>;
   hint?: string;

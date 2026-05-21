@@ -172,9 +172,11 @@ export async function invokeGenerateTrainerQuestionsPhased(
   log(verify.log ?? "Step 2 done: verification finished.");
   for (const o of verify.outcomes ?? []) {
     const acc = o.layer3?.accuracyPercent ?? "?";
-    const imported = acc === 100 && o.qualityStatus === "pass";
+    const rationale =
+      o.layer3?.issues?.length ? o.layer3.issues.join("; ") : "No issues listed.";
+    const willImport = o.qualityStatus !== "fail";
     log(
-      `Audit · ${o.legacyId}: ${acc}% accurate${imported ? " (will import)" : " (not imported)"}`,
+      `Audit · ${o.legacyId}: ${acc}%${willImport ? " · importing" : " · blocked"} · ${rationale}`,
     );
   }
   for (const r of verify.repairReasons ?? []) {
@@ -230,9 +232,12 @@ export async function invokeGenerateTrainerQuestionsPhased(
     log(repair.log ?? "Step 3 done: repair pass finished.");
     for (const r of repair.repairResults ?? []) {
       const after = outcomes.find((o) => o.legacyId === r.legacyId);
-      const acc = after?.layer3?.accuracyPercent ?? "?";
-      const tag = r.afterStatus === "pass" ? "100%, importable" : `${acc}%, not imported`;
-      log(`After repair · ${r.legacyId}: ${tag}`);
+      const acc = after?.layer3?.accuracyPercent ?? r.accuracyPercent ?? "?";
+      const rationale =
+        after?.layer3?.issues?.length
+          ? after.layer3.issues.join("; ")
+          : r.reasons;
+      log(`After repair · ${r.legacyId}: ${acc}% · ${rationale}`);
     }
   } else {
     log("Step 3 of 4: Skipped (no drafts needed AI repair).");

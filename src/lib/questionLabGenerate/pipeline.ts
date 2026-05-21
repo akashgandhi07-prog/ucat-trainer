@@ -110,14 +110,21 @@ async function verifyRawQuestion(
   else if (accuracy === 100) qualityStatus = "pass";
   else qualityStatus = "needs_review";
 
-  const notes: string[] = [];
+  const auditRationale =
+    layer3.issues.length > 0
+      ? layer3.issues.join("; ")
+      : accuracy === 100
+        ? "No issues listed."
+        : "Audit flagged for review.";
+
+  const notes: string[] = [
+    `Audit ${accuracy}%: ${auditRationale}`,
+  ];
   if (repairPass) notes.push(`AI repair pass ${repairPass}`);
-  notes.push(`Audit accuracy: ${accuracy}%`);
   if (autoFixes.length) notes.push(`Auto-fixed: ${autoFixes.join(", ")}`);
   if (layer1.length) notes.push(`Blocked: ${layer1.join("; ")}`);
   if (layer1Soft.length) notes.push(`Review wording: ${layer1Soft.join("; ")}`);
   if (layer2 && !layer2.ok) notes.push(`L2: ${layer2.summary}`);
-  if (layer3.issues.length) notes.push(`L3: ${layer3.issues.join("; ")}`);
   if (layer2?.ok && layer2.summary && layer2.verified) notes.push(layer2.summary);
 
   const baseOutcome: QuestionVerifyOutcome = {
@@ -146,10 +153,6 @@ async function verifyRawQuestion(
       draft: null,
       raw,
     };
-  }
-
-  if (qualityStatus !== "pass") {
-    return { outcome: baseOutcome, draft: null, raw };
   }
 
   mapped.quality_status = qualityStatus;
@@ -314,7 +317,7 @@ export async function runRepairPhase(
       if (result.draft) {
         if (draftIdx >= 0) drafts[draftIdx] = result.draft;
         else drafts.push(result.draft);
-        if (result.outcome.qualityStatus === "pass") repairSucceeded += 1;
+        if (result.draft) repairSucceeded += 1;
       } else if (draftIdx >= 0) {
         drafts.splice(draftIdx, 1);
       }
@@ -404,19 +407,19 @@ export function summariseGenerateResult(
 
   let hint: string | undefined;
   const below100 = outcomes.filter(
-    (o) => (o.layer3?.accuracyPercent ?? 0) < 100 && o.qualityStatus !== "fail",
+    (o) => importedLegacyIds.has(o.legacyId) && (o.layer3?.accuracyPercent ?? 0) < 100,
   ).length;
 
   if (imported === 0 && outcomes.length > 0) {
     hint =
-      "Nothing reached 100% audit accuracy, so nothing was imported. Check accuracy % below. Tune generate prompts or official examples.";
+      "Nothing imported (all failed hard checks). See accuracy % and rationale below.";
   } else if (below100 > 0) {
-    hint = `${imported} imported at 100% accuracy. ${below100} draft(s) below 100% were not imported (not sent to Review Queue).`;
+    hint = `${imported} imported to Review Queue. ${below100} below 100% accuracy: check those first.`;
   } else if (failed > 0) {
-    hint = `${failed} blocked (hard fail). ${imported} imported at 100% accuracy.`;
+    hint = `${imported} imported. ${failed} blocked (hard fail, not imported).`;
   }
   if (repairAttempted > 0) {
-    const repairLine = `Repair passes: ${repairSucceeded} reached 100% of ${repairAttempted} attempts.`;
+    const repairLine = `Repair: ${repairSucceeded} of ${repairAttempted} produced importable drafts.`;
     hint = hint ? `${hint} ${repairLine}` : repairLine;
   }
 
@@ -437,6 +440,8 @@ export function summariseGenerateResult(
       quality_status: o.qualityStatus,
       quality_notes: o.qualityNotes,
       accuracy_percent: o.layer3?.accuracyPercent,
+      audit_rationale:
+        o.layer3?.issues?.length ? o.layer3.issues.join("; ") : undefined,
       imported: importedLegacyIds.has(o.legacyId),
     })),
   };

@@ -118,6 +118,7 @@ export default function QuestionLabWorkflow() {
       quality_status: string;
       quality_notes: string;
       accuracy_percent?: number;
+      audit_rationale?: string;
       imported?: boolean;
     }>;
   } | null>(null);
@@ -392,9 +393,9 @@ export default function QuestionLabWorkflow() {
               Edge Function and OPENROUTER_API_KEY.
             </p>
             <p className="text-xs text-violet-800/90">
-              Uses the <strong>Trainer</strong> below. Only drafts scoring <strong>100% audit
-              accuracy</strong> go to Review Queue. Others show their % in the log so you can spot
-              weak generate passes. Usually 2 to 4 minutes.
+              Uses the <strong>Trainer</strong> below. All importable drafts go to Review Queue with
+              <strong> audit %</strong> and rationale in the log and per-question report. Usually 2
+              to 4 minutes.
             </p>
             <div className="flex flex-wrap gap-3 items-end">
               <label className="flex flex-col gap-1 text-sm">
@@ -524,8 +525,12 @@ export default function QuestionLabWorkflow() {
                           >
                             {q.imported ? "imported" : "not imported"}
                           </span>
-                          {q.quality_notes ? (
-                            <p className="mt-1 text-zinc-600">{q.quality_notes}</p>
+                          {q.audit_rationale ? (
+                            <p className="mt-1 text-zinc-700">{q.audit_rationale}</p>
+                          ) : q.quality_notes ? (
+                            <p className="mt-1 text-zinc-600 whitespace-pre-wrap">
+                              {q.quality_notes}
+                            </p>
                           ) : null}
                         </li>
                       ))}
