@@ -39,11 +39,26 @@ export function validateUniversal(
   const stem = str(raw.stem) || str(raw.prompt);
   if (!stem) issues.push("Missing stem");
 
+  let vennSlowExplanation: string | null = null;
+
   if (profile.questionKind === "mcq") {
     const explanation = str(raw.explanation);
     if (!explanation) issues.push("Missing explanation");
     else if (!/step\s*1\s*:/i.test(explanation)) {
       issues.push("Explanation should use Step 1:, Step 2:, … structure");
+    }
+    const skillTag = str(raw.skill_tag) || str(raw.skillTag);
+    if (
+      profile.trainerType === "venn-logic" &&
+      skillTag === "two-set-find-overlap" &&
+      explanation &&
+      /\bneither\b/i.test(stem) &&
+      (/\(\s*\d+\s*[-−]\s*Both\)/i.test(explanation) ||
+        /Only\s+[A-Z].*\+\s*Only\s+[A-Z]/i.test(explanation) ||
+        /governing equation/i.test(explanation))
+    ) {
+      vennSlowExplanation =
+        "Explanation uses slow region algebra; rewrite with fast method (neither → at least one → add groups → subtract once)";
     }
     const generalRule = str(raw.generalRule);
     if (profile.trainerType === "venn-logic" && !generalRule) {
@@ -58,7 +73,6 @@ export function validateUniversal(
         }
       }
     }
-    const skillTag = str(raw.skill_tag) || str(raw.skillTag);
     if (!skillTag) issues.push("Missing skill_tag");
     const question = str(raw.question);
     if (!question) issues.push("Missing question line");
@@ -128,6 +142,7 @@ export function validateUniversal(
   const copy = checkCopyQuality(raw, profile);
   for (const msg of copy.hard) issues.push(`Copy: ${msg}`);
   const soft = [...copy.soft];
+  if (vennSlowExplanation) soft.push(vennSlowExplanation);
 
   if (stem) {
     const key = normaliseStemKey(stem);

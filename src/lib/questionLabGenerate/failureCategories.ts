@@ -89,6 +89,9 @@ function categoriesFromText(blob: string): FailureCategory[] {
       /tutorial voice/i,
       /us spelling/i,
       /exclamation/i,
+      /slow region algebra/i,
+      /fast method/i,
+      /§4A/i,
     ])
   ) {
     found.add("copy_style");

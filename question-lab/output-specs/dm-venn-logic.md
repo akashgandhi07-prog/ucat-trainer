@@ -110,24 +110,74 @@ Every question must have exactly one defensible correct answer. Before finalisin
 
 ## 4. Explanation Style
 
-Do **not** just give the answer. The explanation must walk through the set logic so a student who got it wrong can replicate the method on any Venn question.
+Do **not** just give the answer. Explanations must teach the **fast UCAT mental model** students use under time pressure: short steps, plain arithmetic, no unnecessary algebra.
 
-### Required structure
-
-Output as **numbered steps with blank lines between them** (in JSON: `\n\n` after each step).
-
-1. **Step 1: Name the sets and regions.** State what each region represents before any arithmetic.
-2. **Step 2: State the governing equation.** General form first (e.g. `Total = Only A + Only B + Both + Neither`), then expanded for three sets where needed.
-3. **Step 3: Substitute known values.** Show substitution explicitly; do not skip from equation to answer.
-4. **Step 4: Solve.** Show the algebraic step.
-5. **Step 5: Name the trap.** Name the wrong method behind each distractor (e.g. "Students who chose B added 29 + 9 = 38, treating the sets as mutually exclusive, but overlap is not given").
+Output as **numbered steps with blank lines between them** (in JSON: `\n\n` before each Step label after Step 1, and after each `Step N:` before the body). See `_shared-explanation-formatting.md`.
 
 ### Tone
-Teaching, not marking. Write as if the student got it wrong and needs to understand why, not as a worked solution to be memorised.
+- Concise, scannable, teaching (not marking).
+- One idea per step. Prefer whole-number arithmetic shown inline (e.g. `50 − 10 = 40`).
+- Write as if the student got it wrong and needs a method they can reuse quickly.
 
-### What to avoid
-- Do not use "subtract all-three from each set total" as the explanation method for three-set problems, even when it produces the correct answer. It works only under specific conditions and teaches the wrong habit. Use full inclusion-exclusion explicitly.
-- Do not assert the answer is correct "because the diagram shows it" without showing the arithmetic.
+### 4A. Fast two-set method (required for these skill tags)
+
+Use this structure for **`two-set-find-overlap`** and **`two-set-find-neither`** when the stem gives a total and a **neither** count (or when overlap is the only unknown and neither is known).
+
+**Do not** expand into `Only A + Only B + Both + Neither` with a `Both` unknown (e.g. avoid `50 = (30 − Both) + (25 − Both) + Both + 10`). That is mathematically correct but too slow for UCAT.
+
+**Required steps (3 to 4 steps plus trap):**
+
+1. **Step 1:** Start from **neither** (if given) or what the question asks. Compute **at least one** when neither is known: `Total − Neither = …`
+2. **Step 2:** Add the two set totals. State clearly that this **double-counts** students in both.
+3. **Step 3:** Subtract the at-least-one total once to get overlap (or apply the one-line fix for the skill). End with **Therefore, …** and the answer.
+4. **Step 4 or 5 (trap):** Name the wrong method behind the main trap option (e.g. neither ignored, double-count without subtracting overlap).
+
+**Gold exemplar** (match this pacing and clarity for similar stems):
+
+```
+Step 1:
+
+10 students play neither sport, so the number who play at least one sport is:
+
+50 − 10 = 40
+
+Step 2:
+
+If we add the football and basketball groups:
+
+30 + 25 = 55
+
+But this counts students who play both sports twice.
+
+Step 3:
+
+So subtract the overlap once:
+
+55 − 40 = 15
+
+Therefore, 15 students play both sports.
+
+Step 4:
+
+Students who chose B added 30 + 25 = 55, subtracted 50, and got 5, forgetting the 10 who play neither.
+```
+
+`generalRule` for this family: *At least one = Total − Neither; Overlap = (Set A + Set B) − At least one.*
+
+### 4B. Full region / inclusion-exclusion (three-set and harder)
+
+For **`three-set-*`**, **`algebraic-constraint`**, and **`two-set-must-be-true`** / **`three-set-must-be-true`**, use more steps as needed:
+
+1. **Step 1:** Name sets / regions or constraints.
+2. **Step 2:** State the governing equation (inclusion-exclusion or constraint).
+3. **Step 3:** Substitute known values.
+4. **Step 4:** Solve (show arithmetic).
+5. **Step 5:** Name the trap.
+
+### What to avoid (all Venn explanations)
+- Do not use "subtract all-three from each set total" for three-set problems (teaches the wrong habit). Use full inclusion-exclusion.
+- Do not assert the answer is correct "because the diagram shows it" without arithmetic.
+- Do not use five algebra-heavy steps for a basic two-set overlap when §4A applies.
 
 ---
 
@@ -182,7 +232,7 @@ Return one object per question. All fields are required unless marked optional.
     { "id": "D", "text": "..." }
   ],
   "correctAnswer": "A",
-  "explanation": "Step 1: Name the sets...\n\nStep 2: State the equation...\n\nStep 3: Substitute...\n\nStep 4: Solve...\n\nStep 5: Trap: ...",
+  "explanation": "Step 1: Neither → at least one (arithmetic)...\n\nStep 2: Add set totals, note double-count...\n\nStep 3: Subtract once → overlap. Therefore, ...\n\nStep 4: Trap: ...",
   "commonTrap": "double-count-trap",
   "generalRule": "Formula or named procedure — not a piece of advice.",
   "wrongOptionReasons": {
@@ -221,7 +271,8 @@ Before outputting a question, verify:
 
 - [ ] Built the full Venn (all regions) and confirmed all values sum to the stated total.
 - [ ] Each wrong option is reachable by a specific, named wrong method.
-- [ ] The explanation uses full inclusion-exclusion, not the "subtract all-three from each set" shortcut.
+- [ ] For `two-set-find-overlap` / `two-set-find-neither` with neither given: explanation uses §4A fast method (not `(30 − Both)` style algebra).
+- [ ] For three-set questions: explanation uses full inclusion-exclusion, not the "subtract all-three from each set" shortcut.
 - [ ] For `must-be-true` questions: checked at least two different valid overlap configurations to confirm the correct answer holds for both and each wrong answer fails for at least one.
 - [ ] No combinatorics or probability reasoning is required to answer the question.
 - [ ] `generalRule` contains a formula or procedure, not advice.

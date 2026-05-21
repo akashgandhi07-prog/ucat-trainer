@@ -27,7 +27,7 @@ export function buildGenerateMessages(input: {
     "- UK English only (organise, colour, centre, behaviour, analyse, favourite, defence).",
     "- No em dashes or en dashes (U+2014, U+2013). Use comma, colon, full stop, or ·.",
     "- No AI or chatbot voice: no 'let me', 'certainly', 'it's important to note', 'delve', 'leverage', 'furthermore', 'in conclusion', exclamation marks, or self-correction.",
-    "- Plain, direct wording for students under time pressure. Teach the method, not an essay.",
+    "- Plain, direct wording for students under time pressure. Teach the fast UCAT method from the output spec (Venn §4A for basic two-set overlap), not slow full-region algebra.",
     "- New scenarios and numbers only.",
     "- Before writing each question, solve it yourself and ensure exactly one correct answer.",
     "- Each wrong option must come from a named wrong method (see output spec distractor rules).",
@@ -44,7 +44,14 @@ export function buildGenerateMessages(input: {
   const userParts = [
     `Generate ${count} new ${profile.label} questions.`,
   ];
-  if (skillTag) userParts.push(`Prefer skill_tag: ${skillTag}.`);
+  if (skillTag) {
+    userParts.push(`Prefer skill_tag: ${skillTag}.`);
+    if (profile.trainerType === "venn-logic" && skillTag === "two-set-find-overlap") {
+      userParts.push(
+        "Use the fast two-set explanation in output spec §4A (neither → at least one → add groups → subtract once). Do not use (30 − Both) style algebra.",
+      );
+    }
+  }
   if (difficulty) userParts.push(`Prefer difficulty: ${difficulty}.`);
   if (bankSnippet) {
     userParts.push("", "Avoid duplicating these existing scenarios:", bankSnippet.slice(0, 8_000));
@@ -76,7 +83,7 @@ export function buildAuditMessages(input: {
     "- mathsCorrect: stem numbers, correctAnswer, option values, and explanation arithmetic agree.",
     "- oneCorrectAnswer: exactly one defensible correct option; stem is unambiguous.",
     "- explanationMatches: explanation supports the keyed answer, not a different number.",
-    "- ucatStyle: UK English, no em/en dash, no AI chat filler; Step 1/2 labels are required (do not fail ucatStyle for those).",
+    "- ucatStyle: UK English, no em/en dash, no AI chat filler; Step labels required. For Venn two-set-find-overlap with neither in stem: ucatStyle false if explanation uses slow Only A/Only B/Both algebra instead of fast at-least-one method (§4A).",
     "List concrete fixes in issues. Check hidden fields solutionFormula and computedAnswer if present.",
     "Plugin line is advisory; verify maths yourself when plugin says not auto-verified.",
     "",
@@ -118,6 +125,7 @@ export function buildRepairMessages(input: {
     "- Return ONLY a JSON array with the same number of questions, same order, same id on each.",
     "- Fix every issue in repairIssues so re-audit scores mathsCorrect, oneCorrectAnswer, explanationMatches, and ucatStyle all true.",
     "- Keep solutionFormula, computedAnswer, and distractorLogic aligned with the keyed answer.",
+    "- For Venn two-set-find-overlap: rewrite explanation using output spec §4A fast method if audit flagged slow algebra.",
     "- Re-solve the question: align stem, all options, correctAnswer, and every explanation step.",
     "- If audit cited a calculation error, fix the numbers and the keyed answer, not just the prose.",
     "- UK English. No em or en dash. No AI voice (let me, certainly, delve, furthermore, in conclusion).",
