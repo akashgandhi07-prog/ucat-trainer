@@ -1,5 +1,6 @@
 import { mapRawQuestionForImport, type ImportDraftPayload } from "../questionLabMapImport.ts";
-import { applyAuditAccuracyCaps, parseAuditVerdict } from "./audit.ts";
+import { applyAuditAccuracyCaps, formatAuditScores, parseAuditVerdict } from "./audit.ts";
+import { classifyFailures, formatFailureCategories, type FailureCategory } from "./failureCategories.ts";
 import { buildAuditMessages, buildGenerateMessages, buildRepairMessages } from "./prompts.ts";
 import { callOpenRouter, type OpenRouterConfig } from "./openrouter.ts";
 import { eligibleForAiRepair, repairIssuesForPrompt } from "./repair.ts";
@@ -53,7 +54,10 @@ async function auditQuestion(
     questionJson: JSON.stringify(raw, null, 0),
     pluginSummary,
   });
-  const rawAudit = await callOpenRouter(config, config.auditModel, messages, 2_000);
+  const rawAudit = await callOpenRouter(config, config.auditModel, messages, {
+    maxTokens: 2_000,
+    temperature: 0.2,
+  });
   return parseAuditVerdict(rawAudit);
 }
 
@@ -66,7 +70,13 @@ async function verifyRawQuestion(
   const { fixes: autoFixes } = autoFixGeneratedRaw(raw, profile);
 
   const legacyId = str(raw.legacy_id) || str(raw.id) || "unknown";
-  const layer1Result = validateUniversal(raw, profile, stemKeys, legacyIdsInBatch);
+  const layer1Result = validateUniversal(
+    raw,
+    profile,
+    stemKeys,
+    legacyIdsInBatch,
+    input.existingStems ?? [],
+  );
   const layer1 = layer1Result.hard;
   const layer1Soft = layer1Result.soft;
   const layer2 = runPlugins(raw, profile);
@@ -87,10 +97,26 @@ async function verifyRawQuestion(
         verdict: "needs_review",
         issues: [err instanceof Error ? err.message : "Audit call failed."],
         accuracyPercent: 0,
+        scores: {
+          mathsCorrect: false,
+          oneCorrectAnswer: false,
+          explanationMatches: false,
+          ucatStyle: false,
+        },
       };
     }
   } else {
-    layer3 = { verdict: "pass", issues: [], accuracyPercent: 100 };
+    layer3 = {
+      verdict: "pass",
+      issues: [],
+      accuracyPercent: 100,
+      scores: {
+        mathsCorrect: true,
+        oneCorrectAnswer: true,
+        explanationMatches: true,
+        ucatStyle: true,
+      },
+    };
   }
 
   if (layer3) {
@@ -117,8 +143,16 @@ async function verifyRawQuestion(
         ? "No issues listed."
         : "Audit flagged for review.";
 
+  const failureCategories = classifyFailures({
+    layer1Hard: layer1,
+    layer1Soft,
+    layer2,
+    layer3,
+  });
+
   const notes: string[] = [
-    `Audit ${accuracy}%: ${auditRationale}`,
+    `Audit ${accuracy}% (${formatAuditScores(layer3.scores)}): ${auditRationale}`,
+    `Failure categories: ${formatFailureCategories(failureCategories)}`,
   ];
   if (repairPass) notes.push(`AI repair pass ${repairPass}`);
   if (autoFixes.length) notes.push(`Auto-fixed: ${autoFixes.join(", ")}`);
@@ -132,6 +166,7 @@ async function verifyRawQuestion(
     hardPass: !hardFail,
     qualityStatus,
     qualityNotes: notes.join(" ") || "AI draft.",
+    failureCategories,
     layer1Issues: [...layer1, ...layer1Soft.map((s) => `(review) ${s}`)],
     layer2,
     layer3,
@@ -143,12 +178,20 @@ async function verifyRawQuestion(
 
   const mapped = mapRawQuestionForImport(raw, profile.trainerType);
   if (typeof mapped === "string") {
+    const mappingCats = classifyFailures({
+      layer1Hard: layer1,
+      layer1Soft,
+      layer2,
+      layer3,
+      mappingError: mapped,
+    });
     return {
       outcome: {
         ...baseOutcome,
         hardPass: false,
         qualityStatus: "fail",
-        qualityNotes: `${repairPass ? `AI repair pass ${repairPass}. ` : ""}Mapping: ${mapped}`,
+        failureCategories: mappingCats,
+        qualityNotes: `${repairPass ? `AI repair pass ${repairPass}. ` : ""}Mapping: ${mapped} Failure categories: ${formatFailureCategories(mappingCats)}.`,
       },
       draft: null,
       raw,
@@ -203,6 +246,7 @@ export async function runGeneratePhase(input: ProcessGeneratedInput): Promise<{
     input.openRouter,
     input.openRouter.generateModel,
     generateMessages,
+    { temperature: 0.15 },
   );
 
   const list = parseAiJsonArray(generatedRaw);
@@ -355,7 +399,7 @@ async function runAiRepairBatch(
     ctx.input.openRouter,
     ctx.input.openRouter.repairModel,
     messages,
-    12_000,
+    { maxTokens: 12_000, temperature: 0.2 },
   );
 
   return parseAiJsonArray(repairedRaw)
@@ -405,6 +449,13 @@ export function summariseGenerateResult(
   const failed = outcomes.filter((o) => o.qualityStatus === "fail").length;
   const flagged = outcomes.filter((o) => o.qualityStatus === "needs_review").length;
 
+  const categorySummary: Partial<Record<FailureCategory, number>> = {};
+  for (const o of outcomes) {
+    for (const cat of o.failureCategories) {
+      categorySummary[cat] = (categorySummary[cat] ?? 0) + 1;
+    }
+  }
+
   let hint: string | undefined;
   const below100 = outcomes.filter(
     (o) => importedLegacyIds.has(o.legacyId) && (o.layer3?.accuracyPercent ?? 0) < 100,
@@ -423,6 +474,15 @@ export function summariseGenerateResult(
     hint = hint ? `${hint} ${repairLine}` : repairLine;
   }
 
+  const topCats = Object.entries(categorySummary)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4)
+    .map(([k, n]) => `${k} (${n})`)
+    .join(", ");
+  if (topCats) {
+    hint = hint ? `${hint} Top failure tags: ${topCats}.` : `Top failure tags: ${topCats}.`;
+  }
+
   return {
     created: importResult.created,
     updated: importResult.updated,
@@ -435,11 +495,14 @@ export function summariseGenerateResult(
     repairAttempted,
     repairSucceeded,
     hint,
+    categorySummary: Object.keys(categorySummary).length ? categorySummary : undefined,
     questions: outcomes.map((o) => ({
       legacy_id: o.legacyId,
       quality_status: o.qualityStatus,
       quality_notes: o.qualityNotes,
       accuracy_percent: o.layer3?.accuracyPercent,
+      audit_scores: o.layer3?.scores,
+      failure_categories: o.failureCategories.length ? o.failureCategories : undefined,
       audit_rationale:
         o.layer3?.issues?.length ? o.layer3.issues.join("; ") : undefined,
       imported: importedLegacyIds.has(o.legacyId),

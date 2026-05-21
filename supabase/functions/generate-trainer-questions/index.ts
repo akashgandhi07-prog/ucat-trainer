@@ -269,6 +269,7 @@ Deno.serve(async (req) => {
           afterStatus,
           improved: afterStatus === "pass",
           accuracyPercent,
+          failureCategories: after?.failureCategories,
           reasons: after ? summariseRepairReason(after).reasons : "Repair returned no item.",
         };
       });

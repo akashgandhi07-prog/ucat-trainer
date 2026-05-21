@@ -22,12 +22,24 @@ async function fetchWithTimeout(
   }
 }
 
+export type OpenRouterCallOptions = {
+  maxTokens?: number;
+  temperature?: number;
+};
+
 export async function callOpenRouter(
   config: OpenRouterConfig,
   model: string,
   messages: Array<{ role: string; content: string }>,
-  maxTokens = 16_000,
+  maxTokensOrOpts: number | OpenRouterCallOptions = 16_000,
+  legacyTemperature?: number,
 ): Promise<string> {
+  const opts: OpenRouterCallOptions =
+    typeof maxTokensOrOpts === "number"
+      ? { maxTokens: maxTokensOrOpts, temperature: legacyTemperature ?? 0.3 }
+      : maxTokensOrOpts;
+  const maxTokens = opts.maxTokens ?? 16_000;
+  const temperature = opts.temperature ?? 0.3;
   let res: Response;
   try {
     res = await fetchWithTimeout(
@@ -43,7 +55,7 @@ export async function callOpenRouter(
         body: JSON.stringify({
           model,
           messages,
-          temperature: 0.3,
+          temperature,
           max_tokens: maxTokens,
         }),
       },

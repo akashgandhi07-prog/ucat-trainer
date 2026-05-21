@@ -24,10 +24,12 @@ import { supabase } from "../../lib/supabase";
 import Header from "../../components/layout/Header";
 import Footer from "../../components/layout/Footer";
 import QuestionLabQuestionEditor from "../../components/admin/QuestionLabQuestionEditor";
+import QuestionLabContentPreview from "../../components/admin/QuestionLabContentPreview";
 import QuestionLabWorkflow from "../../components/admin/QuestionLabWorkflow";
 import {
   deleteTrainerQuestion,
   deleteTrainerQuestions,
+  formatBulkDeleteMessage,
   isDeletableQuestion,
 } from "../../lib/questionLabDelete";
 import { saveTrainerQuestionEdit, type QuestionEditPatch } from "../../lib/questionLabEdit";
@@ -408,7 +410,6 @@ function ExpandedQuestion({
   actionLoading: string | null;
 }) {
   const content = row.content as Record<string, unknown>;
-  const options = content.options as Record<string, string> | undefined;
   const activateLoading = isActionLoading(actionLoading, "activate", row.id);
   const duplicateLoading = isActionLoading(actionLoading, "duplicate", row.id);
   const archiveLoading = isActionLoading(actionLoading, "archive", row.id);
@@ -432,38 +433,11 @@ function ExpandedQuestion({
           <p className="text-zinc-800 whitespace-pre-wrap">{row.stem}</p>
         </div>
       )}
-      {!!content.question && (
-        <div>
-          <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-1">Question</p>
-          <p className="text-zinc-800 whitespace-pre-wrap">{String(content.question)}</p>
-        </div>
-      )}
-      {options && (
-        <div>
-          <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-1">Options</p>
-          <ul className="space-y-0.5">
-            {(["A", "B", "C", "D"] as const).map((k) =>
-              options[k] ? (
-                <li key={k} className={`flex gap-2 ${content.correctAnswer === k ? "font-semibold" : ""}`}>
-                  <span className="text-zinc-400 w-4 shrink-0">{k}</span>
-                  <span className={content.correctAnswer === k ? "text-black" : "text-zinc-700"}>
-                    {options[k]}
-                    {content.correctAnswer === k && (
-                      <span className="ml-1 text-xs text-zinc-400">(correct)</span>
-                    )}
-                  </span>
-                </li>
-              ) : null
-            )}
-          </ul>
-        </div>
-      )}
-      {!!content.commonTrap && (
-        <div>
-          <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-1">Common Trap</p>
-          <p className="text-zinc-700 whitespace-pre-wrap">{String(content.commonTrap)}</p>
-        </div>
-      )}
+      <QuestionLabContentPreview
+        questionKind={row.question_kind}
+        content={content}
+        stem={row.stem}
+      />
       {row.explanation && (
         <div>
           <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-1">Explanation</p>
@@ -646,19 +620,16 @@ function QuestionsTab() {
         () => deleteTrainerQuestions(ids),
         "Bulk delete",
       );
-      if (result.skipped > 0) {
-        setActionError(
-          `Deleted ${result.deleted}. ${result.skipped} could not be deleted (often active questions).`,
-        );
-      }
+      const bulkMessage = formatBulkDeleteMessage(result);
+      if (bulkMessage) setActionError(bulkMessage);
       selection.clearSelection();
       setExpandedId(null);
-      await load(page);
     } catch (e) {
       setActionError(errorMessage(e, "Bulk delete failed."));
     } finally {
       setActionLoading(null);
     }
+    void load(page);
   };
 
   const handleActivate = async (id: string) => {
@@ -1425,19 +1396,16 @@ function ReviewQueueTab() {
         () => deleteTrainerQuestions(ids),
         "Bulk delete",
       );
-      if (result.skipped > 0) {
-        setActionError(
-          `Deleted ${result.deleted}. ${result.skipped} could not be deleted (often active questions).`,
-        );
-      }
+      const bulkMessage = formatBulkDeleteMessage(result);
+      if (bulkMessage) setActionError(bulkMessage);
       selection.clearSelection();
       setExpandedId(null);
-      await load();
     } catch (e) {
       setActionError(errorMessage(e, "Bulk delete failed."));
     } finally {
       setActionLoading(null);
     }
+    void load();
   };
 
   const handleActivate = async (id: string) => {

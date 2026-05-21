@@ -113,11 +113,13 @@ export default function QuestionLabWorkflow() {
     hint?: string;
     repairAttempted?: number;
     repairSucceeded?: number;
+    categorySummary?: Record<string, number>;
     questions?: Array<{
       legacy_id: string;
       quality_status: string;
       quality_notes: string;
       accuracy_percent?: number;
+      failure_categories?: string[];
       audit_rationale?: string;
       imported?: boolean;
     }>;
@@ -525,6 +527,11 @@ export default function QuestionLabWorkflow() {
                           >
                             {q.imported ? "imported" : "not imported"}
                           </span>
+                          {q.failure_categories && q.failure_categories.length > 0 ? (
+                            <p className="mt-1 text-amber-900">
+                              Tags: {q.failure_categories.join(", ")}
+                            </p>
+                          ) : null}
                           {q.audit_rationale ? (
                             <p className="mt-1 text-zinc-700">{q.audit_rationale}</p>
                           ) : q.quality_notes ? (

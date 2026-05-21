@@ -1,3 +1,4 @@
+import { readCanonicalSolution } from "../canonical.ts";
 import type { PluginVerifyResult } from "../types.ts";
 import { asRecord, parseOptionNumber, str } from "../utils.ts";
 
@@ -74,9 +75,46 @@ export function verifyNumeric(
     };
   }
 
+  const canonical = readCanonicalSolution(raw);
   const claimed = mcqCorrectValue(raw);
   const explanation = str(raw.explanation);
   const inferred = answerFromExplanation(explanation);
+
+  if (canonical?.computedAnswer != null) {
+    const c = canonical.computedAnswer;
+    if (claimed !== null && Math.abs(c - claimed) > 0.5) {
+      return {
+        ok: false,
+        hardFail: true,
+        verified: true,
+        reviewRecommended: true,
+        summary: `computedAnswer ${c} does not match keyed option value ${claimed}.`,
+        computedAnswer: c,
+        correctOption: str(raw.correctAnswer).toUpperCase(),
+      };
+    }
+    if (inferred !== null && Math.abs(c - inferred) > 0.5) {
+      return {
+        ok: false,
+        hardFail: true,
+        verified: true,
+        reviewRecommended: true,
+        summary: `computedAnswer ${c} does not match explanation arithmetic (${inferred}).`,
+        computedAnswer: c,
+      };
+    }
+    if (claimed !== null && Math.abs(c - claimed) <= 0.5) {
+      return {
+        ok: true,
+        hardFail: false,
+        verified: true,
+        reviewRecommended: false,
+        summary: `Canonical computedAnswer ${c} matches keyed option.`,
+        computedAnswer: c,
+        correctOption: str(raw.correctAnswer).toUpperCase(),
+      };
+    }
+  }
 
   if (claimed === null) {
     return unverified(true, false, "Could not parse MCQ option values; human review.");

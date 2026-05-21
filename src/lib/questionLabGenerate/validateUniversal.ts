@@ -1,4 +1,5 @@
 import { checkCopyQuality } from "./copyQuality.ts";
+import { findNearDuplicateStem } from "./stemSimilarity.ts";
 import type { TrainerGenerateProfile } from "./types.ts";
 import { asRecord, normaliseStemKey, str } from "./utils.ts";
 
@@ -21,6 +22,7 @@ export function validateUniversal(
   profile: TrainerGenerateProfile,
   existingStemKeys: Set<string>,
   legacyIdsInBatch?: Set<string>,
+  bankStems: string[] = [],
 ): UniversalValidationResult {
   const issues: string[] = [];
   const legacyId = str(raw.legacy_id) || str(raw.id);
@@ -129,8 +131,17 @@ export function validateUniversal(
 
   if (stem) {
     const key = normaliseStemKey(stem);
-    if (existingStemKeys.has(key)) issues.push("Stem looks like a near-duplicate");
-    else existingStemKeys.add(key);
+    if (existingStemKeys.has(key)) {
+      issues.push("Stem looks like a near-duplicate (exact key match)");
+    } else {
+      existingStemKeys.add(key);
+      const near = findNearDuplicateStem(stem, bankStems);
+      if (near) {
+        issues.push(
+          `Stem near-duplicate (${Math.round(near.score * 100)}% similar to bank stem)`,
+        );
+      }
+    }
   }
 
   return { hard: issues, soft };

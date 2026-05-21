@@ -25,6 +25,9 @@ export function repairIssuesForPrompt(outcome: QuestionVerifyOutcome): string {
   }
   if (outcome.layer2 && !outcome.layer2.ok) parts.push(outcome.layer2.summary);
   if (outcome.layer3?.issues.length) parts.push(...outcome.layer3.issues);
+  if (outcome.failureCategories.length) {
+    parts.push(`Failure tags: ${outcome.failureCategories.join(", ")}`);
+  }
   return parts.join("; ") || outcome.qualityNotes;
 }
 
@@ -39,6 +42,9 @@ export function summariseRepairReason(
     legacyId: outcome.legacyId,
     qualityStatus: outcome.qualityStatus,
     reasons: trimmed,
+    failureCategories: outcome.failureCategories.length
+      ? outcome.failureCategories
+      : undefined,
   };
 }
 

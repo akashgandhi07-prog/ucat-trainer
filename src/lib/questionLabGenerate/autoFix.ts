@@ -1,3 +1,4 @@
+import { stripGeneratorMetaFields } from "./canonical.ts";
 import { sanitizeStudentFacingCopy } from "../studentFacingCopy.ts";
 import type { TrainerGenerateProfile } from "./types.ts";
 import { asRecord, str } from "./utils.ts";
@@ -99,5 +100,6 @@ export function autoFixGeneratedRaw(
     if (fixed !== text) setByPath(raw, field, fixed);
   }
 
+  stripGeneratorMetaFields(raw);
   return { fixes: [...new Set(fixes)] };
 }

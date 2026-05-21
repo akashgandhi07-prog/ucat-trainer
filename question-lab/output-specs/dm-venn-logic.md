@@ -198,12 +198,16 @@ Return one object per question. All fields are required unless marked optional.
     "distractorQuality": "high",
     "distractorNote": "Each wrong option maps to a nameable wrong method.",
     "whySafeToInclude": "All values consistent; verified by building full Venn before writing options."
-  }
+  },
+  "solutionFormula": "|A∩B| = |A| + |B| − total + neither (one line)",
+  "computedAnswer": 6,
+  "distractorLogic": "B: double-count overlap; C: forgot neither; D: used |A|+|B| only"
 }
 ```
 
 ### Field notes
 
+- `solutionFormula`, `computedAnswer`, `distractorLogic`: Required on every draft for automated verification. Stripped before students see the question. `computedAnswer` must match the keyed option value.
 - `requiresVisual`: Set `true` only for the visual-only types in §1B. All current questions should be `false`.
 - `commonTrap`: Use a slug from this controlled list: `double-count-trap`, `exclusive-vs-inclusive`, `all-three-subtracted-once`, `neither-ignored`, `complement-confusion`, `must-be-true-range-ignored`.
 - `distractorQuality`: `"high"` = every wrong option maps to a nameable wrong method. `"medium"` = most do. `"low"` = some are arbitrary — flag for revision.

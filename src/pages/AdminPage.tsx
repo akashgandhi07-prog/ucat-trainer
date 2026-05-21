@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   LineChart,
@@ -69,6 +69,8 @@ type RegistrationRow = {
   user_id: string;
   email: string;
   display_name?: string;
+  stream?: string | null;
+  entry_year?: string | null;
   created_at: string | null;
   speed_reading: number;
   rapid_recall: number;
@@ -82,11 +84,37 @@ type RegistrationRow = {
   session_correct?: number;
   session_questions?: number;
   total_time_seconds?: number;
+  trainer_questions?: Record<string, number>;
+  trainer_time_seconds?: Record<string, number>;
   days_active?: number;
   last_wpm?: number | null;
   avg_wpm?: number | null;
   last_active_at: string | null;
 };
+
+const REGISTRATION_TRAINER_USAGE: {
+  key: string;
+  label: string;
+  sessionsKey: keyof RegistrationRow;
+}[] = [
+  { key: "speed_reading", label: "Speed reading", sessionsKey: "speed_reading" },
+  { key: "rapid_recall", label: "Rapid recall", sessionsKey: "rapid_recall" },
+  { key: "keyword_scanning", label: "Keyword scanning", sessionsKey: "keyword_scanning" },
+  { key: "calculator", label: "Calculator", sessionsKey: "calculator" },
+  { key: "inference_trainer", label: "Inference", sessionsKey: "inference_trainer" },
+  { key: "mental_maths", label: "Mental maths", sessionsKey: "mental_maths" },
+  { key: "syllogism_micro", label: "Syllogism micro", sessionsKey: "syllogism_micro" },
+  { key: "syllogism_macro", label: "Syllogism macro", sessionsKey: "syllogism_macro" },
+];
+
+function getRegistrationTrainerUsage(row: RegistrationRow) {
+  return REGISTRATION_TRAINER_USAGE.map(({ key, label, sessionsKey }) => {
+    const sessions = Number(row[sessionsKey] ?? 0);
+    const questions = Number(row.trainer_questions?.[key] ?? 0);
+    const timeSeconds = Number(row.trainer_time_seconds?.[key] ?? 0);
+    return { key, label, sessions, questions, timeSeconds };
+  }).filter((t) => t.sessions > 0 || t.questions > 0 || t.timeSeconds > 0);
+}
 
 type UsageSummaryResponse = {
   summary: UsageSummaryPayload;
@@ -402,6 +430,7 @@ export default function AdminPage() {
   const [registrationSortKey, setRegistrationSortKey] = useState<RegistrationSortKey>("created_at");
   const [registrationSortDir, setRegistrationSortDir] = useState<"asc" | "desc">("desc");
   const [registrationFilterQuery, setRegistrationFilterQuery] = useState<string>("");
+  const [expandedSignUpIds, setExpandedSignUpIds] = useState<Set<string>>(new Set());
 
   const USER_TABLE_COLUMNS: { key: UserSortKey; label: string }[] = [
     { key: "display_name", label: "Name" },
@@ -864,17 +893,22 @@ export default function AdminPage() {
         {registrations.length > 0 && (
           <section className="mb-10">
             <h2 className="text-lg font-semibold text-foreground mb-3">Recent sign-ups</h2>
-            <p className="text-sm text-muted-foreground mb-3">All registered users, newest first. Activity = total questions answered across all trainers.</p>
+            <p className="text-sm text-muted-foreground mb-3">
+              All registered users, newest first. Expand a row for subject and per-trainer usage (sessions, questions, time).
+            </p>
             <div className="bg-card rounded-xl border border-border overflow-x-auto">
-              <table className="w-full text-sm min-w-[640px]">
+              <table className="w-full text-sm min-w-[760px]">
                 <thead>
                   <tr className="border-b border-border bg-secondary">
+                    <th className="px-2 py-2 text-left font-medium text-foreground w-8" aria-label="Expand" />
                     <th className="px-3 py-2 text-left font-medium text-foreground whitespace-nowrap">#</th>
                     <th className="px-3 py-2 text-left font-medium text-foreground whitespace-nowrap">Name</th>
+                    <th className="px-3 py-2 text-left font-medium text-foreground whitespace-nowrap">Subject</th>
                     <th className="px-3 py-2 text-left font-medium text-foreground whitespace-nowrap">Email</th>
                     <th className="px-3 py-2 text-left font-medium text-foreground whitespace-nowrap">Signed up</th>
                     <th className="px-3 py-2 text-left font-medium text-foreground whitespace-nowrap">Last login</th>
                     <th className="px-3 py-2 text-right font-medium text-foreground whitespace-nowrap">Questions</th>
+                    <th className="px-3 py-2 text-right font-medium text-foreground whitespace-nowrap">Time</th>
                     <th className="px-3 py-2 text-right font-medium text-foreground whitespace-nowrap">Days active</th>
                   </tr>
                 </thead>
@@ -886,35 +920,99 @@ export default function AdminPage() {
                       if (!b.created_at) return -1;
                       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
                     })
-                    .map((r, i) => (
-                      <tr key={r.user_id} className="border-b border-border hover:bg-secondary">
-                        <td className="px-3 py-2 text-muted-foreground text-xs tabular-nums">{i + 1}</td>
-                        <td className="px-3 py-2 text-foreground font-medium whitespace-nowrap">
-                          {r.display_name || <span className="text-muted-foreground italic">-</span>}
-                        </td>
-                        <td className="px-3 py-2 text-muted-foreground truncate max-w-[180px]" title={r.email || ""}>
-                          {r.email || "-"}
-                        </td>
-                        <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">
-                          {r.created_at ? new Date(r.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "-"}
-                        </td>
-                        <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">
-                          {r.last_active_at
-                            ? new Date(r.last_active_at).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })
-                            : <span className="text-muted-foreground">Never</span>}
-                        </td>
-                        <td className="px-3 py-2 text-right tabular-nums">
-                          {r.total_questions > 0
-                            ? <span className="text-foreground font-medium">{r.total_questions.toLocaleString()}</span>
-                            : <span className="text-muted-foreground">0</span>}
-                        </td>
-                        <td className="px-3 py-2 text-right tabular-nums">
-                          {r.days_active != null && r.days_active > 0
-                            ? <span className="text-foreground">{r.days_active}</span>
-                            : <span className="text-muted-foreground">-</span>}
-                        </td>
-                      </tr>
-                    ))}
+                    .map((r, i) => {
+                      const isExpanded = expandedSignUpIds.has(r.user_id);
+                      const trainerUsage = getRegistrationTrainerUsage(r);
+                      const toggleExpanded = () => {
+                        setExpandedSignUpIds((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(r.user_id)) next.delete(r.user_id);
+                          else next.add(r.user_id);
+                          return next;
+                        });
+                      };
+                      return (
+                        <Fragment key={r.user_id}>
+                          <tr className="border-b border-border hover:bg-secondary">
+                            <td className="px-2 py-2">
+                              <button
+                                type="button"
+                                onClick={toggleExpanded}
+                                aria-expanded={isExpanded}
+                                aria-label={isExpanded ? "Hide trainer usage" : "Show trainer usage"}
+                                className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary"
+                              >
+                                {isExpanded ? "▾" : "▸"}
+                              </button>
+                            </td>
+                            <td className="px-3 py-2 text-muted-foreground text-xs tabular-nums">{i + 1}</td>
+                            <td className="px-3 py-2 text-foreground font-medium whitespace-nowrap">
+                              {r.display_name || <span className="text-muted-foreground italic">-</span>}
+                            </td>
+                            <td className="px-3 py-2 text-muted-foreground whitespace-nowrap text-xs">
+                              {r.stream || "-"}
+                              {r.entry_year ? (
+                                <span className="block text-muted-foreground/80">{r.entry_year}</span>
+                              ) : null}
+                            </td>
+                            <td className="px-3 py-2 text-muted-foreground truncate max-w-[180px]" title={r.email || ""}>
+                              {r.email || "-"}
+                            </td>
+                            <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">
+                              {r.created_at ? new Date(r.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "-"}
+                            </td>
+                            <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">
+                              {r.last_active_at
+                                ? new Date(r.last_active_at).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })
+                                : <span className="text-muted-foreground">Never</span>}
+                            </td>
+                            <td className="px-3 py-2 text-right tabular-nums">
+                              {r.total_questions > 0
+                                ? <span className="text-foreground font-medium">{r.total_questions.toLocaleString()}</span>
+                                : <span className="text-muted-foreground">0</span>}
+                            </td>
+                            <td className="px-3 py-2 text-right tabular-nums text-muted-foreground whitespace-nowrap">
+                              {formatTimeSeconds(r.total_time_seconds)}
+                            </td>
+                            <td className="px-3 py-2 text-right tabular-nums">
+                              {r.days_active != null && r.days_active > 0
+                                ? <span className="text-foreground">{r.days_active}</span>
+                                : <span className="text-muted-foreground">-</span>}
+                            </td>
+                          </tr>
+                          {isExpanded && (
+                            <tr className="border-b border-border bg-secondary/40">
+                              <td colSpan={10} className="px-4 py-3">
+                                {trainerUsage.length > 0 ? (
+                                  <table className="w-full text-xs max-w-xl">
+                                    <thead>
+                                      <tr className="text-muted-foreground">
+                                        <th className="py-1 pr-4 text-left font-medium">Trainer</th>
+                                        <th className="py-1 px-2 text-right font-medium">Sessions</th>
+                                        <th className="py-1 px-2 text-right font-medium">Questions</th>
+                                        <th className="py-1 pl-2 text-right font-medium">Time</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {trainerUsage.map((t) => (
+                                        <tr key={t.key}>
+                                          <td className="py-1 pr-4 text-foreground">{t.label}</td>
+                                          <td className="py-1 px-2 text-right tabular-nums">{t.sessions}</td>
+                                          <td className="py-1 px-2 text-right tabular-nums">{t.questions.toLocaleString()}</td>
+                                          <td className="py-1 pl-2 text-right tabular-nums">{formatTimeSeconds(t.timeSeconds)}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                ) : (
+                                  <p className="text-sm text-muted-foreground">No trainer activity yet.</p>
+                                )}
+                              </td>
+                            </tr>
+                          )}
+                        </Fragment>
+                      );
+                    })}
                 </tbody>
               </table>
             </div>

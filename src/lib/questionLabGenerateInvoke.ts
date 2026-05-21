@@ -1,4 +1,6 @@
 import { supabase } from "./supabase";
+import { formatAuditScores } from "./questionLabGenerate/audit.ts";
+import { formatFailureCategories } from "./questionLabGenerate/failureCategories.ts";
 import { summariseGenerateResult } from "./questionLabGenerate/pipeline";
 import type { ImportDraftPayload } from "./questionLabMapImport";
 import type {
@@ -172,16 +174,21 @@ export async function invokeGenerateTrainerQuestionsPhased(
   log(verify.log ?? "Step 2 done: verification finished.");
   for (const o of verify.outcomes ?? []) {
     const acc = o.layer3?.accuracyPercent ?? "?";
+    const scoresLine = o.layer3?.scores ? formatAuditScores(o.layer3.scores) : "";
+    const cats = formatFailureCategories(o.failureCategories ?? []);
     const rationale =
       o.layer3?.issues?.length ? o.layer3.issues.join("; ") : "No issues listed.";
     const willImport = o.qualityStatus !== "fail";
     log(
-      `Audit · ${o.legacyId}: ${acc}%${willImport ? " · importing" : " · blocked"} · ${rationale}`,
+      `Audit · ${o.legacyId}: ${acc}%${scoresLine ? ` (${scoresLine})` : ""}${willImport ? " · importing" : " · blocked"} · tags: ${cats} · ${rationale}`,
     );
   }
   for (const r of verify.repairReasons ?? []) {
+    const tags = r.failureCategories?.length
+      ? ` · tags: ${formatFailureCategories(r.failureCategories)}`
+      : "";
     log(
-      `Repair queued · ${r.legacyId} (${r.qualityStatus}): ${r.reasons}`,
+      `Repair queued · ${r.legacyId} (${r.qualityStatus})${tags}: ${r.reasons}`,
     );
   }
   for (const b of verify.blockedNotRepaired ?? []) {
@@ -233,11 +240,19 @@ export async function invokeGenerateTrainerQuestionsPhased(
     for (const r of repair.repairResults ?? []) {
       const after = outcomes.find((o) => o.legacyId === r.legacyId);
       const acc = after?.layer3?.accuracyPercent ?? r.accuracyPercent ?? "?";
+      const scoresLine = after?.layer3?.scores
+        ? formatAuditScores(after.layer3.scores)
+        : "";
+      const tags = formatFailureCategories(
+        after?.failureCategories ?? r.failureCategories ?? [],
+      );
       const rationale =
         after?.layer3?.issues?.length
           ? after.layer3.issues.join("; ")
           : r.reasons;
-      log(`After repair · ${r.legacyId}: ${acc}% · ${rationale}`);
+      log(
+        `After repair · ${r.legacyId}: ${acc}%${scoresLine ? ` (${scoresLine})` : ""} · tags: ${tags} · ${rationale}`,
+      );
     }
   } else {
     log("Step 3 of 4: Skipped (no drafts needed AI repair).");

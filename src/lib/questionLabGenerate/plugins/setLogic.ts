@@ -1,3 +1,4 @@
+import { readCanonicalSolution } from "../canonical.ts";
 import type { PluginVerifyResult } from "../types.ts";
 import { asRecord, extractIntegers, parseOptionNumber, str } from "../utils.ts";
 
@@ -78,7 +79,25 @@ export function verifySetLogic(raw: Record<string, unknown>): PluginVerifyResult
     };
   }
 
-  const computed = tryTwoSetOverlap(stem);
+  const canonical = readCanonicalSolution(raw);
+  let computed = tryTwoSetOverlap(stem);
+
+  if (canonical?.computedAnswer != null) {
+    const c = canonical.computedAnswer;
+    if (computed !== null && Math.abs(c - computed) > 0.5) {
+      return {
+        ok: false,
+        hardFail: true,
+        verified: true,
+        reviewRecommended: true,
+        summary: `computedAnswer ${c} disagrees with set solver ${computed}.`,
+        computedAnswer: computed,
+        correctOption: correct,
+      };
+    }
+    computed = computed ?? c;
+  }
+
   if (computed === null) {
     return {
       ok: true,
@@ -90,6 +109,19 @@ export function verifySetLogic(raw: Record<string, unknown>): PluginVerifyResult
   }
 
   const claimed = opts[correct];
+  if (canonical?.computedAnswer != null && claimed !== undefined) {
+    if (Math.abs(canonical.computedAnswer - claimed) > 0.5) {
+      return {
+        ok: false,
+        hardFail: true,
+        verified: true,
+        reviewRecommended: true,
+        summary: `computedAnswer ${canonical.computedAnswer} does not match option ${correct} (${claimed}).`,
+        computedAnswer: canonical.computedAnswer,
+        correctOption: correct,
+      };
+    }
+  }
   if (claimed === undefined) {
     return {
       ok: false,

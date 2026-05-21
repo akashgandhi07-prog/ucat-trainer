@@ -1,4 +1,5 @@
 import type { QLQuestionKind } from "../../types/questionLab";
+import type { FailureCategory } from "./failureCategories.ts";
 
 export type VerifyPluginId = "set-logic" | "numeric" | "sjt-structure";
 
@@ -15,20 +16,25 @@ export type TrainerGenerateProfile = {
 export type PluginVerifyResult = {
   ok: boolean;
   hardFail: boolean;
-  /** True when a deterministic check confirmed the answer (not just "could not verify"). */
   verified: boolean;
-  /** True when the question should land in Review Queue even if ok. */
   reviewRecommended: boolean;
   summary: string;
   computedAnswer?: string | number;
   correctOption?: string;
 };
 
+export type AuditScores = {
+  mathsCorrect: boolean;
+  oneCorrectAnswer: boolean;
+  explanationMatches: boolean;
+  ucatStyle: boolean;
+};
+
 export type AuditVerdict = {
   verdict: "pass" | "needs_review";
   issues: string[];
-  /** 0–100: exam-ready confidence. 100 only when fully correct with no known issues. */
   accuracyPercent: number;
+  scores: AuditScores;
 };
 
 export type QuestionVerifyOutcome = {
@@ -36,12 +42,13 @@ export type QuestionVerifyOutcome = {
   hardPass: boolean;
   qualityStatus: "pass" | "needs_review" | "fail";
   qualityNotes: string;
+  failureCategories: FailureCategory[];
   layer1Issues: string[];
   layer2: PluginVerifyResult | null;
   layer3: AuditVerdict | null;
 };
 
-export type GeneratePhase = "generate" | "verify" | "repair" | "import";
+export type GeneratePhase = "generate" | "repair" | "verify" | "import";
 
 export type RepairCandidateWire = {
   legacyId: string;
@@ -52,6 +59,7 @@ export type RepairReasonSummary = {
   legacyId: string;
   qualityStatus: "pass" | "needs_review" | "fail";
   reasons: string;
+  failureCategories?: FailureCategory[];
 };
 
 export type RepairResultSummary = {
@@ -60,6 +68,7 @@ export type RepairResultSummary = {
   afterStatus: string;
   improved: boolean;
   accuracyPercent?: number;
+  failureCategories?: FailureCategory[];
   reasons: string;
 };
 
@@ -79,8 +88,11 @@ export type GenerateTrainerQuestionsResult = {
     quality_status: string;
     quality_notes: string;
     accuracy_percent?: number;
+    audit_scores?: AuditScores;
+    failure_categories?: FailureCategory[];
     audit_rationale?: string;
     imported?: boolean;
   }>;
+  categorySummary?: Partial<Record<FailureCategory, number>>;
   hint?: string;
 };
