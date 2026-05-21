@@ -27,6 +27,8 @@ export type PluginVerifyResult = {
 export type AuditVerdict = {
   verdict: "pass" | "needs_review";
   issues: string[];
+  /** 0–100: exam-ready confidence. 100 only when fully correct with no known issues. */
+  accuracyPercent: number;
 };
 
 export type QuestionVerifyOutcome = {
@@ -57,6 +59,7 @@ export type RepairResultSummary = {
   beforeStatus: string;
   afterStatus: string;
   improved: boolean;
+  accuracyPercent?: number;
   reasons: string;
 };
 
@@ -75,6 +78,7 @@ export type GenerateTrainerQuestionsResult = {
     legacy_id: string;
     quality_status: string;
     quality_notes: string;
+    accuracy_percent?: number;
     imported?: boolean;
   }>;
   hint?: string;

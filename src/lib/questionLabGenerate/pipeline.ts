@@ -1,9 +1,9 @@
 import { mapRawQuestionForImport, type ImportDraftPayload } from "../questionLabMapImport.ts";
-import { parseAuditVerdict } from "./audit.ts";
+import { applyAuditAccuracyCaps, parseAuditVerdict } from "./audit.ts";
 import { buildAuditMessages, buildGenerateMessages, buildRepairMessages } from "./prompts.ts";
 import { callOpenRouter, type OpenRouterConfig } from "./openrouter.ts";
 import { eligibleForAiRepair, repairIssuesForPrompt } from "./repair.ts";
-import { pluginAbsentNeedsReview, pluginContextLine, runPlugins } from "./plugins/index.ts";
+import { pluginContextLine, runPlugins } from "./plugins/index.ts";
 import { getGenerateProfile } from "./profiles.ts";
 import type {
   AuditVerdict,
@@ -86,35 +86,39 @@ async function verifyRawQuestion(
       layer3 = {
         verdict: "needs_review",
         issues: [err instanceof Error ? err.message : "Audit call failed."],
+        accuracyPercent: 0,
       };
     }
   } else {
-    layer3 = { verdict: "pass", issues: [] };
+    layer3 = { verdict: "pass", issues: [], accuracyPercent: 100 };
+  }
+
+  if (layer3) {
+    layer3 = applyAuditAccuracyCaps(layer3, {
+      layer1Hard: layer1,
+      layer1Soft,
+      layer2,
+    });
   }
 
   const hardFail =
     layer1.length > 0 || (layer2?.hardFail === true && layer2.ok === false);
 
-  const copyWantsReview = layer1Soft.length > 0;
-  const pluginWantsReview =
-    pluginAbsentNeedsReview(profile) ||
-    layer2?.reviewRecommended === true ||
-    layer2?.verified === false;
-
+  const accuracy = layer3?.accuracyPercent ?? 0;
   let qualityStatus: "pass" | "needs_review" | "fail" = "pass";
   if (hardFail) qualityStatus = "fail";
-  else if (copyWantsReview || pluginWantsReview || layer3.verdict === "needs_review") {
-    qualityStatus = "needs_review";
-  }
+  else if (accuracy === 100) qualityStatus = "pass";
+  else qualityStatus = "needs_review";
 
   const notes: string[] = [];
   if (repairPass) notes.push(`AI repair pass ${repairPass}`);
+  notes.push(`Audit accuracy: ${accuracy}%`);
   if (autoFixes.length) notes.push(`Auto-fixed: ${autoFixes.join(", ")}`);
   if (layer1.length) notes.push(`Blocked: ${layer1.join("; ")}`);
   if (layer1Soft.length) notes.push(`Review wording: ${layer1Soft.join("; ")}`);
   if (layer2 && !layer2.ok) notes.push(`L2: ${layer2.summary}`);
   if (layer3.issues.length) notes.push(`L3: ${layer3.issues.join("; ")}`);
-  if (layer2?.ok && layer2.summary) notes.push(layer2.summary);
+  if (layer2?.ok && layer2.summary && layer2.verified) notes.push(layer2.summary);
 
   const baseOutcome: QuestionVerifyOutcome = {
     legacyId,
@@ -142,6 +146,10 @@ async function verifyRawQuestion(
       draft: null,
       raw,
     };
+  }
+
+  if (qualityStatus !== "pass") {
+    return { outcome: baseOutcome, draft: null, raw };
   }
 
   mapped.quality_status = qualityStatus;
@@ -238,7 +246,9 @@ export async function runVerifyPhase(
   };
 }
 
-/** Step 3: optional OpenRouter repair batch + re-verify. */
+const MAX_REPAIR_PASSES = 2;
+
+/** Step 3: repair batch(es) until 100% accuracy or max passes. */
 export async function runRepairPhase(
   input: ProcessGeneratedInput,
   payload: {
@@ -253,53 +263,70 @@ export async function runRepairPhase(
   repairSucceeded: number;
 }> {
   const ctx = buildVerifyContext(input);
-  let { outcomes, drafts, repairCandidates } = payload;
+  let { outcomes, drafts } = payload;
+  let repairCandidates = [...payload.repairCandidates];
+  const rawByLegacyId = new Map(
+    repairCandidates.map((c) => [c.outcome.legacyId, c.raw] as const),
+  );
+  for (const o of outcomes) {
+    if (!rawByLegacyId.has(o.legacyId)) {
+      const match = payload.repairCandidates.find((c) => c.outcome.legacyId === o.legacyId);
+      if (match) rawByLegacyId.set(o.legacyId, match.raw);
+    }
+  }
+
   let repairAttempted = 0;
   let repairSucceeded = 0;
 
-  if (repairCandidates.length === 0) {
-    return { outcomes, drafts, repairAttempted, repairSucceeded };
-  }
+  for (let pass = 1; pass <= MAX_REPAIR_PASSES && repairCandidates.length > 0; pass++) {
+    repairAttempted += repairCandidates.length;
+    const repairedList = await runAiRepairBatch(ctx, repairCandidates);
 
-  repairAttempted = repairCandidates.length;
-  const repairedList = await runAiRepairBatch(ctx, repairCandidates);
+    const repairVerified = await Promise.all(
+      repairCandidates.map(async (candidate, i) => {
+        const repairedRaw =
+          asRecord(repairedList[i]) ??
+          repairedList.find(
+            (r) =>
+              str(r.legacy_id) === candidate.outcome.legacyId ||
+              str(r.id) === candidate.outcome.legacyId,
+          );
 
-  const repairVerified = await Promise.all(
-    repairCandidates.map(async (candidate, i) => {
-      const repairedRaw =
-        asRecord(repairedList[i]) ??
-        repairedList.find(
-          (r) =>
-            str(r.legacy_id) === candidate.outcome.legacyId ||
-            str(r.id) === candidate.outcome.legacyId,
-        );
+        if (!repairedRaw) return { candidate, result: null as VerifyResult | null };
 
-      if (!repairedRaw) return { candidate, result: null as VerifyResult | null };
+        if (!str(repairedRaw.legacy_id) && !str(repairedRaw.id)) {
+          repairedRaw.legacy_id = candidate.outcome.legacyId;
+        }
 
-      if (!str(repairedRaw.legacy_id) && !str(repairedRaw.id)) {
-        repairedRaw.legacy_id = candidate.outcome.legacyId;
-      }
+        rawByLegacyId.set(candidate.outcome.legacyId, repairedRaw);
+        const result = await verifyRawQuestion(ctx, repairedRaw, pass);
+        return { candidate, result };
+      }),
+    );
 
-      const result = await verifyRawQuestion(ctx, repairedRaw, 1);
-      return { candidate, result };
-    }),
-  );
+    for (const { candidate, result } of repairVerified) {
+      if (!result) continue;
 
-  for (const { candidate, result } of repairVerified) {
-    if (!result) continue;
+      const idx = outcomes.findIndex((o) => o.legacyId === candidate.outcome.legacyId);
+      if (idx >= 0) outcomes[idx] = result.outcome;
 
-    const idx = outcomes.findIndex((o) => o.legacyId === candidate.outcome.legacyId);
-    if (idx >= 0) outcomes[idx] = result.outcome;
-
-    if (result.draft) {
-      const draftIdx = drafts.findIndex((d) => d.legacy_id === result.draft!.legacy_id);
-      if (draftIdx >= 0) drafts[draftIdx] = result.draft;
-      else drafts.push(result.draft);
-      if (result.outcome.qualityStatus !== "fail") repairSucceeded += 1;
-    } else {
       const draftIdx = drafts.findIndex((d) => d.legacy_id === candidate.outcome.legacyId);
-      if (draftIdx >= 0) drafts.splice(draftIdx, 1);
+      if (result.draft) {
+        if (draftIdx >= 0) drafts[draftIdx] = result.draft;
+        else drafts.push(result.draft);
+        if (result.outcome.qualityStatus === "pass") repairSucceeded += 1;
+      } else if (draftIdx >= 0) {
+        drafts.splice(draftIdx, 1);
+      }
     }
+
+    repairCandidates = outcomes
+      .filter((o) => eligibleForAiRepair(o))
+      .map((o) => ({
+        outcome: o,
+        raw: rawByLegacyId.get(o.legacyId)!,
+      }))
+      .filter((c) => Boolean(c.raw));
   }
 
   return { outcomes, drafts, repairAttempted, repairSucceeded };
@@ -376,14 +403,20 @@ export function summariseGenerateResult(
   const flagged = outcomes.filter((o) => o.qualityStatus === "needs_review").length;
 
   let hint: string | undefined;
+  const below100 = outcomes.filter(
+    (o) => (o.layer3?.accuracyPercent ?? 0) < 100 && o.qualityStatus !== "fail",
+  ).length;
+
   if (imported === 0 && outcomes.length > 0) {
     hint =
-      "Nothing imported. See each question below. Blocked items with wrong maths are not auto-repaired.";
+      "Nothing reached 100% audit accuracy, so nothing was imported. Check accuracy % below. Tune generate prompts or official examples.";
+  } else if (below100 > 0) {
+    hint = `${imported} imported at 100% accuracy. ${below100} draft(s) below 100% were not imported (not sent to Review Queue).`;
   } else if (failed > 0) {
-    hint = `${failed} still blocked after repair. Others are in Review Queue.`;
+    hint = `${failed} blocked (hard fail). ${imported} imported at 100% accuracy.`;
   }
   if (repairAttempted > 0) {
-    const repairLine = `AI repair pass: ${repairSucceeded} of ${repairAttempted} fixed and imported.`;
+    const repairLine = `Repair passes: ${repairSucceeded} reached 100% of ${repairAttempted} attempts.`;
     hint = hint ? `${hint} ${repairLine}` : repairLine;
   }
 
@@ -403,6 +436,7 @@ export function summariseGenerateResult(
       legacy_id: o.legacyId,
       quality_status: o.qualityStatus,
       quality_notes: o.qualityNotes,
+      accuracy_percent: o.layer3?.accuracyPercent,
       imported: importedLegacyIds.has(o.legacyId),
     })),
   };

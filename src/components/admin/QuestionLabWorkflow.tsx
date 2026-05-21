@@ -117,6 +117,7 @@ export default function QuestionLabWorkflow() {
       legacy_id: string;
       quality_status: string;
       quality_notes: string;
+      accuracy_percent?: number;
       imported?: boolean;
     }>;
   } | null>(null);
@@ -391,8 +392,9 @@ export default function QuestionLabWorkflow() {
               Edge Function and OPENROUTER_API_KEY.
             </p>
             <p className="text-xs text-violet-800/90">
-              Uses the <strong>Trainer</strong> selected below (e.g. DM · Venn Logic). Usually takes
-              2 to 4 minutes; keep this tab open until the spinner stops.
+              Uses the <strong>Trainer</strong> below. Only drafts scoring <strong>100% audit
+              accuracy</strong> go to Review Queue. Others show their % in the log so you can spot
+              weak generate passes. Usually 2 to 4 minutes.
             </p>
             <div className="flex flex-wrap gap-3 items-end">
               <label className="flex flex-col gap-1 text-sm">
@@ -498,18 +500,29 @@ export default function QuestionLabWorkflow() {
                           className="text-xs border border-zinc-100 rounded p-2 bg-zinc-50"
                         >
                           <span className="font-mono font-medium">{q.legacy_id}</span>
+                          {typeof q.accuracy_percent === "number" ? (
+                            <span
+                              className={
+                                q.accuracy_percent === 100
+                                  ? " text-green-800 font-medium"
+                                  : " text-amber-800 font-medium"
+                              }
+                            >
+                              {" "}
+                              · {q.accuracy_percent}% accurate
+                            </span>
+                          ) : null}
                           {" · "}
                           <span
                             className={
                               q.quality_status === "fail"
                                 ? "text-red-700"
-                                : q.quality_status === "needs_review"
-                                  ? "text-amber-800"
-                                  : "text-green-800"
+                                : q.imported
+                                  ? "text-green-800"
+                                  : "text-zinc-600"
                             }
                           >
-                            {q.quality_status.replace("_", " ")}
-                            {q.imported ? " · imported" : " · not imported"}
+                            {q.imported ? "imported" : "not imported"}
                           </span>
                           {q.quality_notes ? (
                             <p className="mt-1 text-zinc-600">{q.quality_notes}</p>

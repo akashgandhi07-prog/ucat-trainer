@@ -262,14 +262,13 @@ Deno.serve(async (req) => {
         const after = repaired.outcomes.find((o) => o.legacyId === c.outcome.legacyId);
         const beforeStatus = beforeById.get(c.outcome.legacyId) ?? c.outcome.qualityStatus;
         const afterStatus = after?.qualityStatus ?? "fail";
-        const improved =
-          beforeStatus !== "pass" &&
-          (afterStatus === "pass" || afterStatus === "needs_review");
+        const accuracyPercent = after?.layer3?.accuracyPercent ?? 0;
         return {
           legacyId: c.outcome.legacyId,
           beforeStatus,
           afterStatus,
-          improved,
+          improved: afterStatus === "pass",
+          accuracyPercent,
           reasons: after ? summariseRepairReason(after).reasons : "Repair returned no item.",
         };
       });

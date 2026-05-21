@@ -170,6 +170,13 @@ export async function invokeGenerateTrainerQuestionsPhased(
     auditModel?: string;
   };
   log(verify.log ?? "Step 2 done: verification finished.");
+  for (const o of verify.outcomes ?? []) {
+    const acc = o.layer3?.accuracyPercent ?? "?";
+    const imported = acc === 100 && o.qualityStatus === "pass";
+    log(
+      `Audit · ${o.legacyId}: ${acc}% accurate${imported ? " (will import)" : " (not imported)"}`,
+    );
+  }
   for (const r of verify.repairReasons ?? []) {
     log(
       `Repair queued · ${r.legacyId} (${r.qualityStatus}): ${r.reasons}`,
@@ -222,10 +229,10 @@ export async function invokeGenerateTrainerQuestionsPhased(
     repairSucceeded = repair.repairSucceeded;
     log(repair.log ?? "Step 3 done: repair pass finished.");
     for (const r of repair.repairResults ?? []) {
-      const tag = r.improved ? "improved" : "still flagged";
-      log(
-        `After repair · ${r.legacyId} (${r.beforeStatus} → ${r.afterStatus}, ${tag}): ${r.reasons}`,
-      );
+      const after = outcomes.find((o) => o.legacyId === r.legacyId);
+      const acc = after?.layer3?.accuracyPercent ?? "?";
+      const tag = r.afterStatus === "pass" ? "100%, importable" : `${acc}%, not imported`;
+      log(`After repair · ${r.legacyId}: ${tag}`);
     }
   } else {
     log("Step 3 of 4: Skipped (no drafts needed AI repair).");
