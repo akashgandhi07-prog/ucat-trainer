@@ -46,6 +46,20 @@ export type RepairCandidateWire = {
   raw: Record<string, unknown>;
 };
 
+export type RepairReasonSummary = {
+  legacyId: string;
+  qualityStatus: "pass" | "needs_review" | "fail";
+  reasons: string;
+};
+
+export type RepairResultSummary = {
+  legacyId: string;
+  beforeStatus: string;
+  afterStatus: string;
+  improved: boolean;
+  reasons: string;
+};
+
 export type GenerateTrainerQuestionsResult = {
   created: number;
   updated: number;

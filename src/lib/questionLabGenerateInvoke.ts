@@ -5,6 +5,8 @@ import type {
   GeneratePhase,
   GenerateTrainerQuestionsResult,
   QuestionVerifyOutcome,
+  RepairReasonSummary,
+  RepairResultSummary,
 } from "./questionLabGenerate/types";
 
 export type InvokeGenerateInput = {
@@ -162,10 +164,22 @@ export async function invokeGenerateTrainerQuestionsPhased(
       raw: Record<string, unknown>;
       outcome: QuestionVerifyOutcome;
     }>;
+    repairReasons?: RepairReasonSummary[];
+    blockedNotRepaired?: RepairReasonSummary[];
     generated: number;
     auditModel?: string;
   };
   log(verify.log ?? "Step 2 done: verification finished.");
+  for (const r of verify.repairReasons ?? []) {
+    log(
+      `Repair queued · ${r.legacyId} (${r.qualityStatus}): ${r.reasons}`,
+    );
+  }
+  for (const b of verify.blockedNotRepaired ?? []) {
+    log(
+      `Blocked (maths, not auto-repaired) · ${b.legacyId}: ${b.reasons}`,
+    );
+  }
 
   let outcomes = verify.outcomes;
   let drafts = verify.drafts;
@@ -200,12 +214,19 @@ export async function invokeGenerateTrainerQuestionsPhased(
       drafts: ImportDraftPayload[];
       repairAttempted: number;
       repairSucceeded: number;
+      repairResults?: RepairResultSummary[];
     };
     outcomes = repair.outcomes;
     drafts = repair.drafts;
     repairAttempted = repair.repairAttempted;
     repairSucceeded = repair.repairSucceeded;
     log(repair.log ?? "Step 3 done: repair pass finished.");
+    for (const r of repair.repairResults ?? []) {
+      const tag = r.improved ? "improved" : "still flagged";
+      log(
+        `After repair · ${r.legacyId} (${r.beforeStatus} → ${r.afterStatus}, ${tag}): ${r.reasons}`,
+      );
+    }
   } else {
     log("Step 3 of 4: Skipped (no drafts needed AI repair).");
   }

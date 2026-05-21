@@ -30,6 +30,10 @@ import { countOfficialExamples } from "../../../src/lib/questionLabGoldStats.ts"
 import type { ImportDraftPayload } from "../../../src/lib/questionLabMapImport.ts";
 import type { GeneratePhase, QuestionVerifyOutcome } from "../../../src/lib/questionLabGenerate/types.ts";
 import {
+  buildVerifyRepairFeedback,
+  summariseRepairReason,
+} from "../../../src/lib/questionLabGenerate/repair.ts";
+import {
   generateAndVerifyQuestions,
   runGeneratePhase,
   runRepairPhase,
@@ -215,6 +219,10 @@ Deno.serve(async (req) => {
         raw: c.raw,
         outcome: c.outcome,
       }));
+      const { repairReasons, blockedNotRepaired } = buildVerifyRepairFeedback(
+        verify.outcomes,
+        verify.repairCandidates,
+      );
       return json({
         ok: true,
         phase: "verify",
@@ -222,6 +230,8 @@ Deno.serve(async (req) => {
         outcomes: verify.outcomes,
         drafts: verify.drafts,
         repairCandidates: repairWire,
+        repairReasons,
+        blockedNotRepaired,
         generated: verify.generated,
         auditModel,
       });
@@ -240,10 +250,28 @@ Deno.serve(async (req) => {
         outcome: c.outcome,
         raw: c.raw,
       }));
+      const beforeById = new Map(
+        outcomes.map((o) => [o.legacyId, o.qualityStatus] as const),
+      );
       const repaired = await runRepairPhase(processInput, {
         outcomes,
         drafts,
         repairCandidates: candidates,
+      });
+      const repairResults = candidates.map((c) => {
+        const after = repaired.outcomes.find((o) => o.legacyId === c.outcome.legacyId);
+        const beforeStatus = beforeById.get(c.outcome.legacyId) ?? c.outcome.qualityStatus;
+        const afterStatus = after?.qualityStatus ?? "fail";
+        const improved =
+          beforeStatus !== "pass" &&
+          (afterStatus === "pass" || afterStatus === "needs_review");
+        return {
+          legacyId: c.outcome.legacyId,
+          beforeStatus,
+          afterStatus,
+          improved,
+          reasons: after ? summariseRepairReason(after).reasons : "Repair returned no item.",
+        };
       });
       return json({
         ok: true,
@@ -256,6 +284,7 @@ Deno.serve(async (req) => {
         drafts: repaired.drafts,
         repairAttempted: repaired.repairAttempted,
         repairSucceeded: repaired.repairSucceeded,
+        repairResults,
         repairModel,
       });
     }

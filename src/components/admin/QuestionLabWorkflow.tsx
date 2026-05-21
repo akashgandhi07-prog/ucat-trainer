@@ -434,7 +434,7 @@ export default function QuestionLabWorkflow() {
             </div>
             {(generateBusy || generateLog.length > 0) && (
               <div
-                className="rounded border border-violet-200 bg-white/90 px-3 py-2 max-h-40 overflow-y-auto"
+                className="rounded border border-violet-200 bg-white/90 px-3 py-2 max-h-56 overflow-y-auto"
                 aria-live="polite"
                 aria-busy={generateBusy}
               >
