@@ -7,14 +7,18 @@ import ReReadPassageModal from "../components/quiz/ReReadPassageModal";
 import type { QuestionBreakdownItem } from "../components/quiz/DistortionQuiz";
 import { useAuth } from "../hooks/useAuth";
 import type { Passage } from "../data/passages";
-import type { SessionInsertPayload } from "../types/session";
 import { appendGuestSession } from "../lib/guestSessions";
-import { supabase } from "../lib/supabase";
+import { newClientSessionId, upsertTrainerSession } from "../lib/trainerSessionLog";
+import type { TrainerSessionUpsert } from "../lib/trainerSessionLog";
 import { supabaseLog } from "../lib/logger";
-import { withRetry } from "../lib/retry";
 import { getSessionSaveErrorMessage } from "../lib/sessionSaveError";
 import type { TrainingDifficulty } from "../types/training";
-import { pickNewRandomPassage } from "../lib/passages";
+import {
+  getVrPassageCandidates,
+  hydrateSeenFromCloud,
+  markPassageSeen,
+  pickUnseenPassage,
+} from "../lib/vrPassageHistory";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 import SEOHead from "../components/seo/SEOHead";
 import TrainerFaqSection from "../components/seo/TrainerFaqSection";
@@ -57,7 +61,9 @@ export default function RapidRecallPage() {
   const [phase, setPhase] = useState<Phase>("reading");
   const [timeLimitSeconds, setTimeLimitSeconds] = useState(initialTimeLimit);
   const [passage, setPassage] = useState<Passage | null>(
-    () => state?.passage ?? pickNewRandomPassage(null, difficulty, category)
+    () =>
+      state?.passage ??
+      pickUnseenPassage("rapid_recall", getVrPassageCandidates(difficulty, category))
   );
   const [secondsLeft, setSecondsLeft] = useState(initialTimeLimit);
   const [showMoreTimeModal, setShowMoreTimeModal] = useState(false);
@@ -72,6 +78,7 @@ export default function RapidRecallPage() {
   const [readingSeconds, setReadingSeconds] = useState<number | null>(null);
   const [passageModalOpen, setPassageModalOpen] = useState(false);
   const hasAutoSavedRef = useRef(false);
+  const sessionIdRef = useRef(newClientSessionId());
   const mountedRef = useRef(true);
   const { user } = useAuth();
 
@@ -81,6 +88,16 @@ export default function RapidRecallPage() {
       mountedRef.current = false;
     };
   }, []);
+
+  // Hydrate cross-device passage history once per page load (fire-and-forget).
+  useEffect(() => {
+    if (user) void hydrateSeenFromCloud(user.id);
+  }, [user]);
+
+  // The passage is actually shown once the reading phase starts.
+  useEffect(() => {
+    if (phase === "reading" && passage?.id) markPassageSeen("rapid_recall", passage.id);
+  }, [phase, passage?.id]);
 
   useEffect(() => {
     if (phase === "reading") {
@@ -111,6 +128,7 @@ export default function RapidRecallPage() {
 
   useEffect(() => {
     if (phase === "reading" && secondsLeft === 0 && !overtimeMode) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot modal trigger when the countdown hits zero; fires at most once per reading phase
       setShowMoreTimeModal(true);
     }
   }, [phase, secondsLeft, overtimeMode]);
@@ -146,25 +164,24 @@ export default function RapidRecallPage() {
           correct: quizCorrect,
           total: quizTotal,
           time_seconds: timeSeconds,
+          passage_id: passage?.id ?? null,
+          client_session_id: sessionIdRef.current,
         });
         return;
       }
       setSaveError(null);
       setSaving(true);
-      const payload: SessionInsertPayload = {
-        user_id: user.id,
+      const payload: TrainerSessionUpsert = {
         training_type: "rapid_recall",
         difficulty,
         wpm: null,
         correct: quizCorrect,
         total: quizTotal,
         time_seconds: timeSeconds,
+        passage_id: passage?.id ?? null,
       };
-      try {
-        await withRetry(async () => {
-          const { error } = await supabase.from("sessions").insert(payload);
-          if (error) throw error;
-        });
+      const saved = await upsertTrainerSession(user.id, sessionIdRef.current, payload);
+      if (saved) {
         supabaseLog.info("Rapid recall session saved", {
           userId: user.id,
           correct: quizCorrect,
@@ -175,31 +192,27 @@ export default function RapidRecallPage() {
         if (!mountedRef.current) return;
         setSaveError(null);
         if (!opts?.skipRestart) {
+          sessionIdRef.current = newClientSessionId();
           setPhase("reading");
           setSecondsLeft(timeLimitSeconds);
           setShowMoreTimeModal(false);
           setOvertimeMode(false);
           setOvertimeSeconds(0);
         }
-      } catch (err: unknown) {
-        const message = err && typeof err === "object" && "message" in err ? String((err as { message: string }).message) : "Unknown error";
-        supabaseLog.error("Failed to save rapid_recall session", {
-          message,
-          userId: user.id,
-        });
+      } else {
         if (!mountedRef.current) return;
-        setSaveError(getSessionSaveErrorMessage(err));
-      } finally {
-        if (mountedRef.current) setSaving(false);
+        setSaveError(getSessionSaveErrorMessage(null));
       }
+      if (mountedRef.current) setSaving(false);
     },
-    [user, quizCorrect, quizTotal, timeLimitSeconds, overtimeSeconds, readingSeconds, difficulty]
+    [user, quizCorrect, quizTotal, timeLimitSeconds, overtimeSeconds, readingSeconds, difficulty, passage?.id]
   );
 
   useEffect(() => {
     if (phase !== "results" || hasAutoSavedRef.current) return;
     hasAutoSavedRef.current = true;
     if (user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot auto-save on entering results; guarded by hasAutoSavedRef
       handleSaveProgress({ skipRestart: true });
     } else {
       appendGuestSession({
@@ -210,9 +223,11 @@ export default function RapidRecallPage() {
         total: quizTotal,
         time_seconds:
           readingSeconds != null ? readingSeconds : timeLimitSeconds + overtimeSeconds,
+        passage_id: passage?.id ?? null,
+        client_session_id: sessionIdRef.current,
       });
     }
-  }, [phase, handleSaveProgress, user, quizCorrect, quizTotal, difficulty, readingSeconds, timeLimitSeconds, overtimeSeconds]);
+  }, [phase, handleSaveProgress, user, quizCorrect, quizTotal, difficulty, readingSeconds, timeLimitSeconds, overtimeSeconds, passage?.id]);
 
   if (!passage) {
     return <Navigate to="/?mode=rapid_recall" replace />;
@@ -544,13 +559,16 @@ export default function RapidRecallPage() {
                       type="button"
                       onClick={() => {
                         hasAutoSavedRef.current = false;
+                        sessionIdRef.current = newClientSessionId();
                         setTimeLimitSeconds(nextTimeSuggestion);
                         setSecondsLeft(nextTimeSuggestion);
                         setOvertimeMode(false);
                         setOvertimeSeconds(0);
                         setReadingSeconds(null);
                         setPhase("reading");
-                        setPassage((current) => pickNewRandomPassage(current?.id, difficulty, category));
+                        setPassage((current) =>
+                          pickUnseenPassage("rapid_recall", getVrPassageCandidates(difficulty, category), current?.id)
+                        );
                       }}
                       className="min-h-[44px] px-6 py-3 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
                     >
@@ -561,12 +579,15 @@ export default function RapidRecallPage() {
                     type="button"
                     onClick={() => {
                       hasAutoSavedRef.current = false;
+                      sessionIdRef.current = newClientSessionId();
                       setSecondsLeft(timeLimitSeconds);
                         setOvertimeMode(false);
                         setOvertimeSeconds(0);
                         setReadingSeconds(null);
                       setPhase("reading");
-                      setPassage((current) => pickNewRandomPassage(current?.id, difficulty, category));
+                      setPassage((current) =>
+                        pickUnseenPassage("rapid_recall", getVrPassageCandidates(difficulty, category), current?.id)
+                      );
                     }}
                     className={`min-h-[44px] px-6 py-3 font-medium rounded-lg transition-colors ${
                       canPushPace

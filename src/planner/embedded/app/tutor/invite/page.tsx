@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { createTutorInviteLink } from '@/lib/planner-client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -16,10 +17,8 @@ export default function TutorInvitePage() {
     setError(null)
     setCopied(false)
     try {
-      const res = await fetch('/api/tutor/invite-link', { method: 'POST' })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Could not create invite link')
-      setInviteUrl(data.inviteUrl as string)
+      const { inviteUrl: url } = await createTutorInviteLink()
+      setInviteUrl(url)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong')
       setInviteUrl(null)

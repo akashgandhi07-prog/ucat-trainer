@@ -12,9 +12,14 @@ import QuestionFeedbackModal from "../feedback/QuestionFeedbackModal";
 import type { TrainingType } from "../../types/training";
 import QuestionMediaBlock from "../media/QuestionMediaBlock";
 
+/** Per-question time limit for timed mode, in seconds. */
+const QUESTION_TIME_LIMIT_SECONDS = 60;
+
 type InferenceQuizProps = {
   passageText: string;
   questions: InferenceQuestion[];
+  /** When true, each question has a 60 second countdown and auto-submits on expiry. */
+  timedMode?: boolean;
   onComplete: (
     correct: number,
     total: number,
@@ -35,6 +40,7 @@ type InferenceQuizProps = {
 export default function InferenceQuiz({
   passageText,
   questions,
+  timedMode = false,
   onComplete,
   onNextQuestion,
   onProgressChange,
@@ -58,6 +64,8 @@ export default function InferenceQuiz({
   } | null>(null);
   const [emptySelectionError, setEmptySelectionError] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [questionSeconds, setQuestionSeconds] = useState(0);
+  const [timedOut, setTimedOut] = useState(false);
 
   const current = questions[currentIndex];
   const answeredCount = answers.size;
@@ -143,9 +151,74 @@ export default function InferenceQuiz({
     setEmptySelectionError(false);
   }, [current, currentIndex, passageText]);
 
+  // Auto-submit when the timed mode countdown expires: an existing selection is
+  // evaluated as normal; no selection (or zero overlap) is marked incorrect.
+  const handleTimeExpired = useCallback(() => {
+    const correctSpan = current.correctSpans[0];
+    const correctText = getSpanText(passageText, correctSpan);
+    const userSpan = getSelectionFromPassage(passageRef, passageText);
+
+    let result: InferenceBreakdownItem["result"] = "incorrect";
+    let userText = "";
+    let evaluatedSpan: TextSpan | null = null;
+    if (userSpan && userSpan.start < userSpan.end) {
+      const cmp = compareSelection(
+        userSpan,
+        current.correctSpans,
+        current.alternateSpans
+      ) as InferenceAnswerResult;
+      result = cmp === "partial" ? "partial" : cmp === "correct" ? "correct" : "incorrect";
+      userText = getSpanText(passageText, userSpan);
+      evaluatedSpan = userSpan;
+    }
+
+    const item: InferenceBreakdownItem = {
+      questionId: current.id,
+      questionText: current.questionText,
+      userSpan: evaluatedSpan,
+      userText,
+      correctSpan,
+      correctText,
+      result,
+      explanation: current.explanation,
+    };
+    setAnswers((prev) => new Map(prev).set(currentIndex, item));
+    setFeedback({
+      show: true,
+      result,
+      userSpan: evaluatedSpan,
+      userText,
+      correctSpan,
+      correctText,
+      explanation: current.explanation,
+    });
+    setTimedOut(true);
+    setEmptySelectionError(false);
+  }, [current, currentIndex, passageText]);
+
+  // Per-question clock: counts up while the question is open (paused on feedback).
+  useEffect(() => {
+    if (feedback) return;
+    const interval = setInterval(() => {
+      setQuestionSeconds((s) => s + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [feedback, currentIndex]);
+
+  // Timed mode expiry.
+  useEffect(() => {
+    if (!timedMode || feedback) return;
+    if (questionSeconds >= QUESTION_TIME_LIMIT_SECONDS) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot auto-submit when the per-question timer expires; guarded by the feedback check
+      handleTimeExpired();
+    }
+  }, [timedMode, feedback, questionSeconds, handleTimeExpired]);
+
   const handleNext = useCallback(() => {
     setFeedback(null);
     setEmptySelectionError(false);
+    setQuestionSeconds(0);
+    setTimedOut(false);
     if (isLastQuestion && onNextQuestion) {
       const total = questions.length;
       const correct = [...answers.values()].filter(
@@ -206,10 +279,33 @@ export default function InferenceQuiz({
       {/* Right: Question */}
       <div className="lg:flex-1 min-w-0">
         <div className="bg-card rounded-xl border border-border p-6">
-          <div className="mb-4 rounded-lg border border-border px-4 py-3">
+          <div className="mb-4 rounded-lg border border-border px-4 py-3 flex items-center justify-between gap-3">
             <p className="text-sm text-foreground font-medium">
               Please select the relevant section(s) of text as requested below.
             </p>
+            {timedMode ? (
+              <span
+                className={`shrink-0 inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold tabular-nums ${
+                  !feedback && QUESTION_TIME_LIMIT_SECONDS - questionSeconds <= 10
+                    ? "bg-destructive-muted text-destructive border border-destructive"
+                    : "bg-secondary text-muted-foreground border border-border"
+                }`}
+                aria-live="polite"
+              >
+                <span aria-hidden>⏱</span>
+                {Math.max(0, QUESTION_TIME_LIMIT_SECONDS - questionSeconds)}s left
+              </span>
+            ) : (
+              questionSeconds > QUESTION_TIME_LIMIT_SECONDS && (
+                <span
+                  className="shrink-0 inline-flex items-center gap-1 rounded-full bg-warning-muted border border-warning px-3 py-1 text-xs font-semibold text-foreground tabular-nums"
+                  aria-live="polite"
+                >
+                  <span aria-hidden>⏱</span>
+                  +{questionSeconds - QUESTION_TIME_LIMIT_SECONDS}s over
+                </span>
+              )
+            )}
           </div>
 
           <div className="mb-4 flex items-start justify-between gap-3">
@@ -271,6 +367,11 @@ export default function InferenceQuiz({
                     ? "Skipped"
                     : "Incorrect"}
                 </p>
+                {timedOut && (
+                  <p className="text-xs font-medium text-muted-foreground mb-1">
+                    Time expired, so this question was submitted automatically.
+                  </p>
+                )}
                 <p className="text-sm text-foreground">{feedback.explanation}</p>
                 <button
                   type="button"

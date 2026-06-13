@@ -9,7 +9,9 @@ import { Input } from '@/components/ui/input'
 import { formatDate, parseDate, scoreColor, toISODate } from '@/lib/utils'
 import { MOCK_WEAKNESS_OPTIONS } from '@/lib/mock-weaknesses'
 import { addGuestMockScore, getGuestPlanner, updateGuestMockTargets } from '@/lib/guest-planner-store'
-import { addMockScore, updateMockTargets } from '@/lib/planner-client'
+import { addMockScore, rebalancePlan, updateMockTargets } from '@/lib/planner-client'
+import { createClient } from '@/lib/supabase/client'
+import { toast } from 'sonner'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts'
@@ -93,6 +95,37 @@ function computeMockTabStats(list: DBMockScore[]) {
 
 type Tab = 'full' | 'mini'
 
+const REBALANCE_SECTION_ORDER = ['vr', 'dm', 'qr', 'sjt'] as const
+const REBALANCE_SECTIONS = new Set<string>(REBALANCE_SECTION_ORDER)
+
+/**
+ * Sections that look weak in a just-logged mock: any of VR/DM/QR scoring ≥50
+ * points below every other logged section, plus any section named in the
+ * selected weakness tags (e.g. 'qr_speed' → 'qr').
+ */
+function deriveWeakSections(saved: DBMockScore): string[] {
+  const weak = new Set<string>()
+  const sectionScores = (
+    [
+      { key: 'vr', score: saved.score_vr },
+      { key: 'dm', score: saved.score_dm },
+      { key: 'qr', score: saved.score_qr },
+    ] as const
+  ).filter((s): s is { key: 'vr' | 'dm' | 'qr'; score: number } => s.score != null)
+
+  for (const { key, score } of sectionScores) {
+    const others = sectionScores.filter(s => s.key !== key).map(s => s.score)
+    if (others.length > 0 && Math.min(...others) - score >= 50) weak.add(key)
+  }
+
+  for (const tag of saved.weakness_tags ?? []) {
+    const prefix = tag.split('_')[0]
+    if (REBALANCE_SECTIONS.has(prefix)) weak.add(prefix)
+  }
+
+  return REBALANCE_SECTION_ORDER.filter(k => weak.has(k))
+}
+
 export function MockScoresView({
   planId,
   mockScores: initialScores,
@@ -129,6 +162,9 @@ export function MockScoresView({
   const [showForm, setShowForm] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  /** Sections offered for extra focus after a weak mock (null = no prompt showing). */
+  const [postMockPrompt, setPostMockPrompt] = useState<string[] | null>(null)
+  const [rebalancing, setRebalancing] = useState(false)
   const [activeTab, setActiveTab] = useState<Tab>('full')
   const [form, setForm] = useState({
     mockDate: toISODate(new Date()),
@@ -266,10 +302,46 @@ export function MockScoresView({
       setShowForm(false)
       setActiveTab(form.mockType)
       setForm(f => ({ ...f, vr: '', dm: '', qr: '', sjt: '', mockSource: '', weaknessTags: [] }))
+
+      if (!guestMode && !readOnly) {
+        const weak = deriveWeakSections(saved)
+        setPostMockPrompt(weak.length > 0 ? weak : null)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save mock score')
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handlePostMockRebalance() {
+    if (!postMockPrompt || postMockPrompt.length === 0) return
+    setRebalancing(true)
+    try {
+      const supabase = createClient()
+      const { data: planRow, error: planErr } = await supabase
+        .from('plans')
+        .select('school_day_hours, weekend_hours')
+        .eq('id', planId)
+        .maybeSingle()
+      if (planErr) throw new Error(planErr.message)
+      if (!planRow) throw new Error('Plan not found')
+
+      await rebalancePlan({
+        planId,
+        fromDate: toISODate(new Date()),
+        schoolDayHours: Number(planRow.school_day_hours),
+        weekendHours: Number(planRow.weekend_hours),
+        needsMore: postMockPrompt,
+      })
+      toast.success(
+        `Plan updated — extra ${postMockPrompt.map(s => s.toUpperCase()).join(', ')} focus added`,
+      )
+      setPostMockPrompt(null)
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not update your plan. Please try again.')
+    } finally {
+      setRebalancing(false)
     }
   }
 
@@ -601,6 +673,40 @@ export function MockScoresView({
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* Post-mock guidance prompt */}
+      {postMockPrompt && postMockPrompt.length > 0 && !readOnly && (
+        <Card className="border-primary/40 bg-secondary/50">
+          <CardContent className="pt-5 pb-5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary mb-2">
+              Adjust your plan?
+            </p>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Your {postMockPrompt.map(s => s.toUpperCase()).join(' and ')}{' '}
+              {postMockPrompt.length === 1 ? 'score' : 'scores'} lagged in this mock. Add extra{' '}
+              {postMockPrompt.map(s => s.toUpperCase()).join(' and ')} focus to your upcoming weeks?
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={handlePostMockRebalance}
+                disabled={rebalancing}
+                className="rounded-lg bg-primary px-3.5 py-2 text-xs font-semibold text-white hover:bg-primary/90 disabled:opacity-50 transition-colors"
+              >
+                {rebalancing ? 'Adjusting…' : 'Yes, adjust my plan'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setPostMockPrompt(null)}
+                disabled={rebalancing}
+                className="rounded-lg border border-border bg-white px-3.5 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+              >
+                No thanks
+              </button>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Encouragement */}

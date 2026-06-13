@@ -4,6 +4,7 @@ import { CONVERSION_QUESTIONS } from "../../data/conversionQuestions";
 import type { ConversionQuestion } from "../../data/conversionQuestions";
 import { fetchConversionDrill } from "../../lib/conversionTrainerApi";
 import { saveConversionSession } from "../../utils/analyticsStorage";
+import { newClientSessionId } from "../../lib/trainerSessionLog";
 
 type AnswerRecord = {
   category: ConversionQuestion["category"];
@@ -117,6 +118,8 @@ export default function ConversionTrainer() {
   const [savedAnswerCount, setSavedAnswerCount] = useState(0);
   const sessionStartedAtRef = useRef(0);
   const lastSavedAnswerCountRef = useRef(0);
+  // One id per drill run: every checkpoint upserts the same cloud row.
+  const clientSessionIdRef = useRef(newClientSessionId());
 
   useEffect(() => {
     sessionStartedAtRef.current = Date.now();
@@ -137,6 +140,7 @@ export default function ConversionTrainer() {
           setSavedAnswerCount(0);
           lastSavedAnswerCountRef.current = 0;
           sessionStartedAtRef.current = Date.now();
+          clientSessionIdRef.current = newClientSessionId();
         }
       })
       .finally(() => {
@@ -188,7 +192,7 @@ export default function ConversionTrainer() {
       timeSeconds: (Date.now() - sessionStartedAtRef.current) / 1000,
       categoryStats: buildCategoryStats(records),
       trapStats: buildTrapStats(records),
-    }).then((saved) => {
+    }, clientSessionIdRef.current).then((saved) => {
       if (!saved) {
         lastSavedAnswerCountRef.current = Math.min(lastSavedAnswerCountRef.current, nextSavedCount - 1);
         setSavedAnswerCount(lastSavedAnswerCountRef.current);
@@ -250,6 +254,7 @@ export default function ConversionTrainer() {
     lastSavedAnswerCountRef.current = 0;
     setSavedAnswerCount(0);
     sessionStartedAtRef.current = Date.now();
+    clientSessionIdRef.current = newClientSessionId();
     scrollTrainerToTop();
   };
 

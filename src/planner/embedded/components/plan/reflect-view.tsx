@@ -1,11 +1,19 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { DBWeeklyReflection, DBPlanWeek, DifficultyRating } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { formatDate, parseDate } from '@/lib/utils'
+import { formatDate, parseDate, toISODate } from '@/lib/utils'
 import { saveWeeklyReflection } from '@/lib/planner-client'
+import { createClient } from '@/lib/supabase/client'
+import {
+  bucketWeekRecaps,
+  isWeekCompleted,
+  type WeekRecap,
+  type WeekRecapCompletionRow,
+  type WeekRecapSessionRow,
+} from '../../../lib/week-recap'
 
 interface ReflectViewProps {
   planId: string
@@ -25,8 +33,45 @@ export function ReflectView({ planId, reflections: initialReflections, planWeeks
   const [text, setText] = useState('')
   const [difficulty, setDifficulty] = useState<DifficultyRating>(2)
   const [loading, setLoading] = useState(false)
+  /** Per-week planned/logged/effort stats; null while loading. */
+  const [weekRecaps, setWeekRecaps] = useState<Map<number, WeekRecap> | null>(null)
 
   const reflectionsByWeek = new Map(reflections.map(r => [r.week_number, r]))
+  const todayIso = toISODate(new Date())
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadRecaps() {
+      try {
+        const supabase = createClient()
+        const [sessionsRes, completionsRes] = await Promise.all([
+          supabase
+            .from('plan_sessions')
+            .select('id, day_date, duration_minutes, session_type')
+            .eq('plan_id', planId),
+          supabase
+            .from('session_completions')
+            .select('session_id, minutes_completed, perceived_effort, plan_sessions!inner(plan_id, day_date)')
+            .eq('plan_sessions.plan_id', planId),
+        ])
+        if (sessionsRes.error) throw new Error(sessionsRes.error.message)
+        if (completionsRes.error) throw new Error(completionsRes.error.message)
+        if (cancelled) return
+        setWeekRecaps(
+          bucketWeekRecaps(
+            planWeeks,
+            (sessionsRes.data ?? []) as WeekRecapSessionRow[],
+            (completionsRes.data ?? []) as unknown as WeekRecapCompletionRow[],
+          ),
+        )
+      } catch {
+        if (!cancelled) setWeekRecaps(new Map())
+      }
+    }
+    loadRecaps()
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [planId])
 
   async function handleSubmit(weekNumber: number) {
     setLoading(true)
@@ -79,6 +124,8 @@ export function ReflectView({ planId, reflections: initialReflections, planWeeks
           const existing = reflectionsByWeek.get(week.week_number)
           const isEditing = activeWeek === week.week_number
           const d = parseDate(week.week_start)
+          const completed = isWeekCompleted(week.week_start, todayIso)
+          const recap = completed ? weekRecaps?.get(week.week_number) : undefined
 
           return (
             <Card key={week.week_number} className={isEditing ? 'border-border shadow-sm' : ''}>
@@ -89,6 +136,17 @@ export function ReflectView({ planId, reflections: initialReflections, planWeeks
                     <p className="text-sm text-muted-foreground mt-0.5">
                       {formatDate(d)}
                     </p>
+                    {completed && (
+                      recap ? (
+                        <p className="text-xs text-slate-400 mt-1 tabular-nums">
+                          Planned {(recap.plannedMinutes / 60).toFixed(1)}h
+                          {' · '}Logged {(recap.loggedMinutes / 60).toFixed(1)}h
+                          {recap.avgEffort != null && ` · Avg effort ${recap.avgEffort}/5`}
+                        </p>
+                      ) : weekRecaps === null ? (
+                        <div className="mt-1.5 h-3 w-44 animate-pulse rounded bg-slate-100" aria-hidden />
+                      ) : null
+                    )}
                   </div>
                   <div className="flex items-center gap-3">
                     {existing && (

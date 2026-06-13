@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toISODate } from '@/lib/utils'
+import { saveTimeAwayPeriods, updateExamDateTime } from '@/lib/planner-client'
 import { UCAT_EXAM_WINDOW_END_ISO, UCAT_EXAM_WINDOW_START_ISO } from '../../../../lib/ucatExamWindow'
 import type { TimeAwayPeriod } from '@/types'
 
@@ -53,18 +54,12 @@ export function SettingsView({
     setSaved(false)
     setError('')
     try {
-      const res = await fetch('/api/plans/update-exam', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          planId,
-          examDate,
-          examTime: examTime || null,
-          ucatSen,
-        }),
+      await updateExamDateTime({
+        planId,
+        examDate,
+        examTime: examTime || null,
+        ucatSen,
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Failed to update')
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
     } catch (e: unknown) {
@@ -80,17 +75,11 @@ export function SettingsView({
     setTaError('')
     try {
       const today = toISODate(new Date())
-      const res = await fetch('/api/plans/time-away', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          planId,
-          periods: updated,
-          regenerateFromDate: regenerate ? today : undefined,
-        }),
+      await saveTimeAwayPeriods({
+        planId,
+        periods: updated,
+        regenerateFromDate: regenerate ? today : undefined,
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Failed to save')
       setTimeAway(updated)
       setTaSaved(true)
       setTimeout(() => setTaSaved(false), 3000)

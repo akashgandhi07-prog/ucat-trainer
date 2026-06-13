@@ -18,7 +18,9 @@ export async function withRetry<T>(
         throw e;
       }
       if (attempt < retries) {
-        const delay = baseMs * Math.pow(2, attempt);
+        // Jitter (80-120% of the backoff) so clients that failed together don't all
+        // retry in the same instant and hammer the server again in lockstep.
+        const delay = baseMs * Math.pow(2, attempt) * (0.8 + Math.random() * 0.4);
         await new Promise((r) => setTimeout(r, delay));
       }
     }

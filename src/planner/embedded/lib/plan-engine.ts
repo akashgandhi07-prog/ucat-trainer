@@ -9,7 +9,7 @@ import {
   DBPlanWeek, DBPlanDay, DBSession,
   Phase, SectionWeight, SessionType, WeekType, DifficultyRating, DateRange, UCATSection
 } from '@/types'
-import { addDays, toISODate, parseDate, weeksUntil, startOfWeek } from './utils'
+import { addDays, toISODate, parseDate, weeksUntil, startOfWeek, calendarDaysBetween } from './utils'
 import {
   weaknessTagWeightBonus,
   weaknessHints,
@@ -165,12 +165,6 @@ function rampFactor(weekNumber: number, totalWeeks: number): number {
   return Math.min(0.5 + 0.5 * progress, 1.0)
 }
 
-function calendarDaysBetween(a: Date, b: Date): number {
-  const ua = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate())
-  const ub = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate())
-  return Math.round((ub - ua) / 86400000)
-}
-
 function roundPlannerHours(h: number): number {
   return Math.max(Math.round(h * 2) / 2, 0.5)
 }
@@ -238,8 +232,8 @@ export function weeklyMockTarget(
  *  - Term weekdays (Mon-Fri, not in holiday_periods): school-day target scaled by ramp
  *    (50% in week 1 of the plan through full intensity by the end, for long plans).
  *  - Weekend days and any date inside holiday_periods: at least 3h once past exam day;
- *    a gradual increase from 3h toward 4h across the plan, then 4h through 6h per day
- *    in the final 14 days before the exam (UCAT holiday-style study build-up).
+ *    a gradual increase from 3h toward 4h across the plan, then a final-weeks ramp toward
+ *    the student's stated maximum (never beyond it; 4h floor so full mocks still fit).
  */
 export function hoursForDate(
   date: Date,
@@ -263,19 +257,17 @@ export function hoursForDate(
 
   /**
    * Final three weeks (21-day window before the exam, excluding exam day): ramp every day
-   * from the student's current weekday baseline toward 6 h/day. We deliberately push past
-   * the student's stated weekend max - the exam is near and intensity must rise. A student
-   * who said "4 h weekends" will see the plan climb to 6 h here so the mock count is
-   * achievable (each full mock + reflection block needs ~4 h).
+   * from the student's current baseline toward their own stated maximum. We never exceed
+   * what the student told us they can do - the only floor is 4 h, the minimum a full mock
+   * plus its reflection block needs, so the final-phase mock schedule stays achievable.
    */
   if (daysUntilExam >= 1 && daysUntilExam <= 21) {
     const low = isHighCapacity
-      ? Math.max(3, weekendMax, schoolDayMax)
+      ? Math.max(3, Math.min(weekendMax, 4))
       : Math.max(2, schoolDayMax)
-    // Always ramp toward at least 6 h, even if the student's stated max is lower
-    const high = Math.max(6, weekendMax, schoolDayMax)
+    const high = Math.max(4, weekendMax, schoolDayMax)
     const t = (21 - daysUntilExam) / 20
-    return roundPlannerHours(low + t * (high - low))
+    return roundPlannerHours(Math.max(low, low + t * (high - low)))
   }
 
   if (!isHighCapacity) {
@@ -576,11 +568,16 @@ export function generateFullPlan(inputs: PlanInputs): GeneratedPlan {
     examDate, hasPriorExperience, confidence,
     schoolDayHours, weekendHours, holidayPeriods,
     restDays, busyPeriods, latestMockScores, weaknessTags,
+    difficultyAdjustment = 0,
     ucatSen = false,
   } = inputs
 
   const today = new Date(); today.setHours(0, 0, 0, 0)
   const planStart = startOfWeek(today, 1)   // Monday
+
+  // Weekly reflections: "too hard" weeks shrink future daily load, "too easy" grows it.
+  // delta is clamped to ±2 upstream, so the swing is at most ±20%.
+  const difficultyFactor = 1 + 0.1 * Math.max(-2, Math.min(2, difficultyAdjustment))
 
   const busyDates = new Set<string>()
   for (const p of busyPeriods) {
@@ -627,10 +624,11 @@ export function generateFullPlan(inputs: PlanInputs): GeneratedPlan {
     for (let i = 0; i < 7; i++) {
       const d = addDays(weekStart, i)
       if (d > examDate) break
+      if (d < today) continue   // days already gone can't hold study time
       const ds = toISODate(d)
       if (restDays.includes(d.getDay()) || busyDates.has(ds)) continue
       const h = hoursForDate(d, examDate, planStart, schoolDayHours, weekendHours, holidayPeriods, w + 1, totalWeeks)
-      weeklyAvailableMinutes += Math.round(h * 60)
+      weeklyAvailableMinutes += Math.round(h * 60 * difficultyFactor)
     }
 
     const weeklyMockCap = weeklyMockTarget(weeksRemaining, totalWeeks, weeklyAvailableMinutes, ucatSen)
@@ -647,6 +645,9 @@ export function generateFullPlan(inputs: PlanInputs): GeneratedPlan {
       const isRestDay = restDays.includes(dow)
       const isBusy = busyDates.has(dateStr)
       const isRest = isRestDay || isBusy
+      // Never schedule work on days that have already passed - a student onboarding on a
+      // Friday must not start their plan four sessions "behind".
+      const isPast = date < today
       const isExamDay = dateStr === examDateStr
       const isFinalWeek = weeksUntil(examDate, date) <= 1
       const daysUntilExamCal = calendarDaysBetween(date, examDate)
@@ -661,10 +662,10 @@ export function generateFullPlan(inputs: PlanInputs): GeneratedPlan {
         w + 1,
         totalWeeks,
       )
-      const availableMinutes = isRest ? 0 : Math.round(hours * 60)
+      const availableMinutes = isRest || isPast ? 0 : Math.round(hours * 60 * difficultyFactor)
 
       let plannedSessions: PlannedSession[] = []
-      if (!isRest && availableMinutes >= 30) {
+      if (!isRest && !isPast && availableMinutes >= 30) {
         const plan = planDaySessions(
           availableMinutes,
           phase,

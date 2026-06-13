@@ -13,7 +13,13 @@ import type { Passage } from "../data/passages";
 import { getTipForMode } from "../data/tips";
 import type { TrainingType, TrainingDifficulty } from "../types/training";
 import { TRAINING_TYPE_LABELS, TRAINING_DIFFICULTY_LABELS } from "../types/training";
-import { pickNewRandomPassage } from "../lib/passages";
+import {
+  getBankProgress,
+  getVrPassageCandidates,
+  hydrateSeenFromCloud,
+  pickUnseenPassage,
+  type VrTrainerType,
+} from "../lib/vrPassageHistory";
 import { PASSAGE_IDS_WITH_INFERENCE } from "../data/inferenceQuestions";
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../lib/supabase";
@@ -198,8 +204,23 @@ function isValidTrainingType(s: string | null): s is TrainingType {
   return s === "speed_reading" || s === "rapid_recall" || s === "keyword_scanning" || s === "inference_trainer";
 }
 
-function pickPassageForDifficulty(level: TrainingDifficulty, cat?: string): Passage {
-  return pickNewRandomPassage(null, level, cat);
+function pickPassageForTrainer(
+  trainer: VrTrainerType,
+  level: TrainingDifficulty,
+  cat?: string
+): Passage {
+  return pickUnseenPassage(trainer, getVrPassageCandidates(level, cat));
+}
+
+/** The three trainers that draw from the local passage bank (inference has DB-backed rotation). */
+const VR_BANK_TRAINERS: VrTrainerType[] = ["speed_reading", "rapid_recall", "keyword_scanning"];
+
+function computeBankProgress(): Record<VrTrainerType, { seen: number; total: number }> {
+  return {
+    speed_reading: getBankProgress("speed_reading", PASSAGES.length),
+    rapid_recall: getBankProgress("rapid_recall", PASSAGES.length),
+    keyword_scanning: getBankProgress("keyword_scanning", PASSAGES.length),
+  };
 }
 
 export default function VerbalReasoningPage() {
@@ -237,6 +258,20 @@ export default function VerbalReasoningPage() {
   const [streak, setStreak] = useState(0);
   const [lastPracticedLabel, setLastPracticedLabel] = useState<string | null>(null);
   const [streakFetched, setStreakFetched] = useState(false);
+  /** Per-trainer passage bank coverage for the local-bank trainers. */
+  const [bankProgress, setBankProgress] = useState(computeBankProgress);
+
+  // Union cloud passage history into the local seen sets, then refresh coverage.
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    void hydrateSeenFromCloud(user.id).then(() => {
+      if (!cancelled) setBankProgress(computeBankProgress());
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   const avgWordsSpeedReading = useMemo(
     () => Math.round(PASSAGES.reduce((s, p) => s + wordCount(p), 0) / PASSAGES.length),
@@ -424,7 +459,7 @@ export default function VerbalReasoningPage() {
       difficulty,
       pathname: "/reader",
     });
-    const chosenPassage = pickPassageForDifficulty(difficulty, category);
+    const chosenPassage = pickPassageForTrainer("speed_reading", difficulty, category);
     try {
       localStorage.setItem(WPM_STORAGE_KEY, String(wpm));
     } catch {
@@ -451,7 +486,7 @@ export default function VerbalReasoningPage() {
       difficulty,
       pathname: "/train/rapid-recall",
     });
-    const chosenPassage = pickPassageForDifficulty(difficulty, category);
+    const chosenPassage = pickPassageForTrainer("rapid_recall", difficulty, category);
     navigate("/train/rapid-recall", {
       state: {
         trainingType: "rapid_recall" as const,
@@ -469,7 +504,7 @@ export default function VerbalReasoningPage() {
       difficulty,
       pathname: "/train/keyword-scanning",
     });
-    const chosenPassage = pickPassageForDifficulty(difficulty, category);
+    const chosenPassage = pickPassageForTrainer("keyword_scanning", difficulty, category);
     navigate("/train/keyword-scanning", {
       state: {
         trainingType: "keyword_scanning" as const,
@@ -581,6 +616,25 @@ export default function VerbalReasoningPage() {
               />
             ))}
             </HubTrainerGrid>
+            <div className="mt-4 rounded-xl border border-border bg-training-surface px-4 py-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground mb-1.5">
+                Passage coverage
+              </p>
+              <div className="flex flex-col sm:flex-row sm:flex-wrap gap-x-6 gap-y-1">
+                {VR_BANK_TRAINERS.map((trainer) => (
+                  <p key={trainer} className="text-sm text-foreground">
+                    {TRAINING_TYPE_LABELS[trainer]}:{" "}
+                    <span className="font-medium">
+                      {bankProgress[trainer].seen} of {bankProgress[trainer].total}
+                    </span>{" "}
+                    passages seen
+                  </p>
+                ))}
+              </div>
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                Progress resets automatically when you&apos;ve seen every passage.
+              </p>
+            </div>
           </SkillsSectionBlock>
 
         {/* Settings panel */}

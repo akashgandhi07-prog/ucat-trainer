@@ -1,14 +1,17 @@
 import type { DateRange, DBPlan } from '../embedded/types'
-import { generateFullPlan, planToDBRows, type PlanInputs } from '../embedded/lib/plan-engine'
+import {
+  calcDifficultyAdjustment,
+  generateFullPlan,
+  planToDBRows,
+  type PlanInputs,
+} from '../embedded/lib/plan-engine'
 import { PLAN_TIMETABLE_TABLE } from '../embedded/lib/planner-db-tables'
 import {
   anchorDateForRegenerate,
-  deletePlanDaysByDates,
-  deletePlanTimetableByDates,
   prepareRegeneratedRows,
 } from '../embedded/lib/regenerate-plan-cleanup'
 import { supabase } from '../../lib/supabase'
-import { invalidateActivePlanCache } from './load-planner-data'
+import { invalidateActivePlanCache, PLAN_COLUMNS, PLAN_WEEK_COLUMNS } from './load-planner-data'
 
 export async function updateDayAvailability(
   planId: string,
@@ -55,39 +58,53 @@ export async function updateDayAvailability(
 }
 
 async function getPlanById(planId: string): Promise<DBPlan | null> {
-  const { data, error } = await supabase.from('plans').select('*').eq('id', planId).single()
+  const { data, error } = await supabase
+    .from('plans')
+    .select(PLAN_COLUMNS)
+    .eq('id', planId)
+    .single()
   if (error) return null
-  return data as DBPlan
+  return data as unknown as DBPlan
 }
 
 export async function regenerateFutureWeeks(planId: string, fromWeekNumber: number): Promise<void> {
-  const plan = await getPlanById(planId)
+  // All five reads are keyed on planId only, so fetch them in one round trip.
+  const [plan, reflectionsRes, latestMockRes, busyDaysRes, weeksRes] = await Promise.all([
+    getPlanById(planId),
+    supabase
+      .from('weekly_reflections')
+      .select('week_number, difficulty_rating')
+      .eq('plan_id', planId)
+      .order('week_number'),
+    supabase
+      .from('mock_scores')
+      .select('score_vr, score_dm, score_qr, weakness_tags')
+      .eq('plan_id', planId)
+      .order('logged_date', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('plan_days')
+      .select('day_date')
+      .eq('plan_id', planId)
+      .eq('is_rest', true)
+      .eq('availability', 'unavailable'),
+    supabase
+      .from('plan_weeks')
+      .select(PLAN_WEEK_COLUMNS)
+      .eq('plan_id', planId)
+      .order('week_number'),
+  ])
   if (!plan) throw new Error('Plan not found')
 
-  const { data: reflections } = await supabase
-    .from('weekly_reflections')
-    .select('*')
-    .eq('plan_id', planId)
-    .order('week_number')
+  const { data: reflections } = reflectionsRes
+  const { data: latestMock } = latestMockRes
+  const { data: busyDays } = busyDaysRes
+  const { data: weeks } = weeksRes
 
   const ratings = (reflections ?? [])
     .filter((r) => r.week_number < fromWeekNumber)
     .map((r) => r.difficulty_rating as 1 | 2 | 3)
-
-  const { data: latestMock } = await supabase
-    .from('mock_scores')
-    .select('*')
-    .eq('plan_id', planId)
-    .order('logged_date', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-
-  const { data: busyDays } = await supabase
-    .from('plan_days')
-    .select('day_date')
-    .eq('plan_id', planId)
-    .eq('is_rest', true)
-    .eq('availability', 'unavailable')
 
   const busyPeriods: DateRange[] = (busyDays ?? []).map((d) => ({
     start: d.day_date,
@@ -109,7 +126,7 @@ export async function regenerateFutureWeeks(planId: string, fromWeekNumber: numb
     holidayPeriods: plan.holiday_periods ?? [],
     restDays: plan.rest_days ?? [],
     busyPeriods,
-    difficultyAdjustment: ratings.reduce((acc, r) => acc + (r - 2), 0),
+    difficultyAdjustment: calcDifficultyAdjustment(ratings),
     latestMockScores: latestMock
       ? {
           vr: latestMock.score_vr,
@@ -121,12 +138,6 @@ export async function regenerateFutureWeeks(planId: string, fromWeekNumber: numb
     regenerateFromWeek: fromWeekNumber,
     ucatSen: plan.ucat_sen ?? false,
   }
-
-  const { data: weeks } = await supabase
-    .from('plan_weeks')
-    .select('*')
-    .eq('plan_id', planId)
-    .order('week_number')
 
   const generated = generateFullPlan(inputs)
   const { planWeeks: newWeeks, planDays: newDays, sessions: newSessions } = planToDBRows(
@@ -152,28 +163,17 @@ export async function regenerateFutureWeeks(planId: string, fromWeekNumber: numb
     newSessions,
   )
 
-  if (datesToClear.length > 0) {
-    await deletePlanTimetableByDates(supabase, planId, PLAN_TIMETABLE_TABLE, datesToClear)
-    await deletePlanDaysByDates(supabase, planId, datesToClear)
-  }
-
-  if (futureWeekRowIds.length > 0) {
-    const { error } = await supabase.from('plan_weeks').delete().in('id', futureWeekRowIds)
-    if (error) throw new Error(error.message)
-  }
-
-  if (futureNewWeeks.length) {
-    const { error } = await supabase.from('plan_weeks').insert(futureNewWeeks)
-    if (error) throw new Error(error.message)
-  }
-  if (futureNewDays.length) {
-    const { error } = await supabase.from('plan_days').insert(futureNewDays)
-    if (error) throw new Error(error.message)
-  }
-  if (futureNewSessions.length) {
-    const { error } = await supabase.from(PLAN_TIMETABLE_TABLE).insert(futureNewSessions)
-    if (error) throw new Error(error.message)
-  }
+  // One transactional round trip: deletes and inserts succeed or fail together, so a
+  // crash or dropped connection can never leave the plan half-rebuilt.
+  const { error: rpcErr } = await supabase.rpc('apply_plan_regeneration', {
+    p_plan_id: planId,
+    p_dates_to_clear: datesToClear,
+    p_week_ids_to_delete: futureWeekRowIds,
+    p_new_weeks: futureNewWeeks,
+    p_new_days: futureNewDays,
+    p_new_sessions: futureNewSessions,
+  })
+  if (rpcErr) throw new Error(rpcErr.message)
 
   invalidateActivePlanCache(plan.student_id)
 }

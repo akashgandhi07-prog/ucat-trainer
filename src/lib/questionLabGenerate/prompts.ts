@@ -16,7 +16,7 @@ export function buildGenerateMessages(input: {
     `You write new ${profile.label} questions for The UKCAT People skills trainer.`,
     "",
     "OFFICIAL UCAT EXAMPLES (learn style, traps, difficulty only; do not copy stems):",
-    goldStandard.slice(0, 40_000),
+    goldStandard.slice(0, 8_000),
     "",
     "OUTPUT FORMAT (follow exactly):",
     outputSpec.slice(0, 40_000),

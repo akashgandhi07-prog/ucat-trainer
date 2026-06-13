@@ -17,6 +17,7 @@ import {
   completeSession,
   rebalancePlan,
   saveExtraStudy as persistExtraStudy,
+  setDayBlocked,
   updateExamDateTime,
   updatePlanDay,
 } from '@/lib/planner-client'
@@ -125,13 +126,7 @@ function BlockDayButton({
     setBusy(true)
     setErr('')
     try {
-      const res = await fetch('/api/plans/block-day', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId, dayDate: dateStr, blocked: !isCurrentlyBlocked }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Failed')
+      await setDayBlocked({ planId, dayDate: dateStr, blocked: !isCurrentlyBlocked })
       router.refresh()
       onDone()
     } catch (e: unknown) {
@@ -1422,6 +1417,18 @@ export function PlanCalendar({ plan, planDays, sessions, extraStudyLogs, readOnl
   const monthMocks = monthSessions.filter(s => s.session_type === 'full_mock' || s.session_type === 'mini_mock').length
   const monthHours = monthSessions.reduce((a, s) => a + s.duration_minutes, 0) / 60
 
+  // Whole-plan progress to date (sessions scheduled up to today, excluding rest)
+  const planWideStats = useMemo(() => {
+    const toDate = sessions.filter(s => s.session_type !== 'rest' && s.day_date <= todayDate)
+    const plannedMinutes = toDate.reduce((a, s) => a + s.duration_minutes, 0)
+    const loggedMinutes = toDate.reduce(
+      (a, s) => a + creditedMinutesTowardPlan(s.completed, s.duration_minutes, s.completed_minutes),
+      0,
+    )
+    const pct = plannedMinutes > 0 ? Math.round((loggedMinutes / plannedMinutes) * 100) : 0
+    return { plannedMinutes, loggedMinutes, pct }
+  }, [sessions, todayDate])
+
   // Jump helpers
   const canGoPrev = currentMonth > new Date(parseDate(planStart).getFullYear(), parseDate(planStart).getMonth(), 1)
   const canGoNext = currentMonth < new Date(parseDate(examDate).getFullYear(), parseDate(examDate).getMonth(), 1)
@@ -1522,6 +1529,12 @@ export function PlanCalendar({ plan, planDays, sessions, extraStudyLogs, readOnl
                 <span className="text-xs text-slate-400">{monthProgressPct}% of planned time logged</span>
               )}
             </div>
+            {planWideStats.plannedMinutes > 0 && (
+              <p className="text-xs text-slate-400 mt-0.5 tabular-nums">
+                Whole plan: planned {(planWideStats.plannedMinutes / 60).toFixed(1)}h
+                {' · '}logged {(planWideStats.loggedMinutes / 60).toFixed(1)}h ({planWideStats.pct}%)
+              </p>
+            )}
           </div>
           <button
             onClick={() => setCurrentMonth(nextMonth)}

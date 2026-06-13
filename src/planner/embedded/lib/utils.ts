@@ -123,9 +123,16 @@ export function suggestHoursFromRecentSessions(
 }
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
+/** Whole local calendar days from a to b (DST-safe: compares local Y/M/D, not raw ms). */
+export function calendarDaysBetween(a: Date, b: Date): number {
+  const ua = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate())
+  const ub = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate())
+  return Math.round((ub - ua) / 86400000)
+}
+
 export function weeksUntil(examDate: Date, from: Date = new Date()): number {
-  const ms = examDate.getTime() - from.getTime()
-  return Math.ceil(ms / (7 * 24 * 60 * 60 * 1000))
+  // Calendar-day based so time-of-day and DST shifts can never skew the week count.
+  return Math.ceil(calendarDaysBetween(from, examDate) / 7)
 }
 
 export function addDays(date: Date, days: number): Date {

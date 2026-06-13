@@ -468,8 +468,13 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
                 )}
               >
                 <p className="text-2xl font-bold text-foreground">
-                  {correctCount} / {answers.length}
+                  {correctCount} / {total}
                 </p>
+                {answers.length !== total && (
+                  <p className="text-sm text-foreground mt-1">
+                    {answers.length} of {total} answered · {correctCount} correct
+                  </p>
+                )}
                 <p className="text-sm text-muted-foreground mt-1">
                   {retryMode ? "Retry complete" : "Drill complete"} in {elapsedSeconds}s
                 </p>

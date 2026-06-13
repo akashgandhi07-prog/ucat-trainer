@@ -2,6 +2,7 @@ import type { TrainerGenerateProfile, PluginVerifyResult } from "../types.ts";
 import { verifyNumeric } from "./numeric.ts";
 import { verifySetLogic } from "./setLogic.ts";
 import { verifySjtStructure } from "./sjtStructure.ts";
+import { verifyVrStructure } from "./vrStructure.ts";
 
 export function runPlugins(
   raw: Record<string, unknown>,
@@ -15,6 +16,8 @@ export function runPlugins(
     else if (id === "numeric") results.push(verifyNumeric(raw, profile.trainerType));
     else if (id === "sjt-structure") {
       results.push(verifySjtStructure(raw, profile.questionKind));
+    } else if (id === "vr-structure") {
+      results.push(verifyVrStructure(raw));
     }
   }
 

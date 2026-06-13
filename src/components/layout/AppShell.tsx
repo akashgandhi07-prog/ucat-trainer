@@ -1,8 +1,7 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { LogIn, Menu, MessageSquare, X } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
-import { supabase } from "../../lib/supabase";
 import { AppShellProvider } from "../../contexts/AppShellContext";
 import { useAuthModal } from "../../contexts/AuthModalContext";
 import { useBugReportModal } from "../../contexts/BugReportContext";
@@ -19,12 +18,11 @@ const NO_SHELL = ["/reset-password"];
 
 export default function AppShell() {
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { openAuthModal } = useAuthModal();
   const { openBugReport } = useBugReportModal();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => readSidebarCollapsedPreference());
-  const [showTutorNav, setShowTutorNav] = useState(false);
   const chromeRef = useRef<HTMLDivElement>(null);
   const mainScrollRef = useRef<HTMLElement>(null);
   const plannerOn = isPlannerIntegrated();
@@ -33,23 +31,8 @@ export default function AppShell() {
     mainScrollRef.current?.scrollTo(0, 0);
   }, [location.key]);
 
-  useEffect(() => {
-    if (!user) return;
-    let cancelled = false;
-    void supabase
-      .from("profiles")
-      .select("planner_role")
-      .eq("id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!cancelled) setShowTutorNav(data?.planner_role === "tutor");
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [user]);
-
-  const tutorNavVisible = Boolean(user && showTutorNav);
+  // planner_role rides along on the profile AuthContext already loads - no extra fetch.
+  const tutorNavVisible = Boolean(user && profile?.planner_role === "tutor");
 
   const toggleSidebarCollapsed = () => {
     setSidebarCollapsed((prev) => {

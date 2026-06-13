@@ -55,6 +55,16 @@ export const GENERATE_PROFILES: Record<string, TrainerGenerateProfile> = {
     batchSize: 5,
     requiresGoldExamples: true,
   },
+  "vr-passages": {
+    trainerType: "vr-passages",
+    slug: "vr-passages",
+    label: "VR · Passages",
+    questionKind: "true-false-ct",
+    plugins: ["vr-structure"],
+    // Each item is a full passage plus four questions, so keep batches small.
+    batchSize: 3,
+    requiresGoldExamples: true,
+  },
   "qr-conversions": {
     trainerType: "qr-conversions",
     slug: "qr-conversions",

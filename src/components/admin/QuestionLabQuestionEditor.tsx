@@ -134,8 +134,8 @@ export default function QuestionLabQuestionEditor({ row, saving, onSave }: Props
     }
 
     if (isNumeric) {
-      if (correctAnswer.trim()) patch.correctAnswer = Number(correctAnswer);
-      if (units.trim()) patch.units = units.trim();
+      if (canEditAll && correctAnswer.trim()) patch.correctAnswer = Number(correctAnswer);
+      if (canEditAll && units.trim()) patch.units = units.trim();
       patch.explanation = {
         method: {
           target: methodTarget.trim(),

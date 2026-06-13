@@ -11,6 +11,7 @@ import { TRAINING_TYPE_LABELS } from "../types/training";
 import { useAuth } from "../hooks/useAuth";
 import { saveMentalMathsSession } from "../utils/analyticsStorage";
 import { appendGuestSession } from "../lib/guestSessions";
+import { newClientSessionId } from "../lib/trainerSessionLog";
 import type { MentalMathsSummaryStats } from "../hooks/useMentalMathsLogic";
 import SEOHead from "../components/seo/SEOHead";
 import TrainerFaqSection from "../components/seo/TrainerFaqSection";
@@ -48,18 +49,22 @@ export default function MentalMathsPage() {
   const handleSessionComplete = useCallback(
     (stats: MentalMathsSummaryStats) => {
       clearActiveTrainer();
+      // One id per completed run: results-phase retries can't double-log it.
+      const clientSessionId = newClientSessionId();
       if (user) {
-        saveMentalMathsSession(stats, user.id).then((ok) => {
+        saveMentalMathsSession(stats, user.id, clientSessionId).then((ok) => {
           if (!ok) showToast("Couldn't save your session. Please check your connection.", { variant: "error" });
         });
       } else {
         appendGuestSession({
           training_type: "mental_maths",
           difficulty: difficultyFromStageIndex(stats.stageIndex),
-          wpm: Math.round(stats.avgTimeMs),
+          wpm: null,
+          avg_ms: Math.round(stats.avgTimeMs),
           correct: stats.correct,
           total: stats.total,
           time_seconds: Math.round((stats.avgTimeMs * stats.total) / 1000) || 1,
+          client_session_id: clientSessionId,
         });
       }
     },

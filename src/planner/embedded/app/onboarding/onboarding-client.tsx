@@ -7,9 +7,8 @@ import { OnboardingState, TimeAwayPeriod, CurrentSituation, SchoolYear } from '@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Slider } from '@/components/ui/slider'
 import { createClient } from '@/lib/supabase/client'
-import { parseDate, toISODate, weeksUntil, DAY_NAMES_FULL } from '@/lib/utils'
+import { calendarDaysBetween, parseDate, toISODate, weeksUntil, DAY_NAMES_FULL } from '@/lib/utils'
 import { buildGuestPlannerFromOnboarding } from '@/lib/build-guest-plan'
 import { getGuestPlanner, saveGuestPlanner } from '@/lib/guest-planner-store'
 import { createPlanFromOnboarding } from '@/lib/create-plan-from-onboarding'
@@ -502,7 +501,14 @@ function Step3({
           })}
         </div>
       </div>
-      {warning && (
+      {state.examDate && calendarDaysBetween(new Date(), parseDate(state.examDate)) < 14 && (
+        <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800">
+          ⚠️ Your exam is only {calendarDaysBetween(new Date(), parseDate(state.examDate))} days away.
+          Expect an intense schedule: several mocks a week and full use of your stated study hours
+          from day one. Double-check the date — if it's right, we'll make every day count.
+        </div>
+      )}
+      {warning && state.examDate && calendarDaysBetween(new Date(), parseDate(state.examDate)) >= 14 && (
         <div className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
           ⚠️ Your exam is fewer than 3 weeks away. Your plan will be compressed and mock-heavy from day one.
         </div>
@@ -541,29 +547,35 @@ function Step4({
       {sections.map(({ key, label }) => {
         const isAnswered = answered[key]
         return (
-          <div key={key} className="space-y-2">
-            <Slider
-              label={`${label} *`}
-              value={state.confidence[key]}
-              min={1}
-              max={5}
-              lowLabel="Not confident"
-              highLabel="Very confident"
-              onChange={v => {
-                onUpdate({ confidence: { ...state.confidence, [key]: v } })
-                onAnswer(key)
-              }}
-            />
-            {!isAnswered && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onAnswer(key)}
-                className="h-8 px-3 text-xs"
-              >
-                Confirm {state.confidence[key]}
-              </Button>
-            )}
+          <div key={key} className="space-y-1.5">
+            <label className="text-sm font-medium text-foreground block">{label} *</label>
+            <div className="grid grid-cols-5 gap-2">
+              {[1, 2, 3, 4, 5].map((v) => {
+                const selected = isAnswered && state.confidence[key] === v
+                return (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => {
+                      onUpdate({ confidence: { ...state.confidence, [key]: v } })
+                      onAnswer(key)
+                    }}
+                    className={`h-10 rounded-lg border text-sm font-semibold transition-colors ${
+                      selected
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-border bg-background text-foreground hover:bg-secondary'
+                    }`}
+                    aria-pressed={selected}
+                  >
+                    {v}
+                  </button>
+                )
+              })}
+            </div>
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>Not confident</span>
+              <span>Very confident</span>
+            </div>
           </div>
         )
       })}
@@ -604,7 +616,7 @@ function Step5({
           }}
         />
         <p className="text-xs text-muted-foreground">
-          We'll start at about half this and ramp up each week. Pick an ambitious max - you can always lower it later.
+          We'll start at about half this and ramp up each week, peaking at your stated max (never beyond it) in the final three weeks. Pick an ambitious max - you can always lower it later.
         </p>
       </div>
     )
@@ -683,7 +695,7 @@ function Step5({
           }}
         />
         <p className="text-xs text-muted-foreground mt-2">
-          We'll start at about half this and ramp up each week. Pick something ambitious.
+          We'll start at about half this and ramp up each week, peaking at your stated max (never beyond it) in the final three weeks. Pick something ambitious.
         </p>
       </div>
     </div>
@@ -878,6 +890,13 @@ function Step7({
           </button>
         ))}
       </div>
+      {state.restDays.length > 4 && (
+        <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-800">
+          With {state.restDays.length} rest days there are only {7 - state.restDays.length} study
+          day{7 - state.restDays.length === 1 ? '' : 's'} a week — not enough to prepare properly.
+          Please keep at least 3 days a week for study.
+        </div>
+      )}
       <p className="text-xs text-muted-foreground">
         {!answered
           ? 'Choose at least one rest day or confirm that you do not need any.'
@@ -972,7 +991,8 @@ function canAdvance(step: number, state: OnboardingState, requiredAnswers: Requi
     return requiredAnswers.schoolDayHours && requiredAnswers.weekendHours
   }
   if (step === 6) return requiredAnswers.timeAway
-  if (step === 7) return requiredAnswers.restDays
+  // Cap rest days at 4 so the generated plan always has at least 3 study days a week.
+  if (step === 7) return requiredAnswers.restDays && state.restDays.length <= 4
   return true
 }
 

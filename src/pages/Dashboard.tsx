@@ -40,6 +40,7 @@ import {
   ucatExamDayRangeInMonth,
 } from "../lib/ucatExamWindow";
 import { getGuestSessions } from "../lib/guestSessions";
+import { buildVrCategoryStats, deriveVrInsight } from "../lib/vrCategoryInsights";
 import { getConversionTrainerDetailSessions } from "../lib/conversionTrainerStorage";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 import { trackEvent } from "../lib/analytics";
@@ -95,11 +96,15 @@ type GuestDashboardSummary = {
   speedReadingCount: number;
   rapidRecallCount: number;
   keywordScanningCount: number;
+  inferenceTrainerCount: number;
+  calculatorCount: number;
   mentalMathsCount: number;
   unitConversionsCount: number;
   averageWpm: number | null;
   rapidRecallAvgAccuracy: number | null;
   keywordScanningAvgAccuracy: number | null;
+  inferenceTrainerAvgAccuracy: number | null;
+  calculatorAvgKps: string | null;
 };
 
 function getTrainingType(s: SessionRow): TrainingType {
@@ -107,6 +112,22 @@ function getTrainingType(s: SessionRow): TrainingType {
   if (t === "speed_reading" || t === "rapid_recall" || t === "keyword_scanning" || t === "calculator" || t === "inference_trainer" || t === "mental_maths" || t === "unit_conversions")
     return t;
   return "speed_reading";
+}
+
+/**
+ * Calculator keystrokes-per-second. Cloud rows are migrated to the `kps` column
+ * (wpm is null); the `wpm` fallback exists only for legacy guest localStorage entries.
+ */
+function getCalculatorKps(s: Pick<SessionRow, "wpm" | "kps">): number | null {
+  return s.kps ?? s.wpm;
+}
+
+/**
+ * Mental maths average ms per question. Cloud rows are migrated to the `avg_ms` column
+ * (wpm is null); the `wpm` fallback exists only for legacy guest localStorage entries.
+ */
+function getMentalMathsAvgMs(s: Pick<SessionRow, "wpm" | "avg_ms">): number | null {
+  return s.avg_ms ?? s.wpm;
 }
 
 function formatSessionScore(session: SessionRow): string {
@@ -117,7 +138,7 @@ function formatSessionScore(session: SessionRow): string {
     return `${wpm} WPM`;
   }
   if (type === "calculator") {
-    const kps = session.wpm != null ? session.wpm : 0;
+    const kps = getCalculatorKps(session) ?? 0;
     return `${kps} KPS, ${pct}%`;
   }
   if (type === "mental_maths" || type === "unit_conversions") {
@@ -479,7 +500,7 @@ export default function Dashboard() {
       try {
         const { data, error: err } = await supabase
           .from("sessions")
-          .select("id, user_id, training_type, difficulty, wpm, correct, total, created_at, passage_id, time_seconds")
+          .select("id, user_id, training_type, difficulty, wpm, kps, avg_ms, correct, total, created_at, passage_id, time_seconds")
           .eq("user_id", userId)
           .order("created_at", { ascending: true })
           .abortSignal(abortController.signal);
@@ -618,6 +639,8 @@ export default function Dashboard() {
     const speed = guestSessions.filter((s) => s.training_type === "speed_reading");
     const rapid = guestSessions.filter((s) => s.training_type === "rapid_recall");
     const keyword = guestSessions.filter((s) => s.training_type === "keyword_scanning");
+    const inference = guestSessions.filter((s) => s.training_type === "inference_trainer");
+    const calculator = guestSessions.filter((s) => s.training_type === "calculator");
     const mentalMaths = guestSessions.filter((s) => s.training_type === "mental_maths");
     const unitConversions = guestSessions.filter((s) => s.training_type === "unit_conversions");
     const wpmValues = speed.map((s) => s.wpm ?? 0).filter((n) => Number.isFinite(n) && n > 0);
@@ -629,16 +652,30 @@ export default function Dashboard() {
     const rapidRecallAvgAccuracy = rapidAccValues.length > 0 ? Math.round(rapidAccValues.reduce((a, b) => a + b, 0) / rapidAccValues.length) : null;
     const kwAccValues = keyword.filter((s) => s.total > 0).map((s) => (s.correct / s.total) * 100);
     const keywordScanningAvgAccuracy = kwAccValues.length > 0 ? Math.round(kwAccValues.reduce((a, b) => a + b, 0) / kwAccValues.length) : null;
+    const inferenceAccValues = inference.filter((s) => s.total > 0).map((s) => (s.correct / s.total) * 100);
+    const inferenceTrainerAvgAccuracy = inferenceAccValues.length > 0 ? Math.round(inferenceAccValues.reduce((a, b) => a + b, 0) / inferenceAccValues.length) : null;
+    // Guest entries may still carry KPS in the legacy wpm slot
+    const calcKpsValues = calculator
+      .map((s) => getCalculatorKps(s) ?? 0)
+      .filter((n) => Number.isFinite(n) && n > 0);
+    const calculatorAvgKps =
+      calcKpsValues.length > 0
+        ? (calcKpsValues.reduce((sum, n) => sum + n, 0) / calcKpsValues.length).toFixed(1)
+        : null;
     setGuestSummary({
       totalSessions: guestSessions.length + guestSjt.length,
       speedReadingCount: speed.length,
       rapidRecallCount: rapid.length,
       keywordScanningCount: keyword.length,
+      inferenceTrainerCount: inference.length,
+      calculatorCount: calculator.length,
       mentalMathsCount: mentalMaths.length,
       unitConversionsCount: unitConversions.length,
       averageWpm,
       rapidRecallAvgAccuracy,
       keywordScanningAvgAccuracy,
+      inferenceTrainerAvgAccuracy,
+      calculatorAvgKps,
     });
     dashboardLog.info("Dashboard ready (guest)", {
       guest_session_count: guestSessions.length,
@@ -692,11 +729,11 @@ export default function Dashboard() {
     [byType.inference_trainer],
   );
   const calcKpsDelta = useMemo(
-    () => computeRollingDelta(byType.calculator, (s) => s.wpm),
+    () => computeRollingDelta(byType.calculator, (s) => getCalculatorKps(s)),
     [byType.calculator],
   );
   const mentalMathsTimeDelta = useMemo(
-    () => computeRollingDelta(byType.mental_maths, (s) => s.wpm),
+    () => computeRollingDelta(byType.mental_maths, (s) => getMentalMathsAvgMs(s)),
     [byType.mental_maths],
   );
 
@@ -731,6 +768,19 @@ export default function Dashboard() {
     hasSetSmartDefault.current = true;
   // eslint-disable-next-line react-hooks/exhaustive-deps -- isValidTab is a pure inline predicate; adding it would cause infinite re-runs
   }, [loading, byType, syllogismSessions, sjtSessions, DASHBOARD_TAB_KEY]);
+
+  // Per-category VR insight, built from the rows already fetched (or guest
+  // localStorage sessions) - no extra network call.
+  const vrCategoryStats = useMemo(() => {
+    const vrTypes = new Set<string>(["speed_reading", "rapid_recall", "keyword_scanning", "inference_trainer"]);
+    const rows = userId
+      ? sessions.filter((s) => vrTypes.has(s.training_type))
+      : getGuestSessions().filter((s) => vrTypes.has(s.training_type));
+    return buildVrCategoryStats(
+      rows.map((s) => ({ passage_id: s.passage_id ?? null, correct: s.correct, total: s.total })),
+    );
+  }, [userId, sessions]);
+  const vrCategoryInsight = useMemo(() => deriveVrInsight(vrCategoryStats), [vrCategoryStats]);
 
   const speedReadingSessions = byType.speed_reading;
   const lastSpeedSession = speedReadingSessions[speedReadingSessions.length - 1];
@@ -901,10 +951,10 @@ export default function Dashboard() {
       )
       : 0;
 
-  // WPM column stores KPS for calculator
+  // Calculator speed lives in the kps column (legacy wpm fallback for guest rows)
   const calculatorKpsValues = calculatorSessions
-    .filter(s => s.wpm != null)
-    .map(s => s.wpm ?? 0);
+    .filter(s => getCalculatorKps(s) != null)
+    .map(s => getCalculatorKps(s) ?? 0);
 
   const calculatorAvgKps =
     calculatorKpsValues.length > 0
@@ -917,10 +967,10 @@ export default function Dashboard() {
       : "0.0";
 
   const calculatorChartData: ChartPoint[] = calculatorSessions
-    .filter((s) => s.wpm != null)
+    .filter((s) => getCalculatorKps(s) != null)
     .map((s) => ({
       date: s.created_at,
-      wpm: s.wpm ?? 0, // This is KPS
+      wpm: getCalculatorKps(s) ?? 0, // This is KPS
       displayDate: new Date(s.created_at).toLocaleDateString(undefined, {
         month: "short",
         day: "numeric",
@@ -936,7 +986,7 @@ export default function Dashboard() {
         breakdown[mode] = { count: 0, kpsSum: 0, accSum: 0 };
       }
       breakdown[mode].count++;
-      breakdown[mode].kpsSum += s.wpm ?? 0;
+      breakdown[mode].kpsSum += getCalculatorKps(s) ?? 0;
       breakdown[mode].accSum += s.total > 0 ? (s.correct / s.total) * 100 : 0;
     }
 
@@ -961,18 +1011,18 @@ export default function Dashboard() {
             mentalMathsSessions.length)
         )
       : 0;
-  // wpm column stores average time per question in ms for mental_maths
-  const mentalMathsWithWpm = mentalMathsSessions.filter((s) => s.wpm != null);
+  // avg_ms column stores average time per question in ms for mental_maths (legacy wpm fallback for guest rows)
+  const mentalMathsWithAvgMs = mentalMathsSessions.filter((s) => getMentalMathsAvgMs(s) != null);
   const mentalMathsAvgTimeMs =
-    mentalMathsWithWpm.length > 0
-      ? Math.round(mentalMathsWithWpm.reduce((sum, s) => sum + (s.wpm ?? 0), 0) / mentalMathsWithWpm.length)
+    mentalMathsWithAvgMs.length > 0
+      ? Math.round(mentalMathsWithAvgMs.reduce((sum, s) => sum + (getMentalMathsAvgMs(s) ?? 0), 0) / mentalMathsWithAvgMs.length)
       : null;
   const mentalMathsChartData: ChartPoint[] = mentalMathsSessions
-    .filter((s) => s.wpm != null)
+    .filter((s) => getMentalMathsAvgMs(s) != null)
     .slice(-10) // last 10 sessions (sessions are ordered created_at ascending)
     .map((s) => ({
       date: s.created_at,
-      wpm: s.wpm ?? 0,
+      wpm: getMentalMathsAvgMs(s) ?? 0,
       displayDate: new Date(s.created_at).toLocaleDateString(undefined, {
         month: "short",
         day: "numeric",
@@ -1355,6 +1405,20 @@ export default function Dashboard() {
                 <p className="text-xs text-muted-foreground mt-1">Avg accuracy: {guestSummary.keywordScanningAvgAccuracy}%</p>
               )}
             </div>
+            <div className="bg-card rounded-xl border border-border p-5">
+              <p className="text-sm font-medium text-muted-foreground">Inference Trainer</p>
+              <p className="text-2xl font-bold text-foreground">{guestSummary.inferenceTrainerCount}</p>
+              {guestSummary.inferenceTrainerAvgAccuracy != null && (
+                <p className="text-xs text-muted-foreground mt-1">Avg accuracy: {guestSummary.inferenceTrainerAvgAccuracy}%</p>
+              )}
+            </div>
+            <div className="bg-card rounded-xl border border-border p-5">
+              <p className="text-sm font-medium text-muted-foreground">Calculator</p>
+              <p className="text-2xl font-bold text-foreground">{guestSummary.calculatorCount}</p>
+              {guestSummary.calculatorAvgKps != null && (
+                <p className="text-xs text-muted-foreground mt-1">Avg speed: {guestSummary.calculatorAvgKps} KPS</p>
+              )}
+            </div>
             {/* QR guest summary */}
             <div className="bg-card rounded-xl border border-border p-5">
               <p className="text-sm font-medium text-muted-foreground">QR skills</p>
@@ -1705,6 +1769,34 @@ export default function Dashboard() {
               {/* VR: Speed Reading · Rapid Recall · Keyword Scanning · Inference */}
               {activeTab === "vr" && (
                 <div className="space-y-8">
+                  {vrCategoryStats.length >= 2 && (
+                    <section>
+                      <div className="bg-card rounded-xl border border-border p-4">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
+                          Verbal reasoning focus
+                        </p>
+                        {vrCategoryInsight != null && (
+                          <p className="text-sm text-foreground mb-3">{vrCategoryInsight.message}</p>
+                        )}
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {vrCategoryStats.map((stat) => (
+                            <span
+                              key={stat.category}
+                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary text-foreground"
+                            >
+                              {stat.category}: {stat.accuracyPct}% over {stat.attempts} passage{stat.attempts !== 1 ? "s" : ""}
+                            </span>
+                          ))}
+                        </div>
+                        <Link
+                          to="/ucat-verbal-reasoning-practice"
+                          className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                        >
+                          Practise verbal reasoning →
+                        </Link>
+                      </div>
+                    </section>
+                  )}
                   <section>
                     <div className="flex items-center justify-between mb-4">
                       <h2 className="text-lg font-semibold text-foreground">

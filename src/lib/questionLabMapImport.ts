@@ -197,6 +197,91 @@ function mapConversion(raw: Record<string, unknown>, meta: TrainerMeta): ImportD
   };
 }
 
+const VR_TFCT_ANSWERS = new Set(["True", "False", "Can't tell"]);
+
+function mapVrPassage(raw: Record<string, unknown>, meta: TrainerMeta): ImportDraftPayload | string {
+  const legacy_id = str(raw.legacy_id) || str(raw.id);
+  if (!legacy_id) return "Missing id or legacy_id";
+
+  const contentObj = asRecord(raw.content);
+  const passage = str(raw.passage) || str(contentObj?.passage);
+  const title = str(raw.title) || str(contentObj?.title);
+  const category = str(raw.category) || str(contentObj?.category);
+  const questions = (raw.questions ?? contentObj?.questions) as unknown;
+
+  if (!passage || !title) return "VR passage set needs passage and title";
+  const words = passage.trim().split(/\s+/).filter(Boolean).length;
+  if (words < 200 || words > 450) {
+    return `Passage is ${words} words; target 260-400`;
+  }
+  if (!Array.isArray(questions) || questions.length !== 4) {
+    return "VR passage set needs exactly 4 questions";
+  }
+
+  const mappedQuestions: Record<string, unknown>[] = [];
+  for (let i = 0; i < questions.length; i++) {
+    const q = asRecord(questions[i]);
+    if (!q) return `Question ${i + 1} is not an object`;
+    const type = str(q.type) || "tfct";
+    const explanation = str(q.explanation);
+    if (!explanation) return `Question ${i + 1} missing explanation`;
+    if (type === "tfct") {
+      const statement = str(q.statement);
+      const answer = str(q.answer);
+      if (!statement || !VR_TFCT_ANSWERS.has(answer)) {
+        return `Question ${i + 1}: tfct needs statement and answer True/False/Can't tell`;
+      }
+      mappedQuestions.push({
+        type: "tfct",
+        questionCategory: str(q.questionCategory) || "standard",
+        statement: sanitizeStudentFacingCopy(statement),
+        answer,
+        explanation: sanitizeStudentFacingCopy(explanation),
+      });
+    } else if (type === "mc4") {
+      const stem = str(q.stem);
+      const options = Array.isArray(q.options) ? q.options.map((o) => str(o)) : [];
+      const answer = str(q.answer);
+      if (!stem || options.length !== 4 || options.some((o) => !o) || !options.includes(answer)) {
+        return `Question ${i + 1}: mc4 needs stem, 4 options, and answer matching one option`;
+      }
+      mappedQuestions.push({
+        type: "mc4",
+        questionCategory: str(q.questionCategory) || "standard",
+        stem: sanitizeStudentFacingCopy(stem),
+        options: options.map((o) => sanitizeStudentFacingCopy(o)),
+        answer,
+        explanation: sanitizeStudentFacingCopy(explanation),
+      });
+    } else {
+      return `Question ${i + 1}: unknown type '${type}'`;
+    }
+  }
+
+  const content = sanitizeQuestionContent(
+    {
+      title: sanitizeStudentFacingCopy(title),
+      passage: sanitizeStudentFacingCopy(passage),
+      category: category || "Science",
+      wordCount: words,
+      questions: mappedQuestions,
+    },
+    meta.questionKind,
+  );
+
+  return {
+    legacy_id,
+    section: meta.section,
+    trainer_type: meta.trainerType,
+    question_kind: meta.questionKind,
+    difficulty: normalizeImportDifficulty(raw.difficulty),
+    skill_tag: str(raw.skill_tag) || str(raw.skillTag) || (category || "passage").toLowerCase(),
+    stem: sanitizeStudentFacingCopy(title),
+    explanation: "See per-question explanations in content.",
+    content,
+  };
+}
+
 /** Map one AI-generated question object to an import draft row. */
 export function mapRawQuestionForImport(
   raw: Record<string, unknown>,
@@ -210,5 +295,6 @@ export function mapRawQuestionForImport(
   if (meta.section === "dm") return mapDmMcq(raw, meta);
   if (meta.section === "sjt") return mapSjt(raw, meta);
   if (meta.trainerType === "qr-conversions") return mapConversion(raw, meta);
+  if (meta.trainerType === "vr-passages") return mapVrPassage(raw, meta);
   return "Unsupported trainer for import mapping.";
 }

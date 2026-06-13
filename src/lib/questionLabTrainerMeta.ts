@@ -95,11 +95,11 @@ export const TRAINER_META: Record<string, TrainerMeta> = {
     label: "VR · Passages",
     section: "vr",
     questionKind: "true-false-ct",
-    supportsImport: false,
-    supportsGenerate: false,
+    supportsImport: true,
+    supportsGenerate: true,
     supportsLocalBank: false,
     importHint:
-      "Full passages need a dedicated import flow. Use DM trainers for now.",
+      "One item per passage set: { title, category, passage (260-400 words), questions: [4 x tfct or mc4] }.",
   },
   "qr-conversions": {
     trainerType: "qr-conversions",

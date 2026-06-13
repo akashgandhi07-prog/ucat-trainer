@@ -15,6 +15,7 @@ import "../../../src/lib/questionLabGenerate/plugins/index.ts";
 import "../../../src/lib/questionLabGenerate/plugins/numeric.ts";
 import "../../../src/lib/questionLabGenerate/plugins/setLogic.ts";
 import "../../../src/lib/questionLabGenerate/plugins/sjtStructure.ts";
+import "../../../src/lib/questionLabGenerate/plugins/vrStructure.ts";
 import "../../../src/lib/questionLabGenerate/prompts.ts";
 import "../../../src/lib/questionLabGenerate/repair.ts";
 import "../../../src/lib/questionLabGenerate/types.ts";

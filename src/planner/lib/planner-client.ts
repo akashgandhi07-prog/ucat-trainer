@@ -1,4 +1,5 @@
-import type { MockSource, MockType } from '../embedded/types'
+import { toast } from 'sonner'
+import type { DateRange, MockSource, MockType, TimeAwayPeriod } from '../embedded/types'
 import { PLAN_TIMETABLE_TABLE } from '../embedded/lib/planner-db-tables'
 import { weekNumberForCalendarDate } from '../embedded/lib/week-for-plan-date'
 import { toISODate } from '../embedded/lib/utils'
@@ -38,6 +39,44 @@ export async function getCurrentUserId(): Promise<string> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthorized')
   return user.id
+}
+
+async function regenerateFromDate(
+  planId: string,
+  fromDate: string,
+  fallbackWeek?: number,
+): Promise<void> {
+  const { data: weeks } = await supabase
+    .from('plan_weeks')
+    .select('week_number, week_start')
+    .eq('plan_id', planId)
+  const weekNum = weekNumberForCalendarDate(weeks ?? [], fromDate) ?? fallbackWeek ?? null
+  if (weekNum != null) await regenerateFutureWeeks(planId, weekNum)
+}
+
+// Regeneration rewrites future plan_weeks/plan_days/session rows, so two runs for
+// the same plan must never interleave their deletes and inserts. Chain per plan.
+const regenChains = new Map<string, Promise<void>>()
+
+/**
+ * Rebuild future weeks in the background so saves can return as soon as the change
+ * itself is persisted. Planner views refresh when it finishes; failures are shown
+ * to the user instead of being swallowed.
+ */
+function scheduleRegenerateFromDate(planId: string, fromDate: string, fallbackWeek?: number): void {
+  const prev = regenChains.get(planId) ?? Promise.resolve()
+  const run = prev.catch(() => {}).then(() => regenerateFromDate(planId, fromDate, fallbackWeek))
+  regenChains.set(planId, run)
+  void run
+    .then(() => {
+      window.dispatchEvent(new CustomEvent('planner-refresh'))
+    })
+    .catch((e: unknown) => {
+      console.error('Plan regeneration failed', e)
+      toast.error(
+        'Your change was saved, but rescheduling your upcoming weeks failed. Please refresh the page and try again.',
+      )
+    })
 }
 
 export async function completeSession(input: {
@@ -100,6 +139,12 @@ export async function updatePlanDay(input: {
   customHours?: number | null
 }): Promise<void> {
   const userId = await getCurrentUserId()
+  if (input.availability === 'reduced' && input.customHours != null) {
+    const h = Number(input.customHours)
+    if (!Number.isFinite(h) || h < 0.5 || h > 8) {
+      throw new Error('Custom hours must be between 0.5 and 8.')
+    }
+  }
   const gate = await requireStudentOrTutorPlan(input.planId, userId)
   if (!gate.ok) throw new Error(gate.message)
 
@@ -110,25 +155,172 @@ export async function updatePlanDay(input: {
     input.availability === 'reduced' ? input.customHours ?? null : null,
   )
 
-  const { data: weeks } = await supabase
-    .from('plan_weeks')
-    .select('week_number, week_start')
-    .eq('plan_id', input.planId)
+  scheduleRegenerateFromDate(input.planId, input.dayDate)
+}
 
-  const weekNum = weekNumberForCalendarDate(weeks ?? [], input.dayDate)
-  if (weekNum != null) {
-    try {
-      await regenerateFutureWeeks(input.planId, weekNum)
-    } catch {
-      /* non-fatal */
+/** Block (or unblock) a single calendar day, then rebuild future weeks in the background. */
+export async function setDayBlocked(input: {
+  planId: string
+  dayDate: string
+  blocked: boolean
+}): Promise<void> {
+  const userId = await getCurrentUserId()
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.dayDate) || isNaN(Date.parse(input.dayDate))) {
+    throw new Error('dayDate must be a valid ISO date (YYYY-MM-DD)')
+  }
+  const gate = await requireStudentOrTutorPlan(input.planId, userId)
+  if (!gate.ok) throw new Error(gate.message)
+
+  if (input.blocked) {
+    const { error: upErr } = await supabase.from('plan_days').upsert(
+      {
+        plan_id: input.planId,
+        day_date: input.dayDate,
+        availability: 'unavailable' as const,
+        is_rest: true,
+        custom_hours: null,
+      },
+      { onConflict: 'plan_id,day_date' },
+    )
+    if (upErr) throw new Error(upErr.message)
+    const { error: delErr } = await supabase
+      .from(PLAN_TIMETABLE_TABLE)
+      .delete()
+      .eq('plan_id', input.planId)
+      .eq('day_date', input.dayDate)
+    if (delErr) throw new Error(delErr.message)
+  } else {
+    const { data: existing } = await supabase
+      .from('plan_days')
+      .select('id, availability')
+      .eq('plan_id', input.planId)
+      .eq('day_date', input.dayDate)
+      .maybeSingle()
+    if (existing && existing.availability === 'unavailable') {
+      const { error } = await supabase.from('plan_days').delete().eq('id', existing.id)
+      if (error) throw new Error(error.message)
     }
   }
+
+  scheduleRegenerateFromDate(input.planId, input.dayDate)
+}
+
+function eachDay(start: string, end: string): string[] {
+  const days: string[] = []
+  const cur = new Date(start)
+  const last = new Date(end)
+  while (cur <= last) {
+    days.push(cur.toISOString().slice(0, 10))
+    cur.setDate(cur.getDate() + 1)
+  }
+  return days
+}
+
+/**
+ * Persist time-away periods: holidays go on the plan row (the engine reduces hours),
+ * busy periods become fully blocked plan_days. Optionally rebuilds future weeks
+ * (in the background) from the given date.
+ */
+export async function saveTimeAwayPeriods(input: {
+  planId: string
+  periods: TimeAwayPeriod[]
+  regenerateFromDate?: string | null
+}): Promise<void> {
+  const userId = await getCurrentUserId()
+  const gate = await requireStudentOrTutorPlan(input.planId, userId)
+  if (!gate.ok) throw new Error(gate.message)
+
+  const holidayPeriods: DateRange[] = input.periods.filter((p) => p.kind === 'holiday')
+  const busyPeriods: DateRange[] = input.periods.filter((p) => p.kind === 'busy')
+
+  const { error: planErr } = await supabase
+    .from('plans')
+    .update({ holiday_periods: holidayPeriods })
+    .eq('id', input.planId)
+  if (planErr) throw new Error(planErr.message)
+
+  const busyDates = new Set<string>()
+  for (const p of busyPeriods) {
+    for (const d of eachDay(p.start, p.end)) busyDates.add(d)
+  }
+
+  const { data: existingBusyDays } = await supabase
+    .from('plan_days')
+    .select('id, day_date')
+    .eq('plan_id', input.planId)
+    .eq('is_rest', true)
+    .eq('availability', 'unavailable')
+
+  const existingDates = new Set((existingBusyDays ?? []).map((d) => d.day_date))
+  const existingById = new Map((existingBusyDays ?? []).map((d) => [d.day_date, d.id]))
+
+  const toDelete = [...existingDates].filter((d) => !busyDates.has(d))
+  if (toDelete.length > 0) {
+    const idsToDelete = toDelete.map((d) => existingById.get(d)!).filter(Boolean)
+    if (idsToDelete.length) {
+      const { error } = await supabase.from('plan_days').delete().in('id', idsToDelete)
+      if (error) throw new Error(error.message)
+    }
+  }
+
+  const toAdd = [...busyDates].filter((d) => !existingDates.has(d))
+  if (toAdd.length > 0) {
+    const { error: addErr } = await supabase.from('plan_days').upsert(
+      toAdd.map((day_date) => ({
+        plan_id: input.planId,
+        day_date,
+        availability: 'unavailable' as const,
+        is_rest: true,
+        custom_hours: null,
+      })),
+      { onConflict: 'plan_id,day_date' },
+    )
+    if (addErr) throw new Error(addErr.message)
+    const { error: sessErr } = await supabase
+      .from(PLAN_TIMETABLE_TABLE)
+      .delete()
+      .eq('plan_id', input.planId)
+      .in('day_date', toAdd)
+    if (sessErr) throw new Error(sessErr.message)
+  }
+
+  if (input.regenerateFromDate) {
+    scheduleRegenerateFromDate(input.planId, input.regenerateFromDate)
+  }
+}
+
+/** Create a one-time tutor → student invite link (requires planner_role = tutor). */
+export async function createTutorInviteLink(): Promise<{ token: string; inviteUrl: string }> {
+  const userId = await getCurrentUserId()
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('planner_role')
+    .eq('id', userId)
+    .maybeSingle()
+  if (profile?.planner_role !== 'tutor') throw new Error('Only tutors can create invite links')
+
+  const bytes = new Uint8Array(24)
+  crypto.getRandomValues(bytes)
+  const token = btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '')
+
+  const { error } = await supabase.from('student_invite_links').insert({
+    token,
+    tutor_id: userId,
+  })
+  if (error) throw new Error(error.message)
+
+  return { token, inviteUrl: `${window.location.origin}/join/${token}` }
 }
 
 export async function updateExamDateTime(input: {
   planId: string
   examDate: string
   examTime: string | null
+  ucatSen?: boolean
   regenerate?: boolean
 }): Promise<void> {
   const userId = await getCurrentUserId()
@@ -142,12 +334,14 @@ export async function updateExamDateTime(input: {
     )
   }
 
+  const planPatch: { exam_date: string; exam_time: string | null; ucat_sen?: boolean } = {
+    exam_date: examIso,
+    exam_time: input.examTime || null,
+  }
+  if (typeof input.ucatSen === 'boolean') planPatch.ucat_sen = input.ucatSen
   const { error: planErr } = await supabase
     .from('plans')
-    .update({
-      exam_date: examIso,
-      exam_time: input.examTime || null,
-    })
+    .update(planPatch)
     .eq('id', input.planId)
   if (planErr) throw new Error(planErr.message)
 
@@ -164,12 +358,7 @@ export async function updateExamDateTime(input: {
   if (profileErr) throw new Error(profileErr.message)
 
   if (input.regenerate ?? true) {
-    const { data: weeks } = await supabase
-      .from('plan_weeks')
-      .select('week_number, week_start')
-      .eq('plan_id', input.planId)
-    const currentWeek = weekNumberForCalendarDate(weeks ?? [], toISODate(new Date())) ?? 1
-    await regenerateFutureWeeks(input.planId, currentWeek)
+    scheduleRegenerateFromDate(input.planId, toISODate(new Date()), 1)
   }
 }
 
@@ -379,9 +568,19 @@ export async function saveWeeklyReflection(input: {
   )
   if (error) throw new Error(error.message)
 
-  try {
-    await regenerateFutureWeeks(input.planId, input.weekNumber + 1)
-  } catch {
-    /* non-fatal */
-  }
+  const prev = regenChains.get(input.planId) ?? Promise.resolve()
+  const run = prev
+    .catch(() => {})
+    .then(() => regenerateFutureWeeks(input.planId, input.weekNumber + 1))
+  regenChains.set(input.planId, run)
+  void run
+    .then(() => {
+      window.dispatchEvent(new CustomEvent('planner-refresh'))
+    })
+    .catch((e: unknown) => {
+      console.error('Plan regeneration after reflection failed', e)
+      toast.error(
+        'Your reflection was saved, but rescheduling your upcoming weeks failed. Please refresh the page and try again.',
+      )
+    })
 }

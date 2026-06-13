@@ -11,11 +11,10 @@ import type { Passage } from "../data/passages";
 import { PASSAGES } from "../data/passages";
 import { getInferenceQuestionsForPassage, PASSAGE_IDS_WITH_INFERENCE } from "../data/inferenceQuestions";
 import type { InferenceQuestion, InferenceBreakdownItem } from "../types/inference";
-import type { SessionInsertPayload } from "../types/session";
 import { appendGuestSession } from "../lib/guestSessions";
-import { supabase } from "../lib/supabase";
+import { newClientSessionId, upsertTrainerSession } from "../lib/trainerSessionLog";
+import type { TrainerSessionUpsert } from "../lib/trainerSessionLog";
 import { supabaseLog } from "../lib/logger";
-import { withRetry } from "../lib/retry";
 import { getSessionSaveErrorMessage } from "../lib/sessionSaveError";
 import type { TrainingDifficulty } from "../types/training";
 import { getSiteBaseUrl } from "../lib/siteUrl";
@@ -27,6 +26,18 @@ import { trainerFaqs } from "../data/trainerFaqs";
 import { trackEvent, setActiveTrainer, clearActiveTrainer } from "../lib/analytics";
 
 type Phase = "active" | "results";
+
+// Timed mode: 60 seconds per question with auto-submit. Defaults to ON; the
+// student's choice persists across visits in localStorage.
+const TIMED_MODE_STORAGE_KEY = "inference_timed_mode";
+
+function readStoredTimedMode(): boolean {
+  try {
+    return localStorage.getItem(TIMED_MODE_STORAGE_KEY) !== "off";
+  } catch {
+    return true;
+  }
+}
 
 type LocationState = {
   trainingType: "inference_trainer";
@@ -76,13 +87,16 @@ export default function InferenceTrainerPage() {
     InferenceBreakdownItem[]
   >([]);
   const [quizKey, setQuizKey] = useState(0);
+  const [timedMode, setTimedMode] = useState<boolean>(() => readStoredTimedMode());
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const hasAutoSavedRef = useRef(false);
+  // Initialised in a mount effect below: impure calls aren't allowed during render.
+  const sessionIdRef = useRef("");
   const mountedRef = useRef(true);
-  const startTimeRef = useRef<number>(Date.now());
+  const startTimeRef = useRef<number>(0);
   const passagePickAbortRef = useRef<AbortController | null>(null);
   const { user } = useAuth();
 
@@ -137,22 +151,26 @@ export default function InferenceTrainerPage() {
 
   useEffect(() => {
     mountedRef.current = true;
+    if (!sessionIdRef.current) sessionIdRef.current = newClientSessionId();
+    if (!startTimeRef.current) startTimeRef.current = Date.now();
     return () => {
       mountedRef.current = false;
       passagePickAbortRef.current?.abort();
     };
   }, []);
 
-  // Keep latestRef current on every render so the exit handler always reads fresh values.
-  latestRef.current = {
-    runningCorrect,
-    runningTotal,
-    phase,
-    elapsedSeconds,
-    user,
-    difficulty,
-    passageId: passage?.id ?? null,
-  };
+  // Keep latestRef current after every render so the exit handler always reads fresh values.
+  useEffect(() => {
+    latestRef.current = {
+      runningCorrect,
+      runningTotal,
+      phase,
+      elapsedSeconds,
+      user,
+      difficulty,
+      passageId: passage?.id ?? null,
+    };
+  });
 
   // Autosave running progress on tab close or SPA navigation away (e.g. back to hub).
   // Only fires when in the active phase with at least one completed passage.
@@ -163,9 +181,8 @@ export default function InferenceTrainerPage() {
       if (p !== "active" || total <= 0) return;
       savedOnExitRef.current = true;
       if (u) {
-        void supabase.from("sessions").insert({
-          user_id: u.id,
-          training_type: "inference_trainer" as const,
+        void upsertTrainerSession(u.id, sessionIdRef.current, {
+          training_type: "inference_trainer",
           difficulty: diff,
           wpm: null,
           correct,
@@ -181,6 +198,7 @@ export default function InferenceTrainerPage() {
           correct,
           total,
           time_seconds: elapsed,
+          client_session_id: sessionIdRef.current,
         });
       }
     };
@@ -254,6 +272,18 @@ export default function InferenceTrainerPage() {
     [passage, pickAndSetNextPassage]
   );
 
+  const handleToggleTimedMode = useCallback(() => {
+    setTimedMode((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(TIMED_MODE_STORAGE_KEY, next ? "on" : "off");
+      } catch {
+        /* localStorage unavailable; the toggle still works for this visit */
+      }
+      return next;
+    });
+  }, []);
+
   const handleEndSession = useCallback(() => {
     setShowEndConfirm(true);
   }, []);
@@ -282,13 +312,13 @@ export default function InferenceTrainerPage() {
           correct: correctToSave,
           total: totalToSave,
           time_seconds: elapsedSeconds,
+          client_session_id: sessionIdRef.current,
         });
         return;
       }
       setSaveError(null);
       setSaving(true);
-      const payload: SessionInsertPayload = {
-        user_id: user.id,
+      const payload: TrainerSessionUpsert = {
         training_type: "inference_trainer",
         difficulty,
         wpm: null,
@@ -297,11 +327,8 @@ export default function InferenceTrainerPage() {
         passage_id: passage?.id ?? null,
         time_seconds: elapsedSeconds,
       };
-      try {
-        await withRetry(async () => {
-          const { error } = await supabase.from("sessions").insert(payload);
-          if (error) throw error;
-        });
+      const saved = await upsertTrainerSession(user.id, sessionIdRef.current, payload);
+      if (saved) {
         supabaseLog.info("Inference trainer session saved", {
           userId: user.id,
           correct: quizCorrect,
@@ -312,6 +339,8 @@ export default function InferenceTrainerPage() {
         if (!mountedRef.current) return;
         setSaveError(null);
         if (!opts?.skipRestart) {
+          sessionIdRef.current = newClientSessionId();
+          savedOnExitRef.current = false;
           setPhase("active");
           setQuizCorrect(0);
           setQuizTotal(0);
@@ -325,20 +354,11 @@ export default function InferenceTrainerPage() {
           setElapsedSeconds(0);
           pickAndSetNextPassage(passage?.id ?? null);
         }
-      } catch (err: unknown) {
-        const message =
-          err && typeof err === "object" && "message" in err
-            ? String((err as { message: string }).message)
-            : "Unknown error";
-        supabaseLog.error("Failed to save inference_trainer session", {
-          message,
-          userId: user.id,
-        });
+      } else {
         if (!mountedRef.current) return;
-        setSaveError(getSessionSaveErrorMessage(err));
-      } finally {
-        if (mountedRef.current) setSaving(false);
+        setSaveError(getSessionSaveErrorMessage(null));
       }
+      if (mountedRef.current) setSaving(false);
     },
     [
       user,
@@ -356,6 +376,8 @@ export default function InferenceTrainerPage() {
 
   const handleRestart = useCallback(() => {
     hasAutoSavedRef.current = false;
+    sessionIdRef.current = newClientSessionId();
+    savedOnExitRef.current = false;
     setPhase("active");
     setQuizCorrect(0);
     setQuizTotal(0);
@@ -374,6 +396,7 @@ export default function InferenceTrainerPage() {
     if (phase !== "results" || hasAutoSavedRef.current) return;
     hasAutoSavedRef.current = true;
     if (user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot auto-save on entering results; guarded by hasAutoSavedRef
       handleSaveProgress({ skipRestart: true });
     } else {
       appendGuestSession({
@@ -383,6 +406,7 @@ export default function InferenceTrainerPage() {
         correct: runningCorrect,
         total: runningTotal,
         time_seconds: elapsedSeconds,
+        client_session_id: sessionIdRef.current,
       });
     }
   }, [
@@ -457,8 +481,17 @@ export default function InferenceTrainerPage() {
       {phase === "active" && (
         <>
           <div className="px-4 pt-4">
-            <div className="max-w-5xl mx-auto">
+            <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-3">
               <BreadcrumbNav items={breadcrumbs} />
+              <label className="inline-flex items-center gap-2 text-sm text-muted-foreground cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={timedMode}
+                  onChange={handleToggleTimedMode}
+                  className="h-4 w-4 rounded border-border accent-primary"
+                />
+                Timed mode (60s per question)
+              </label>
             </div>
           </div>
           <InferenceSessionHeader
@@ -481,6 +514,7 @@ export default function InferenceTrainerPage() {
               key={`${passage.id}-${quizKey}`}
               passageText={passage.text}
               questions={questions}
+              timedMode={timedMode}
               onComplete={handleQuizComplete}
               onNextQuestion={handleNextQuestion}
               onProgressChange={handleProgressChange}

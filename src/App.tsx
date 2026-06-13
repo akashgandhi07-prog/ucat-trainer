@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { Toaster } from "sonner";
@@ -7,45 +8,58 @@ import { AuthModalProvider } from "./contexts/AuthModalContext";
 import { BugReportProvider } from "./contexts/BugReportContext";
 import AppShell from "./components/layout/AppShell";
 import LandingPage from "./pages/LandingPage";
-import VerbalReasoningPage from "./pages/VerbalReasoningPage";
-import ReaderPage from "./pages/ReaderPage";
-import RapidRecallPage from "./pages/RapidRecallPage";
-import KeywordScanningPage from "./pages/KeywordScanningPage";
-import InferenceTrainerPage from "./pages/InferenceTrainerPage";
-import AdminPage from "./pages/AdminPage";
-import GoldStandardFilesPage from "./pages/admin/GoldStandardFilesPage";
-import OutputSpecsFilesPage from "./pages/admin/OutputSpecsFilesPage";
-import QuestionLabDashboard from "./pages/admin/QuestionLabDashboard";
-import ResetPasswordPage from "./pages/ResetPasswordPage";
-import CalculatorPage from "./pages/CalculatorPage";
-import MentalMathsPage from "./pages/MentalMathsPage";
-import ConversionsTrainerPage from "./pages/ConversionsTrainerPage";
-import QuantitativeReasoningPage from "./pages/QuantitativeReasoningPage";
-import DecisionMakingPage from "./pages/DecisionMakingPage";
-import StudyGuidesPage from "./pages/StudyGuidesPage";
-import SyllogismFoundationPage from "./pages/SyllogismFoundationPage";
-import SyllogismMicroPage from "./pages/SyllogismMicroPage";
-import SyllogismMacroPage from "./pages/SyllogismMacroPage";
-import VennLogicTrainerPage from "./pages/VennLogicTrainerPage";
-import DataLogicTrainerPage from "./pages/DataLogicTrainerPage";
-import ArgumentJudgeTrainerPage from "./pages/ArgumentJudgeTrainerPage";
-import SJTHubPage from "./pages/SJTHubPage";
-import SJTAppropriatenessPage from "./pages/SJTAppropriatenessPage";
-import SJTImportancePage from "./pages/SJTImportancePage";
-import SJTRankingPage from "./pages/SJTRankingPage";
-import StudyPlanPage from "./pages/planner/StudyPlanPage";
-import StudyPlanTodayPage from "./pages/planner/StudyPlanTodayPage";
-import StudyPlanPlanPage from "./pages/planner/StudyPlanPlanPage";
-import StudyPlanReflectPage from "./pages/planner/StudyPlanReflectPage";
-import MockScoresPage from "./pages/planner/MockScoresPage";
-import TutorLayout from "./pages/tutor/TutorLayout";
-import TutorOverviewPage from "./pages/tutor/TutorOverviewPage";
-import TutorInvitePage from "./pages/tutor/TutorInvitePage";
-import TutorStudentPage from "./pages/tutor/TutorStudentPage";
-import JoinInvitePage from "./pages/tutor/JoinInvitePage";
-import Dashboard from "./pages/Dashboard";
 import { PageViewTracker } from "./components/analytics/PageViewTracker";
 import { WindowScrollToTop } from "./components/layout/ScrollRestoration";
+
+// Route-level code splitting: every page below loads as its own chunk on first
+// visit instead of shipping in the initial bundle. AppShell and LandingPage stay
+// eager so the first paint of "/" needs no extra round trip.
+const VerbalReasoningPage = lazy(() => import("./pages/VerbalReasoningPage"));
+const ReaderPage = lazy(() => import("./pages/ReaderPage"));
+const RapidRecallPage = lazy(() => import("./pages/RapidRecallPage"));
+const KeywordScanningPage = lazy(() => import("./pages/KeywordScanningPage"));
+const InferenceTrainerPage = lazy(() => import("./pages/InferenceTrainerPage"));
+const NotExceptTrainerPage = lazy(() => import("./pages/NotExceptTrainerPage"));
+const AdminPage = lazy(() => import("./pages/AdminPage"));
+const GoldStandardFilesPage = lazy(() => import("./pages/admin/GoldStandardFilesPage"));
+const OutputSpecsFilesPage = lazy(() => import("./pages/admin/OutputSpecsFilesPage"));
+const QuestionLabDashboard = lazy(() => import("./pages/admin/QuestionLabDashboard"));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
+const CalculatorPage = lazy(() => import("./pages/CalculatorPage"));
+const MentalMathsPage = lazy(() => import("./pages/MentalMathsPage"));
+const ConversionsTrainerPage = lazy(() => import("./pages/ConversionsTrainerPage"));
+const QuantitativeReasoningPage = lazy(() => import("./pages/QuantitativeReasoningPage"));
+const DecisionMakingPage = lazy(() => import("./pages/DecisionMakingPage"));
+const StudyGuidesPage = lazy(() => import("./pages/StudyGuidesPage"));
+const SyllogismFoundationPage = lazy(() => import("./pages/SyllogismFoundationPage"));
+const SyllogismMicroPage = lazy(() => import("./pages/SyllogismMicroPage"));
+const SyllogismMacroPage = lazy(() => import("./pages/SyllogismMacroPage"));
+const VennLogicTrainerPage = lazy(() => import("./pages/VennLogicTrainerPage"));
+const DataLogicTrainerPage = lazy(() => import("./pages/DataLogicTrainerPage"));
+const ArgumentJudgeTrainerPage = lazy(() => import("./pages/ArgumentJudgeTrainerPage"));
+const SJTHubPage = lazy(() => import("./pages/SJTHubPage"));
+const SJTAppropriatenessPage = lazy(() => import("./pages/SJTAppropriatenessPage"));
+const SJTImportancePage = lazy(() => import("./pages/SJTImportancePage"));
+const SJTRankingPage = lazy(() => import("./pages/SJTRankingPage"));
+const StudyPlanPage = lazy(() => import("./pages/planner/StudyPlanPage"));
+const StudyPlanTodayPage = lazy(() => import("./pages/planner/StudyPlanTodayPage"));
+const StudyPlanPlanPage = lazy(() => import("./pages/planner/StudyPlanPlanPage"));
+const StudyPlanReflectPage = lazy(() => import("./pages/planner/StudyPlanReflectPage"));
+const MockScoresPage = lazy(() => import("./pages/planner/MockScoresPage"));
+const TutorLayout = lazy(() => import("./pages/tutor/TutorLayout"));
+const TutorOverviewPage = lazy(() => import("./pages/tutor/TutorOverviewPage"));
+const TutorInvitePage = lazy(() => import("./pages/tutor/TutorInvitePage"));
+const TutorStudentPage = lazy(() => import("./pages/tutor/TutorStudentPage"));
+const JoinInvitePage = lazy(() => import("./pages/tutor/JoinInvitePage"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+
+function RouteFallback() {
+  return (
+    <div className="flex items-center justify-center py-24" role="status" aria-label="Loading page">
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" />
+    </div>
+  );
+}
 
 function ConfigureRedirect() {
   const { search } = useLocation();
@@ -63,6 +77,7 @@ function App() {
               <BugReportProvider>
                 <PageViewTracker />
                 <WindowScrollToTop />
+                <Suspense fallback={<RouteFallback />}>
                 <Routes>
                   <Route element={<AppShell />}>
                     <Route path="/" element={<LandingPage />} />
@@ -72,6 +87,7 @@ function App() {
                     <Route path="/ucat-rapid-recall-trainer" element={<RapidRecallPage />} />
                     <Route path="/ucat-keyword-scanning-trainer" element={<KeywordScanningPage />} />
                     <Route path="/ucat-inference-trainer" element={<InferenceTrainerPage />} />
+                    <Route path="/ucat-vr-not-except-trainer" element={<NotExceptTrainerPage />} />
                     <Route path="/ucat-decision-making-practice" element={<DecisionMakingPage />} />
                     <Route path="/ucat-venn-logic-practice-questions" element={<VennLogicTrainerPage />} />
                     <Route path="/ucat-data-logic-practice-questions" element={<DataLogicTrainerPage />} />
@@ -127,6 +143,7 @@ function App() {
                   <Route path="/join/:token" element={<JoinInvitePage />} />
                   <Route path="/reset-password" element={<ResetPasswordPage />} />
                 </Routes>
+                </Suspense>
               </BugReportProvider>
             </AuthModalProvider>
           </AuthProvider>

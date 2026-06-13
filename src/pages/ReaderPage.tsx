@@ -12,14 +12,18 @@ import type { Passage } from "../data/passages";
 import SEOHead from "../components/seo/SEOHead";
 import TrainerFaqSection from "../components/seo/TrainerFaqSection";
 import UcatGuidesPanel from "../components/layout/UcatGuidesPanel";
-import type { SessionInsertPayload } from "../types/session";
 import { appendGuestSession } from "../lib/guestSessions";
-import { supabase } from "../lib/supabase";
+import { newClientSessionId, upsertTrainerSession } from "../lib/trainerSessionLog";
+import type { TrainerSessionUpsert } from "../lib/trainerSessionLog";
 import { supabaseLog } from "../lib/logger";
-import { withRetry } from "../lib/retry";
 import { getSessionSaveErrorMessage } from "../lib/sessionSaveError";
 import type { TrainingDifficulty } from "../types/training";
-import { pickNewRandomPassage } from "../lib/passages";
+import {
+  getVrPassageCandidates,
+  hydrateSeenFromCloud,
+  markPassageSeen,
+  pickUnseenPassage,
+} from "../lib/vrPassageHistory";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 import { trainerFaqs } from "../data/trainerFaqs";
 import {
@@ -50,7 +54,12 @@ export default function ReaderPage() {
   const [phase, setPhase] = useState<Phase>("reading");
   const [readingKey, setReadingKey] = useState(0);
   const [passage, setPassage] = useState<Passage>(
-    () => configureState?.passage ?? pickNewRandomPassage(null, configureState?.difficulty, configureState?.category)
+    () =>
+      configureState?.passage ??
+      pickUnseenPassage(
+        "speed_reading",
+        getVrPassageCandidates(configureState?.difficulty, configureState?.category)
+      )
   );
   const [wpm, setWpm] = useState<number>(() => configureState?.wpm ?? 300);
   const [quizCorrect, setQuizCorrect] = useState(0);
@@ -69,6 +78,7 @@ export default function ReaderPage() {
   const [suggestedChunkSize, setSuggestedChunkSize] = useState<number | null>(null);
   const [readingTimeSeconds, setReadingTimeSeconds] = useState<number | null>(null);
   const hasAutoSavedRef = useRef(false);
+  const sessionIdRef = useRef(newClientSessionId());
   const readingStartTimeRef = useRef<number | null>(null);
   const mountedRef = useRef(true);
   const { user } = useAuth();
@@ -90,9 +100,15 @@ export default function ReaderPage() {
     }
   }, []);
 
+  // Hydrate cross-device passage history once per page load (fire-and-forget).
+  useEffect(() => {
+    if (user) void hydrateSeenFromCloud(user.id);
+  }, [user]);
+
   useEffect(() => {
     if (phase === "reading") {
       readingStartTimeRef.current = Date.now();
+      if (passage?.id) markPassageSeen("speed_reading", passage.id);
       trackEvent("trainer_started", {
         training_type: "speed_reading",
         difficulty: configureState?.difficulty ?? "medium",
@@ -106,6 +122,7 @@ export default function ReaderPage() {
 
   useEffect(() => {
     if (phase !== "results") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset of derived suggestion when leaving results; cheap and intentional
       setSuggestedChunkSize(null);
       return;
     }
@@ -131,7 +148,12 @@ export default function ReaderPage() {
       setReadingTimeSeconds(opts.timeSpentSeconds);
       setWpm(Math.round((wordCount / opts.timeSpentSeconds) * 60));
     } else {
-      setReadingTimeSeconds(null);
+      // Capture the fallback now, at the end of reading - measuring it at results
+      // render time would wrongly include the quiz duration.
+      const startedAt = readingStartTimeRef.current;
+      setReadingTimeSeconds(
+        startedAt != null ? Math.max(1, Math.round((Date.now() - startedAt) / 1000)) : null,
+      );
       setWpm(finishedWpm);
     }
     setPhase("quiz");
@@ -154,6 +176,7 @@ export default function ReaderPage() {
           correct: quizCorrect,
           total: quizTotal,
           passage_id: passage?.id ?? null,
+          client_session_id: sessionIdRef.current,
           ...(rating != null && { wpm_rating: rating }),
           ...(readingTimeSeconds != null && readingTimeSeconds > 0 && { time_seconds: readingTimeSeconds }),
         });
@@ -161,8 +184,7 @@ export default function ReaderPage() {
       }
       setSaveError(null);
       setSaveInProgress(true);
-      const payload: SessionInsertPayload = {
-        user_id: user.id,
+      const payload: TrainerSessionUpsert = {
         training_type: "speed_reading",
         difficulty,
         wpm,
@@ -172,11 +194,8 @@ export default function ReaderPage() {
         ...(rating != null && { wpm_rating: rating }),
         ...(readingTimeSeconds != null && readingTimeSeconds > 0 && { time_seconds: readingTimeSeconds }),
       };
-      try {
-        await withRetry(async () => {
-          const { error } = await supabase.from("sessions").insert(payload);
-          if (error) throw error;
-        });
+      const saved = await upsertTrainerSession(user.id, sessionIdRef.current, payload);
+      if (saved) {
         supabaseLog.info("Speed reading session saved", {
           userId: user.id,
           wpm: payload.wpm,
@@ -188,31 +207,29 @@ export default function ReaderPage() {
         if (!mountedRef.current) return;
         setSaveError(null);
         if (!opts?.skipRestart) {
+          sessionIdRef.current = newClientSessionId();
           setPhase("reading");
           setReadingKey((k) => k + 1);
           readingStartTimeRef.current = null;
         }
-      } catch (err: unknown) {
-        const message = err && typeof err === "object" && "message" in err ? String((err as { message: string }).message) : "Unknown error";
-        supabaseLog.error("Failed to save speed_reading session", {
-          message,
-          userId: user.id,
-        });
+      } else {
         if (!mountedRef.current) return;
-        setSaveError(getSessionSaveErrorMessage(err));
-      } finally {
-        if (mountedRef.current) setSaveInProgress(false);
+        setSaveError(getSessionSaveErrorMessage(null));
       }
+      if (mountedRef.current) setSaveInProgress(false);
     },
     [user, wpm, quizCorrect, quizTotal, passage?.id, difficulty, readingTimeSeconds]
   );
 
   const handleRestart = useCallback(() => {
     hasAutoSavedRef.current = false;
+    sessionIdRef.current = newClientSessionId();
     setReadingTimeSeconds(null);
     setPhase("reading");
     setReadingKey((k) => k + 1);
-    setPassage((current) => pickNewRandomPassage(current?.id, difficulty, category));
+    setPassage((current) =>
+      pickUnseenPassage("speed_reading", getVrPassageCandidates(difficulty, category), current?.id)
+    );
     readingStartTimeRef.current = null;
   }, [difficulty, category]);
 
@@ -221,9 +238,12 @@ export default function ReaderPage() {
       setWpm(Math.min(WPM_MAX, Math.max(WPM_MIN, newWpm)));
       setReadingTimeSeconds(null);
       hasAutoSavedRef.current = false;
+      sessionIdRef.current = newClientSessionId();
       setPhase("reading");
       setReadingKey((k) => k + 1);
-      setPassage((current) => pickNewRandomPassage(current?.id, difficulty, category));
+      setPassage((current) =>
+        pickUnseenPassage("speed_reading", getVrPassageCandidates(difficulty, category), current?.id)
+      );
       readingStartTimeRef.current = null;
     },
     [difficulty, category]
@@ -239,6 +259,7 @@ export default function ReaderPage() {
     if (phase !== "results" || hasAutoSavedRef.current) return;
     hasAutoSavedRef.current = true;
     if (user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot auto-save on entering results; guarded by hasAutoSavedRef
       handleSaveProgress(undefined, { skipRestart: true });
     } else {
       appendGuestSession({
@@ -248,6 +269,7 @@ export default function ReaderPage() {
         correct: quizCorrect,
         total: quizTotal,
         passage_id: passage?.id ?? null,
+        client_session_id: sessionIdRef.current,
         ...(readingTimeSeconds != null && readingTimeSeconds > 0 && { time_seconds: readingTimeSeconds }),
       });
     }
@@ -318,9 +340,7 @@ export default function ReaderPage() {
             total={quizTotal}
             passageTitle={passage?.title}
             passageText={passageText}
-            timeSpentSeconds={
-              readingTimeSeconds ?? (readingStartTimeRef.current != null ? Math.round((Date.now() - readingStartTimeRef.current) / 1000) : 0)
-            }
+            timeSpentSeconds={readingTimeSeconds ?? 0}
             questionBreakdown={questionBreakdown}
             onRestart={handleRestart}
             onTrySlowerWpm={() => handleRestartWithWpm(wpm - 25)}

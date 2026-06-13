@@ -658,20 +658,146 @@ function buildCantTellQuestion(
   };
 }
 
-// ───────── Question type ─────────
+// ───────── NOT/EXCEPT question builder (exported for the NOT/EXCEPT trainer) ─────────
 
-type CorrectAnswer = "true" | "false" | "cant_tell";
-
-type Question = {
-  displayedSentence: string;
-  correctAnswer: CorrectAnswer;
-  passageSnippet: string;
+export type ExceptOption = {
+  /** The statement shown to the student. */
+  text: string;
+  /** True when the statement is supported by the passage. */
+  supported: boolean;
+  /** The passage sentence this option was built from. */
+  sourceSentence: string;
+  /** Student-facing explanation of why the option is or is not supported. */
+  explanation: string;
+  /** Distortion label for the unsupported option (reuses the engine's labels). */
   distortionLabel?: string;
   originalFragment?: string;
   replacedFragment?: string;
 };
 
+export type ExceptQuestion = {
+  prompt: string;
+  options: ExceptOption[];
+  /** Index in `options` of the statement NOT supported by the passage. */
+  correctIndex: number;
+};
+
+/**
+ * Builds ONE 4-option NOT/EXCEPT question from a passage: three statements that
+ * ARE supported (true variants via synonym substitution of distinct sentences)
+ * plus one that is NOT supported (a distorted statement), shuffled.
+ *
+ * Pass `opts.exclude` (a set of already-used source sentences) when generating
+ * several questions from the same passage so questions stay distinct.
+ * Returns null when the passage cannot support a question.
+ */
+// eslint-disable-next-line react-refresh/only-export-components -- pure generator co-located with the distortion engine it reuses; consumed by NotExceptTrainerPage
+export function generateExceptSet(
+  passage: { text: string; title?: string },
+  opts?: { exclude?: Set<string> }
+): ExceptQuestion | null {
+  const sentences = splitSentences(passage.text.trim()).filter(
+    (s) => !opts?.exclude?.has(s)
+  );
+  if (sentences.length < 4) return null;
+
+  const shuffled = shuffle(sentences);
+
+  // Find a sentence we can distort: this becomes the unsupported statement.
+  let distorted: { source: string; result: DistortionResult } | null = null;
+  for (const s of shuffled) {
+    const result = applyDistortion(s);
+    if (result.applied) {
+      distorted = { source: s, result };
+      break;
+    }
+  }
+  if (!distorted) return null;
+
+  // Three supported statements from distinct other sentences (paraphrased).
+  const remaining = shuffled.filter((s) => s !== distorted.source);
+  const paraphrased = remaining.map((s) => ({ s, p: paraphrase(s) }));
+  // Prefer sentences where a synonym swap was made (richer explanations).
+  const ordered = [
+    ...paraphrased.filter((r) => r.p.text !== r.s),
+    ...paraphrased.filter((r) => r.p.text === r.s),
+  ];
+  if (ordered.length < 3) return null;
+
+  const supportedOptions: ExceptOption[] = ordered.slice(0, 3).map(({ s, p }) => ({
+    text: p.text,
+    supported: true,
+    sourceSentence: s,
+    explanation:
+      p.originalFragment && p.replacedFragment
+        ? `Supported. The passage states: "${s}" ("${p.originalFragment}" was paraphrased as "${p.replacedFragment}" but the meaning is unchanged).`
+        : `Supported. The passage states: "${s}"`,
+    originalFragment: p.originalFragment,
+    replacedFragment: p.replacedFragment,
+  }));
+
+  const unsupportedOption: ExceptOption = {
+    text: distorted.result.text,
+    supported: false,
+    sourceSentence: distorted.source,
+    explanation: `Not supported. This statement was changed (${distorted.result.label ?? "the wording was altered"}). The passage actually says: "${distorted.source}"`,
+    distortionLabel: distorted.result.label,
+    originalFragment: distorted.result.originalFragment,
+    replacedFragment: distorted.result.replacedFragment,
+  };
+
+  const options = shuffle([...supportedOptions, unsupportedOption]);
+  const correctIndex = options.findIndex((o) => !o.supported);
+  if (correctIndex === -1) return null;
+
+  // Mark all four source sentences as used so subsequent questions differ.
+  if (opts?.exclude) {
+    for (const o of options) opts.exclude.add(o.sourceSentence);
+  }
+
+  return {
+    prompt: "Which of the following is NOT supported by the passage?",
+    options,
+    correctIndex,
+  };
+}
+
+// ───────── Question type ─────────
+
+type CorrectAnswer = "true" | "false" | "cant_tell";
+
+export type McOption = {
+  text: string;
+  /** True for the single best-supported option. */
+  isCorrect: boolean;
+  /** Why this option is right or wrong (distortion label for wrong options). */
+  explanation: string;
+  sourceSentence: string;
+  distortionLabel?: string;
+  originalFragment?: string;
+  replacedFragment?: string;
+};
+
+type Question =
+  | {
+      kind: "tfct";
+      displayedSentence: string;
+      correctAnswer: CorrectAnswer;
+      passageSnippet: string;
+      distortionLabel?: string;
+      originalFragment?: string;
+      replacedFragment?: string;
+    }
+  | {
+      kind: "mc";
+      prompt: string;
+      options: McOption[];
+      correctIndex: number;
+    };
+
 type AnswerChoice = "true" | "false" | "cant_tell" | null;
+/** T/F/CT choice for standard questions; option index (number) for the MC question. */
+type AnswerValue = AnswerChoice | number;
 
 export type QuestionBreakdownItem = {
   statement: string;
@@ -683,6 +809,10 @@ export type QuestionBreakdownItem = {
   distortionLabel?: string;
   originalFragment?: string;
   replacedFragment?: string;
+  /** Present for the 4-option multiple choice question (additive; existing consumers ignore it). */
+  mcOptions?: McOption[];
+  mcSelectedIndex?: number | null;
+  mcCorrectIndex?: number;
 };
 
 type DistortionQuizProps = {
@@ -695,6 +825,59 @@ type DistortionQuizProps = {
   passageId: string;
 };
 
+/**
+ * Builds the 4-option "best supported" MC question: 1 true variant + 3 distorted
+ * statements, from four distinct sentences. Returns null when the passage cannot
+ * support it (callers fall back to a standard T/F/CT question).
+ */
+function buildMcQuestion(sentences: string[]): Question | null {
+  if (sentences.length < 4) return null;
+  const shuffled = shuffle(sentences);
+
+  // Three distorted statements from distinct sentences.
+  const wrong: McOption[] = [];
+  const usedSentences = new Set<string>();
+  for (const s of shuffled) {
+    if (wrong.length >= 3) break;
+    const result = applyDistortion(s);
+    if (result.applied) {
+      wrong.push({
+        text: result.text,
+        isCorrect: false,
+        explanation: `Not supported: ${result.label ?? "the wording was altered"}. The passage actually says: "${s}"`,
+        sourceSentence: s,
+        distortionLabel: result.label,
+        originalFragment: result.originalFragment,
+        replacedFragment: result.replacedFragment,
+      });
+      usedSentences.add(s);
+    }
+  }
+  if (wrong.length < 3) return null;
+
+  // One true variant from a different sentence (paraphrase preferred).
+  const remaining = shuffled.filter((s) => !usedSentences.has(s));
+  if (remaining.length === 0) return null;
+  const paraphrased = remaining.map((s) => ({ s, p: paraphrase(s) }));
+  const best = paraphrased.find((r) => r.p.text !== r.s) ?? paraphrased[0];
+  const right: McOption = {
+    text: best.p.text,
+    isCorrect: true,
+    explanation: `Supported. The passage states: "${best.s}"`,
+    sourceSentence: best.s,
+    originalFragment: best.p.originalFragment,
+    replacedFragment: best.p.replacedFragment,
+  };
+
+  const options = shuffle([right, ...wrong]);
+  return {
+    kind: "mc",
+    prompt: "Which of the following statements is best supported by the passage?",
+    options,
+    correctIndex: options.findIndex((o) => o.isCorrect),
+  };
+}
+
 function buildQuestions(passageText: string, count: number, passageTitle?: string): Question[] {
   const trimmed = passageText.trim();
   if (trimmed.length === 0) return [];
@@ -702,8 +885,22 @@ function buildQuestions(passageText: string, count: number, passageTitle?: strin
   const allSentences = splitSentences(trimmed);
   if (allSentences.length === 0) return [];
 
-  const targetCount = Math.max(3, Math.min(count, allSentences.length));
-  const shuffledSentences = shuffle(allSentences);
+  // When the passage has enough usable sentences, one of the questions becomes a
+  // 4-option multiple choice. The MC question consumes 4 sentences, so only
+  // attempt it when there are still enough left for the standard questions.
+  let mcQuestion: Question | null = null;
+  let remainingSentences = allSentences;
+  if (count >= 4 && allSentences.length >= 8) {
+    mcQuestion = buildMcQuestion(allSentences);
+    if (mcQuestion && mcQuestion.kind === "mc") {
+      const mcSources = new Set(mcQuestion.options.map((o) => o.sourceSentence));
+      remainingSentences = allSentences.filter((s) => !mcSources.has(s));
+    }
+  }
+  const standardCount = mcQuestion ? count - 1 : count;
+
+  const targetCount = Math.max(3, Math.min(standardCount, remainingSentences.length));
+  const shuffledSentences = shuffle(remainingSentences);
   const questions: Question[] = [];
   const usedIndices = new Set<number>();
 
@@ -719,6 +916,7 @@ function buildQuestions(passageText: string, count: number, passageTitle?: strin
     const result = applyDistortion(sentence);
     if (result.applied) {
       questions.push({
+        kind: "tfct",
         displayedSentence: result.text,
         correctAnswer: "false",
         passageSnippet: sentence,
@@ -738,6 +936,7 @@ function buildQuestions(passageText: string, count: number, passageTitle?: strin
       const result = distortNegation(sentence);
       if (result.applied && result.text !== sentence) {
         questions.push({
+          kind: "tfct",
           displayedSentence: result.text,
           correctAnswer: "false",
           passageSnippet: sentence,
@@ -757,9 +956,10 @@ function buildQuestions(passageText: string, count: number, passageTitle?: strin
   const withoutSwap = paraphraseResults.filter(r => !usedIndices.has(r.i) && r.p.text === r.s);
   const truePool = [...withSwap, ...withoutSwap];
   for (const { i, s, p } of truePool) {
-    if (questions.filter(q => q.correctAnswer === "true").length >= numTrue) break;
+    if (questions.filter(q => q.kind === "tfct" && q.correctAnswer === "true").length >= numTrue) break;
     if (usedIndices.has(i)) continue;
     questions.push({
+      kind: "tfct",
       displayedSentence: p.text,
       correctAnswer: "true",
       passageSnippet: s,
@@ -774,6 +974,7 @@ function buildQuestions(passageText: string, count: number, passageTitle?: strin
     const cantTell = buildCantTellQuestion(allSentences, passageTitle);
     if (cantTell) {
       questions.push({
+        kind: "tfct",
         displayedSentence: cantTell.displayedSentence,
         correctAnswer: "cant_tell",
         passageSnippet: cantTell.passageSnippet,
@@ -781,7 +982,7 @@ function buildQuestions(passageText: string, count: number, passageTitle?: strin
     }
   }
 
-  return shuffle(questions);
+  return shuffle(mcQuestion ? [...questions, mcQuestion] : questions);
 }
 
 export default function DistortionQuiz({
@@ -795,7 +996,7 @@ export default function DistortionQuiz({
 }: DistortionQuizProps) {
   const questions = useMemo(() => buildQuestions(passageText, questionCount, passageTitle), [passageText, questionCount, passageTitle]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<AnswerChoice[]>(() =>
+  const [answers, setAnswers] = useState<AnswerValue[]>(() =>
     Array(questions.length).fill(null)
   );
   const [flagged, setFlagged] = useState<Set<number>>(new Set());
@@ -806,7 +1007,7 @@ export default function DistortionQuiz({
   const answeredCount = answers.filter((a) => a !== null).length;
 
   const handleAnswer = useCallback(
-    (choice: AnswerChoice) => {
+    (choice: AnswerValue) => {
       setAnswers((prev) => {
         const next = [...prev];
         next[currentIndex] = choice;
@@ -824,7 +1025,37 @@ export default function DistortionQuiz({
       cant_tell: "Can't Tell",
     };
     const breakdown: QuestionBreakdownItem[] = questions.map((q, i) => {
-      const a = answers[i] ?? "cant_tell";
+      if (q.kind === "mc") {
+        const picked = typeof answers[i] === "number" ? (answers[i] as number) : null;
+        const isCorrect = picked === q.correctIndex;
+        if (isCorrect) correct++;
+        const pickedOption = picked != null ? q.options[picked] : null;
+        const trueOption = q.options[q.correctIndex];
+        // Map the MC result onto the existing breakdown shape so results screens
+        // (ResultsView in Reader/Rapid Recall) render meaningful feedback without changes:
+        // the shown statement is the option the student chose, judged true/false.
+        return {
+          statement: pickedOption
+            ? `Best supported by the passage: "${pickedOption.text}"`
+            : q.prompt,
+          correctAnswer: isCorrect,
+          correctAnswerRaw: (isCorrect ? "true" : "false") as CorrectAnswer,
+          userAnswer: "true" as const,
+          correctAnswerLabel: isCorrect
+            ? "True"
+            : `The best supported statement was: "${trueOption.text}"`,
+          passageSnippet: pickedOption?.sourceSentence ?? trueOption.sourceSentence,
+          distortionLabel: pickedOption?.distortionLabel,
+          originalFragment: pickedOption?.originalFragment,
+          replacedFragment: pickedOption?.replacedFragment,
+          mcOptions: q.options,
+          mcSelectedIndex: picked,
+          mcCorrectIndex: q.correctIndex,
+        };
+      }
+      const raw = answers[i];
+      const a: "true" | "false" | "cant_tell" =
+        raw === "true" || raw === "false" ? raw : "cant_tell";
       if (a === q.correctAnswer) correct++;
       return {
         statement: q.displayedSentence,
@@ -909,6 +1140,9 @@ export default function DistortionQuiz({
         <p className="text-ucat-body mt-1 text-[15px] leading-[1.5]">
           Based on the passage you just read, determine if each statement is True,
           False, or Can&apos;t Tell.
+          {questions.some((q) => q.kind === "mc") && (
+            <> One question asks you to pick the statement best supported by the passage.</>
+          )}
         </p>
       </div>
 
@@ -954,41 +1188,69 @@ export default function DistortionQuiz({
             </button>
           </div>
         </div>
-        <p className="text-[16px] leading-[1.5] text-ucat-body mb-6 font-normal">
-          {current?.displayedSentence}?
-        </p>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            type="button"
-            onClick={() => handleAnswer("true")}
-            className={`flex-1 min-h-[44px] px-4 py-3 rounded-lg border-2 font-normal text-[15px] text-ucat-body ${answers[currentIndex] === "true"
-              ? "border-slate-400 bg-secondary text-foreground"
-              : "border-border hover:bg-secondary"
-              }`}
-          >
-            True
-          </button>
-          <button
-            type="button"
-            onClick={() => handleAnswer("false")}
-            className={`flex-1 min-h-[44px] px-4 py-3 rounded-lg border-2 font-normal text-[15px] text-ucat-body ${answers[currentIndex] === "false"
-              ? "border-slate-400 bg-secondary text-foreground"
-              : "border-border hover:bg-secondary"
-              }`}
-          >
-            False
-          </button>
-          <button
-            type="button"
-            onClick={() => handleAnswer("cant_tell")}
-            className={`flex-1 min-h-[44px] px-4 py-3 rounded-lg border-2 font-normal text-[15px] text-ucat-body ${answers[currentIndex] === "cant_tell"
-              ? "border-slate-400 bg-secondary text-foreground"
-              : "border-border hover:bg-secondary"
-              }`}
-          >
-            Can&apos;t Tell
-          </button>
-        </div>
+        {current?.kind === "mc" ? (
+          <>
+            <p className="text-[16px] leading-[1.5] text-ucat-body mb-6 font-normal">
+              {current.prompt}
+            </p>
+            <div className="flex flex-col gap-3">
+              {current.options.map((option, optIdx) => (
+                <button
+                  key={optIdx}
+                  type="button"
+                  onClick={() => handleAnswer(optIdx)}
+                  className={`w-full min-h-[44px] px-4 py-3 rounded-lg border-2 font-normal text-[15px] text-ucat-body text-left flex items-start gap-3 ${answers[currentIndex] === optIdx
+                    ? "border-slate-400 bg-secondary text-foreground"
+                    : "border-border hover:bg-secondary"
+                    }`}
+                >
+                  <span className="font-medium shrink-0" aria-hidden>
+                    {String.fromCharCode(65 + optIdx)}.
+                  </span>
+                  <span>{option.text}</span>
+                </button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="text-[16px] leading-[1.5] text-ucat-body mb-6 font-normal">
+              {current?.displayedSentence}?
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                type="button"
+                onClick={() => handleAnswer("true")}
+                className={`flex-1 min-h-[44px] px-4 py-3 rounded-lg border-2 font-normal text-[15px] text-ucat-body ${answers[currentIndex] === "true"
+                  ? "border-slate-400 bg-secondary text-foreground"
+                  : "border-border hover:bg-secondary"
+                  }`}
+              >
+                True
+              </button>
+              <button
+                type="button"
+                onClick={() => handleAnswer("false")}
+                className={`flex-1 min-h-[44px] px-4 py-3 rounded-lg border-2 font-normal text-[15px] text-ucat-body ${answers[currentIndex] === "false"
+                  ? "border-slate-400 bg-secondary text-foreground"
+                  : "border-border hover:bg-secondary"
+                  }`}
+              >
+                False
+              </button>
+              <button
+                type="button"
+                onClick={() => handleAnswer("cant_tell")}
+                className={`flex-1 min-h-[44px] px-4 py-3 rounded-lg border-2 font-normal text-[15px] text-ucat-body ${answers[currentIndex] === "cant_tell"
+                  ? "border-slate-400 bg-secondary text-foreground"
+                  : "border-border hover:bg-secondary"
+                  }`}
+              >
+                Can&apos;t Tell
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="mt-6 flex flex-col items-center gap-3">

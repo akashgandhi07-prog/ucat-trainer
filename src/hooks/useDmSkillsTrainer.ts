@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "./useAuth";
 import { fetchDmTrainerDrill } from "../lib/dmTrainerApi";
 import { persistDmTrainerSession } from "../lib/dmTrainerSessionStorage";
+import type { DmTrainerAttemptInput } from "../lib/dmTrainerSessionStorage";
 import type {
   DmTrainerOptionId,
   DmTrainerQuestion,
@@ -36,6 +37,16 @@ export function useDmSkillsTrainer(trainerType: DmTrainerType) {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const retryModeRef = useRef(false);
   const answersByIndexRef = useRef(answersByIndex);
+  // Per-question attempt rows (null for unanswered or local-JSON questions
+  // whose ids don't exist in trainer_questions).
+  const attemptInputsRef = useRef<(DmTrainerAttemptInput | null)[]>([]);
+  // Timestamp when the current unanswered question was shown, for time_taken_seconds.
+  const questionShownAtRef = useRef<number>(Date.now());
+  // Per-drill guard so a partial flush never double-saves a completed drill
+  // (dm_trainer_sessions has no unique client id to dedupe on).
+  const sessionSavedRef = useRef(false);
+  const phaseRef = useRef(phase);
+  const userIdRef = useRef<string | null>(user?.id ?? null);
 
   const activeQuestions = retryMode ? retryQueue : questions;
   const current = activeQuestions[currentIndex] ?? null;
@@ -53,6 +64,14 @@ export function useDmSkillsTrainer(trainerType: DmTrainerType) {
   useEffect(() => {
     retryModeRef.current = retryMode;
   }, [retryMode]);
+
+  useEffect(() => {
+    phaseRef.current = phase;
+  }, [phase]);
+
+  useEffect(() => {
+    userIdRef.current = user?.id ?? null;
+  }, [user?.id]);
 
   const loadQuestions = useCallback(async () => {
     setQuestionsLoading(true);
@@ -111,14 +130,33 @@ export function useDmSkillsTrainer(trainerType: DmTrainerType) {
     setRetryQueue([]);
     setElapsedSeconds(0);
     startTimeRef.current = Date.now();
+    attemptInputsRef.current = questions.map(() => null);
+    questionShownAtRef.current = Date.now();
+    sessionSavedRef.current = false;
   }, [questions]);
 
   const submitAnswer = useCallback(
     (optionId: DmTrainerOptionId) => {
       if (!current || showFeedback) return;
       const correct = optionId === current.correctAnswer;
+      const timeTakenSeconds = Math.max(
+        0,
+        Math.round((Date.now() - questionShownAtRef.current) / 1000),
+      );
       setSelected(optionId);
       setShowFeedback(true);
+      // Only DB-backed questions carry dbId (trainer_questions UUID); local
+      // fallback questions are never logged to trainer_question_attempts.
+      attemptInputsRef.current[currentIndex] = current.dbId
+        ? {
+            questionDbId: current.dbId,
+            skillTag: current.skillTag || "unknown",
+            difficulty: current.difficulty || "medium",
+            isCorrect: correct,
+            selectedAnswer: optionId,
+            timeTakenSeconds,
+          }
+        : null;
       setAnswersByIndex((prev) => {
         const next = [...prev];
         next[currentIndex] = {
@@ -141,6 +179,7 @@ export function useDmSkillsTrainer(trainerType: DmTrainerType) {
     } else {
       setSelected(null);
       setShowFeedback(false);
+      questionShownAtRef.current = Date.now();
     }
   }, []);
 
@@ -165,6 +204,7 @@ export function useDmSkillsTrainer(trainerType: DmTrainerType) {
       setCurrentIndex((i) => i + 1);
       setSelected(null);
       setShowFeedback(false);
+      questionShownAtRef.current = Date.now();
       return;
     }
 
@@ -179,9 +219,64 @@ export function useDmSkillsTrainer(trainerType: DmTrainerType) {
       answers: completed,
       completedAt: new Date().toISOString(),
     };
-    void persistDmTrainerSession(user?.id ?? null, summary, retryModeRef.current);
+    sessionSavedRef.current = true;
+    const attempts = attemptInputsRef.current.filter(
+      (a): a is DmTrainerAttemptInput => a != null,
+    );
+    void persistDmTrainerSession(user?.id ?? null, summary, retryModeRef.current, {
+      attempts,
+      completed: true,
+    });
     setPhase("results");
   }, [showFeedback, currentIndex, total, trainerType, elapsedSeconds, user?.id]);
+
+  /**
+   * Flush partial progress when the user abandons mid-drill (unmount or
+   * pagehide) so answered-so-far work isn't lost. Mirrors the SJT
+   * flushPartialIfNeeded convention. total_questions is the ANSWERED count
+   * (the table CHECKs total_questions > 0, so zero-answer drills are skipped),
+   * and sessionSavedRef guards against double-saving a completed drill.
+   */
+  const flushPartialIfNeeded = useCallback(() => {
+    if (phaseRef.current !== "drill") return;
+    if (sessionSavedRef.current) return;
+    const completed = answersByIndexRef.current.filter(
+      (a): a is DmTrainerSessionAnswer => a != null,
+    );
+    if (completed.length === 0) return;
+    sessionSavedRef.current = true;
+
+    const elapsed =
+      startTimeRef.current != null
+        ? Math.max(0, Math.floor((Date.now() - startTimeRef.current) / 1000))
+        : 0;
+    const summary = {
+      trainerType,
+      correct: completed.filter((a) => a.correct).length,
+      total: completed.length,
+      elapsedSeconds: elapsed,
+      answers: completed,
+      completedAt: new Date().toISOString(),
+    };
+    const attempts = attemptInputsRef.current.filter(
+      (a): a is DmTrainerAttemptInput => a != null,
+    );
+    void persistDmTrainerSession(userIdRef.current, summary, retryModeRef.current, {
+      attempts,
+      completed: false,
+    });
+  }, [trainerType]);
+
+  useEffect(() => {
+    window.addEventListener("pagehide", flushPartialIfNeeded);
+    return () => window.removeEventListener("pagehide", flushPartialIfNeeded);
+  }, [flushPartialIfNeeded]);
+
+  useEffect(() => {
+    return () => {
+      flushPartialIfNeeded();
+    };
+  }, [flushPartialIfNeeded]);
 
   const restartDrill = useCallback(() => {
     startDrill();
@@ -200,6 +295,9 @@ export function useDmSkillsTrainer(trainerType: DmTrainerType) {
     setShowFeedback(false);
     setElapsedSeconds(0);
     startTimeRef.current = Date.now();
+    attemptInputsRef.current = queue.map(() => null);
+    questionShownAtRef.current = Date.now();
+    sessionSavedRef.current = false;
   }, [answers, questions]);
 
   const backToIntro = useCallback(() => {

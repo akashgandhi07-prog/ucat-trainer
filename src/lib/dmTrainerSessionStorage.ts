@@ -20,6 +20,65 @@ export type DmTrainerSessionPayload = {
   answers: DmTrainerSessionSummary["answers"];
 };
 
+/**
+ * One per-question attempt destined for trainer_question_attempts.
+ * questionDbId is the trainer_questions UUID (the `dbId` field on a
+ * DmTrainerQuestion) — only questions loaded from the database have one,
+ * so local-JSON fallback questions are never logged here (FK constraint).
+ */
+export type DmTrainerAttemptInput = {
+  questionDbId: string;
+  skillTag: string;
+  difficulty: string;
+  isCorrect: boolean;
+  selectedAnswer: string | null;
+  timeTakenSeconds: number;
+};
+
+/**
+ * Fire-and-forget batch insert into trainer_question_attempts.
+ * Works for signed-in users (user_id = auth.uid()) and guests (user_id null).
+ * A failure here must never block or break the session save — errors are
+ * logged and swallowed.
+ */
+export async function logDmTrainerQuestionAttempts(
+  userId: string | null,
+  sessionId: string | null,
+  trainerType: DmTrainerType,
+  attempts: DmTrainerAttemptInput[],
+): Promise<void> {
+  if (attempts.length === 0) return;
+  try {
+    const rows = attempts.map((a) => ({
+      question_id: a.questionDbId,
+      user_id: userId,
+      session_id: sessionId,
+      trainer_type: trainerType,
+      skill_tag: a.skillTag || "unknown",
+      difficulty: a.difficulty || "medium",
+      is_correct: a.isCorrect,
+      selected_answer: a.selectedAnswer,
+      changed_answer: false,
+      time_taken_seconds: a.timeTakenSeconds,
+      explanation_viewed: true,
+      attempt_number: 1,
+    }));
+    const { error } = await supabase.from("trainer_question_attempts").insert(rows);
+    if (error) throw error;
+    supabaseLog.info("dm_trainer_attempts_logged", {
+      trainer_type: trainerType,
+      count: rows.length,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    supabaseLog.error("dm_trainer_attempts_log_failed", {
+      message,
+      trainer_type: trainerType,
+      count: attempts.length,
+    });
+  }
+}
+
 function storageAvailable(): boolean {
   return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
 }
@@ -92,21 +151,29 @@ function toDmHistoryType(
 export async function saveDmTrainerSessionToCloud(
   userId: string,
   payload: DmTrainerSessionPayload,
-): Promise<{ saved: boolean; error?: string }> {
+  options?: { partial?: boolean },
+): Promise<{ saved: boolean; sessionId?: string; error?: string }> {
   if (payload.total_questions <= 0) return { saved: false };
 
+  let sessionId: string | undefined;
   try {
     await withRetry(async () => {
-      const { error } = await supabase.from("dm_trainer_sessions").insert({
-        user_id: userId,
-        ...payload,
-      });
+      const { data, error } = await supabase
+        .from("dm_trainer_sessions")
+        .insert({
+          user_id: userId,
+          ...payload,
+        })
+        .select("id")
+        .single();
       if (error) throw error;
+      sessionId = typeof data?.id === "string" ? data.id : undefined;
     });
 
-    // Record the completed drill in the history system (non-retry full runs only).
+    // Record the completed drill in the history system (non-retry full runs only;
+    // partial abandon flushes don't count as a completed drill).
     // Fire-and-forget — a failure here should never block the session save result.
-    if (!payload.retry_mode) {
+    if (!payload.retry_mode && !options?.partial) {
       void supabase.rpc("complete_dm_trainer_drill", {
         p_trainer_type: toDmHistoryType(payload.trainer_type),
       });
@@ -117,7 +184,7 @@ export async function saveDmTrainerSessionToCloud(
       score: payload.score,
       total: payload.total_questions,
     });
-    return { saved: true };
+    return { saved: true, sessionId };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     supabaseLog.error("dm_trainer_session_save_failed", { message });
@@ -129,23 +196,38 @@ export async function persistDmTrainerSession(
   userId: string | null,
   summary: DmTrainerSessionSummary,
   retryMode: boolean,
+  options?: { attempts?: DmTrainerAttemptInput[]; completed?: boolean },
 ): Promise<void> {
   const payload = summaryToPayload(summary, retryMode);
   if (payload.total_questions <= 0) return;
 
+  const completed = options?.completed ?? true;
+  let sessionId: string | null = null;
+
   if (userId) {
-    await saveDmTrainerSessionToCloud(userId, payload);
+    const result = await saveDmTrainerSessionToCloud(userId, payload, {
+      partial: !completed,
+    });
+    sessionId = result.sessionId ?? null;
   } else {
     appendGuestDmTrainerSession(payload);
   }
 
-  trackEvent("trainer_completed", {
-    training_type: `dm_${summary.trainerType.replace(/-/g, "_")}`,
-    correct: summary.correct,
-    total: summary.total,
-    time_seconds: summary.elapsedSeconds,
-    retry_mode: retryMode,
-  });
+  // Per-question attempt logging — fire-and-forget, never blocks the session save.
+  const attempts = options?.attempts ?? [];
+  if (attempts.length > 0) {
+    void logDmTrainerQuestionAttempts(userId, sessionId, summary.trainerType, attempts);
+  }
+
+  if (completed) {
+    trackEvent("trainer_completed", {
+      training_type: `dm_${summary.trainerType.replace(/-/g, "_")}`,
+      correct: summary.correct,
+      total: summary.total,
+      time_seconds: summary.elapsedSeconds,
+      retry_mode: retryMode,
+    });
+  }
 }
 
 export async function mergeGuestDmTrainerOnSignIn(userId: string): Promise<boolean> {

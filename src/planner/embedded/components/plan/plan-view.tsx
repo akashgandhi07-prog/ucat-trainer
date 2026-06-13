@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from '@/lib/app-navigation'
+import { updatePlanDay } from '@/lib/planner-client'
 import { DBPlan, DBPlanWeek, DBPlanDay, DBSession, SessionType } from '@/types'
 import { SessionPill } from '@/components/ui/badge'
 import { addDays, formatDate, parseDate, toISODate, DAY_NAMES } from '@/lib/utils'
@@ -44,22 +45,23 @@ function DayEditPopover({
   const [error, setError] = useState('')
 
   async function save() {
+    if (availability === 'reduced' && hours) {
+      const h = Number(hours)
+      if (!Number.isFinite(h) || h < 0.5 || h > 8) {
+        setError('Hours must be between 0.5 and 8.')
+        return
+      }
+    }
     setSaving(true)
     setError('')
     try {
-      const res = await fetch('/api/days/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          planId,
-          dayDate,
-          availability,
-          customHours: availability === 'reduced' && hours ? Number(hours) : null,
-        }),
+      await updatePlanDay({
+        planId,
+        dayDate,
+        availability,
+        customHours: availability === 'reduced' && hours ? Number(hours) : null,
       })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(typeof data.error === 'string' ? data.error : 'Failed to update day')
-      await router.refresh()
+      router.refresh()
       onUpdate(
         dayDate,
         availability,

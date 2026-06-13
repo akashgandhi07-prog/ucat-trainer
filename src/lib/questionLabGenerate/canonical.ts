@@ -1,5 +1,5 @@
 import type { PluginVerifyResult } from "./types.ts";
-import { asRecord, parseOptionNumber, str } from "./utils.ts";
+import { parseOptionNumber, str } from "./utils.ts";
 
 export type CanonicalSolution = {
   solutionFormula: string;

@@ -165,18 +165,25 @@ export async function migrateLocalSJTAttemptsToCloud(userId: string): Promise<vo
     return;
   }
 
-  const rows = attempts.map((a) => ({
-    user_id: userId,
-    question_id: a.questionId,
-    question_type: a.type,
-    domain: a.domain,
-    score: a.score,
-    max_score: a.maxScore,
-    items_attempted: a.maxScore > 0 ? Math.round(a.maxScore) : 1,
-    items_total: Math.max(1, Math.round(a.maxScore)),
-    completed: true,
-    created_at: new Date(a.timestamp).toISOString(),
-  }));
+  const rows = attempts.map((a) => {
+    // Legacy attempts never stored item counts, so estimate from the scoring scheme:
+    // rating questions award 1 mark per item (items ≈ max score); a ranking question
+    // is one scenario worth 2 marks, not two items.
+    const estimatedItems =
+      a.type === "ranking" ? 1 : Math.max(1, Math.round(a.maxScore));
+    return {
+      user_id: userId,
+      question_id: a.questionId,
+      question_type: a.type,
+      domain: a.domain,
+      score: a.score,
+      max_score: a.maxScore,
+      items_attempted: estimatedItems,
+      items_total: estimatedItems,
+      completed: true,
+      created_at: new Date(a.timestamp).toISOString(),
+    };
+  });
 
   const { error } = await supabase.from("sjt_sessions").insert(rows);
   if (!error) {

@@ -5,14 +5,19 @@ import Footer from "../components/layout/Footer";
 import { useAuth } from "../hooks/useAuth";
 import type { Passage } from "../data/passages";
 import { PASSAGES } from "../data/passages";
-import type { SessionInsertPayload } from "../types/session";
 import { appendGuestSession } from "../lib/guestSessions";
+import { newClientSessionId, upsertTrainerSession } from "../lib/trainerSessionLog";
+import type { TrainerSessionUpsert } from "../lib/trainerSessionLog";
 import { supabase } from "../lib/supabase";
 import { supabaseLog } from "../lib/logger";
-import { withRetry } from "../lib/retry";
 import { getSessionSaveErrorMessage } from "../lib/sessionSaveError";
 import type { TrainingDifficulty } from "../types/training";
-import { pickNewRandomPassage } from "../lib/passages";
+import {
+  getVrPassageCandidates,
+  hydrateSeenFromCloud,
+  markPassageSeen,
+  pickUnseenPassage,
+} from "../lib/vrPassageHistory";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 import SEOHead from "../components/seo/SEOHead";
 import TrainerFaqSection from "../components/seo/TrainerFaqSection";
@@ -82,7 +87,11 @@ export default function KeywordScanningPage() {
 
   const [phase, setPhase] = useState<Phase>("scanning");
   const [passage, setPassage] = useState<Passage | null>(
-    () => state?.passage ?? PASSAGES[0] ?? null
+    () =>
+      state?.passage ??
+      (PASSAGES.length > 0
+        ? pickUnseenPassage("keyword_scanning", getVrPassageCandidates(difficulty))
+        : null)
   );
   const [startTime, setStartTime] = useState(() => Date.now());
   const [foundCount, setFoundCount] = useState(0);
@@ -92,6 +101,7 @@ export default function KeywordScanningPage() {
   const [bestTimeSeconds, setBestTimeSeconds] = useState<number | null>(null);
   const [resultsElapsedSeconds, setResultsElapsedSeconds] = useState<number | null>(null);
   const hasAutoSavedRef = useRef(false);
+  const sessionIdRef = useRef(newClientSessionId());
   const mountedRef = useRef(true);
   const { user } = useAuth();
 
@@ -101,6 +111,16 @@ export default function KeywordScanningPage() {
       mountedRef.current = false;
     };
   }, []);
+
+  // Hydrate cross-device passage history once per page load (fire-and-forget).
+  useEffect(() => {
+    if (user) void hydrateSeenFromCloud(user.id);
+  }, [user]);
+
+  // The passage is actually shown once the scanning phase starts.
+  useEffect(() => {
+    if (phase === "scanning" && passage?.id) markPassageSeen("keyword_scanning", passage.id);
+  }, [phase, passage?.id]);
 
   useEffect(() => {
     if (phase === "scanning") {
@@ -129,7 +149,7 @@ export default function KeywordScanningPage() {
         .limit(1)
         .maybeSingle();
       const t = data?.time_seconds;
-      setBestTimeSeconds(typeof t === "number" ? t : null);
+      setBestTimeSeconds(typeof t === "number" && t > 0 ? t : null);
     };
     fetchBest();
   }, [phase, user, keywordCount]);
@@ -175,7 +195,7 @@ export default function KeywordScanningPage() {
   const handleSaveProgress = useCallback(
     async (opts?: { skipRestart?: boolean }) => {
       if (!user) {
-        const timeSeconds = Math.round((Date.now() - startTime) / 1000);
+        const timeSeconds = Math.max(1, Math.round((Date.now() - startTime) / 1000));
         appendGuestSession({
           training_type: "keyword_scanning",
           wpm: null,
@@ -183,38 +203,29 @@ export default function KeywordScanningPage() {
           total: targets.length,
           time_seconds: timeSeconds,
           difficulty,
+          passage_id: passage?.id ?? null,
+          client_session_id: sessionIdRef.current,
         });
         return;
       }
       setSaveError(null);
       setSaving(true);
-      const timeSeconds = Math.round((Date.now() - startTime) / 1000);
-      const payload: SessionInsertPayload = {
-        user_id: user.id,
+      const timeSeconds = Math.max(1, Math.round((Date.now() - startTime) / 1000));
+      const payload: TrainerSessionUpsert = {
         training_type: "keyword_scanning",
         difficulty,
         wpm: null,
         correct: foundCount,
         total: targets.length,
         time_seconds: timeSeconds,
+        passage_id: passage?.id ?? null,
       };
-      try {
-        await withRetry(async () => {
-          const { error } = await supabase.from("sessions").insert(payload);
-          if (error) throw error;
-        });
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "Unknown error";
-        const code = (err as { code?: string })?.code;
-        supabaseLog.error("Failed to save keyword_scanning session", {
-          message,
-          code,
-          userId: user.id,
-        });
+      const saved = await upsertTrainerSession(user.id, sessionIdRef.current, payload);
+      if (!saved) {
         if (mountedRef.current) {
-          setSaveError(getSessionSaveErrorMessage(err));
+          setSaveError(getSessionSaveErrorMessage(null));
+          setSaving(false);
         }
-        if (mountedRef.current) setSaving(false);
         return;
       }
       supabaseLog.info("Keyword scanning session saved", {
@@ -229,13 +240,14 @@ export default function KeywordScanningPage() {
       setSaveError(null);
       setSaving(false);
       if (!opts?.skipRestart) {
+        sessionIdRef.current = newClientSessionId();
         setPhase("scanning");
         setFoundSet(new Set());
         setFoundCount(0);
         setStartTime(Date.now());
       }
     },
-    [user, foundCount, targets.length, startTime, difficulty]
+    [user, foundCount, targets.length, startTime, difficulty, passage?.id]
   );
 
   useEffect(() => {
@@ -245,16 +257,18 @@ export default function KeywordScanningPage() {
       /* eslint-disable-next-line react-hooks/set-state-in-effect -- auto-save on results */
       handleSaveProgress({ skipRestart: true });
     } else {
-      const timeSeconds = Math.round((Date.now() - startTime) / 1000);
+      const timeSeconds = Math.max(1, Math.round((Date.now() - startTime) / 1000));
       appendGuestSession({
         training_type: "keyword_scanning",
         wpm: null,
         correct: foundCount,
         total: targets.length,
         time_seconds: timeSeconds,
+        passage_id: passage?.id ?? null,
+        client_session_id: sessionIdRef.current,
       });
     }
-  }, [phase, user, handleSaveProgress, startTime, foundCount, targets.length]);
+  }, [phase, user, handleSaveProgress, startTime, foundCount, targets.length, passage?.id]);
 
   if (!passage) {
     return <Navigate to="/?mode=keyword_scanning" replace />;
@@ -336,11 +350,14 @@ export default function KeywordScanningPage() {
               type="button"
               onClick={() => {
                 hasAutoSavedRef.current = false;
+                sessionIdRef.current = newClientSessionId();
                 setPhase("scanning");
                 setFoundSet(new Set());
                 setFoundCount(0);
                 setStartTime(Date.now());
-                setPassage((current) => pickNewRandomPassage(current?.id, difficulty));
+                setPassage((current) =>
+                  pickUnseenPassage("keyword_scanning", getVrPassageCandidates(difficulty), current?.id)
+                );
               }}
               className="min-h-[44px] px-6 py-3 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90"
             >

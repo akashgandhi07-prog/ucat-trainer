@@ -1,8 +1,8 @@
 import { supabase } from '../lib/supabase';
 import { trackEvent } from '../lib/analytics';
-import { withRetry } from '../lib/retry';
 import { supabaseLog } from '../lib/logger';
 import { appendGuestSession } from '../lib/guestSessions';
+import { newClientSessionId, upsertTrainerSession } from '../lib/trainerSessionLog';
 import { appendConversionTrainerDetailSession } from '../lib/conversionTrainerStorage';
 import type { MentalMathsSummaryStats } from '../hooks/useMentalMathsLogic';
 import { difficultyFromStageIndex } from '../components/mentalMaths/mentalMathsStages';
@@ -20,7 +20,10 @@ export interface GameSession {
 
 const STORAGE_KEY = 'ucat_mastery_stats';
 
-export const saveSession = async (session: Omit<GameSession, 'id' | 'date'>) => {
+export const saveSession = async (
+    session: Omit<GameSession, 'id' | 'date'>,
+    clientSessionId: string = newClientSessionId(),
+) => {
     const history = getHistory();
     const newSession: GameSession = {
         ...session,
@@ -35,40 +38,33 @@ export const saveSession = async (session: Omit<GameSession, 'id' | 'date'>) => 
     // Persist to Supabase if logged in, otherwise add to guest_sessions for the dashboard
     try {
         const { data: { user } } = await supabase.auth.getUser();
+        const timeSeconds = session.timeTaken ? parseInt(session.timeTaken, 10) : 60;
         if (user) {
-            const timeSeconds = session.timeTaken ? parseInt(session.timeTaken, 10) : 60;
-            const payload = {
-                user_id: user.id,
-                training_type: 'calculator' as const,
-                wpm: session.kps,
+            const saved = await upsertTrainerSession(user.id, clientSessionId, {
+                training_type: 'calculator',
+                wpm: null,
+                kps: session.kps,
                 correct: session.correctQuestions || 0,
                 total: session.totalQuestions || 0,
                 time_seconds: timeSeconds,
-            };
-            try {
-                await withRetry(async () => {
-                    const { error } = await supabase.from('sessions').insert(payload);
-                    if (error) throw error;
-                });
+            });
+            if (saved) {
                 supabaseLog.info("calculator_session_saved", {
                     userId: user.id,
                     mode: session.mode,
                     kps: session.kps,
-                    correct: payload.correct,
-                    total: payload.total,
                 });
                 trackEvent("trainer_completed", { training_type: "calculator", mode: session.mode });
-            } catch (err) {
-                const message = err instanceof Error ? err.message : String(err);
-                supabaseLog.error("calculator_session_save_failed", { message, userId: user.id });
             }
         } else {
             appendGuestSession({
                 training_type: 'calculator',
-                wpm: session.kps,
+                wpm: null,
+                kps: session.kps,
                 correct: session.correctQuestions || 0,
                 total: session.totalQuestions || 0,
-                time_seconds: session.timeTaken ? parseInt(session.timeTaken, 10) : 60,
+                time_seconds: timeSeconds,
+                client_session_id: clientSessionId,
             });
         }
     } catch (err) {
@@ -79,27 +75,24 @@ export const saveSession = async (session: Omit<GameSession, 'id' | 'date'>) => 
     return newSession;
 };
 
-/** Save a mental maths session to Supabase. wpm column stores average time per question in ms. Returns true on success. */
+/** Save a mental maths session to Supabase. avg_ms stores average time per question. Returns true on success. */
 export async function saveMentalMathsSession(
   stats: MentalMathsSummaryStats,
-  userId: string
+  userId: string,
+  clientSessionId: string = newClientSessionId(),
 ): Promise<boolean> {
   const difficulty = difficultyFromStageIndex(stats.stageIndex);
   const timeSeconds = Math.round((stats.avgTimeMs * stats.total) / 1000) || 1;
-  const payload = {
-    user_id: userId,
-    training_type: 'mental_maths' as const,
+  const saved = await upsertTrainerSession(userId, clientSessionId, {
+    training_type: 'mental_maths',
     difficulty,
-    wpm: Math.round(stats.avgTimeMs),
+    wpm: null,
+    avg_ms: Math.round(stats.avgTimeMs),
     correct: stats.correct,
     total: stats.total,
     time_seconds: timeSeconds,
-  };
-  try {
-    await withRetry(async () => {
-      const { error } = await supabase.from('sessions').insert(payload);
-      if (error) throw error;
-    });
+  });
+  if (saved) {
     supabaseLog.info("mental_maths_session_saved", {
       userId,
       difficulty,
@@ -107,12 +100,10 @@ export async function saveMentalMathsSession(
       total: stats.total,
     });
     trackEvent("trainer_completed", { training_type: "mental_maths", difficulty });
-    return true;
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    supabaseLog.error("mental_maths_session_save_failed", { message, userId });
-    return false;
+  } else {
+    supabaseLog.error("mental_maths_session_save_failed", { userId });
   }
+  return saved;
 }
 
 export type ConversionSessionStats = {
@@ -123,7 +114,10 @@ export type ConversionSessionStats = {
   trapStats?: Record<string, number>;
 };
 
-export async function saveConversionSession(stats: ConversionSessionStats): Promise<boolean> {
+export async function saveConversionSession(
+  stats: ConversionSessionStats,
+  clientSessionId: string = newClientSessionId(),
+): Promise<boolean> {
   const payload = {
     training_type: 'unit_conversions' as const,
     difficulty: 'medium' as const,
@@ -149,20 +143,17 @@ export async function saveConversionSession(stats: ConversionSessionStats): Prom
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      await withRetry(async () => {
-        const { error } = await supabase.from('sessions').insert({
-          ...payload,
-          user_id: user.id,
-        });
-        if (error) throw error;
-      });
+      // Checkpoints every few answers upsert the SAME row, so a finished drill is
+      // exactly one session no matter how many checkpoints fired along the way.
+      const saved = await upsertTrainerSession(user.id, clientSessionId, payload);
+      if (!saved) return false;
       supabaseLog.info("conversion_session_saved", {
         userId: user.id,
         correct: stats.correct,
         total: stats.total,
       });
     } else {
-      appendGuestSession(payload);
+      appendGuestSession({ ...payload, client_session_id: clientSessionId });
     }
     trackEvent("trainer_completed", { training_type: "unit_conversions", difficulty: "medium" });
     return true;

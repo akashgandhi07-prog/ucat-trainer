@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from '@/lib/app-navigation'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { DBSession, DBPlanDay, DBPlan } from '@/types'
@@ -15,6 +15,11 @@ import { Button } from '@/components/ui/button'
 import { SessionLogSheet, type SessionLogSavePayload } from '@/components/sessions/session-log-sheet'
 import { upsertGuestCompletion } from '@/lib/guest-planner-store'
 import { completeSession, updatePlanDay } from '@/lib/planner-client'
+import { trainerLinkForSession, type TrainerLink } from '../../../lib/session-trainer-links'
+
+const ACTIVE_SESSION_KEY = 'planner_active_session'
+const LAST_STREAK_KEY = 'planner_last_streak'
+const RETURN_PROMPT_MS = 10 * 60 * 1000
 
 interface SessionWithCompletion extends DBSession {
   completed: boolean
@@ -95,6 +100,79 @@ export function TodayView({
   const totalCount = activeSessions.length
 
   const weeksLeft = weeksUntil(parseDate(examDate))
+  const daysLeft = Math.ceil(
+    (parseDate(examDate).getTime() - parseDate(todayDate).getTime()) / (24 * 60 * 60 * 1000),
+  )
+
+  // Return-to-log prompt: if the user clicked "Start session" earlier and
+  // ≥10 minutes have passed without logging it, reopen the log sheet.
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(ACTIVE_SESSION_KEY)
+      if (!raw) return
+      const parsed = JSON.parse(raw) as { sessionId?: string; startedAt?: number } | null
+      const activeId = parsed?.sessionId
+      const startedAt = parsed?.startedAt
+      if (!activeId || typeof startedAt !== 'number') {
+        sessionStorage.removeItem(ACTIVE_SESSION_KEY)
+        return
+      }
+      const target = sessions.find(s => s.id === activeId)
+      if (!target || target.completed) {
+        sessionStorage.removeItem(ACTIVE_SESSION_KEY)
+        return
+      }
+      if (Date.now() - startedAt >= RETURN_PROMPT_MS) {
+        sessionStorage.removeItem(ACTIVE_SESSION_KEY)
+        setSheetSession(target)
+      }
+      // <10 min elapsed: leave the key so a later visit can still prompt.
+    } catch {
+      // sessionStorage unavailable — skip silently
+    }
+    // Mount-only: pre-selects the pending session once per page load.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Streak-loss notice: if a streak of ≥3 dropped to 0, tell the user once per day.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(LAST_STREAK_KEY)
+      const stored = raw
+        ? (JSON.parse(raw) as { streak?: number; date?: string; noticedDate?: string } | null)
+        : null
+      let noticedDate = stored?.noticedDate
+      if (
+        typeof stored?.streak === 'number' &&
+        stored.streak >= 3 &&
+        streak === 0 &&
+        noticedDate !== todayDate
+      ) {
+        toast(`Your ${stored.streak}-day streak ended — one session today starts a new one.`)
+        noticedDate = todayDate
+      }
+      localStorage.setItem(
+        LAST_STREAK_KEY,
+        JSON.stringify({ streak, date: todayDate, noticedDate: noticedDate ?? null }),
+      )
+    } catch {
+      // localStorage unavailable — skip silently
+    }
+    // Mount-only: compares the persisted streak against this page load.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  function startSession(session: SessionWithCompletion, link: TrainerLink) {
+    try {
+      sessionStorage.setItem(
+        ACTIVE_SESSION_KEY,
+        JSON.stringify({ sessionId: session.id, startedAt: Date.now() }),
+      )
+    } catch {
+      // sessionStorage unavailable — still navigate
+    }
+    router.push(link.href)
+  }
 
   async function markDayBusy(availability: 'unavailable' | 'reduced', hours?: number) {
     if (guestMode) {
@@ -163,6 +241,17 @@ export function TodayView({
       )
     )
     setSavingId(sessionId)
+
+    if (nextCompleted) {
+      try {
+        const raw = sessionStorage.getItem(ACTIVE_SESSION_KEY)
+        if (raw && (JSON.parse(raw) as { sessionId?: string } | null)?.sessionId === sessionId) {
+          sessionStorage.removeItem(ACTIVE_SESSION_KEY)
+        }
+      } catch {
+        // sessionStorage unavailable — ignore
+      }
+    }
 
     try {
       if (guestMode) {
@@ -318,13 +407,26 @@ export function TodayView({
     <>
     <div className="p-6 md:p-10 max-w-3xl mx-auto space-y-8">
       {insights && insights.length > 0 && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50/85 px-4 py-3 text-sm text-amber-950 space-y-1.5">
-          <p className="font-semibold text-xs uppercase tracking-wide text-amber-900">Momentum check</p>
+        <div className="rounded-xl border border-amber-200 bg-amber-50/85 px-4 py-3 text-sm text-amber-950 space-y-2">
+          <p className="font-semibold text-xs uppercase tracking-wide text-amber-900">Catch up</p>
           <ul className="space-y-1 list-disc pl-4 text-[13px] leading-snug text-amber-950/95">
             {insights.map(line => (
               <li key={line}>{line}</li>
             ))}
           </ul>
+          <button
+            type="button"
+            onClick={() => {
+              if (!guestMode && plan) {
+                setShowRebuild(true)
+              } else {
+                router.push('/study-plan/plan')
+              }
+            }}
+            className="inline-flex items-center rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/90"
+          >
+            {!guestMode && plan ? 'Rebuild plan ahead' : 'Open plan calendar'}
+          </button>
         </div>
       )}
       <PlannerToolbarLinks />
@@ -333,8 +435,14 @@ export function TodayView({
         <div>
           <p className="text-sm text-muted-foreground font-medium">{formatDateLong(parseDate(todayDate))}</p>
           <h1 className="text-3xl font-bold text-slate-900 mt-1">Today's sessions</h1>
-          {weeksLeft > 0 && (
-            <p className="text-sm text-muted-foreground mt-1">{weeksLeft} week{weeksLeft !== 1 ? 's' : ''} until your exam</p>
+          {daysLeft > 0 && (
+            <p className="text-sm font-semibold text-primary mt-1">
+              {daysLeft} day{daysLeft !== 1 ? 's' : ''} until your exam
+              {weeksLeft > 1 ? ` (about ${weeksLeft} weeks)` : ''}
+            </p>
+          )}
+          {daysLeft === 0 && (
+            <p className="text-sm font-semibold text-primary mt-1">Your exam is today — good luck!</p>
           )}
         </div>
         <div className="relative shrink-0 mt-1">
@@ -410,14 +518,19 @@ export function TodayView({
         <p className="text-xs text-slate-400 -mt-1">
           Tap any session to log time: full block, partial minutes, or not done.
         </p>
-        {activeSessions.map(session => (
-          <SessionCard
-            key={session.id}
-            session={session}
-            saving={savingId === session.id}
-            onOpen={() => setSheetSession(session)}
-          />
-        ))}
+        {activeSessions.map(session => {
+          const trainerLink = trainerLinkForSession(session.session_type, session.notes)
+          return (
+            <SessionCard
+              key={session.id}
+              session={session}
+              saving={savingId === session.id}
+              onOpen={() => setSheetSession(session)}
+              trainerLink={trainerLink}
+              onStart={trainerLink ? () => startSession(session, trainerLink) : undefined}
+            />
+          )
+        })}
         {activeSessions.length === 0 && (
           <p className="text-slate-400 text-sm text-center py-8">No sessions scheduled for today.</p>
         )}
@@ -448,10 +561,14 @@ function SessionCard({
   session,
   saving,
   onOpen,
+  trainerLink,
+  onStart,
 }: {
   session: SessionWithCompletion
   saving: boolean
   onOpen: () => void
+  trainerLink: TrainerLink | null
+  onStart?: () => void
 }) {
   const planned = session.duration_minutes
   const logged =
@@ -462,8 +579,16 @@ function SessionCard({
   const doneZero = session.completed && logged === 0
 
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
+      aria-disabled={saving}
+      onKeyDown={e => {
+        if ((e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget && !saving) {
+          e.preventDefault()
+          onOpen()
+        }
+      }}
       className={`w-full flex items-center gap-4 rounded-xl border p-4 transition-all text-left cursor-pointer select-none ${
         !session.completed
           ? 'bg-white border-border hover:border-border hover:shadow-sm'
@@ -473,8 +598,9 @@ function SessionCard({
               ? 'bg-slate-50 border-green-200'
               : 'bg-slate-50 border-border'
       }`}
-      onClick={onOpen}
-      disabled={saving}
+      onClick={() => {
+        if (!saving) onOpen()
+      }}
     >
       <div
         className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
@@ -504,6 +630,19 @@ function SessionCard({
         {session.notes && (
           <p className="text-xs text-muted-foreground">{session.notes}</p>
         )}
+        {!session.completed && trainerLink && onStart && (
+          <button
+            type="button"
+            title={trainerLink.label}
+            onClick={e => {
+              e.stopPropagation()
+              onStart()
+            }}
+            className="mt-1.5 inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/90"
+          >
+            Start session →
+          </button>
+        )}
       </div>
 
       <div
@@ -522,6 +661,6 @@ function SessionCard({
           </>
         )}
       </div>
-    </button>
+    </div>
   )
 }

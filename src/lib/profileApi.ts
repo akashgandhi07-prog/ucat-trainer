@@ -15,6 +15,8 @@ export type Profile = {
   stream: Stream | null;
   updated_at: string;
   role?: string | null;
+  /** Planner identity: 'tutor' unlocks tutor navigation and invite links. */
+  planner_role?: string | null;
   entry_year?: string | null;
   email_marketing_opt_in?: boolean;
   /** UCAT exam date (published sitting window). ISO date string YYYY-MM-DD. */
@@ -28,7 +30,7 @@ export async function getProfile(userId: string): Promise<Profile | null> {
   try {
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, full_name, stream, updated_at, role, entry_year, email_marketing_opt_in, ucat_exam_date")
+      .select("id, full_name, stream, updated_at, role, planner_role, entry_year, email_marketing_opt_in, ucat_exam_date")
       .eq("id", userId)
       .maybeSingle();
 

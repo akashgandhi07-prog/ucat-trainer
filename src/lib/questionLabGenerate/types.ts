@@ -1,7 +1,7 @@
 import type { QLQuestionKind } from "../../types/questionLab";
 import type { FailureCategory } from "./failureCategories.ts";
 
-export type VerifyPluginId = "set-logic" | "numeric" | "sjt-structure";
+export type VerifyPluginId = "set-logic" | "numeric" | "sjt-structure" | "vr-structure";
 
 export type TrainerGenerateProfile = {
   trainerType: string;

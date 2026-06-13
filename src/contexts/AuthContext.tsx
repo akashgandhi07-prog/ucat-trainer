@@ -4,7 +4,7 @@ import { withRetry } from "../lib/retry";
 import { authLog } from "../lib/logger";
 import { trackEvent } from "../lib/analytics";
 import { getProfile, upsertProfile } from "../lib/profileApi";
-import { getGuestSessions, clearGuestSessions } from "../lib/guestSessions";
+import { clearGuestSessions, ensureGuestSessionIds } from "../lib/guestSessions";
 import { mergeGuestSJTOnSignIn, migrateLocalSJTAttemptsToCloud } from "../lib/sjtSessionStorage";
 import {
   mergeGuestDmTrainerOnSignIn,
@@ -108,6 +108,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfile(p);
   }, []);
 
+  /**
+   * A locally stored token can outlive its session (revoked, user deleted, refresh
+   * failed). RLS then silently hides the profile row and the bootstrap upsert is
+   * rejected, so without this check every page load loops read → 403 → read forever.
+   */
+  const handleStaleSession = useCallback(async () => {
+    authLog.warn("Stale session detected (profile unreadable and upsert rejected) - signing out locally");
+    try {
+      await supabase.auth.signOut({ scope: "local" });
+    } catch {
+      /* ignore */
+    }
+    if (!mountedRef.current) return;
+    setUser(null);
+    setProfile(null);
+    showToast("Your session expired. Please sign in again.", { variant: "error" });
+  }, [showToast]);
+
+  /**
+   * Load the profile for a signed-in user, creating a minimal row on first login.
+   * Returns "stale" when the stored session no longer maps to a valid user.
+   */
+  const bootstrapProfile = useCallback(
+    async (userId: string): Promise<AuthState["profile"] | "stale"> => {
+      let p = await getProfile(userId);
+      if (p || !mountedRef.current) return p;
+      authLog.info("No profile row for user, creating minimal profile", { userId });
+      const created = await upsertProfile(userId, null, null);
+      if (!mountedRef.current) return null;
+      if (!created.ok) {
+        const { data, error } = await supabase.auth.getUser();
+        if (error || !data?.user) return "stale";
+        authLog.error("Profile bootstrap upsert failed for valid session", {
+          userId,
+          error: created.error,
+        });
+        return null;
+      }
+      p = await getProfile(userId);
+      return p;
+    },
+    [],
+  );
+
   /* ── loadSession ───────────────────────────────────────────────── */
   const loadSession = useCallback(async () => {
     setSessionLoadFailed(false);
@@ -151,21 +195,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Always runs - fix #3 (no fragile early-return before finally)
     if (!mountedRef.current) return;
     setUser(resolvedUser);
+    // Unblock rendering immediately; the profile loads in the background so a slow
+    // profiles round trip can never hold the whole app on the loading screen.
+    setLoading(false);
     if (resolvedUser) {
-      let p = await getProfile(resolvedUser.id);
-      if (!mountedRef.current) return;
-      if (!p) {
-        authLog.info("No profile row for user, creating minimal profile", { userId: resolvedUser.id });
-        await upsertProfile(resolvedUser.id, null, null);
-        p = await getProfile(resolvedUser.id);
-      }
-      if (!mountedRef.current) return;
-      setProfile(p);
+      void (async () => {
+        const p = await bootstrapProfile(resolvedUser.id);
+        if (!mountedRef.current) return;
+        if (p === "stale") {
+          await handleStaleSession();
+          return;
+        }
+        setProfile(p);
+      })();
     } else {
       setProfile(null);
     }
-    setLoading(false);
-  }, []);
+  }, [bootstrapProfile, handleStaleSession]);
 
   /* ── mount: listener only (fix #7 - no double-load) ────────── */
   useEffect(() => {
@@ -198,14 +244,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         void (async () => {
-          let p = await getProfile(u.id);
+          const bootstrapped = await bootstrapProfile(u.id);
           if (!mountedRef.current) return;
-          if (!p) {
-            authLog.info("No profile row, creating minimal profile", { userId: u.id });
-            await upsertProfile(u.id, null, null);
-            if (!mountedRef.current) return;
-            p = await getProfile(u.id);
+          if (bootstrapped === "stale") {
+            await handleStaleSession();
+            return;
           }
+          let p = bootstrapped;
           const meta = u.user_metadata as Record<string, unknown> | null;
           const metaStream = (meta?.stream as string | undefined) ?? undefined;
           const validStreams = ["Medicine", "Dentistry", "Veterinary Medicine", "Other", "Undecided"];
@@ -229,20 +274,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (event === "SIGNED_IN" && session?.user) {
         trackEvent("sign_in");
-        const guestSessions = getGuestSessions();
+        // Ids are assigned and persisted to localStorage BEFORE uploading, so a
+        // partially-failed merge retried on the next sign-in upserts the same rows
+        // instead of duplicating the user's history.
+        const guestSessions = ensureGuestSessionIds();
         if (guestSessions.length > 0 && authListenerActive) {
           const rows = guestSessions.map((g) => ({
             user_id: session.user.id,
             training_type: g.training_type,
             difficulty: g.difficulty ?? null,
             wpm: g.wpm ?? null,
+            kps: g.kps ?? null,
+            avg_ms: g.avg_ms ?? null,
             correct: g.correct,
             total: g.total,
             passage_id: g.passage_id ?? null,
             wpm_rating: g.wpm_rating ?? null,
             time_seconds: g.time_seconds ?? null,
+            client_session_id: g.client_session_id ?? null,
           }));
-          const { error } = await supabase.from("sessions").insert(rows);
+          const { error } = await supabase
+            .from("sessions")
+            .upsert(rows, { onConflict: "user_id,client_session_id", ignoreDuplicates: true });
           if (!error) {
             clearGuestSessions();
             showToast("History successfully synced!", { variant: "success" });
@@ -341,7 +394,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       authListenerActive = false;
       subscription.unsubscribe();
     };
-  }, [fetchProfile, showToast]);
+  }, [fetchProfile, showToast, bootstrapProfile, handleStaleSession]);
 
   // Fallback: if INITIAL_SESSION never fires (e.g. edge case / env), stop loading after a short delay
   const loadingRef = useRef(loading);

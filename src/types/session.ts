@@ -35,26 +35,35 @@ export interface AuthState {
 export interface SessionRow {
   id: string;
   user_id: string;
-  training_type: "speed_reading" | "rapid_recall" | "keyword_scanning" | "calculator" | "inference_trainer" | "mental_maths" | "unit_conversions";
+  training_type: "speed_reading" | "rapid_recall" | "keyword_scanning" | "calculator" | "inference_trainer" | "mental_maths" | "unit_conversions" | "not_except";
   difficulty?: "easy" | "medium" | "hard" | "stage_1" | "stage_2" | "stage_3" | "stage_4" | null;
   wpm: number | null;
+  /** Calculator keystrokes per second (was historically stored in wpm). */
+  kps?: number | null;
+  /** Mental maths average ms per question (was historically stored in wpm). */
+  avg_ms?: number | null;
   correct: number;
   total: number;
   created_at: string;
   passage_id: string | null;
   wpm_rating?: string | null;
   time_seconds?: number | null;
+  /** Client-generated per-drill uuid; cloud writes upsert on (user_id, client_session_id). */
+  client_session_id?: string | null;
 }
 
 /** Payload for inserting a row into sessions. Use this instead of Record<string, unknown>. */
 export interface SessionInsertPayload {
   user_id: string;
-  training_type: "speed_reading" | "rapid_recall" | "keyword_scanning" | "calculator" | "inference_trainer" | "mental_maths" | "unit_conversions";
+  training_type: "speed_reading" | "rapid_recall" | "keyword_scanning" | "calculator" | "inference_trainer" | "mental_maths" | "unit_conversions" | "not_except";
   difficulty?: "easy" | "medium" | "hard" | "stage_1" | "stage_2" | "stage_3" | "stage_4" | null;
   wpm: number | null;
+  kps?: number | null;
+  avg_ms?: number | null;
   correct: number;
   total: number;
   passage_id?: string | null;
   wpm_rating?: string | null;
   time_seconds?: number | null;
+  client_session_id?: string | null;
 }
