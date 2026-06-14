@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { isMocksOnlyPlaceholderPlan } from "../../planner/lib/load-planner-data";
 import { supabase } from "../../lib/supabase";
+import { withTimeout } from "../../lib/withTimeout";
 
 interface PlanSession {
   id: string;
@@ -50,33 +51,42 @@ export default function TodayPlanStrip({ userId }: TodayPlanStripProps) {
     let cancelled = false;
 
     async function load() {
-      const { data: plan } = await supabase
-        .from("plans")
-        .select("id, exam_date")
-        .eq("student_id", userId)
-        .eq("status", "active")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      try {
+        const { data: plan } = await withTimeout(
+          supabase
+            .from("plans")
+            .select("id, exam_date")
+            .eq("student_id", userId)
+            .eq("status", "active")
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+        );
 
-      if (cancelled) return;
-      if (!plan || isMocksOnlyPlaceholderPlan(plan)) {
+        if (cancelled) return;
+        if (!plan || isMocksOnlyPlaceholderPlan(plan)) {
+          setLoading(false);
+          return;
+        }
+
+        setHasPlan(true);
+
+        const { data: rows } = await withTimeout(
+          supabase
+            .from("plan_sessions")
+            .select("id, session_type, duration_minutes, position")
+            .eq("plan_id", plan.id)
+            .eq("day_date", todayISO())
+            .order("position"),
+        );
+
+        if (cancelled) return;
+        setSessions((rows as PlanSession[]) ?? []);
         setLoading(false);
-        return;
+      } catch {
+        // Hang or error: stop loading (the strip hides itself when no plan loaded).
+        if (!cancelled) setLoading(false);
       }
-
-      setHasPlan(true);
-
-      const { data: rows } = await supabase
-        .from("plan_sessions")
-        .select("id, session_type, duration_minutes, position")
-        .eq("plan_id", plan.id)
-        .eq("day_date", todayISO())
-        .order("position");
-
-      if (cancelled) return;
-      setSessions((rows as PlanSession[]) ?? []);
-      setLoading(false);
     }
 
     load();

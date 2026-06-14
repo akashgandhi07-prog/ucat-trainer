@@ -25,7 +25,7 @@ export default async function HomePage() {
       <nav className="flex items-center justify-between max-w-5xl mx-auto px-6 py-5">
         <div className="flex items-center gap-2">
           <div className="flex gap-1">
-            <div className="w-3 h-3 rounded-full bg-secondary0" />
+            <div className="w-3 h-3 rounded-full bg-primary" />
             <div className="w-3 h-3 rounded-full bg-green-500" />
             <div className="w-3 h-3 rounded-full bg-amber-500" />
             <div className="w-3 h-3 rounded-full bg-foreground" />
@@ -74,7 +74,7 @@ export default async function HomePage() {
         {/* Feature grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-20">
           {[
-            { color: 'bg-secondary0', label: 'Verbal Reasoning', desc: 'Section-specific sessions weighted by your confidence score' },
+            { color: 'bg-primary', label: 'Verbal Reasoning', desc: 'Section-specific sessions weighted by your confidence score' },
             { color: 'bg-green-500', label: 'Decision Making', desc: 'Progressive mocks from mini to full as your exam approaches' },
             { color: 'bg-amber-500', label: 'Quantitative Reasoning', desc: 'Automatic plan adjustment after each mock and weekly reflection' },
             { color: 'bg-foreground', label: 'Situational Judgement', desc: 'Tutor visibility, notes, and override controls throughout' },

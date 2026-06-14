@@ -66,7 +66,7 @@ export function TrainerShell({ pathWithQuery }: TrainerShellProps) {
         <iframe
           title="UCAT skills trainer"
           src={iframeSrc}
-          className="w-full flex-1 min-h-[calc(100vh-52px)] border-0 bg-white"
+          className="w-full flex-1 min-h-[calc(100dvh-52px)] border-0 bg-white"
           allow="clipboard-write"
         />
       ) : null}

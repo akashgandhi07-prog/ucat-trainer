@@ -734,7 +734,7 @@ export function MockScoresView({
           >
             {tab === 'full' ? 'Full Mocks' : 'Mini Mocks'}
             <span className={`ml-2 rounded-full px-1.5 py-0.5 text-xs ${
-              activeTab === tab ? 'bg-secondary0 text-white' : 'bg-slate-100 text-muted-foreground'
+              activeTab === tab ? 'bg-primary text-white' : 'bg-slate-100 text-muted-foreground'
             }`}>
               {tab === 'full' ? fullScores.length : miniScores.length}
             </span>

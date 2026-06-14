@@ -63,7 +63,7 @@ export default async function PublicPlanPage({ params }: PageProps) {
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="flex gap-0.5">
-              <div className="w-2 h-2 rounded-full bg-secondary0" />
+              <div className="w-2 h-2 rounded-full bg-primary" />
               <div className="w-2 h-2 rounded-full bg-green-500" />
               <div className="w-2 h-2 rounded-full bg-amber-500" />
               <div className="w-2 h-2 rounded-full bg-foreground" />

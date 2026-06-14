@@ -36,7 +36,7 @@ export function NavSidebar({ user, planSlug }: NavSidebarProps) {
       <div className="px-5 py-5 border-b border-slate-100">
         <Link href="/dashboard" className="inline-flex items-center gap-2">
           <div className="flex gap-0.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-secondary0" />
+            <div className="w-2.5 h-2.5 rounded-full bg-primary" />
             <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
             <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
             <div className="w-2.5 h-2.5 rounded-full bg-foreground" />

@@ -1242,7 +1242,7 @@ function DayCell({
       <div className="flex items-center justify-between mb-1">
         <span className={[
           'text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full',
-          isToday ? 'bg-secondary0 text-white' :
+          isToday ? 'bg-primary text-white' :
           isExamDay ? 'bg-amber-500 text-white' :
           'text-slate-600',
         ].join(' ')}>

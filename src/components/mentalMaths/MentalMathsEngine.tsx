@@ -383,7 +383,7 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
           </span>
           <div className="w-20 h-1.5 bg-secondary rounded-full overflow-hidden">
             <div
-              className="h-full bg-secondary0 rounded-full transition-all duration-300 ease-out"
+              className="h-full bg-primary rounded-full transition-all duration-300 ease-out"
               style={{ width: `${progressPct}%` }}
             />
           </div>

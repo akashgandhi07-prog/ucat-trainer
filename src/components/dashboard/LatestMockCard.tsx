@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
+import { withTimeout } from "../../lib/withTimeout";
 
 interface MockScore {
   id: string;
@@ -110,27 +111,37 @@ export default function LatestMockCard({ userId }: LatestMockCardProps) {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([
-      supabase
-        .from("mock_scores")
-        .select("id, logged_date, score_vr, score_dm, score_qr, score_sjt, mock_type")
-        .eq("student_id", userId)
-        .order("logged_date", { ascending: false })
-        .limit(6),
-      supabase
-        .from("plans")
-        .select("id, mock_target_total, mock_target_sjt_band")
-        .eq("student_id", userId)
-        .eq("status", "active")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-    ]).then(([scoresRes, planRes]) => {
-      if (cancelled) return;
-      setAllScores((scoresRes.data as MockScore[]) ?? []);
-      setPlan((planRes.data as Plan) ?? null);
-      setLoading(false);
-    });
+    withTimeout(
+      Promise.all([
+        supabase
+          .from("mock_scores")
+          .select("id, logged_date, score_vr, score_dm, score_qr, score_sjt, mock_type")
+          .eq("student_id", userId)
+          .order("logged_date", { ascending: false })
+          .limit(6),
+        supabase
+          .from("plans")
+          .select("id, mock_target_total, mock_target_sjt_band")
+          .eq("student_id", userId)
+          .eq("status", "active")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]),
+    )
+      .then(([scoresRes, planRes]) => {
+        if (cancelled) return;
+        setAllScores((scoresRes.data as MockScore[]) ?? []);
+        setPlan((planRes.data as Plan) ?? null);
+        setLoading(false);
+      })
+      // A hang or error must still flip loading off, or the card sticks on its skeleton forever.
+      .catch(() => {
+        if (cancelled) return;
+        setAllScores([]);
+        setPlan(null);
+        setLoading(false);
+      });
     return () => { cancelled = true; };
   }, [userId]);
 

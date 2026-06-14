@@ -16,6 +16,7 @@ import { useBugReportModal } from "../contexts/BugReportContext";
 import { useAuthModal } from "../contexts/AuthModalContext";
 import { supabase } from "../lib/supabase";
 import { dashboardLog } from "../lib/logger";
+import { withTimeout } from "../lib/withTimeout";
 import {
   getWpmComparisonCopy,
   getWpmTier,
@@ -577,11 +578,13 @@ export default function Dashboard() {
       return;
     }
     let cancelled = false;
-    supabase
-      .from("syllogism_sessions")
-      .select("id, user_id, mode, score, total_questions, average_time_per_decision, categorical_accuracy, relative_accuracy, majority_accuracy, complex_accuracy, created_at")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: true })
+    withTimeout(
+      supabase
+        .from("syllogism_sessions")
+        .select("id, user_id, mode, score, total_questions, average_time_per_decision, categorical_accuracy, relative_accuracy, majority_accuracy, complex_accuracy, created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: true }),
+    )
       .then(({ data, error }) => {
         if (cancelled) return;
         if (error) {
@@ -590,6 +593,11 @@ export default function Dashboard() {
           return;
         }
         setSyllogismSessions((data as SyllogismSession[]) ?? []);
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        dashboardLog.warn("Syllogism sessions fetch timed out", { message: String(e) });
+        setSyllogismSessions([]);
       });
     return () => {
       cancelled = true;
@@ -602,13 +610,15 @@ export default function Dashboard() {
       return;
     }
     let cancelled = false;
-    supabase
-      .from("sjt_sessions")
-      .select(
-        "id, user_id, question_id, question_type, domain, score, max_score, items_attempted, items_total, completed, created_at",
-      )
-      .eq("user_id", userId)
-      .order("created_at", { ascending: true })
+    withTimeout(
+      supabase
+        .from("sjt_sessions")
+        .select(
+          "id, user_id, question_id, question_type, domain, score, max_score, items_attempted, items_total, completed, created_at",
+        )
+        .eq("user_id", userId)
+        .order("created_at", { ascending: true }),
+    )
       .then(({ data, error: err }) => {
         if (cancelled) return;
         if (err) {
@@ -617,6 +627,11 @@ export default function Dashboard() {
           return;
         }
         setSjtSessions((data as SJTSessionsRow[]) ?? []);
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        dashboardLog.warn("SJT sessions fetch timed out", { message: String(e) });
+        setSjtSessions([]);
       });
     return () => {
       cancelled = true;

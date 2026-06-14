@@ -91,7 +91,7 @@ export default async function JoinViaInvitePage({ params }: PageProps) {
         <div className="text-center space-y-1">
           <div className="inline-flex items-center gap-2 text-2xl font-bold tracking-tight text-slate-900">
             <div className="flex gap-1">
-              <div className="w-3 h-3 rounded-full bg-secondary0" />
+              <div className="w-3 h-3 rounded-full bg-primary" />
               <div className="w-3 h-3 rounded-full bg-green-500" />
               <div className="w-3 h-3 rounded-full bg-amber-500" />
               <div className="w-3 h-3 rounded-full bg-foreground" />

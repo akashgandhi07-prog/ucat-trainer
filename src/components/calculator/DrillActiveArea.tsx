@@ -126,7 +126,7 @@ export const DrillActiveArea = ({
                     {/* Progress Bar */}
                     <div className="h-1 w-full bg-secondary mt-2 rounded-full overflow-hidden">
                         <div
-                            className="h-full bg-secondary0 transition-all duration-300 ease-out"
+                            className="h-full bg-primary transition-all duration-300 ease-out"
                             style={{ width: `${progress}%` }}
                         />
                     </div>
