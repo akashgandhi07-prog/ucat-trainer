@@ -51,9 +51,9 @@ export default function HomePage() {
       <main className="flex-1 flex flex-col">
         <LandingHero />
         <LandingSectionHub
-          onVerbal={() => navigate("/verbal")}
-          onDecision={() => navigate("/decision-making")}
-          onQuant={() => navigate("/quantitative")}
+          onVerbal={() => navigate("/ucat-verbal-reasoning-practice")}
+          onDecision={() => navigate("/ucat-decision-making-practice")}
+          onQuant={() => navigate("/ucat-quantitative-reasoning-practice")}
           onSjt={() => navigate("/ucat-sjt-practice")}
         />
         <LandingHowItWorks />

@@ -16,7 +16,7 @@ export function getAppTopBarTitle(pathname: string): string {
 
   if (
     pathname === "/ucat-decision-making-practice" ||
-    pathname.startsWith("/train/syllogism") ||
+    pathname.startsWith("/ucat-syllogism") ||
     pathname.startsWith("/ucat-syllogism") ||
     pathname.startsWith("/ucat-venn-logic") ||
     pathname.startsWith("/ucat-data-logic") ||
@@ -28,7 +28,7 @@ export function getAppTopBarTitle(pathname: string): string {
   if (
     pathname === "/ucat-quantitative-reasoning-practice" ||
     pathname.startsWith("/ucat-calculator-trainer") ||
-    pathname.startsWith("/train/mentalMaths") ||
+    pathname.startsWith("/ucat-mental-maths-trainer") ||
     pathname.startsWith("/ucat-mental-maths")
   ) {
     return "Quantitative Reasoning";

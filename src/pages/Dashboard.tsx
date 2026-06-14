@@ -2149,7 +2149,7 @@ export default function Dashboard() {
                           supports inferences.
                         </p>
                         <Link
-                          to="/train/inference"
+                          to="/ucat-inference-trainer"
                           className="inline-flex mt-4 px-4 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
                         >
                           Go to Inference Trainer
@@ -2193,7 +2193,7 @@ export default function Dashboard() {
                           </span>
                           {inferenceLastSession && <span>Last: {inferenceLastSession}</span>}
                           <Link
-                            to="/train/inference"
+                            to="/ucat-inference-trainer"
                             className="text-primary font-medium hover:underline"
                           >
                             Practice again →
@@ -2223,7 +2223,7 @@ export default function Dashboard() {
                         </Link>
                       )}
                       {inferenceSessions.length === 0 && (
-                        <Link to="/train/inference" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">
+                        <Link to="/ucat-inference-trainer" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">
                           Inference Trainer →
                         </Link>
                       )}
@@ -2380,7 +2380,7 @@ export default function Dashboard() {
                           calculator.
                         </p>
                         <Link
-                          to="/train/mentalMaths"
+                          to="/ucat-mental-maths-trainer"
                           className="inline-flex mt-4 px-4 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
                         >
                           Go to Mental Maths Trainer
@@ -2495,7 +2495,7 @@ export default function Dashboard() {
                           No Conversions sessions yet. Practise the unit traps that cost easy QR marks.
                         </p>
                         <Link
-                          to="/train/conversions"
+                          to="/ucat-unit-conversions-trainer"
                           className="inline-flex mt-4 px-4 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
                         >
                           Go to Conversions Trainer

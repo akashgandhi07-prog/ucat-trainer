@@ -37,7 +37,7 @@ export default function SyllogismAnalytics({ sessions }: Props) {
           No syllogism sessions yet. Complete a few foundations, micro or macro drills to see your accuracy and speed here.
         </p>
         <Link
-          to="/decision-making"
+          to="/ucat-decision-making-practice"
           className="inline-flex mt-4 px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
         >
           Go to Syllogisms Trainer

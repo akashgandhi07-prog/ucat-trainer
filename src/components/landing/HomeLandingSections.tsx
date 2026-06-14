@@ -114,7 +114,7 @@ const HERO_SECTIONS = [
     accent: "bg-card border-border hover:border-foreground/25 hover:bg-secondary",
     iconBg: "bg-primary/10",
     iconColor: "text-primary",
-    href: "/verbal",
+    href: "/ucat-verbal-reasoning-practice",
   },
   {
     icon: Scale,
@@ -123,7 +123,7 @@ const HERO_SECTIONS = [
     accent: "bg-card border-border hover:border-foreground/25 hover:bg-secondary",
     iconBg: "bg-primary/10",
     iconColor: "text-primary",
-    href: "/decision-making",
+    href: "/ucat-decision-making-practice",
   },
   {
     icon: Calculator,
@@ -132,7 +132,7 @@ const HERO_SECTIONS = [
     accent: "bg-card border-border hover:border-foreground/25 hover:bg-secondary",
     iconBg: "bg-primary/10",
     iconColor: "text-primary",
-    href: "/quantitative",
+    href: "/ucat-quantitative-reasoning-practice",
   },
   {
     icon: Users,

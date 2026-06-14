@@ -22,7 +22,7 @@ export default function SyllogismMacroPage() {
     trackEvent("trainer_opened", {
       training_type: "syllogism",
       mode: "macro",
-      pathname: "/train/syllogism/macro",
+      pathname: "/ucat-syllogism-practice-macro-drills",
     });
   }, []);
   const base = getSiteBaseUrl();

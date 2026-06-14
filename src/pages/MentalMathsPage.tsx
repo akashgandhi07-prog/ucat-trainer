@@ -29,7 +29,7 @@ export default function MentalMathsPage() {
   useEffect(() => {
     trackEvent("trainer_opened", {
       training_type: "mental_maths",
-      pathname: "/train/mentalMaths",
+      pathname: "/ucat-mental-maths-trainer",
     });
   }, []);
 

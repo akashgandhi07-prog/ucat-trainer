@@ -15,17 +15,17 @@ export const LANDING_TRAINER_SECTION_META: Record<
 > = {
   vr: {
     label: "Verbal Reasoning",
-    hubHref: "/verbal",
+    hubHref: "/ucat-verbal-reasoning-practice",
     summary: "Reading speed, recall, scanning and inference at exam pace.",
   },
   dm: {
     label: "Decision Making",
-    hubHref: "/decision-making",
+    hubHref: "/ucat-decision-making-practice",
     summary: "Syllogisms, Venn logic, data reasoning and argument judgement drills.",
   },
   qr: {
     label: "Quantitative Reasoning",
-    hubHref: "/quantitative",
+    hubHref: "/ucat-quantitative-reasoning-practice",
     summary: "On-screen calculator fluency, mental maths and unit conversion traps.",
   },
   sjt: {

@@ -76,7 +76,7 @@ export default function DecisionMakingPage() {
               description="Full stimulus with five conclusions. UCAT-style layout with sticky passage and Yes/No for each."
               icon={LayoutList}
               accent="amber"
-              onClick={() => navigate("/train/syllogism/macro")}
+              onClick={() => navigate("/ucat-syllogism-practice-macro-drills")}
             />
             <HubTrainerCard
               title={venn.title}

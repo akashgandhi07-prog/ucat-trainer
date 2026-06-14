@@ -457,7 +457,7 @@ export default function VerbalReasoningPage() {
     trackEvent("trainer_started", {
       training_type: "speed_reading",
       difficulty,
-      pathname: "/reader",
+      pathname: "/ucat-verbal-reasoning-speed-reading-trainer",
     });
     const chosenPassage = pickPassageForTrainer("speed_reading", difficulty, category);
     try {
@@ -465,7 +465,7 @@ export default function VerbalReasoningPage() {
     } catch {
       // ignore
     }
-    navigate("/reader", {
+    navigate("/ucat-verbal-reasoning-speed-reading-trainer", {
       state: {
         trainingType: "speed_reading" as const,
         passageId: chosenPassage.id,
@@ -484,10 +484,10 @@ export default function VerbalReasoningPage() {
     trackEvent("trainer_started", {
       training_type: "rapid_recall",
       difficulty,
-      pathname: "/train/rapid-recall",
+      pathname: "/ucat-rapid-recall-trainer",
     });
     const chosenPassage = pickPassageForTrainer("rapid_recall", difficulty, category);
-    navigate("/train/rapid-recall", {
+    navigate("/ucat-rapid-recall-trainer", {
       state: {
         trainingType: "rapid_recall" as const,
         passage: chosenPassage,
@@ -502,10 +502,10 @@ export default function VerbalReasoningPage() {
     trackEvent("trainer_started", {
       training_type: "keyword_scanning",
       difficulty,
-      pathname: "/train/keyword-scanning",
+      pathname: "/ucat-keyword-scanning-trainer",
     });
     const chosenPassage = pickPassageForTrainer("keyword_scanning", difficulty, category);
-    navigate("/train/keyword-scanning", {
+    navigate("/ucat-keyword-scanning-trainer", {
       state: {
         trainingType: "keyword_scanning" as const,
         passage: chosenPassage,
@@ -520,7 +520,7 @@ export default function VerbalReasoningPage() {
     trackEvent("trainer_started", {
       training_type: "inference_trainer",
       difficulty,
-      pathname: "/train/inference",
+      pathname: "/ucat-inference-trainer",
     });
     const inferencePool = PASSAGES.filter((p) => PASSAGE_IDS_WITH_INFERENCE.includes(p.id));
     const catFiltered = category !== "all"
@@ -529,7 +529,7 @@ export default function VerbalReasoningPage() {
     const candidates = catFiltered.length > 0 ? catFiltered : inferencePool;
     const chosenPassage = candidates[Math.floor(Math.random() * candidates.length)];
     if (!chosenPassage) return;
-    navigate("/train/inference", {
+    navigate("/ucat-inference-trainer", {
       state: {
         trainingType: "inference_trainer" as const,
         passage: chosenPassage,

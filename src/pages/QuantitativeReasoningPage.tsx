@@ -61,14 +61,14 @@ export default function QuantitativeReasoningPage() {
               description="Build speed and estimation without the calculator."
               icon={Brain}
               accent="emerald"
-              onClick={() => navigate("/train/mentalMaths")}
+              onClick={() => navigate("/ucat-mental-maths-trainer")}
             />
             <HubTrainerCard
               title="Conversions Trainer"
               description="Practise metric units, time conversions, rates and per-100 setups."
               icon={Ruler}
               accent="emerald"
-              onClick={() => navigate("/train/conversions")}
+              onClick={() => navigate("/ucat-unit-conversions-trainer")}
             />
           </HubTrainerGrid>
         </SkillsSectionBlock>

@@ -45,7 +45,7 @@ export default function SyllogismMicroPage() {
         <div className={cn("pt-4 pb-2", inAppShell ? APP_CONTENT_X : "px-4")}>
           <div className={cn("w-full", !inAppShell && "max-w-3xl mx-auto")}>
             <Link
-              to="/decision-making"
+              to="/ucat-decision-making-practice"
               className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="w-4 h-4" />
