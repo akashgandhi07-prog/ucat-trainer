@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { withTimeout } from "./withTimeout";
 import type { DmTrainerQuestion, DmTrainerType } from "../types/dmTrainers";
 import { getLocalDmTrainerQuestions } from "../data/dmTrainers/localQuestions";
 
@@ -63,9 +64,12 @@ export async function fetchDmTrainerDrill(
   const fallback = getLocalDmTrainerQuestions(trainerType);
 
   try {
-    const { data, error } = await supabase.rpc("get_dm_trainer_drill", {
-      p_trainer_type: trainerType,
-    });
+    // Cap the wait so a stalled RPC falls back to the local seed instead of
+    // leaving the trainer on an endless loading state.
+    const { data, error } = await withTimeout(
+      supabase.rpc("get_dm_trainer_drill", { p_trainer_type: trainerType }),
+      8000,
+    );
 
     if (error) throw error;
 

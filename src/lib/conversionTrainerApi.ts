@@ -1,6 +1,7 @@
 import type { QuestionExplanation } from "../components/mentalMaths/mathsAlgorithms";
 import { CONVERSION_QUESTIONS, type ConversionQuestion } from "../data/conversionQuestions";
 import { supabase } from "./supabase";
+import { withTimeout } from "./withTimeout";
 
 function mapConversionQuestion(raw: unknown): ConversionQuestion | null {
   if (!raw || typeof raw !== "object") return null;
@@ -43,7 +44,9 @@ export async function fetchConversionDrill(): Promise<{
   source: "supabase" | "local";
 }> {
   try {
-    const { data, error } = await supabase.rpc("get_qr_conversion_drill");
+    // Cap the wait so a stalled RPC falls back to the local bank instead of
+    // leaving the trainer on an endless loading state.
+    const { data, error } = await withTimeout(supabase.rpc("get_qr_conversion_drill"), 8000);
     if (error) throw error;
     const rawList = Array.isArray(data) ? data : [];
     const mapped = rawList
