@@ -27,7 +27,7 @@ export function getAppTopBarTitle(pathname: string): string {
 
   if (
     pathname === "/ucat-quantitative-reasoning-practice" ||
-    pathname.startsWith("/train/calculator") ||
+    pathname.startsWith("/ucat-calculator-trainer") ||
     pathname.startsWith("/train/mentalMaths") ||
     pathname.startsWith("/ucat-mental-maths")
   ) {

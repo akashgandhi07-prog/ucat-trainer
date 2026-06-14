@@ -54,7 +54,7 @@ export default function QuantitativeReasoningPage() {
               description="Master the on-screen calculator and keypad under time pressure."
               icon={Calculator}
               accent="emerald"
-              onClick={() => navigate("/train/calculator")}
+              onClick={() => navigate("/ucat-calculator-trainer")}
             />
             <HubTrainerCard
               title="Mental Maths Trainer"

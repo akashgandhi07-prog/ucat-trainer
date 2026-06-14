@@ -69,7 +69,7 @@ export default function DecisionMakingPage() {
               description="One premise, one conclusion. Build instant pattern recognition with keyboard shortcuts."
               icon={Zap}
               accent="amber"
-              onClick={() => navigate("/train/syllogism/micro")}
+              onClick={() => navigate("/ucat-syllogism-practice-micro-drills")}
             />
             <HubTrainerCard
               title="Syllogisms · Macro"

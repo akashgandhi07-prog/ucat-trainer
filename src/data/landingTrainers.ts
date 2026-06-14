@@ -74,7 +74,7 @@ export const LANDING_TRAINERS: readonly LandingTrainer[] = [
     title: "Syllogism micro drill",
     tag: "Under 10s",
     description: "One premise, one conclusion. Build pattern recognition with keyboard shortcuts.",
-    href: "/train/syllogism/micro",
+    href: "/ucat-syllogism-practice-micro-drills",
   },
   {
     id: "syllogism-macro",
@@ -114,7 +114,7 @@ export const LANDING_TRAINERS: readonly LandingTrainer[] = [
     title: "Calculator trainer",
     tag: "Keypad speed",
     description: "Muscle memory on the on-screen calculator with heatmaps for slow keys.",
-    href: "/train/calculator",
+    href: "/ucat-calculator-trainer",
   },
   {
     id: "mental-maths",

@@ -117,10 +117,12 @@ function App() {
                     <Route path="/train/conversions" element={<Navigate to="/ucat-unit-conversions-trainer" replace />} />
                     <Route path="/train/syllogism/foundation" element={<Navigate to="/ucat-syllogism-foundations-trainer" replace />} />
                     <Route path="/train/syllogism/macro" element={<Navigate to="/ucat-syllogism-practice-macro-drills" replace />} />
+                    <Route path="/train/calculator" element={<Navigate to="/ucat-calculator-trainer" replace />} />
+                    <Route path="/train/syllogism/micro" element={<Navigate to="/ucat-syllogism-practice-micro-drills" replace />} />
 
                     <Route path="/configure" element={<ConfigureRedirect />} />
-                    <Route path="/train/calculator" element={<CalculatorPage />} />
-                    <Route path="/train/syllogism/micro" element={<SyllogismMicroPage />} />
+                    <Route path="/ucat-calculator-trainer" element={<CalculatorPage />} />
+                    <Route path="/ucat-syllogism-practice-micro-drills" element={<SyllogismMicroPage />} />
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/admin" element={<AdminPage />} />
                     <Route path="/admin/question-lab" element={<QuestionLabDashboard />} />

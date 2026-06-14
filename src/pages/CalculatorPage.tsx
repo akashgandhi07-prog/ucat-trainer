@@ -89,7 +89,7 @@ const CalculatorPage = () => {
     useEffect(() => {
         trackEvent("trainer_opened", {
             training_type: "calculator",
-            pathname: "/train/calculator",
+            pathname: "/ucat-calculator-trainer",
         });
     }, []);
 
@@ -175,12 +175,12 @@ const CalculatorPage = () => {
     }));
 
     const base = getSiteBaseUrl();
-    const canonicalUrl = base ? `${base}/train/calculator` : undefined;
+    const canonicalUrl = base ? `${base}/ucat-calculator-trainer` : undefined;
     const breadcrumbs = base
         ? [
             { name: 'Home', url: `${base}/` },
             { name: 'Quantitative Reasoning', url: `${base}/quantitative` },
-            { name: 'Calculator', url: `${base}/train/calculator` },
+            { name: 'Calculator', url: `${base}/ucat-calculator-trainer` },
         ]
         : undefined;
 

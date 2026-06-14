@@ -19,16 +19,16 @@ export default function SyllogismMicroPage() {
     trackEvent("trainer_opened", {
       training_type: "syllogism",
       mode: "micro",
-      pathname: "/train/syllogism/micro",
+      pathname: "/ucat-syllogism-practice-micro-drills",
     });
   }, []);
   const base = getSiteBaseUrl();
-  const canonicalUrl = base ? `${base}/train/syllogism/micro` : undefined;
+  const canonicalUrl = base ? `${base}/ucat-syllogism-practice-micro-drills` : undefined;
   const breadcrumbs = base
     ? [
         { name: "Home", url: `${base}/` },
         { name: "Decision Making", url: `${base}/decision-making` },
-        { name: "Syllogism Micro", url: `${base}/train/syllogism/micro` },
+        { name: "Syllogism Micro", url: `${base}/ucat-syllogism-practice-micro-drills` },
       ]
     : undefined;
 

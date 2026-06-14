@@ -2270,7 +2270,7 @@ export default function Dashboard() {
                           speed.
                         </p>
                         <Link
-                          to="/train/calculator"
+                          to="/ucat-calculator-trainer"
                           className="inline-flex mt-4 px-4 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
                         >
                           Go to Calculator
