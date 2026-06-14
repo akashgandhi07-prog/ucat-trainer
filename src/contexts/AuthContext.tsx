@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { withRetry } from "../lib/retry";
+import { STALE_SESSION_EVENT } from "../lib/authError";
 import { authLog } from "../lib/logger";
 import { trackEvent } from "../lib/analytics";
 import { getProfile, upsertProfile } from "../lib/profileApi";
@@ -125,6 +126,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfile(null);
     showToast("Your session expired. Please sign in again.", { variant: "error" });
   }, [showToast]);
+
+  // A write that fails with an expired/invalid session (e.g. a quiz save after the
+  // JWT lapsed) dispatches this event so the user gets the clean re-login prompt
+  // instead of a generic error and silently lost data.
+  useEffect(() => {
+    const onStale = () => { void handleStaleSession(); };
+    window.addEventListener(STALE_SESSION_EVENT, onStale);
+    return () => window.removeEventListener(STALE_SESSION_EVENT, onStale);
+  }, [handleStaleSession]);
 
   /**
    * Load the profile for a signed-in user, creating a minimal row on first login.

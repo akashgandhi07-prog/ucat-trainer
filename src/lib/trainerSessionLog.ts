@@ -11,6 +11,7 @@
 import { supabase } from "./supabase";
 import { withRetry } from "./retry";
 import { supabaseLog } from "./logger";
+import { isAuthError, notifyIfAuthError } from "./authError";
 
 export type TrainerSessionUpsert = {
   training_type: string;
@@ -44,7 +45,15 @@ async function writeOnce(
       { ...payload, user_id: userId, client_session_id: clientSessionId },
       { onConflict: "user_id,client_session_id" },
     );
-    if (error) throw error;
+    if (error) {
+      // An expired session won't be fixed by retrying, and the user should be told
+      // to sign in again rather than shown a generic "couldn't save".
+      if (isAuthError(error)) {
+        notifyIfAuthError(error);
+        throw Object.assign(new Error(error.message), { name: "AbortError" });
+      }
+      throw error;
+    }
   });
 }
 
