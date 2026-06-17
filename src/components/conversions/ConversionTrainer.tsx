@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CheckCircle2, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
-import { CONVERSION_QUESTIONS } from "../../data/conversionQuestions";
+import { CheckCircle2, ChevronLeft, ChevronRight, RotateCcw, Timer } from "lucide-react";
 import type { ConversionQuestion } from "../../data/conversionQuestions";
+import { generateConversionDrill } from "../../data/conversionGenerators";
 import { fetchConversionDrill } from "../../lib/conversionTrainerApi";
 import { saveConversionSession } from "../../utils/analyticsStorage";
 import { newClientSessionId } from "../../lib/trainerSessionLog";
+import { getCommonTrapCopy } from "../../data/commonTrapCopy";
 
 type AnswerRecord = {
   category: ConversionQuestion["category"];
@@ -13,24 +14,6 @@ type AnswerRecord = {
 };
 
 const AUTO_SAVE_INTERVAL = 5;
-
-const COMMON_TRAP_COPY: Record<string, string> = {
-  "answer-unit-mismatch": "Doing the calculation correctly but leaving the answer in the wrong unit.",
-  "decimal-hours-read-as-minutes": "Treating a decimal number of hours as if the decimal part were minutes.",
-  "decimal-minutes-read-as-seconds": "Treating a decimal number of minutes as if the decimal part were seconds.",
-  "divided-instead-of-multiplied": "Dividing when the conversion needs multiplication, usually when moving to a smaller unit.",
-  "linear-conversion-used-for-area": "Using the length conversion for an area conversion instead of squaring the conversion factor.",
-  "minutes-used-as-hours": "Using minutes directly in a speed formula instead of converting them to hours first.",
-  "multiplied-instead-of-divided": "Multiplying when the conversion needs division, usually when moving to a larger unit.",
-  "pence-pounds-confusion": "Mixing pence and pounds, especially forgetting that 100p equals £1.",
-  "per-unit-rate-multiplied-by-wrong-unit": "Applying a per-unit rate to the wrong unit or before checking the units match.",
-  "rounded-too-early": "Rounding during the working instead of keeping the calculator value until the final answer.",
-  "rounded-up-when-full-servings-required": "Rounding up when the question asks for complete portions only.",
-  "speed-unit-conversion-reversed": "Reversing the km/h and m/s conversion, especially using ×3.6 and ÷3.6 the wrong way round.",
-  "unnecessary-factor-of-1000": "Adding an unnecessary ×1000 or ÷1000 when the units are already equivalent.",
-  "volume-unit-mismatch": "Confusing volume units such as litres, millilitres and cubic centimetres.",
-  "wrong-denominator": "Using the wrong denominator for a rate, such as treating a per 100 value as a per 1 value.",
-};
 
 function normaliseAnswer(value: string): number | null {
   const match = value.match(/-?\d+(?:,\d{3})*(?:\.\d+)?|-?\d+(?:\.\d+)?/);
@@ -101,15 +84,13 @@ function buildTrapStats(records: Record<string, AnswerRecord>) {
   }, {});
 }
 
-function getCommonTrapCopy(trap: string): string {
-  return COMMON_TRAP_COPY[trap] ?? trap.replace(/-/g, " ");
-}
-
 export default function ConversionTrainer() {
-  const [questionPool, setQuestionPool] = useState<ConversionQuestion[]>(CONVERSION_QUESTIONS);
+  // Default to freshly generated questions; authored cloud content (if any) overrides.
+  const [questionPool, setQuestionPool] = useState<ConversionQuestion[]>([]);
   const [questions, setQuestions] = useState<ConversionQuestion[]>(() =>
-    createQuestionQueue(CONVERSION_QUESTIONS),
+    createQuestionQueue(generateConversionDrill()),
   );
+  const usingGeneratedRef = useRef(true);
   const [loading, setLoading] = useState(true);
   const [index, setIndex] = useState(0);
   const [input, setInput] = useState("");
@@ -120,17 +101,35 @@ export default function ConversionTrainer() {
   const lastSavedAnswerCountRef = useRef(0);
   // One id per drill run: every checkpoint upserts the same cloud row.
   const clientSessionIdRef = useRef(newClientSessionId());
+  // Per-question stopwatch: builds the time pressure QR is really about. The start
+  // time lives in a ref (reset by the navigation handlers) so we never setState
+  // synchronously inside an effect; the interval only ticks the displayed seconds.
+  const questionStartRef = useRef(0);
+  const [questionSeconds, setQuestionSeconds] = useState(0);
 
   useEffect(() => {
     sessionStartedAtRef.current = Date.now();
+    questionStartRef.current = Date.now();
   }, []);
+
+  // Tick only while the current question is unanswered.
+  useEffect(() => {
+    if (submitted) return;
+    const id = setInterval(() => {
+      setQuestionSeconds(Math.floor((Date.now() - questionStartRef.current) / 1000));
+    }, 500);
+    return () => clearInterval(id);
+  }, [submitted, index]);
 
   useEffect(() => {
     let cancelled = false;
     void fetchConversionDrill()
-      .then(({ questions: pool }) => {
+      .then(({ questions: pool, source }) => {
         if (cancelled) return;
-        if (pool.length >= 1) {
+        // Only swap in cloud content; on the local fallback we keep the freshly
+        // generated drill rather than the small static bank.
+        if (source === "supabase" && pool.length >= 1) {
+          usingGeneratedRef.current = false;
           setQuestionPool(pool);
           setQuestions(createQuestionQueue(pool));
           setIndex(0);
@@ -141,6 +140,8 @@ export default function ConversionTrainer() {
           lastSavedAnswerCountRef.current = 0;
           sessionStartedAtRef.current = Date.now();
           clientSessionIdRef.current = newClientSessionId();
+          questionStartRef.current = Date.now();
+          setQuestionSeconds(0);
         }
       })
       .finally(() => {
@@ -232,6 +233,8 @@ export default function ConversionTrainer() {
       setInput("");
       setSubmitted(false);
     }
+    questionStartRef.current = Date.now();
+    setQuestionSeconds(0);
     scrollTrainerToTop();
   };
 
@@ -246,7 +249,10 @@ export default function ConversionTrainer() {
   };
 
   const handleRestart = () => {
-    setQuestions(createQuestionQueue(questionPool));
+    // Generated drills get a brand-new set each restart; cloud pools reshuffle.
+    setQuestions(
+      createQuestionQueue(usingGeneratedRef.current ? generateConversionDrill() : questionPool),
+    );
     setIndex(0);
     setInput("");
     setSubmitted(false);
@@ -255,6 +261,8 @@ export default function ConversionTrainer() {
     setSavedAnswerCount(0);
     sessionStartedAtRef.current = Date.now();
     clientSessionIdRef.current = newClientSessionId();
+    questionStartRef.current = Date.now();
+    setQuestionSeconds(0);
     scrollTrainerToTop();
   };
 
@@ -291,9 +299,20 @@ export default function ConversionTrainer() {
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
-          <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
-            Score {correctCount}/{answeredCount}
-          </span>
+          <div className="flex items-center gap-2">
+            {!submitted && (
+              <span
+                className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-medium tabular-nums ${questionSeconds >= 40 ? "bg-rose-50 text-rose-700" : "bg-secondary text-foreground"}`}
+                aria-label="Time on this question"
+              >
+                <Timer className="h-3.5 w-3.5" />
+                {questionSeconds}s
+              </span>
+            )}
+            <span className="inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
+              Score {correctCount}/{answeredCount}
+            </span>
+          </div>
         </div>
 
         <div className="rounded-xl border border-border px-5 py-4 mb-5">

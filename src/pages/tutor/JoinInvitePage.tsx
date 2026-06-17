@@ -8,9 +8,9 @@ import { isPlannerTutor, isStudentInviteTokenValid } from '../../planner/lib/tut
 import PlannerLoading from '../../planner/components/PlannerLoading'
 
 const btnPrimary =
-  'inline-flex h-10 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-white transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2'
+  'inline-flex h-10 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-white transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2'
 const btnSecondary =
-  'inline-flex h-10 items-center justify-center rounded-lg bg-secondary px-4 text-sm font-medium text-foreground transition-colors hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2'
+  'inline-flex h-10 items-center justify-center rounded-lg bg-secondary px-4 text-sm font-medium text-foreground transition-colors hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2'
 
 export default function JoinInvitePage() {
   const { token } = useParams<{ token: string }>()

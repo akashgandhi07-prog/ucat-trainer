@@ -13,14 +13,27 @@
   --color-foreground: hsl(215 25% 12%);
   --color-card: hsl(0 0% 100%);
   --color-card-foreground: hsl(215 25% 12%);
-  --color-primary: hsl(217 71% 45%);
+  --color-primary: hsl(231 52% 48%);
   --color-primary-foreground: hsl(0 0% 100%);
   --color-secondary: hsl(214 20% 91%);
   --color-secondary-foreground: hsl(215 25% 12%);
   --color-muted: hsl(214 20% 91%);
-  --color-muted-foreground: hsl(215 16% 47%);
-  --color-border: hsl(214 20% 88%);
-  --color-ring: hsl(217 71% 45%);
+  /* Nudged a touch darker than 47% for crisper secondary-text legibility. */
+  --color-muted-foreground: hsl(215 16% 43%);
+  --color-border: hsl(214 20% 89%);
+  --color-ring: hsl(231 52% 48%);
+
+  /* Per-subtest accents — muted, not neon, for a soft premium feel.
+     Applied to icon chips and hover states only; CTAs stay primary blue. */
+  --color-subject-vr: hsl(205 78% 46%);
+  --color-subject-dm: hsl(38 74% 48%);
+  --color-subject-qr: hsl(162 50% 42%);
+  --color-subject-sjt: hsl(264 50% 60%);
+
+  /* Soft, layered elevation. Two stacked low-opacity shadows read as
+     "considered depth" rather than a single hard drop shadow. */
+  --shadow-card: 0 1px 3px hsl(215 25% 15% / 0.04), 0 4px 12px hsl(215 25% 15% / 0.05);
+  --shadow-card-hover: 0 4px 16px hsl(215 25% 15% / 0.08), 0 10px 28px hsl(215 25% 15% / 0.07);
 
   /* Semantic status (use only for meaning: success, error, warning) */
   --color-destructive: hsl(0 72% 51%);
@@ -30,12 +43,12 @@
 
   /* Training-specific */
   --color-training-surface: hsl(214 32% 97%);
-  --color-training-active: hsl(217 71% 45%);
-  --color-training-active-muted: hsl(217 71% 95%);
+  --color-training-active: hsl(231 52% 48%);
+  --color-training-active-muted: hsl(231 52% 95%);
   --color-training-success: hsl(152 60% 42%);
   --color-training-success-muted: hsl(152 60% 95%);
-  --color-training-highlight: hsl(217 71% 45%);
-  --color-training-highlight-muted: hsl(217 50% 94%);
+  --color-training-highlight: hsl(231 52% 48%);
+  --color-training-highlight-muted: hsl(231 45% 94%);
 
   --radius: 0.75rem;
 }

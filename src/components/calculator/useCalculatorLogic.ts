@@ -18,6 +18,12 @@ interface UseCalculatorLogicProps {
 
 const LAG_MS = 40;
 
+/** Cap length and surface non-finite results (÷0, overflow) as the real calculator's "Error". */
+function formatDisplay(value: number): string {
+    if (!Number.isFinite(value)) return 'Error';
+    return String(value).slice(0, 12);
+}
+
 export const useCalculatorLogic = ({ lagEnabled, onInput }: UseCalculatorLogicProps) => {
     const [state, setState] = useState<CalculatorState>({
         display: '0',
@@ -33,6 +39,15 @@ export const useCalculatorLogic = ({ lagEnabled, onInput }: UseCalculatorLogicPr
     useEffect(() => {
         onInputRef.current = onInput;
     }, [onInput]);
+
+    // Tracks whether the immediately-previous action was an MRC press, so a second
+    // consecutive MRC clears memory (standard basic-calculator behaviour). Any other
+    // key resets it via emit().
+    const lastWasRecallRef = useRef(false);
+    const emit = useCallback((key: string) => {
+        if (key !== 'mrc') lastWasRecallRef.current = false;
+        onInputRef.current?.(key);
+    }, []);
 
     const processInput = useCallback((action: () => void) => {
         if (lagEnabled) {
@@ -60,7 +75,7 @@ export const useCalculatorLogic = ({ lagEnabled, onInput }: UseCalculatorLogicPr
                     display: newDisplay
                 };
             });
-            onInputRef.current?.(digit);
+            emit(digit);
         });
     };
 
@@ -82,7 +97,7 @@ export const useCalculatorLogic = ({ lagEnabled, onInput }: UseCalculatorLogicPr
                 }
                 return prev;
             });
-            onInputRef.current?.('.');
+            emit('.');
         });
     };
 
@@ -95,7 +110,7 @@ export const useCalculatorLogic = ({ lagEnabled, onInput }: UseCalculatorLogicPr
                 operator: null,
                 waitingForOperand: false
             }));
-            onInputRef.current?.('Backspace');
+            emit('Backspace');
         });
     };
 
@@ -127,7 +142,7 @@ export const useCalculatorLogic = ({ lagEnabled, onInput }: UseCalculatorLogicPr
                     return {
                         ...prev,
                         currentValue: newValue,
-                        display: String(newValue).slice(0, 12),
+                        display: formatDisplay(newValue),
                         operator: nextOperator,
                         waitingForOperand: true
                     };
@@ -140,19 +155,19 @@ export const useCalculatorLogic = ({ lagEnabled, onInput }: UseCalculatorLogicPr
                     waitingForOperand: true
                 };
             });
-            onInputRef.current?.(nextOperator || '');
+            emit(nextOperator || '');
         });
     };
 
     const calculateResult = () => {
         processInput(() => {
             setState(prev => {
-                // If no operation pending, just update lastCalculated to signal completion
+                // No operation pending: a stray/extra "=" press. Do NOT bump
+                // lastCalculated here — drills auto-advance on every change to it, so
+                // signalling a non-calculation would re-submit the current display
+                // against the next question and mark it wrong.
                 if (!prev.operator || prev.currentValue === null) {
-                    return {
-                        ...prev,
-                        lastCalculated: Date.now()
-                    };
+                    return prev;
                 }
 
                 const inputValue = parseFloat(prev.display);
@@ -167,14 +182,14 @@ export const useCalculatorLogic = ({ lagEnabled, onInput }: UseCalculatorLogicPr
 
                 return {
                     ...prev,
-                    display: String(newValue).slice(0, 12),
+                    display: formatDisplay(newValue),
                     currentValue: null,
                     operator: null,
                     waitingForOperand: true,
                     lastCalculated: Date.now()
                 };
             });
-            onInputRef.current?.('Enter');
+            emit('Enter');
         });
     };
 
@@ -185,7 +200,7 @@ export const useCalculatorLogic = ({ lagEnabled, onInput }: UseCalculatorLogicPr
                 memory: prev.memory + parseFloat(prev.display),
                 waitingForOperand: true // Usually acts like hitting equals or completing an input
             }));
-            onInputRef.current?.('m+');
+            emit('m+');
         });
     };
 
@@ -196,29 +211,23 @@ export const useCalculatorLogic = ({ lagEnabled, onInput }: UseCalculatorLogicPr
                 memory: prev.memory - parseFloat(prev.display),
                 waitingForOperand: true
             }));
-            onInputRef.current?.('m-');
+            emit('m-');
         });
     };
 
     const memoryRecallClear = () => {
         processInput(() => {
-            setState(prev => {
-                // If memory is on display, clear it. If not, recall it.
-                // Standard behavior: First press recalls, second press clears.
-                // For simplicity/UCAT behavior: check if we just recalled? 
-                // UCAT usually: MRC displays memory. If pressed again (or if memory is 0?), might clear.
-                // Let's implement Recalls Memory. 
-                // Note: The prompt says "Backspace maps to Clear", but "Mrc" helps solving.
-                // Let's stick to standard: Recall. User can clear by other means or implement double-click logic if needed.
-                // Actually, often MRC clears if held or double pressed. Let's Simple Recall for now.
-
-                return {
-                    ...prev,
-                    display: String(prev.memory),
-                    waitingForOperand: true
-                };
-            });
-            onInputRef.current?.('mrc');
+            // Standard MRC: first press recalls memory to the display, a second
+            // consecutive press clears the memory. Decide synchronously off the ref so
+            // the two presses don't race the functional setState.
+            const isSecondPress = lastWasRecallRef.current;
+            setState(prev =>
+                isSecondPress
+                    ? { ...prev, memory: 0, display: '0', waitingForOperand: true }
+                    : { ...prev, display: formatDisplay(prev.memory), waitingForOperand: true }
+            );
+            lastWasRecallRef.current = !isSecondPress;
+            emit('mrc');
         });
     };
 
@@ -226,25 +235,42 @@ export const useCalculatorLogic = ({ lagEnabled, onInput }: UseCalculatorLogicPr
         processInput(() => {
             setState(prev => ({
                 ...prev,
-                display: String(Math.sqrt(parseFloat(prev.display))).slice(0, 12),
+                display: formatDisplay(Math.sqrt(parseFloat(prev.display))),
                 waitingForOperand: true
             }));
-            onInputRef.current?.('sqrt');
+            emit('sqrt');
         });
     };
 
     const percentage = () => {
         processInput(() => {
             setState(prev => {
-                const currentValue = parseFloat(prev.display);
-                const newValue = currentValue / 100;
-                return {
-                    ...prev,
-                    display: String(newValue).slice(0, 12),
-                    waitingForOperand: true
-                };
+                const value = parseFloat(prev.display);
+                // Standard basic-calculator percentage (the model the UCAT calculator
+                // follows), NOT a bare ÷100:
+                //   a + b%  →  a + (a × b/100)   (markup)
+                //   a − b%  →  a − (a × b/100)   (discount, e.g. "15% off")
+                //   a × b%  →  a × (b/100)
+                //   a ÷ b%  →  a ÷ (b/100)
+                // With no pending operation it falls back to b/100.
+                if (prev.operator && prev.currentValue !== null) {
+                    const base = prev.currentValue;
+                    if (prev.operator === '+' || prev.operator === '-') {
+                        // Becomes the operand; pressing = then applies base ± thisValue.
+                        return { ...prev, display: formatDisplay((base * value) / 100), waitingForOperand: false };
+                    }
+                    const result = prev.operator === '*' ? base * (value / 100) : base / (value / 100);
+                    return {
+                        ...prev,
+                        display: formatDisplay(result),
+                        currentValue: null,
+                        operator: null,
+                        waitingForOperand: true
+                    };
+                }
+                return { ...prev, display: formatDisplay(value / 100), waitingForOperand: true };
             });
-            onInputRef.current?.('%');
+            emit('%');
         });
     };
 
@@ -255,11 +281,11 @@ export const useCalculatorLogic = ({ lagEnabled, onInput }: UseCalculatorLogicPr
                 const newValue = currentValue * -1;
                 return {
                     ...prev,
-                    display: String(newValue).slice(0, 12),
+                    display: formatDisplay(newValue),
                     waitingForOperand: true // Usually acts as a completed input for that number
                 };
             });
-            onInputRef.current?.('±');
+            emit('±');
         });
     };
 
@@ -267,6 +293,16 @@ export const useCalculatorLogic = ({ lagEnabled, onInput }: UseCalculatorLogicPr
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
             const { key } = event;
+
+            // Don't hijack keystrokes meant for a real text field (answer inputs,
+            // search boxes, contenteditable). The calculator only owns bare keypresses.
+            const target = event.target as HTMLElement | null;
+            if (target) {
+                const tag = target.tagName;
+                if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable) {
+                    return;
+                }
+            }
 
             // Prevent default for calculator keys to stop scrolling/browser actions
             if (['+', '-', '*', '/', 'Enter', 'Backspace'].includes(key)) {

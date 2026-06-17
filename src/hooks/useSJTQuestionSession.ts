@@ -19,6 +19,20 @@ export function useSJTQuestionSession(type: SJTQuestionType, enabled = true) {
     [type],
   );
 
+  // Fetch a question, recycling the pool when every question has been seen: rather
+  // than dead-ending on a null (blank quiz screen), clear the seen list and serve a
+  // question again so a long session keeps going.
+  const fetchFresh = useCallback(
+    async (signal?: AbortSignal) => {
+      const q = await fetchOne(seenIdsRef.current, signal);
+      if (q || seenIdsRef.current.length === 0) return q;
+      if (signal?.aborted) return q;
+      seenIdsRef.current = [];
+      return fetchOne([], signal);
+    },
+    [fetchOne],
+  );
+
   const loadInitial = useCallback(async () => {
     if (!enabled) return;
     loadAbortRef.current?.abort();
@@ -28,7 +42,7 @@ export function useSJTQuestionSession(type: SJTQuestionType, enabled = true) {
     setLoading(true);
     setError(null);
     try {
-      const q = await fetchOne(seenIdsRef.current, controller.signal);
+      const q = await fetchFresh(controller.signal);
       if (controller.signal.aborted) return;
       setQuestion(q);
       if (q) {
@@ -49,7 +63,7 @@ export function useSJTQuestionSession(type: SJTQuestionType, enabled = true) {
         setLoading(false);
       }
     }
-  }, [enabled, fetchOne]);
+  }, [enabled, fetchFresh]);
 
   const prefetchNext = useCallback(async () => {
     if (!enabled) return;
@@ -61,7 +75,7 @@ export function useSJTQuestionSession(type: SJTQuestionType, enabled = true) {
     prefetchingRef.current = true;
 
     try {
-      const q = await fetchOne(seenIdsRef.current, controller.signal);
+      const q = await fetchFresh(controller.signal);
       if (controller.signal.aborted) return;
       setPrefetched(q);
     } catch {
@@ -71,7 +85,7 @@ export function useSJTQuestionSession(type: SJTQuestionType, enabled = true) {
     } finally {
       prefetchingRef.current = false;
     }
-  }, [enabled, fetchOne, prefetched]);
+  }, [enabled, fetchFresh, prefetched]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -127,7 +141,7 @@ export function useSJTQuestionSession(type: SJTQuestionType, enabled = true) {
     setLoading(true);
     setError(null);
     try {
-      const q = await fetchOne(seenIdsRef.current, controller.signal);
+      const q = await fetchFresh(controller.signal);
       if (controller.signal.aborted) return;
       setQuestion(q);
       if (q) {
@@ -145,7 +159,7 @@ export function useSJTQuestionSession(type: SJTQuestionType, enabled = true) {
         setLoading(false);
       }
     }
-  }, [enabled, prefetched, fetchOne, prefetchNext]);
+  }, [enabled, prefetched, fetchFresh, prefetchNext]);
 
   const resetSession = useCallback(() => {
     loadAbortRef.current?.abort();

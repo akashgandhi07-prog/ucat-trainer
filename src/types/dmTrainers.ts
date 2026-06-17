@@ -61,6 +61,8 @@ export interface DmTrainerSessionAnswer {
   selected: DmTrainerOptionId | null;
   correct: boolean;
   skillTag: string;
+  /** Thinking time: seconds from the question being shown to an answer submitted. */
+  timeTakenSeconds?: number;
 }
 
 export interface DmTrainerSessionSummary {

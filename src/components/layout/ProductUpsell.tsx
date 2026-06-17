@@ -766,13 +766,13 @@ function FooterTutoring() {
     <div className="text-center text-sm text-slate-500 mb-2 space-y-1" aria-label="Trust and tutoring info">
       <p>
         {TUTORING_COPY.trustLine}{" "}
-        <a href={TRUSTPILOT_URL} className="text-slate-600 hover:text-blue-600 transition-colors" {...EXTERNAL}>
+        <a href={TRUSTPILOT_URL} className="text-slate-600 hover:text-primary transition-colors" {...EXTERNAL}>
           {TUTORING_COPY.ratedTrustpilot}
         </a>
         {" - "}
         <a
           href={UCAT_TUTORING_URL}
-          className="text-slate-600 hover:text-blue-600 font-medium"
+          className="text-slate-600 hover:text-primary font-medium"
           {...EXTERNAL}
           onClick={() => trackClick("tutoring", "footer", null, null)}
         >
@@ -790,7 +790,7 @@ function InlineTutoring() {
       {TUTORING_COPY.expertLine}{" "}
       <a
         href={UCAT_TUTORING_URL}
-        className="text-blue-600 hover:underline font-medium"
+        className="text-primary hover:underline font-medium"
         {...EXTERNAL}
         onClick={() => trackClick("tutoring", "landing_hero", null, null)}
       >

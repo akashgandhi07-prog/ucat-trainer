@@ -1306,7 +1306,7 @@ export default function Dashboard() {
   }, [sessions, syllogismSessions, sjtSessions, today]);
 
   const skipLinkClass =
-    "absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-foreground font-medium rounded-lg ring-2 ring-blue-600 opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
+    "absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-foreground font-medium rounded-lg ring-2 ring-primary opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
 
   const renderGuestDashboard = () => {
     if (sessionLoadFailed) {
@@ -1978,7 +1978,7 @@ export default function Dashboard() {
                                   setTargetWpmInput(e.target.value);
                                   if (targetWpmError) setTargetWpmError(null);
                                 }}
-                                className="w-20 rounded-md border border-border px-2 py-1 text-center text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-20 rounded-md border border-border px-2 py-1 text-center text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                                 inputMode="numeric"
                                 pattern="[0-9]*"
                               />

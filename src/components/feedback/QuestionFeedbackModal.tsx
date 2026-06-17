@@ -194,16 +194,12 @@ export default function QuestionFeedbackModal({
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
         <Dialog.Content
           className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-6 shadow-xl outline-none"
-          aria-labelledby="question-feedback-title"
         >
           {/* Header */}
           <div className="mb-1 flex items-start justify-between gap-2">
             <div className="flex items-center gap-2">
               <span className="text-xl" aria-hidden>🙋</span>
-              <Dialog.Title
-                id="question-feedback-title"
-                className="text-base font-semibold text-foreground"
-              >
+              <Dialog.Title className="text-base font-semibold text-foreground">
                 Help us improve this question
               </Dialog.Title>
             </div>

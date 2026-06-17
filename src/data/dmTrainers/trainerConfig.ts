@@ -33,7 +33,7 @@ export const DM_TRAINER_CONFIGS: Record<DmTrainerType, DmTrainerConfig> = {
     introBullets: [
       "Master exactly two, only, neither and must be true wording.",
       "Use total-mentions logic for three-set diagrams without double counting.",
-      "Five reviewed questions per drill. More batches are added after manual review.",
+      "Ten questions per drill, randomly drawn and shuffled from a growing bank.",
     ],
     questions: getLocalDmTrainerQuestions("venn-logic"),
     analyticsType: "dm_venn_logic",
@@ -53,7 +53,7 @@ export const DM_TRAINER_CONFIGS: Record<DmTrainerType, DmTrainerConfig> = {
     introBullets: [
       "Practise complements, missing percentages and respondent denominators.",
       "Train at-least-one and first-player advantage without A-level algebra.",
-      "Five reviewed questions per drill. More batches are added after manual review.",
+      "Ten questions per drill, randomly drawn and shuffled from a growing bank.",
     ],
     questions: getLocalDmTrainerQuestions("data-logic"),
     analyticsType: "dm_data_logic",
@@ -73,7 +73,7 @@ export const DM_TRAINER_CONFIGS: Record<DmTrainerType, DmTrainerConfig> = {
     introBullets: [
       "State the exact aim before you read the options.",
       "Reject true-but-irrelevant, too-narrow and unsupported-assumption options.",
-      "Five reviewed questions per drill. More batches are added after manual review.",
+      "Ten questions per drill, randomly drawn and shuffled from a growing bank.",
     ],
     questions: getLocalDmTrainerQuestions("argument-judge"),
     analyticsType: "dm_argument_judge",

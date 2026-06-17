@@ -10,33 +10,33 @@ const accentStyles: Record<
 > = {
   primary: {
     iconBox: "bg-primary/10 text-primary",
-    hoverBorder: "hover:border-foreground/25",
+    hoverBorder: "hover:border-primary/40",
     hoverTitle: "group-hover:text-primary",
     hoverChevron: "group-hover:text-primary",
   },
   blue: {
-    iconBox: "bg-primary/10 text-primary",
-    hoverBorder: "hover:border-foreground/25",
-    hoverTitle: "group-hover:text-primary",
-    hoverChevron: "group-hover:text-primary",
+    iconBox: "bg-subject-vr/10 text-subject-vr",
+    hoverBorder: "hover:border-subject-vr/40",
+    hoverTitle: "group-hover:text-subject-vr",
+    hoverChevron: "group-hover:text-subject-vr",
   },
   amber: {
-    iconBox: "bg-primary/10 text-primary",
-    hoverBorder: "hover:border-foreground/25",
-    hoverTitle: "group-hover:text-primary",
-    hoverChevron: "group-hover:text-primary",
+    iconBox: "bg-subject-dm/10 text-subject-dm",
+    hoverBorder: "hover:border-subject-dm/40",
+    hoverTitle: "group-hover:text-subject-dm",
+    hoverChevron: "group-hover:text-subject-dm",
   },
   emerald: {
-    iconBox: "bg-primary/10 text-primary",
-    hoverBorder: "hover:border-foreground/25",
-    hoverTitle: "group-hover:text-primary",
-    hoverChevron: "group-hover:text-primary",
+    iconBox: "bg-subject-qr/10 text-subject-qr",
+    hoverBorder: "hover:border-subject-qr/40",
+    hoverTitle: "group-hover:text-subject-qr",
+    hoverChevron: "group-hover:text-subject-qr",
   },
   violet: {
-    iconBox: "bg-primary/10 text-primary",
-    hoverBorder: "hover:border-foreground/25",
-    hoverTitle: "group-hover:text-primary",
-    hoverChevron: "group-hover:text-primary",
+    iconBox: "bg-subject-sjt/10 text-subject-sjt",
+    hoverBorder: "hover:border-subject-sjt/40",
+    hoverTitle: "group-hover:text-subject-sjt",
+    hoverChevron: "group-hover:text-subject-sjt",
   },
 };
 
@@ -80,13 +80,16 @@ export default function HubTrainerCard({
         "p-5 sm:p-6 transition-all duration-200",
         selected
           ? "border-primary bg-training-active-muted shadow-md ring-1 ring-primary/20"
-          : cn("border-border", styles.hoverBorder),
+          : cn(
+              "border-border shadow-card hover:-translate-y-0.5 hover:shadow-card-hover",
+              styles.hoverBorder,
+            ),
       )}
     >
       <div className="mb-3 flex items-start justify-between gap-2">
         <span
           className={cn(
-            "rounded-lg p-2",
+            "rounded-xl p-2.5 transition-colors",
             selected ? "bg-primary text-primary-foreground" : styles.iconBox,
           )}
         >

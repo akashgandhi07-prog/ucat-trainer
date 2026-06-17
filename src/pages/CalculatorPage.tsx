@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { CalculatorEngine } from '../components/calculator/CalculatorEngine';
 import { AnalyticsDashboard } from '../components/calculator/AnalyticsDashboard';
 import { SprintDrill, FingerTwisterDrill, MemoryMarathonDrill, StagesDrill } from '../components/calculator/DrillModes';
@@ -77,12 +77,16 @@ const CalculatorPage = () => {
 
     // New UX State
     const [userKeystrokes, setUserKeystrokes] = useState<string[]>([]);
+    // Real keystrokes typed across the whole drill — used to report a true
+    // keystrokes-per-second figure instead of the old answers×5 estimate.
+    const totalKeystrokesRef = useRef(0);
     const [shortcutsOpen, setShortcutsOpen] = useState(false);
     const [calculatorState, setCalculatorState] = useState<{ display: string; currentValue: number | null; lastCalculated?: number }>({ display: '0', currentValue: null });
 
     // Reset keystrokes when drill changes
     useEffect(() => {
         setUserKeystrokes([]);
+        totalKeystrokesRef.current = 0;
     }, [activeDrill]);
 
     // Analytics: trainer_opened on mount
@@ -113,6 +117,7 @@ const CalculatorPage = () => {
     const handleCalculatorInput = useCallback((key: string) => {
         if (activeDrill) {
             setUserKeystrokes(prev => [...prev, key]);
+            totalKeystrokesRef.current += 1;
         }
     }, [activeDrill]);
 
@@ -133,8 +138,17 @@ const CalculatorPage = () => {
     const handleDrillComplete = useCallback((stats: LastDrillStats) => {
         clearActiveTrainer();
         const mode: GameSession['mode'] = activeDrill ?? 'free';
+        // Real keystrokes-per-second from what was actually typed (the drills' own
+        // "kps" is an answers×5 estimate). Fall back to the estimate if we somehow
+        // recorded no keystrokes.
+        const seconds = Math.max(1, parseInt(stats.timeTaken ?? '0', 10) || 0);
+        const realKps =
+            totalKeystrokesRef.current > 0
+                ? (totalKeystrokesRef.current / seconds).toFixed(1)
+                : (stats.kps ?? '0');
+        const statsWithKps: LastDrillStats = { ...stats, kps: realKps };
         const sessionData: Omit<GameSession, 'id' | 'date'> = {
-            kps: parseFloat(stats.kps ?? '0'),
+            kps: parseFloat(realKps),
             accuracy: stats.accuracy ?? 0,
             mode,
             correctQuestions: stats.correctQuestions,
@@ -143,7 +157,7 @@ const CalculatorPage = () => {
         };
         saveSession(sessionData);
         loadData();
-        setLastDrillStats({ ...stats, drillName: activeDrill ?? undefined });
+        setLastDrillStats({ ...statsWithKps, drillName: activeDrill ?? undefined });
         setActiveDrill(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- loadData intentionally omitted to avoid loop
     }, [activeDrill]);

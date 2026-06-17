@@ -189,6 +189,38 @@ export function generateChunkedMultiplication(): ExactQuestion {
   };
 }
 
+/**
+ * Build four estimate options: the target, two values close to it (a plausible
+ * over/under-estimate), and one decimal-place ("order of magnitude") trap. Real UCAT
+ * distractors sit near the answer, so options can't be eliminated by size alone.
+ * Near values are rounded to a sensible step so they still read as "clean" numbers.
+ */
+function buildEstimateOptions(target: number): number[] {
+  const step = target >= 10000 ? 1000 : target >= 1000 ? 100 : 10;
+  const roundStep = (v: number) => roundToTwo(Math.round(v / step) * step);
+
+  const options: number[] = [target];
+  const pushUnique = (v: number) => {
+    if (v > 0 && !options.some((o) => Math.abs(o - v) < 0.01)) options.push(v);
+  };
+
+  pushUnique(roundStep(target * 1.2)); // over-estimate (rounded the wrong way)
+  pushUnique(roundStep(target * 0.8)); // under-estimate
+  pushUnique(roundToTwo(target / 10)); // decimal-place slip
+
+  // Pad with progressively wider near-values if any candidate collided.
+  let spread = 0.3;
+  while (options.length < 4) {
+    pushUnique(roundStep(target * (1 + spread)));
+    pushUnique(roundStep(target * (1 - spread)));
+    spread += 0.15;
+    if (spread > 0.9) break;
+  }
+  while (options.length < 4) pushUnique(roundToTwo(target * (options.length + 2)));
+
+  return options;
+}
+
 /** Shuffle array and return new array plus index of where `value` moved to */
 function shuffleWithIndex<T>(arr: T[], correctValue: T): { arr: T[]; correctIndex: number } {
   const withIndices = arr.map((v, i) => ({ v, i }));
@@ -208,10 +240,7 @@ export function generateRoundingDrill(): McqQuestion {
   const roundedA = Math.round(a / 100) * 100;
   const roundedB = Math.round(b / 10) * 10;
   const target = roundToTwo(roundedA * roundedB);
-  const d1 = roundToTwo(target * 10);
-  const d2 = roundToTwo(target / 10);
-  const wrongLead = target >= 10000 ? roundToTwo(target * 0.5) : roundToTwo(target * 2);
-  const options = [target, d1, d2, wrongLead];
+  const options = buildEstimateOptions(target);
   const { arr, correctIndex } = shuffleWithIndex(options, target);
   return {
     kind: "mcq",
@@ -261,10 +290,7 @@ export function generateWordProblem(): McqQuestion {
   const roundPop = Math.round(population / 1000) * 1000;
   const roundPct = pct;
   const target = roundToTwo((roundPct / 100) * roundPop);
-  const d1 = roundToTwo(target * 10);
-  const d2 = roundToTwo(target / 10);
-  const wrongLead = target >= 1000 ? roundToTwo(target * 0.5) : roundToTwo(target * 2);
-  const options = [target, d1, d2, wrongLead];
+  const options = buildEstimateOptions(target);
   const { arr, correctIndex } = shuffleWithIndex(options, target);
   const prompt = template
     .replace("{population}", population.toLocaleString())

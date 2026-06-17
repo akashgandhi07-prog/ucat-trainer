@@ -13,12 +13,27 @@ import { getDmTrainerConfig } from "../data/dmTrainers/trainerConfig";
 
 export type DmTrainerPhase = "intro" | "drill" | "results";
 
+// Each drill serves a random, shuffled subset of the bank rather than the
+// whole thing in fixed legacy_id order (which let students memorise positions).
+const DRILL_SIZE = 10;
+
+function sampleDrillQuestions(pool: DmTrainerQuestion[]): DmTrainerQuestion[] {
+  const shuffled = [...pool];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled.slice(0, DRILL_SIZE);
+}
+
 export function useDmSkillsTrainer(trainerType: DmTrainerType) {
   const config = getDmTrainerConfig(trainerType);
   const { user, loading: authLoading } = useAuth();
 
   const [phase, setPhase] = useState<DmTrainerPhase>("intro");
   const [questions, setQuestions] = useState<DmTrainerQuestion[]>([]);
+  // The sampled+shuffled subset served for the current drill (see startDrill).
+  const [drillQuestions, setDrillQuestions] = useState<DmTrainerQuestion[]>([]);
   const [questionsLoading, setQuestionsLoading] = useState(true);
   const [questionsError, setQuestionsError] = useState<string | null>(null);
   const [questionSource, setQuestionSource] = useState<"supabase" | "local" | null>(null);
@@ -48,7 +63,7 @@ export function useDmSkillsTrainer(trainerType: DmTrainerType) {
   const phaseRef = useRef(phase);
   const userIdRef = useRef<string | null>(user?.id ?? null);
 
-  const activeQuestions = retryMode ? retryQueue : questions;
+  const activeQuestions = retryMode ? retryQueue : drillQuestions;
   const current = activeQuestions[currentIndex] ?? null;
   const total = activeQuestions.length;
   const answers = answersByIndex.filter(
@@ -121,16 +136,18 @@ export function useDmSkillsTrainer(trainerType: DmTrainerType) {
 
   const startDrill = useCallback(() => {
     if (questions.length === 0) return;
+    const drill = sampleDrillQuestions(questions);
+    setDrillQuestions(drill);
     setPhase("drill");
     setCurrentIndex(0);
-    setAnswersByIndex(questions.map(() => null));
+    setAnswersByIndex(drill.map(() => null));
     setSelected(null);
     setShowFeedback(false);
     setRetryMode(false);
     setRetryQueue([]);
     setElapsedSeconds(0);
     startTimeRef.current = Date.now();
-    attemptInputsRef.current = questions.map(() => null);
+    attemptInputsRef.current = drill.map(() => null);
     questionShownAtRef.current = Date.now();
     sessionSavedRef.current = false;
   }, [questions]);
@@ -164,6 +181,7 @@ export function useDmSkillsTrainer(trainerType: DmTrainerType) {
           selected: optionId,
           correct,
           skillTag: current.skillTag,
+          timeTakenSeconds,
         };
         return next;
       });
@@ -284,7 +302,7 @@ export function useDmSkillsTrainer(trainerType: DmTrainerType) {
 
   const retryIncorrect = useCallback(() => {
     const incorrectIds = new Set(answers.filter((a) => !a.correct).map((a) => a.questionId));
-    const queue = questions.filter((q) => incorrectIds.has(q.id));
+    const queue = drillQuestions.filter((q) => incorrectIds.has(q.id));
     if (queue.length === 0) return;
     setRetryMode(true);
     setRetryQueue(queue);
@@ -298,7 +316,7 @@ export function useDmSkillsTrainer(trainerType: DmTrainerType) {
     attemptInputsRef.current = queue.map(() => null);
     questionShownAtRef.current = Date.now();
     sessionSavedRef.current = false;
-  }, [answers, questions]);
+  }, [answers, drillQuestions]);
 
   const backToIntro = useCallback(() => {
     setPhase("intro");

@@ -289,7 +289,7 @@ export default function KeywordScanningPage() {
     const isPerfect = foundCount === targets.length;
     const isNewBest = isPerfect && (bestTimeSeconds == null || elapsed < bestTimeSeconds);
     const skipLinkClass =
-      "absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-foreground font-medium rounded-lg ring-2 ring-blue-600 opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
+      "absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-foreground font-medium rounded-lg ring-2 ring-primary opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
 
     return (
       <div className="flex flex-col min-h-screen">
@@ -385,7 +385,7 @@ export default function KeywordScanningPage() {
   }
 
   const skipLinkClass =
-    "absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-foreground font-medium rounded-lg ring-2 ring-blue-600 opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
+    "absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-foreground font-medium rounded-lg ring-2 ring-primary opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
 
   return (
     <div className="flex flex-col min-h-screen bg-secondary/50">

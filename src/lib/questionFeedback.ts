@@ -36,6 +36,7 @@ export type QuestionFeedbackTrainerType =
   | "dm_data_logic"
   | "dm_argument_judge"
   | "sjt_appropriateness"
+  | "sjt_importance"
   | "sjt_ranking";
 
 export const questionFeedbackSchema = z.object({

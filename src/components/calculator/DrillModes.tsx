@@ -117,8 +117,11 @@ const generateUCATStyleQuestion = (difficulty: Difficulty): { text: string; answ
         return generateSum(difficulty);
     }
     if (roll < 0.2) {
+        // n must be a multiple of 20 so pct% is always a whole number for every pct
+        // here; otherwise the stored (rounded) answer rejects a correct calculator
+        // result, e.g. 15% of 150 = 22.5 stored as 23.
         const pct = [15, 20, 25, 30, 40][Math.floor(Math.random() * 5)];
-        const n = [80, 100, 120, 150, 200][Math.floor(Math.random() * 5)];
+        const n = [80, 100, 120, 160, 200][Math.floor(Math.random() * 5)];
         const ans = Math.round((pct / 100) * n);
         return { text: `${pct}% of ${n}`, answer: ans };
     }

@@ -71,7 +71,7 @@ function NavIcon({ children, active }: { children: ReactNode; active: boolean })
     <span
       className={cn(
         "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors",
-        active ? "bg-sky-400/90 text-white" : "bg-white/10 text-sky-100 group-hover:bg-white/15",
+        active ? "bg-primary text-white" : "bg-white/10 text-sky-100 group-hover:bg-white/15",
       )}
     >
       {children}

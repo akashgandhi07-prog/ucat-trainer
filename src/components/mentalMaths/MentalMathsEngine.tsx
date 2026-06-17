@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useMentalMathsLogic } from "../../hooks/useMentalMathsLogic";
 import type { MentalMathsSummaryStats } from "../../hooks/useMentalMathsLogic";
 import { MENTAL_MATHS_STAGES } from "./mentalMathsStages";
+import { getCommonTrapCopy } from "../../data/commonTrapCopy";
 import { PostDrillUpsell } from "../layout/ProductUpsell";
 import { CheckCircle2, Lock, Trophy } from "lucide-react";
 
@@ -269,7 +270,7 @@ export function MentalMathsEngine({ onSessionComplete, onStageStart }: MentalMat
               </div>
               <div>
                 <h3 className="font-semibold text-foreground">Common trap</h3>
-                <p className="text-foreground mt-1">{q.explanation.commonTrap}</p>
+                <p className="text-foreground mt-1">{getCommonTrapCopy(q.explanation.commonTrap)}</p>
               </div>
             </div>
           </div>

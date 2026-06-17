@@ -53,10 +53,10 @@ const SECTION_ICONS: Record<LandingTrainerSection, typeof BookOpen> = {
 };
 
 const SECTION_ACCENT: Record<LandingTrainerSection, string> = {
-  vr:  "text-primary bg-primary/8 border-primary/15",
-  dm:  "text-primary bg-primary/8 border-primary/15",
-  qr:  "text-primary bg-primary/8 border-primary/15",
-  sjt: "text-primary bg-primary/8 border-primary/15",
+  vr:  "text-subject-vr bg-subject-vr/10 border-subject-vr/15",
+  dm:  "text-subject-dm bg-subject-dm/10 border-subject-dm/15",
+  qr:  "text-subject-qr bg-subject-qr/10 border-subject-qr/15",
+  sjt: "text-subject-sjt bg-subject-sjt/10 border-subject-sjt/15",
 };
 
 const SECTION_HEADER_BG: Record<LandingTrainerSection, string> = {
@@ -106,41 +106,44 @@ function TrustStars({ className }: { className?: string }) {
   );
 }
 
+const HERO_CARD_BASE =
+  "bg-card border-border shadow-card hover:-translate-y-0.5 hover:shadow-card-hover";
+
 const HERO_SECTIONS = [
   {
     icon: BookOpen,
     label: "Verbal Reasoning",
     count: "4 drills",
-    accent: "bg-card border-border hover:border-foreground/25 hover:bg-secondary",
-    iconBg: "bg-primary/10",
-    iconColor: "text-primary",
+    accent: cn(HERO_CARD_BASE, "hover:border-subject-vr/40"),
+    iconBg: "bg-subject-vr/10",
+    iconColor: "text-subject-vr",
     href: "/ucat-verbal-reasoning-practice",
   },
   {
     icon: Scale,
     label: "Decision Making",
     count: "5 drills",
-    accent: "bg-card border-border hover:border-foreground/25 hover:bg-secondary",
-    iconBg: "bg-primary/10",
-    iconColor: "text-primary",
+    accent: cn(HERO_CARD_BASE, "hover:border-subject-dm/40"),
+    iconBg: "bg-subject-dm/10",
+    iconColor: "text-subject-dm",
     href: "/ucat-decision-making-practice",
   },
   {
     icon: Calculator,
     label: "Quantitative Reasoning",
     count: "3 drills",
-    accent: "bg-card border-border hover:border-foreground/25 hover:bg-secondary",
-    iconBg: "bg-primary/10",
-    iconColor: "text-primary",
+    accent: cn(HERO_CARD_BASE, "hover:border-subject-qr/40"),
+    iconBg: "bg-subject-qr/10",
+    iconColor: "text-subject-qr",
     href: "/ucat-quantitative-reasoning-practice",
   },
   {
     icon: Users,
     label: "Situational Judgement",
     count: "3 drills",
-    accent: "bg-card border-border hover:border-foreground/25 hover:bg-secondary",
-    iconBg: "bg-primary/10",
-    iconColor: "text-primary",
+    accent: cn(HERO_CARD_BASE, "hover:border-subject-sjt/40"),
+    iconBg: "bg-subject-sjt/10",
+    iconColor: "text-subject-sjt",
     href: "/ucat-sjt-practice",
   },
 ] as const;
@@ -309,7 +312,7 @@ export function LandingSectionHub({ onVerbal, onDecision, onQuant, onSjt }: Sect
     {
       onClick: onVerbal,
       icon: BookOpen,
-      accent: "bg-primary/10 text-primary group-hover:bg-primary/15",
+      accent: "bg-subject-vr/20 text-subject-vr group-hover:bg-subject-vr/30",
       title: "Verbal Reasoning",
       desc: "Speed reading, rapid recall, keyword scanning and inference.",
       label: "4 trainers",
@@ -317,7 +320,7 @@ export function LandingSectionHub({ onVerbal, onDecision, onQuant, onSjt }: Sect
     {
       onClick: onDecision,
       icon: Scale,
-      accent: "bg-primary/10 text-primary group-hover:bg-primary/15",
+      accent: "bg-subject-dm/20 text-subject-dm group-hover:bg-subject-dm/30",
       title: "Decision Making",
       desc: "Syllogisms, Venn logic, data reasoning and argument judgement.",
       label: "5 trainers",
@@ -325,7 +328,7 @@ export function LandingSectionHub({ onVerbal, onDecision, onQuant, onSjt }: Sect
     {
       onClick: onQuant,
       icon: Calculator,
-      accent: "bg-primary/10 text-primary group-hover:bg-primary/15",
+      accent: "bg-subject-qr/20 text-subject-qr group-hover:bg-subject-qr/30",
       title: "Quantitative Reasoning",
       desc: "Calculator keypad speed, mental maths fluency and unit conversion drills.",
       label: "3 trainers",
@@ -333,7 +336,7 @@ export function LandingSectionHub({ onVerbal, onDecision, onQuant, onSjt }: Sect
     {
       onClick: onSjt,
       icon: Users,
-      accent: "bg-primary/10 text-primary group-hover:bg-primary/15",
+      accent: "bg-subject-sjt/20 text-subject-sjt group-hover:bg-subject-sjt/30",
       title: "Situational Judgement",
       desc: "Appropriateness rating, importance rating and ranking questions.",
       label: "3 trainers",

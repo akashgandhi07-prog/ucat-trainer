@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CheckCircle2, XCircle, AlertCircle, ExternalLink, ChevronRight } from "lucide-react";
 import type { SJTRatingQuestion, SJTRating, SJTQuizProgress } from "../../types/sjt";
 import QuestionFeedbackModal from "../feedback/QuestionFeedbackModal";
@@ -80,6 +80,34 @@ export default function SJTRatingQuiz({ question, onComplete, onProgress }: Prop
     }
   }
 
+  // Keyboard support: 1–4 picks a rating, Enter confirms then advances. Mirrors the
+  // QR trainers and lets candidates work without reaching for the mouse each item.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (feedbackOpen) return; // don't steal keys from the report dialog
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
+        return;
+      }
+      if (itemPhase === "rating") {
+        const n = Number(e.key);
+        if (Number.isInteger(n) && n >= 1 && n <= scale.length) {
+          e.preventDefault();
+          handleSelect(scale[n - 1]);
+        } else if (e.key === "Enter" && selected) {
+          e.preventDefault();
+          handleConfirm();
+        }
+      } else if (itemPhase === "feedback" && e.key === "Enter") {
+        e.preventDefault();
+        handleNext();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- handlers are stable enough; re-subscribe on phase/selection changes only
+  }, [itemPhase, selected, feedbackOpen, scale]);
+
   const currentScore = selected && itemPhase === "feedback"
     ? scoreItem(selected, item.correctRating, question.type)
     : null;
@@ -157,22 +185,36 @@ export default function SJTRatingQuiz({ question, onComplete, onProgress }: Prop
             {/* Rating buttons */}
             {itemPhase === "rating" && (
               <div className="space-y-2">
-                {scale.map((r) => (
+                {scale.map((r, i) => (
                   <button
                     key={r}
                     type="button"
                     onClick={() => handleSelect(r)}
                     aria-pressed={selected === r}
                     className={cn(
-                      "w-full text-left px-4 py-3 rounded-xl border text-sm font-medium transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary",
+                      "w-full flex items-center gap-2.5 text-left px-4 py-3 rounded-xl border text-sm font-medium transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary",
                       selected === r
                         ? "bg-primary text-primary-foreground border-primary"
                         : "bg-card border-border text-foreground hover:bg-secondary"
                     )}
                   >
+                    <span
+                      aria-hidden
+                      className={cn(
+                        "inline-flex h-5 w-5 shrink-0 items-center justify-center rounded border text-[11px] font-semibold",
+                        selected === r
+                          ? "border-primary-foreground/40 text-primary-foreground"
+                          : "border-border text-muted-foreground"
+                      )}
+                    >
+                      {i + 1}
+                    </span>
                     {labelMap[r]}
                   </button>
                 ))}
+                <p className="text-[11px] text-muted-foreground pt-0.5">
+                  Tip: press <kbd className="font-semibold">1</kbd>–<kbd className="font-semibold">{scale.length}</kbd> to rate, <kbd className="font-semibold">Enter</kbd> to confirm.
+                </p>
               </div>
             )}
 
@@ -294,7 +336,7 @@ export default function SJTRatingQuiz({ question, onComplete, onProgress }: Prop
         isOpen={feedbackOpen}
         onClose={() => setFeedbackOpen(false)}
         context={{
-          trainerType: "sjt_appropriateness",
+          trainerType: question.type === "importance" ? "sjt_importance" : "sjt_appropriateness",
           questionKind: "sjt_rating",
           questionIdentifier: `sjt:${question.id}:${item.id}`,
           passageId: null,

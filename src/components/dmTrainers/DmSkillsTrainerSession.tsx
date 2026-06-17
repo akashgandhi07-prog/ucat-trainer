@@ -13,6 +13,33 @@ import { scrollPageToTop } from "../../lib/scrollPageToTop";
 import { useAppShell } from "../../contexts/AppShellContext";
 import { APP_CONTENT_X } from "../../lib/appContentLayout";
 import { formatExplanationForDisplay } from "../../lib/studentFacingCopy";
+import { getCommonTrapCopy } from "../../data/commonTrapCopy";
+import type { DmTrainerSessionAnswer } from "../../types/dmTrainers";
+
+// DM in the real exam is ~35 questions in 37 minutes ≈ 63s per question.
+const EXAM_SECONDS_PER_QUESTION = 63;
+
+function humaniseTag(tag: string): string {
+  const words = tag.replace(/-/g, " ").trim();
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+type SkillBreakdownRow = { skillTag: string; correct: number; total: number };
+
+function buildSkillBreakdown(answers: DmTrainerSessionAnswer[]): SkillBreakdownRow[] {
+  const byTag = new Map<string, SkillBreakdownRow>();
+  for (const a of answers) {
+    const tag = a.skillTag || "unknown";
+    const row = byTag.get(tag) ?? { skillTag: tag, correct: 0, total: 0 };
+    row.total += 1;
+    if (a.correct) row.correct += 1;
+    byTag.set(tag, row);
+  }
+  // Weakest skills first so the learner's attention lands on what to revise.
+  return [...byTag.values()].sort(
+    (x, y) => x.correct / x.total - y.correct / y.total || y.total - x.total,
+  );
+}
 
 const OPTION_KEYS: Record<string, DmTrainerOptionId> = {
   "1": "A",
@@ -176,6 +203,19 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (phase !== "drill" || !current) return;
+      // Don't hijack keys while the Report modal is open or while the user is
+      // typing into a field — otherwise letter/number keys submit an answer and
+      // get preventDefault'd out of the textarea.
+      if (feedbackOpen) return;
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
       if (!showFeedback) {
         const id = OPTION_KEYS[e.key];
         if (id) {
@@ -189,7 +229,7 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
         goToNext();
       }
     },
-    [phase, current, showFeedback, submitAnswer, goToNext],
+    [phase, current, showFeedback, feedbackOpen, submitAnswer, goToNext],
   );
 
   useEffect(() => {
@@ -202,10 +242,19 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
   const review = current?.review;
   const argReview = review && isArgumentJudgeReview(review) ? review : null;
 
+  const skillRows = buildSkillBreakdown(answers);
+  const timedAnswers = answers.filter((a) => typeof a.timeTakenSeconds === "number");
+  const avgThinkingSeconds = timedAnswers.length
+    ? Math.round(
+        timedAnswers.reduce((sum, a) => sum + (a.timeTakenSeconds ?? 0), 0) /
+          timedAnswers.length,
+      )
+    : null;
+
   return (
     <div className={cn("pb-8", inAppShell ? APP_CONTENT_X : "px-4")}>
       <div className={cn("w-full pt-4", !inAppShell && "max-w-3xl mx-auto")}>
-        <div className="bg-card rounded-xl border border-border p-5 sm:p-6 lg:p-8 overflow-hidden">
+        <div className="bg-card rounded-xl border border-border shadow-card p-5 sm:p-6 lg:p-8 overflow-hidden">
           <div
             className={cn(
               "mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4",
@@ -371,6 +420,17 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
                         </p>
                       )}
 
+                      {current.commonTrap && (
+                        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5">
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-red-700 mb-1">
+                            Common trap
+                          </p>
+                          <p className="text-sm text-red-900 leading-relaxed">
+                            {getCommonTrapCopy(current.commonTrap)}
+                          </p>
+                        </div>
+                      )}
+
                       {current.wrongOptionReasons && (
                         <div className="space-y-1.5 border-t border-border/80 pt-2.5">
                           <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
@@ -479,6 +539,62 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
                   {retryMode ? "Retry complete" : "Drill complete"} in {elapsedSeconds}s
                 </p>
               </div>
+
+              {avgThinkingSeconds != null && (
+                <div className="rounded-lg border border-border bg-card px-4 py-3">
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                    <p className="text-sm font-semibold text-foreground">Pace</p>
+                    <p className="text-sm tabular-nums text-foreground">
+                      <span className="font-semibold">{avgThinkingSeconds}s</span>
+                      <span className="text-muted-foreground"> / question · exam pace ~{EXAM_SECONDS_PER_QUESTION}s</span>
+                    </p>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                    {avgThinkingSeconds <= EXAM_SECONDS_PER_QUESTION
+                      ? "You're at or ahead of exam pace. Keep accuracy up at this speed."
+                      : "Above exam pace — in the real test you have about a minute per question. Average answering time, not counting time spent reading explanations."}
+                  </p>
+                </div>
+              )}
+
+              {skillRows.length > 0 && (
+                <div className="rounded-lg border border-border bg-card px-4 py-3">
+                  <p className="text-sm font-semibold text-foreground mb-2">By skill</p>
+                  <ul className="space-y-1.5">
+                    {skillRows.map((row) => {
+                      const allRight = row.correct === row.total;
+                      const noneRight = row.correct === 0;
+                      return (
+                        <li
+                          key={row.skillTag}
+                          className="flex items-center justify-between gap-3 text-sm"
+                        >
+                          <span className="min-w-0 truncate text-foreground">
+                            {humaniseTag(row.skillTag)}
+                          </span>
+                          <span
+                            className={cn(
+                              "shrink-0 tabular-nums font-medium",
+                              allRight
+                                ? "text-green-600"
+                                : noneRight
+                                  ? "text-red-600"
+                                  : "text-amber-600",
+                            )}
+                          >
+                            {row.correct}/{row.total}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {incorrectCount > 0
+                      ? 'Weakest skills first. Use "Retry incorrect" to drill what you missed.'
+                      : "Full marks across every skill in this drill."}
+                  </p>
+                </div>
+              )}
 
               <div className="flex flex-col sm:flex-row gap-3">
                 {incorrectCount > 0 && !retryMode && (
