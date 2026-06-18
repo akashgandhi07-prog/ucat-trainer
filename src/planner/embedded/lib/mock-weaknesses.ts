@@ -55,6 +55,23 @@ export function weaknessHints(tags: string[] | null | undefined): string[] {
   return tags.map(t => OPT_BY_ID.get(t)?.hint).filter(Boolean) as string[]
 }
 
+/**
+ * The specific topic to drill per section, taken from logged mock weaknesses. Lets a
+ * generic "Decision making" block show what to actually work on ("DM: charts/graphs").
+ * First tagged weakness per section wins.
+ */
+export function topicFocusBySection(
+  tags: string[] | null | undefined,
+): Partial<Record<WeaknessSection, string>> {
+  const out: Partial<Record<WeaknessSection, string>> = {}
+  if (!tags?.length) return out
+  for (const t of tags) {
+    const o = OPT_BY_ID.get(t)
+    if (o && !out[o.section]) out[o.section] = o.label
+  }
+  return out
+}
+
 /** Which numbered section lagged cohort average most (VR/DM/QR only; SJT scoring differs). */
 export function weakestSectionFromScores(mock: {
   vr: number | null

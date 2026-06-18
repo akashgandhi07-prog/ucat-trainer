@@ -14,6 +14,7 @@ import {
   weaknessTagWeightBonus,
   weaknessHints,
   weakestSectionFromScores,
+  topicFocusBySection,
   type WeaknessSection,
 } from './mock-weaknesses'
 
@@ -120,35 +121,80 @@ export function getPhase(weeksUntilExam: number, hasPriorExperience: boolean): P
 
 // ─── Section weighting ────────────────────────────────────────────────────────
 
+export interface WeightingSignals {
+  /** Mocks logged so far — fades the influence of stale onboarding self-assessment. */
+  mockCount?: number
+  /** Goal VR+DM+QR combined total (out of 2700). */
+  targetTotal?: number | null
+  /** Latest SJT band (1 best … 4 weakest). */
+  sjtBand?: number | null
+  /** Goal SJT band (1-4). */
+  targetSjtBand?: number | null
+}
+
 export function calcSectionWeights(
   confidence: { vr: number; dm: number; qr: number; sjt: number },
   mockScores?: { vr: number | null; dm: number | null; qr: number | null } | null,
   tagWeights?: { vr: number; dm: number; qr: number; sjt: number } | null,
+  signals?: WeightingSignals,
 ): SectionWeight {
-  let vr = 6 - confidence.vr + (tagWeights?.vr ?? 0)
-  let dm = 6 - confidence.dm + (tagWeights?.dm ?? 0)
-  let qr = 6 - confidence.qr + (tagWeights?.qr ?? 0)
+  // Onboarding confidence is a day-one guess. As real mock data arrives, fade its
+  // contribution toward neutral (3) so measured performance — not stale self-doubt —
+  // drives the plan. Full self-report at 0 mocks; ~80% faded by the 4th mock.
+  const decay = Math.min(0.8, Math.max(0, signals?.mockCount ?? 0) * 0.2)
+  const confTerm = (c: number) => (6 - c) * (1 - decay) + 3 * decay
 
+  let vr = confTerm(confidence.vr) + (tagWeights?.vr ?? 0)
+  let dm = confTerm(confidence.dm) + (tagWeights?.dm ?? 0)
+  let qr = confTerm(confidence.qr) + (tagWeights?.qr ?? 0)
+
+  // Relative-to-self boost: every numbered section trailing the student's own mock
+  // average gets weight (not just the single worst), scaled by how far it trails.
   if (mockScores && (mockScores.vr || mockScores.dm || mockScores.qr)) {
-    const scores = [mockScores.vr, mockScores.dm, mockScores.qr].filter(Boolean) as number[]
-    if (scores.length > 0) {
-      const avg = scores.reduce((a, b) => a + b, 0) / scores.length
-      const deltas = {
-        vr: mockScores.vr ? avg - mockScores.vr : 0,
-        dm: mockScores.dm ? avg - mockScores.dm : 0,
-        qr: mockScores.qr ? avg - mockScores.qr : 0,
-      }
-      const maxDelta = Math.max(deltas.vr, deltas.dm, deltas.qr)
-      if (maxDelta > 0) {
-        if (deltas.vr === maxDelta) vr += 2
-        else if (deltas.dm === maxDelta) dm += 2
-        else qr += 2
+    const present = ([
+      ['vr', mockScores.vr],
+      ['dm', mockScores.dm],
+      ['qr', mockScores.qr],
+    ] as const).filter(([, s]) => typeof s === 'number' && (s as number) > 0) as ['vr' | 'dm' | 'qr', number][]
+    if (present.length > 0) {
+      const avg = present.reduce((a, [, s]) => a + s, 0) / present.length
+      for (const [sec, s] of present) {
+        const below = avg - s
+        if (below <= 0) continue
+        const boost = Math.min(below / 50, 2) // up to +2 for ~100 below own average
+        if (sec === 'vr') vr += boost
+        else if (sec === 'dm') dm += boost
+        else qr += boost
       }
     }
   }
 
+  // Absolute gap-to-target boost: a uniformly-weak student (every section below the
+  // goal but "balanced") still gets pushed, which the relative boost alone can't do.
+  const targetTotal = signals?.targetTotal ?? null
+  if (targetTotal && mockScores) {
+    const perSectionTarget = targetTotal / 3
+    const gapBoost = (s: number | null) => {
+      if (!s || s <= 0) return 0
+      const gap = perSectionTarget - s
+      return gap > 0 ? Math.min(gap / 100, 3) : 0 // up to +3 for a 300-pt shortfall
+    }
+    vr += gapBoost(mockScores.vr)
+    dm += gapBoost(mockScores.dm)
+    qr += gapBoost(mockScores.qr)
+  }
+
   const mainSum = vr + dm + qr
-  const sjt = (mainSum / 3) * 0.6
+  // SJT starts at 60% of the main average, then responds to actual SJT performance:
+  // a band worse than target (or band 3-4 with no target set) pulls in more SJT time.
+  let sjt = (mainSum / 3) * 0.6 + (tagWeights?.sjt ?? 0)
+  const band = signals?.sjtBand ?? null
+  const targetBand = signals?.targetSjtBand ?? null
+  if (band != null) {
+    if (targetBand != null && band > targetBand) sjt += (band - targetBand) * 0.8
+    else if (targetBand == null && band >= 3) sjt += (band - 2) * 0.6
+  }
+
   const total = vr + dm + qr + sjt
   return { vr: vr / total, dm: dm / total, qr: qr / total, sjt: sjt / total }
 }
@@ -188,6 +234,12 @@ export function weeklyMockTarget(
   totalWeeks: number,
   weeklyAvailableMinutes: number,
   ucatSen: boolean,
+  /**
+   * Raises the phase ceiling by this many mocks when the student is behind their goal.
+   * It only bites when their *existing* hours already have room (fitsByTime), so being
+   * behind buys more timed-mock practice within stated hours — never extra hours.
+   */
+  mockCeilingBonus = 0,
 ): number {
   if (weeksRemaining <= 0) return 0
 
@@ -212,6 +264,8 @@ export function weeklyMockTarget(
   else if (weeksRemaining <= 5) phaseCeiling = 3
   else if (weeksRemaining <= 6) phaseCeiling = 2
   else phaseCeiling = 5
+
+  phaseCeiling += Math.max(0, mockCeilingBonus)
 
   let ideal = Math.min(phaseCeiling, fitsByTime)
 
@@ -262,10 +316,16 @@ export function hoursForDate(
    * plus its reflection block needs, so the final-phase mock schedule stays achievable.
    */
   if (daysUntilExam >= 1 && daysUntilExam <= 21) {
+    const high = Math.max(4, weekendMax, schoolDayMax)
+    // Taper the final two days so the student arrives rested rather than peaking the
+    // night before. The day before is a light review day; two days out is moderate.
+    // (Both fall below a full-mock block, so the last days become review/practice, not
+    // another timed mock — which is exactly the intended pre-exam wind-down.)
+    if (daysUntilExam === 1) return roundPlannerHours(Math.min(2, high))
+    if (daysUntilExam === 2) return roundPlannerHours(Math.min(3, high))
     const low = isHighCapacity
       ? Math.max(3, Math.min(weekendMax, 4))
       : Math.max(2, schoolDayMax)
-    const high = Math.max(4, weekendMax, schoolDayMax)
     const t = (21 - daysUntilExam) / 20
     return roundPlannerHours(Math.max(low, low + t * (high - low)))
   }
@@ -377,6 +437,8 @@ function weakestPracticeSection(weights: SectionWeight): SessionType {
 type PlannedSession = {
   type: SessionType
   miniMockFocus?: UCATSection
+  /** Specific topic to drill, derived from logged mock weaknesses (e.g. "QR: pacing"). */
+  topicFocus?: string
 }
 
 function rankedMiniMockFocuses(weights: SectionWeight): UCATSection[] {
@@ -491,10 +553,15 @@ export function planDaySessions(
   return planPracticeSessions(remaining, weights, phase === 'timed', tracker, currentDayIndex, confidence)
 }
 
+/** Most a single section may be drilled in one day, so big days stay varied. */
+const MAX_PRACTICE_PER_SECTION = 2
+/** Upper bound on practice blocks per day (excludes reflections). */
+const MAX_PRACTICE_BLOCKS = 6
+
 function planPracticeSessions(
   availableMinutes: number,
   weights: SectionWeight,
-  isTimed: boolean,
+  _isTimed: boolean,
   tracker: SectionTracker,
   currentDayIndex: number,
   confidence: { vr: number; dm: number; qr: number; sjt: number },
@@ -509,14 +576,41 @@ function planPracticeSessions(
     { type: 'sjt_practice' as SessionType, weight: weights.sjt },
   ]).sort((a, b) => b.weight - a.weight)
 
-  let added = 0
-  for (const { type } of ranked) {
-    const dur = SESSION_DURATIONS[type]
-    if (remaining >= dur) { sessions.push({ type }); remaining -= dur; added++ }
-    if (added >= 3) break
+  // Fill the day's available time by cycling through the weighted sections rather than
+  // stopping after three blocks — a student who set aside six hours should not see half
+  // of it left unscheduled. Per-section and total caps keep the day varied and sane.
+  const perSection: Record<string, number> = {}
+  let blocks = 0
+  let cursor = 0
+  let sinceReflection = 0
+
+  while (blocks < MAX_PRACTICE_BLOCKS) {
+    let placed = false
+    for (let k = 0; k < ranked.length; k++) {
+      const cand = ranked[(cursor + k) % ranked.length]
+      const dur = SESSION_DURATIONS[cand.type]
+      if ((perSection[cand.type] ?? 0) >= MAX_PRACTICE_PER_SECTION) continue
+      if (remaining < dur) continue
+      sessions.push({ type: cand.type })
+      remaining -= dur
+      perSection[cand.type] = (perSection[cand.type] ?? 0) + 1
+      blocks++
+      sinceReflection++
+      cursor = (cursor + k + 1) % ranked.length
+      placed = true
+      // Drop in a consolidation slot after every couple of blocks while time allows.
+      if (sinceReflection >= 2 && remaining >= REFLECTION_AFTER_PRACTICE_MIN) {
+        sessions.push({ type: 'reflection' })
+        remaining -= REFLECTION_AFTER_PRACTICE_MIN
+        sinceReflection = 0
+      }
+      break
+    }
+    if (!placed) break
   }
 
-  if (remaining >= REFLECTION_AFTER_PRACTICE_MIN && sessions.length >= 2) {
+  // Trailing reflection if we ended on practice with at least a couple of blocks done.
+  if (sinceReflection >= 1 && blocks >= 2 && remaining >= REFLECTION_AFTER_PRACTICE_MIN) {
     sessions.push({ type: 'reflection' })
   }
 
@@ -541,8 +635,18 @@ export interface PlanInputs {
   // Regeneration
   difficultyAdjustment?: number
   latestMockScores?: { vr: number | null; dm: number | null; qr: number | null } | null
+  /** SJT band (1 best … 4 weakest) from the latest logged mock */
+  latestSjtBand?: number | null
   /** Learner-checked weakness tags from latest mock row */
   weaknessTags?: string[] | null
+  /** How many mocks have been logged — fades stale onboarding confidence as data arrives */
+  mockCount?: number
+  /** Goal VR+DM+QR combined total (out of 2700); drives target-gap weighting + intensity */
+  mockTargetTotal?: number | null
+  /** Goal SJT band (1-4) */
+  mockTargetSjtBand?: number | null
+  /** Completed-vs-planned ratio over recent weeks (0..1.5); low adherence lightens the load */
+  adherenceRatio?: number | null
   regenerateFromWeek?: number
 }
 
@@ -555,8 +659,36 @@ interface WeekPlan {
     date: Date
     isRest: boolean
     availableMinutes: number
-    sessions: { type: SessionType; rationale: string | null; miniMockFocus?: UCATSection }[]
+    sessions: { type: SessionType; rationale: string | null; miniMockFocus?: UCATSection; topicFocus?: string }[]
   }[]
+}
+
+/**
+ * How hard to lean on the schedule given the gap to the student's stated goal.
+ * Returns 1.0 when at/above target or when there's nothing to compare against, rising
+ * to at most 1.2 when well behind. Kept modest so we never wildly exceed stated hours.
+ */
+function computeTargetPressure(
+  targetTotal: number | null | undefined,
+  scores: { vr: number | null; dm: number | null; qr: number | null } | null | undefined,
+  targetBand: number | null | undefined,
+  band: number | null | undefined,
+): number {
+  let pressure = 1
+  if (targetTotal && scores) {
+    const present = [scores.vr, scores.dm, scores.qr].filter(
+      (s): s is number => typeof s === 'number' && s > 0,
+    )
+    if (present.length > 0) {
+      const projectedTotal = (present.reduce((a, b) => a + b, 0) / present.length) * 3
+      const gap = targetTotal - projectedTotal
+      if (gap > 0) pressure += Math.min(gap / 2000, 0.15) // ~300-pt shortfall ≈ +15%
+    }
+  }
+  if (targetBand != null && band != null && band > targetBand) {
+    pressure += Math.min((band - targetBand) * 0.03, 0.06)
+  }
+  return Math.min(pressure, 1.2)
 }
 
 export interface GeneratedPlan {
@@ -568,6 +700,8 @@ export function generateFullPlan(inputs: PlanInputs): GeneratedPlan {
     examDate, hasPriorExperience, confidence,
     schoolDayHours, weekendHours, holidayPeriods,
     restDays, busyPeriods, latestMockScores, weaknessTags,
+    latestSjtBand, mockCount, mockTargetTotal, mockTargetSjtBand,
+    adherenceRatio,
     difficultyAdjustment = 0,
     ucatSen = false,
   } = inputs
@@ -578,6 +712,31 @@ export function generateFullPlan(inputs: PlanInputs): GeneratedPlan {
   // Weekly reflections: "too hard" weeks shrink future daily load, "too easy" grows it.
   // delta is clamped to ±2 upstream, so the swing is at most ±20%.
   const difficultyFactor = 1 + 0.1 * Math.max(-2, Math.min(2, difficultyAdjustment))
+
+  // When the student is behind their stated goal we lean in — but WITHOUT exceeding the
+  // hours they committed to. Rather than inflating daily minutes, target pressure buys at
+  // most one extra timed mock per week, and only when their existing hours already have
+  // room for it (see weeklyMockTarget / mockCeilingBonus). The plan stays honest: it never
+  // schedules past stated availability, it just shifts the mix toward mocks when behind.
+  const targetPressure = computeTargetPressure(
+    mockTargetTotal, latestMockScores, mockTargetSjtBand, latestSjtBand,
+  )
+  const mockCeilingBonus = targetPressure > 1.02 ? 1 : 0
+
+  // If recent weeks went largely uncompleted, lighten the load so the plan stays
+  // achievable instead of piling on work the student already isn't finishing.
+  const adherenceFactor =
+    adherenceRatio == null || adherenceRatio >= 0.95
+      ? 1
+      : Math.max(0.7, 0.7 + 0.3 * adherenceRatio)
+
+  // Daily-minutes multiplier. Difficulty reflections may nudge ±20% (pre-existing
+  // behaviour); low adherence only ever reduces. Target pressure is deliberately NOT
+  // here — it must never push a student past the hours they said they can give.
+  const loadFactor = Math.max(
+    0.6,
+    Math.min(1.2, difficultyFactor) * adherenceFactor,
+  )
 
   const busyDates = new Set<string>()
   for (const p of busyPeriods) {
@@ -592,7 +751,15 @@ export function generateFullPlan(inputs: PlanInputs): GeneratedPlan {
 
   const tagBonus = weaknessTagWeightBonus(weaknessTags ?? [])
   const totalWeeks = Math.ceil(weeksUntil(examDate, planStart) + 1)
-  const weights = calcSectionWeights(confidence, latestMockScores, tagBonus)
+  const weights = calcSectionWeights(confidence, latestMockScores, tagBonus, {
+    mockCount: mockCount ?? 0,
+    targetTotal: mockTargetTotal ?? null,
+    sjtBand: latestSjtBand ?? null,
+    targetSjtBand: mockTargetSjtBand ?? null,
+  })
+
+  // Specific topic per section to surface on practice blocks (from logged mock weaknesses).
+  const topicMap = topicFocusBySection(weaknessTags ?? [])
 
   const mockWeakestMain = weakestSectionFromScores(latestMockScores ?? null)
 
@@ -628,10 +795,10 @@ export function generateFullPlan(inputs: PlanInputs): GeneratedPlan {
       const ds = toISODate(d)
       if (restDays.includes(d.getDay()) || busyDates.has(ds)) continue
       const h = hoursForDate(d, examDate, planStart, schoolDayHours, weekendHours, holidayPeriods, w + 1, totalWeeks)
-      weeklyAvailableMinutes += Math.round(h * 60 * difficultyFactor)
+      weeklyAvailableMinutes += Math.round(h * 60 * loadFactor)
     }
 
-    const weeklyMockCap = weeklyMockTarget(weeksRemaining, totalWeeks, weeklyAvailableMinutes, ucatSen)
+    const weeklyMockCap = weeklyMockTarget(weeksRemaining, totalWeeks, weeklyAvailableMinutes, ucatSen, mockCeilingBonus)
     // First two weeks for true beginners: pure untimed foundations, no mocks at all.
     // Once they've built some confidence (week 3+), frequent section mini mocks begin.
     const effectiveMockCap = (phase === 'foundations' && w < 2) ? 0 : weeklyMockCap
@@ -662,7 +829,7 @@ export function generateFullPlan(inputs: PlanInputs): GeneratedPlan {
         w + 1,
         totalWeeks,
       )
-      const availableMinutes = isRest || isPast ? 0 : Math.round(hours * 60 * difficultyFactor)
+      const availableMinutes = isRest || isPast ? 0 : Math.round(hours * 60 * loadFactor)
 
       let plannedSessions: PlannedSession[] = []
       if (!isRest && !isPast && availableMinutes >= 30) {
@@ -694,8 +861,11 @@ export function generateFullPlan(inputs: PlanInputs): GeneratedPlan {
 
       let prevInDay: SessionType | null = null
       const enriched = plannedSessions.map(session => {
+        const sectionForType = practiceWeaknessBucket(session.type)
+        const topicFocus = session.topicFocus ?? (sectionForType ? topicMap[sectionForType] : undefined)
         const row = {
           ...session,
+          topicFocus,
           rationale: rationaleForSession(session.type, rationaleCtx, prevInDay, session.miniMockFocus),
         }
         prevInDay = row.type
@@ -775,7 +945,10 @@ export function planToDBRows(
           duration_minutes: plannedSessionDurationMinutes(sessionType, ucatSen, prev),
           position: idx,
           is_timed: sessionType !== 'sjt_practice' && sessionType !== 'reflection' && sessionType !== 'rest',
-          notes: sessionType === 'mini_mock' ? miniMockNote(row.miniMockFocus) : null,
+          notes:
+            sessionType === 'mini_mock'
+              ? miniMockNote(row.miniMockFocus)
+              : row.topicFocus ?? null,
           planner_rationale: row.rationale,
         })
       })

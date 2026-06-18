@@ -8,3 +8,12 @@ verify_jwt = true
 # webhook callers can reach the function. Auth is enforced inside the function
 # via the webhook secret in the request body.
 verify_jwt = false
+
+[functions.send-weekly-summaries]
+# Invoked by pg_cron via pg_net; auth is enforced inside the function via the
+# WEEKLY_SUMMARY_CRON_SECRET matched against the request body.
+verify_jwt = false
+
+[functions.unsubscribe]
+# Public one-click unsubscribe links; the capability is the per-user unsubscribe_token.
+verify_jwt = false

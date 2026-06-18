@@ -60,7 +60,32 @@ export function invalidateActivePlanCache(studentId?: string): void {
   else activePlanCache.clear()
 }
 
+/**
+ * Wait (briefly) for the Supabase auth session to be restored. getSession() resolves
+ * immediately when a session already exists, so this adds no latency in the common case;
+ * it only spins during the narrow window right after app boot before the session is attached.
+ */
+async function waitForActiveSession(maxMs = 3000): Promise<boolean> {
+  const deadline = Date.now() + maxMs
+  for (;;) {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    if (session) return true
+    if (Date.now() >= deadline) return false
+    await new Promise((resolve) => window.setTimeout(resolve, 150))
+  }
+}
+
 async function fetchActivePlanUncached(studentId: string): Promise<DBPlan | null> {
+  // RLS returns zero rows for an unauthenticated request, which is indistinguishable from
+  // "no plan". On first open the session can still be restoring, so without this gate the
+  // read returned null, got cached, and the planner redirected to onboarding — a hard
+  // refresh (synchronous session restore) is what masked it. Wait for the session so a
+  // real plan is never mistaken for "no plan".
+  const hasSession = await waitForActiveSession()
+  if (!hasSession) return null
+
   const controller = new AbortController()
   const timer = window.setTimeout(() => controller.abort(), 8000)
   try {
@@ -90,7 +115,13 @@ export async function fetchActivePlan(studentId: string): Promise<DBPlan | null>
   if (!pending) {
     pending = fetchActivePlanUncached(studentId)
       .then((plan) => {
-        activePlanCache.set(studentId, { plan, expiresAt: Date.now() + ACTIVE_PLAN_TTL_MS })
+        // Only cache a real plan. Caching null (a transient/early miss before the session
+        // is ready) for 45s is what stranded the planner on "no plan" until a hard refresh
+        // cleared this in-memory cache. Genuine no-plan users are redirected to onboarding
+        // anyway, so re-querying them costs nothing meaningful.
+        if (plan) {
+          activePlanCache.set(studentId, { plan, expiresAt: Date.now() + ACTIVE_PLAN_TTL_MS })
+        }
         return plan
       })
       .finally(() => {

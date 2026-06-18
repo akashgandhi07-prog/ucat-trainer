@@ -36,7 +36,10 @@ export interface DateRange {
   label?: string  // e.g. "Half term", "Family holiday"
 }
 
-/** 'holiday' = reduced hours (weekend rate); 'busy' = fully blocked */
+/**
+ * 'holiday' = treated as a free day (weekend/holiday rate — typically MORE study time
+ * than a school day, not less); 'busy' = fully blocked, no sessions scheduled.
+ */
 export type TimeAwayKind = 'holiday' | 'busy'
 
 export interface TimeAwayPeriod extends DateRange {

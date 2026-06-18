@@ -10,8 +10,42 @@ import {
   anchorDateForRegenerate,
   prepareRegeneratedRows,
 } from '../embedded/lib/regenerate-plan-cleanup'
+import { addDays, toISODate } from '../embedded/lib/utils'
 import { supabase } from '../../lib/supabase'
 import { invalidateActivePlanCache, PLAN_COLUMNS, PLAN_WEEK_COLUMNS } from './load-planner-data'
+
+/**
+ * Completed-vs-planned minutes over the trailing three weeks. Drives the engine's
+ * adherence throttle so a plan the student keeps missing gets lighter, not heavier.
+ * Returns null when there isn't enough recent history to judge fairly.
+ */
+async function computeAdherenceRatio(planId: string, studentId: string): Promise<number | null> {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const windowStartIso = toISODate(addDays(today, -21))
+  const todayIso = toISODate(today)
+
+  const { data: sessions } = await supabase
+    .from(PLAN_TIMETABLE_TABLE)
+    .select('id, duration_minutes, session_type')
+    .eq('plan_id', planId)
+    .gte('day_date', windowStartIso)
+    .lt('day_date', todayIso)
+
+  const planned = (sessions ?? []).filter((s) => s.session_type !== 'rest')
+  const plannedMin = planned.reduce((a, s) => a + (Number(s.duration_minutes) || 0), 0)
+  if (planned.length < 3 || plannedMin <= 0) return null
+
+  const ids = planned.map((s) => s.id as string)
+  const { data: comps } = await supabase
+    .from('session_completions')
+    .select('minutes_completed, session_id')
+    .eq('student_id', studentId)
+    .in('session_id', ids)
+
+  const doneMin = (comps ?? []).reduce((a, c) => a + Math.max(0, Number(c.minutes_completed) || 0), 0)
+  return Math.max(0, Math.min(1.5, doneMin / plannedMin))
+}
 
 export async function updateDayAvailability(
   planId: string,
@@ -69,7 +103,7 @@ async function getPlanById(planId: string): Promise<DBPlan | null> {
 
 export async function regenerateFutureWeeks(planId: string, fromWeekNumber: number): Promise<void> {
   // All five reads are keyed on planId only, so fetch them in one round trip.
-  const [plan, reflectionsRes, latestMockRes, busyDaysRes, weeksRes] = await Promise.all([
+  const [plan, reflectionsRes, latestMockRes, busyDaysRes, weeksRes, mockCountRes] = await Promise.all([
     getPlanById(planId),
     supabase
       .from('weekly_reflections')
@@ -78,7 +112,7 @@ export async function regenerateFutureWeeks(planId: string, fromWeekNumber: numb
       .order('week_number'),
     supabase
       .from('mock_scores')
-      .select('score_vr, score_dm, score_qr, weakness_tags')
+      .select('score_vr, score_dm, score_qr, score_sjt, weakness_tags')
       .eq('plan_id', planId)
       .order('logged_date', { ascending: false })
       .limit(1)
@@ -94,6 +128,10 @@ export async function regenerateFutureWeeks(planId: string, fromWeekNumber: numb
       .select(PLAN_WEEK_COLUMNS)
       .eq('plan_id', planId)
       .order('week_number'),
+    supabase
+      .from('mock_scores')
+      .select('id', { count: 'exact', head: true })
+      .eq('plan_id', planId),
   ])
   if (!plan) throw new Error('Plan not found')
 
@@ -101,6 +139,9 @@ export async function regenerateFutureWeeks(planId: string, fromWeekNumber: numb
   const { data: latestMock } = latestMockRes
   const { data: busyDays } = busyDaysRes
   const { data: weeks } = weeksRes
+
+  // Adherence needs the student id, so it runs after the plan row resolves.
+  const adherenceRatio = await computeAdherenceRatio(planId, plan.student_id)
 
   const ratings = (reflections ?? [])
     .filter((r) => r.week_number < fromWeekNumber)
@@ -134,7 +175,12 @@ export async function regenerateFutureWeeks(planId: string, fromWeekNumber: numb
           qr: latestMock.score_qr,
         }
       : null,
+    latestSjtBand: (latestMock as { score_sjt?: number | null })?.score_sjt ?? null,
     weaknessTags: (latestMock as { weakness_tags?: string[] })?.weakness_tags ?? [],
+    mockCount: mockCountRes.count ?? 0,
+    mockTargetTotal: plan.mock_target_total ?? null,
+    mockTargetSjtBand: plan.mock_target_sjt_band ?? null,
+    adherenceRatio,
     regenerateFromWeek: fromWeekNumber,
     ucatSen: plan.ucat_sen ?? false,
   }

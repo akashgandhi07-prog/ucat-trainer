@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { requireStudentOrTutorPlan } from '@/lib/api-plan-guard'
+import { regenerateFutureWeeks } from '@/lib/db'
+import { weekNumberForCalendarDate } from '@/lib/week-for-plan-date'
+import { toISODate } from '@/lib/utils'
 
 function parseTargetTotal(val: unknown): { ok: true; value: number | null } | { ok: false; message: string } {
   if (val === null || val === undefined || val === '') return { ok: true, value: null }
@@ -63,6 +66,18 @@ export async function PATCH(request: Request) {
       .single()
 
     if (error) throw error
+
+    // Targets feed gap-to-goal weighting + intensity; rebuild upcoming weeks.
+    try {
+      const { data: weeks } = await sb
+        .from('plan_weeks')
+        .select('week_number, week_start')
+        .eq('plan_id', planId)
+      const currentWeek = weekNumberForCalendarDate(weeks ?? [], toISODate(new Date()))
+      if (currentWeek != null) await regenerateFutureWeeks(planId, currentWeek + 1)
+    } catch (regenErr) {
+      console.error('regenerateFutureWeeks after mock target', regenErr)
+    }
 
     return NextResponse.json({ plan: updated })
   } catch (e: unknown) {

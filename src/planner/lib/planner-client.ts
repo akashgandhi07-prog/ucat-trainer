@@ -2,7 +2,7 @@ import { toast } from 'sonner'
 import type { DateRange, MockSource, MockType, TimeAwayPeriod } from '../embedded/types'
 import { PLAN_TIMETABLE_TABLE } from '../embedded/lib/planner-db-tables'
 import { weekNumberForCalendarDate } from '../embedded/lib/week-for-plan-date'
-import { toISODate } from '../embedded/lib/utils'
+import { addDays, toISODate } from '../embedded/lib/utils'
 import {
   UCAT_EXAM_WINDOW_END_ISO,
   UCAT_EXAM_WINDOW_START_ISO,
@@ -77,6 +77,23 @@ function scheduleRegenerateFromDate(planId: string, fromDate: string, fallbackWe
         'Your change was saved, but rescheduling your upcoming weeks failed. Please refresh the page and try again.',
       )
     })
+}
+
+/**
+ * Rebuild from next week onward, leaving the current (possibly in-progress) week
+ * untouched. Used after events that should reshape upcoming weeks but must not wipe
+ * sessions the student may already be partway through — new mock scores, target changes.
+ */
+function scheduleRegenerateFromNextWeek(
+  planId: string,
+  weeks: { week_number: number; week_start: string }[] | null | undefined,
+): void {
+  const currentWeek = weekNumberForCalendarDate(weeks ?? [], toISODate(new Date()))
+  scheduleRegenerateFromDate(
+    planId,
+    toISODate(addDays(new Date(), 7)),
+    currentWeek != null ? currentWeek + 1 : undefined,
+  )
 }
 
 export async function completeSession(input: {
@@ -418,6 +435,11 @@ export async function addMockScore(input: {
     .single()
 
   if (error) throw new Error(error.message)
+
+  // A freshly logged mock reshapes weighting, intensity and topic focus — push those
+  // into the upcoming weeks straight away rather than waiting for a weekly reflection.
+  scheduleRegenerateFromNextWeek(input.planId, weeks)
+
   return row
 }
 
@@ -438,6 +460,13 @@ export async function updateMockTargets(input: {
     })
     .eq('id', input.planId)
   if (error) throw new Error(error.message)
+
+  // Targets feed the gap-to-goal weighting and intensity, so rebuild upcoming weeks.
+  const { data: weeks } = await supabase
+    .from('plan_weeks')
+    .select('week_number, week_start')
+    .eq('plan_id', input.planId)
+  scheduleRegenerateFromNextWeek(input.planId, weeks)
 }
 
 export async function saveExtraStudy(input: {

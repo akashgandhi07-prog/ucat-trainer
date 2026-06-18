@@ -17,7 +17,7 @@ import {
   prepareRegeneratedRows,
 } from './regenerate-plan-cleanup'
 import { PLAN_TIMETABLE_TABLE, PROFILES_TABLE } from '@/lib/planner-db-tables'
-import { generateSlug, toISODate } from './utils'
+import { addDays, generateSlug, toISODate } from './utils'
 
 // ─── Users ────────────────────────────────────────────────────────────────────
 
@@ -369,6 +369,42 @@ export async function createPlan(
 
 // ─── Regenerate future weeks ──────────────────────────────────────────────────
 
+/** Completed-vs-planned minutes over the trailing three weeks (null if too little history). */
+async function computePlanAdherence(
+  sb: Awaited<ReturnType<typeof createClient>>,
+  planId: string,
+  studentId: string,
+): Promise<number | null> {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const windowStartIso = toISODate(addDays(today, -21))
+  const todayIso = toISODate(today)
+
+  const { data: sessions } = await sb
+    .from(PLAN_TIMETABLE_TABLE)
+    .select('id, duration_minutes, session_type')
+    .eq('plan_id', planId)
+    .gte('day_date', windowStartIso)
+    .lt('day_date', todayIso)
+
+  const planned = (sessions ?? []).filter((s: { session_type: string }) => s.session_type !== 'rest')
+  const plannedMin = planned.reduce((a: number, s: { duration_minutes: number | null }) => a + (Number(s.duration_minutes) || 0), 0)
+  if (planned.length < 3 || plannedMin <= 0) return null
+
+  const ids = planned.map((s: { id: string }) => s.id)
+  const { data: comps } = await sb
+    .from('session_completions')
+    .select('minutes_completed, session_id')
+    .eq('student_id', studentId)
+    .in('session_id', ids)
+
+  const doneMin = (comps ?? []).reduce(
+    (a: number, c: { minutes_completed: number | null }) => a + Math.max(0, Number(c.minutes_completed) || 0),
+    0,
+  )
+  return Math.max(0, Math.min(1.5, doneMin / plannedMin))
+}
+
 export async function regenerateFutureWeeks(planId: string, fromWeekNumber: number) {
   const sb = await createClient()
 
@@ -380,7 +416,9 @@ export async function regenerateFutureWeeks(planId: string, fromWeekNumber: numb
     .filter(r => r.week_number < fromWeekNumber)
     .map(r => r.difficulty_rating as 1 | 2 | 3)
 
+  const allMocks = await getMockScores(planId)
   const latestMock = await getLatestMockScore(planId)
+  const adherenceRatio = await computePlanAdherence(sb, planId, plan.student_id)
 
   // Load user-marked busy days (individual date overrides) as busy periods
   const { data: busyDays } = await sb
@@ -417,7 +455,12 @@ export async function regenerateFutureWeeks(planId: string, fromWeekNumber: numb
       dm: latestMock.score_dm,
       qr: latestMock.score_qr,
     } : null,
+    latestSjtBand: latestMock?.score_sjt ?? null,
     weaknessTags: (latestMock as { weakness_tags?: string[] })?.weakness_tags ?? [],
+    mockCount: allMocks.length,
+    mockTargetTotal: (plan as DBPlan).mock_target_total ?? null,
+    mockTargetSjtBand: (plan as DBPlan).mock_target_sjt_band ?? null,
+    adherenceRatio,
     regenerateFromWeek: fromWeekNumber,
     ucatSen: (plan as DBPlan).ucat_sen ?? false,
   }

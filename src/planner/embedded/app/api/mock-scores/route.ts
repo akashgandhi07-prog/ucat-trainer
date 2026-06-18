@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { requireStudentOrTutorPlan } from '@/lib/api-plan-guard'
 import type { MockSource, MockType } from '@/types'
 import { weekNumberForCalendarDate } from '@/lib/week-for-plan-date'
+import { regenerateFutureWeeks } from '@/lib/db'
+import { toISODate } from '@/lib/utils'
 
 const SOURCES = new Set<MockSource>([
   'medify',
@@ -113,6 +115,14 @@ export async function POST(request: Request) {
       .single()
 
     if (error) throw error
+
+    // Reshape upcoming weeks from the new mock data, leaving the in-progress week intact.
+    try {
+      const currentWeek = weekNumberForCalendarDate(weeks ?? [], toISODate(new Date()))
+      if (currentWeek != null) await regenerateFutureWeeks(planId, currentWeek + 1)
+    } catch (regenErr) {
+      console.error('regenerateFutureWeeks after mock score', regenErr)
+    }
 
     return NextResponse.json({ score: row })
   } catch (e: unknown) {
