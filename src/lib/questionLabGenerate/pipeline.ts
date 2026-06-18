@@ -311,7 +311,7 @@ export async function runRepairPhase(
   repairSucceeded: number;
 }> {
   const ctx = buildVerifyContext(input);
-  let { outcomes, drafts } = payload;
+  const { outcomes, drafts } = payload;
   let repairCandidates = [...payload.repairCandidates];
   const rawByLegacyId = new Map(
     repairCandidates.map((c) => [c.outcome.legacyId, c.raw] as const),
