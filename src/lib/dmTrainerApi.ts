@@ -2,6 +2,18 @@ import { supabase } from "./supabase";
 import { withTimeout } from "./withTimeout";
 import type { DmTrainerQuestion, DmTrainerType } from "../types/dmTrainers";
 import { getLocalDmTrainerQuestions } from "../data/dmTrainers/localQuestions";
+import { loadQuestionOverrides, applyOverride } from "./questionOverrides";
+import type { QuestionOverrideMap } from "./questionOverrides";
+
+/** Drop admin-hidden questions and merge in any admin content edits. */
+function applyDmOverrides(
+  questions: DmTrainerQuestion[],
+  overrides: QuestionOverrideMap,
+): DmTrainerQuestion[] {
+  return questions
+    .map((q) => applyOverride(`dm_trainer:${q.id}`, q, overrides))
+    .filter((q): q is DmTrainerQuestion => q != null);
+}
 
 function mapQuestion(raw: unknown): DmTrainerQuestion | null {
   if (!raw || typeof raw !== "object") return null;
@@ -62,6 +74,7 @@ export async function fetchDmTrainerDrill(
   trainerType: DmTrainerType,
 ): Promise<{ questions: DmTrainerQuestion[]; source: "supabase" | "local" }> {
   const fallback = getLocalDmTrainerQuestions(trainerType);
+  const overrides = await loadQuestionOverrides();
 
   try {
     // Cap the wait so a stalled RPC falls back to the local seed instead of
@@ -95,11 +108,11 @@ export async function fetchDmTrainerDrill(
           }),
         };
       });
-      return { questions: enriched, source: "supabase" };
+      return { questions: applyDmOverrides(enriched, overrides), source: "supabase" };
     }
   } catch {
     // fall through to local seed
   }
 
-  return { questions: fallback, source: "local" };
+  return { questions: applyDmOverrides(fallback, overrides), source: "local" };
 }

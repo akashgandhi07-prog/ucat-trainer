@@ -17,6 +17,14 @@ import { supabase } from "../lib/supabase";
 import { dashboardLog } from "../lib/logger";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
+import { resolveFlaggedQuestion, type ResolvedQuestion } from "../lib/resolveFlaggedQuestion";
+import {
+  loadQuestionOverrides,
+  setQuestionHidden,
+  saveQuestionOverride,
+  overrideKeyForIdentifier,
+  type QuestionOverrideMap,
+} from "../lib/questionOverrides";
 
 type AdminStats = {
   total_users: number;
@@ -416,6 +424,12 @@ export default function AdminPage() {
   const [expandedQF, setExpandedQF] = useState<Set<string>>(new Set());
   const [qfDismissing, setQfDismissing] = useState<Set<string>>(new Set());
   const [qfDeleting, setQfDeleting] = useState<Set<string>>(new Set());
+  const [qfResolved, setQfResolved] = useState<Map<string, ResolvedQuestion | "loading">>(new Map());
+  const [qfOverrides, setQfOverrides] = useState<QuestionOverrideMap>(new Map());
+  const [qfHiding, setQfHiding] = useState<Set<string>>(new Set());
+  const [qfEditing, setQfEditing] = useState<string | null>(null);
+  const [qfEditForm, setQfEditForm] = useState<Record<string, string>>({});
+  const [qfSaving, setQfSaving] = useState<Set<string>>(new Set());
   const [qfTrainerFilter, setQfTrainerFilter] = useState<string>("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -555,6 +569,11 @@ export default function AdminPage() {
       } else {
         setQuestionFeedback((qfData as QuestionFeedbackRow[]) ?? []);
       }
+
+      const overridesMap = await loadQuestionOverrides();
+      if (!mounted) return;
+      setQfOverrides(overridesMap);
+
       setLoading(false);
     })();
 
@@ -670,6 +689,142 @@ export default function AdminPage() {
   }
 
   const isFeedbackUpdating = (id: string): boolean => feedbackUpdatingIds.has(id);
+
+  const ensureResolved = (questionIdentifier: string, questionKind: string) => {
+    if (qfResolved.has(questionIdentifier)) return;
+    setQfResolved((prev) => new Map(prev).set(questionIdentifier, "loading"));
+    resolveFlaggedQuestion(questionIdentifier, questionKind)
+      .then((res) =>
+        setQfResolved((prev) => new Map(prev).set(questionIdentifier, res)),
+      )
+      .catch(() =>
+        setQfResolved((prev) =>
+          new Map(prev).set(questionIdentifier, {
+            kind: "unknown",
+            resolved: false,
+            message: "Failed to resolve this question.",
+          }),
+        ),
+      );
+  };
+
+  const handleToggleHide = async (
+    questionIdentifier: string,
+    questionKind: string,
+    trainerType: string,
+    hide: boolean,
+  ) => {
+    setQfHiding((prev) => new Set(prev).add(questionIdentifier));
+    try {
+      await setQuestionHidden(questionIdentifier, hide, { questionKind, trainerType });
+      const fresh = await loadQuestionOverrides();
+      setQfOverrides(fresh);
+    } catch (e) {
+      dashboardLog.warn("Admin hide/unhide question failed", {
+        message: e instanceof Error ? e.message : String(e),
+      });
+    } finally {
+      setQfHiding((prev) => {
+        const next = new Set(prev);
+        next.delete(questionIdentifier);
+        return next;
+      });
+    }
+  };
+
+  const prettyFieldLabel = (k: string): string => {
+    if (k.startsWith("opt_")) return `Option ${k.slice(4)}`;
+    if (k === "questionText") return "Question text";
+    if (k === "correctAnswer") return "Correct answer (A/B/C/D)";
+    if (k === "stimulus_text") return "Stimulus";
+    if (k === "conclusion_text") return "Conclusion";
+    if (k === "pivotInsight") return "Explanation";
+    return k.charAt(0).toUpperCase() + k.slice(1);
+  };
+
+  const startEditQuestion = (questionIdentifier: string, resolved: ResolvedQuestion) => {
+    const key = overrideKeyForIdentifier(questionIdentifier);
+    const existing = (qfOverrides.get(key)?.override ?? {}) as Record<string, unknown>;
+    const v = (k: string, fallback?: string) =>
+      typeof existing[k] === "string" ? (existing[k] as string) : fallback ?? "";
+    let form: Record<string, string> = {};
+    if (resolved.kind === "dm") {
+      form = {
+        stem: v("stem", resolved.stem),
+        question: v("question", resolved.question),
+        correctAnswer: v("correctAnswer", resolved.correctAnswer),
+        explanation: v("explanation", resolved.explanation),
+      };
+      const existingOpts = Array.isArray(existing.options)
+        ? (existing.options as { id?: string; text?: string }[])
+        : null;
+      (resolved.options ?? []).forEach((o) => {
+        const fromOverride = existingOpts?.find((eo) => eo.id === o.id)?.text;
+        if (o.id) form[`opt_${o.id}`] = typeof fromOverride === "string" ? fromOverride : o.text;
+      });
+    } else if (resolved.kind === "inference") {
+      form = { questionText: v("questionText", resolved.stem), explanation: v("explanation", resolved.explanation) };
+    } else if (resolved.kind === "syllogism") {
+      form = {
+        stimulus_text: v("stimulus_text", resolved.stem),
+        conclusion_text: v("conclusion_text", resolved.question),
+        explanation: v("explanation", resolved.explanation),
+      };
+    } else if (resolved.kind === "sjt") {
+      form = { stem: v("stem", resolved.stem), pivotInsight: v("pivotInsight", resolved.explanation) };
+    }
+    setQfEditForm(form);
+    setQfEditing(questionIdentifier);
+  };
+
+  const saveEditQuestion = async (
+    questionIdentifier: string,
+    resolved: ResolvedQuestion,
+    questionKind: string,
+    trainerType: string,
+  ) => {
+    setQfSaving((prev) => new Set(prev).add(questionIdentifier));
+    try {
+      let override: Record<string, unknown> = {};
+      if (resolved.kind === "dm") {
+        override = {
+          stem: qfEditForm.stem,
+          question: qfEditForm.question,
+          correctAnswer: qfEditForm.correctAnswer,
+          explanation: qfEditForm.explanation,
+          options: (resolved.options ?? []).map((o) => ({
+            id: o.id,
+            text: o.id ? qfEditForm[`opt_${o.id}`] ?? o.text : o.text,
+            ...(o.label ? { label: o.label } : {}),
+          })),
+        };
+      } else if (resolved.kind === "inference") {
+        override = { questionText: qfEditForm.questionText, explanation: qfEditForm.explanation };
+      } else if (resolved.kind === "syllogism") {
+        override = {
+          stimulus_text: qfEditForm.stimulus_text,
+          conclusion_text: qfEditForm.conclusion_text,
+          explanation: qfEditForm.explanation,
+        };
+      } else if (resolved.kind === "sjt") {
+        override = { stem: qfEditForm.stem, pivotInsight: qfEditForm.pivotInsight };
+      }
+      await saveQuestionOverride(questionIdentifier, override, { questionKind, trainerType });
+      const fresh = await loadQuestionOverrides();
+      setQfOverrides(fresh);
+      setQfEditing(null);
+    } catch (e) {
+      dashboardLog.warn("Admin save question override failed", {
+        message: e instanceof Error ? e.message : String(e),
+      });
+    } finally {
+      setQfSaving((prev) => {
+        const next = new Set(prev);
+        next.delete(questionIdentifier);
+        return next;
+      });
+    }
+  };
 
   const handleDismissQuestionFeedback = async (questionIdentifier: string) => {
     setQfDismissing((prev) => new Set(prev).add(questionIdentifier));
@@ -1874,6 +2029,10 @@ export default function AdminPage() {
                         const isDeleting = qfDeleting.has(row.question_identifier);
                         const isSyllogism = row.question_kind === "dm_syllogism";
                         const reports = individualReports(row.question_identifier);
+                        const isHidden =
+                          qfOverrides.get(overrideKeyForIdentifier(row.question_identifier))?.is_hidden === true;
+                        const isHiding = qfHiding.has(row.question_identifier);
+                        const resolved = qfResolved.get(row.question_identifier);
                         return (
                           <>
                             <tr key={key} className="border-b border-border hover:bg-secondary">
@@ -1882,6 +2041,11 @@ export default function AdminPage() {
                               </td>
                               <td className="px-3 py-2">
                                 <p className="text-foreground font-mono text-xs">{row.question_identifier}</p>
+                                {isHidden && (
+                                  <span className="inline-flex items-center mt-1 px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 text-[10px] font-semibold uppercase tracking-wide">
+                                    Hidden from students
+                                  </span>
+                                )}
                                 {row.passage_id && (
                                   <p className="text-muted-foreground text-xs">Passage: {row.passage_id}</p>
                                 )}
@@ -1902,16 +2066,36 @@ export default function AdminPage() {
                                 <div className="flex items-center justify-end gap-1.5 flex-wrap">
                                   <button
                                     type="button"
-                                    onClick={() =>
+                                    onClick={() => {
+                                      if (!isExpanded) ensureResolved(row.question_identifier, row.question_kind);
                                       setExpandedQF((prev) => {
                                         const next = new Set(prev);
                                         if (isExpanded) { next.delete(row.question_identifier); } else { next.add(row.question_identifier); }
                                         return next;
-                                      })
-                                    }
+                                      });
+                                    }}
                                     className="inline-flex items-center px-2 py-1 rounded text-xs font-medium border border-border text-foreground hover:bg-secondary"
                                   >
-                                    {isExpanded ? "Hide" : "View"}
+                                    {isExpanded ? "Collapse" : "View question"}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleToggleHide(
+                                        row.question_identifier,
+                                        row.question_kind,
+                                        row.trainer_type,
+                                        !isHidden,
+                                      )
+                                    }
+                                    disabled={isHiding}
+                                    className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium border disabled:opacity-50 disabled:cursor-not-allowed ${
+                                      isHidden
+                                        ? "border-amber-300 text-amber-700 hover:bg-amber-50"
+                                        : "border-red-200 text-red-700 hover:bg-red-50"
+                                    }`}
+                                  >
+                                    {isHiding ? "Saving…" : isHidden ? "Unhide" : "Hide from students"}
                                   </button>
                                   <button
                                     type="button"
@@ -1940,6 +2124,139 @@ export default function AdminPage() {
                             {isExpanded && (
                               <tr key={`${key}--expanded`} className="bg-secondary border-b border-border">
                                 <td colSpan={7} className="px-4 py-3">
+                                  <div className="mb-3 rounded-lg border border-border bg-white p-3">
+                                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                                      Flagged question
+                                    </p>
+                                    {resolved === undefined || resolved === "loading" ? (
+                                      <p className="text-xs text-muted-foreground">Loading question…</p>
+                                    ) : !resolved.resolved ? (
+                                      <p className="text-xs text-amber-700">
+                                        {resolved.message ?? "Could not resolve this question."}
+                                      </p>
+                                    ) : (
+                                      <div className="space-y-2 text-xs text-foreground">
+                                        {resolved.title && <p className="font-semibold">{resolved.title}</p>}
+                                        {resolved.passageText && (
+                                          <details className="rounded border border-border bg-secondary/40 p-2">
+                                            <summary className="cursor-pointer text-muted-foreground">Passage text</summary>
+                                            <p className="mt-1 whitespace-pre-wrap leading-relaxed">{resolved.passageText}</p>
+                                          </details>
+                                        )}
+                                        {resolved.stem && (
+                                          <p><span className="text-muted-foreground">Stem: </span>{resolved.stem}</p>
+                                        )}
+                                        {resolved.question && (
+                                          <p><span className="text-muted-foreground">Question: </span>{resolved.question}</p>
+                                        )}
+                                        {resolved.highlightText && (
+                                          <p>
+                                            <span className="text-muted-foreground">Correct span: </span>
+                                            <mark className="bg-green-100">{resolved.highlightText}</mark>
+                                          </p>
+                                        )}
+                                        {resolved.options && resolved.options.length > 0 && (
+                                          <ul className="space-y-1">
+                                            {resolved.options.map((opt, i) => (
+                                              <li
+                                                key={i}
+                                                className={`rounded border px-2 py-1 ${opt.correct ? "border-green-300 bg-green-50" : "border-border"}`}
+                                              >
+                                                {opt.id && <span className="font-semibold mr-1">{opt.id}.</span>}
+                                                {opt.text}
+                                                {opt.correct && <span className="ml-2 text-green-700 font-medium">✓ correct</span>}
+                                              </li>
+                                            ))}
+                                          </ul>
+                                        )}
+                                        {resolved.correctAnswer && (
+                                          <p>
+                                            <span className="text-muted-foreground">Correct answer: </span>
+                                            <span className="font-medium">{resolved.correctAnswer}</span>
+                                          </p>
+                                        )}
+                                        {resolved.explanation && (
+                                          <p><span className="text-muted-foreground">Explanation: </span>{resolved.explanation}</p>
+                                        )}
+                                        {resolved.kind === "distortion" && resolved.message && (
+                                          <p className="text-muted-foreground italic">{resolved.message}</p>
+                                        )}
+                                        {resolved.extra && Object.keys(resolved.extra).length > 0 && (
+                                          <p className="text-muted-foreground">
+                                            {Object.entries(resolved.extra)
+                                              .filter(([, v]) => v)
+                                              .map(([k, v]) => `${k}: ${v}`)
+                                              .join(" · ")}
+                                          </p>
+                                        )}
+                                      </div>
+                                    )}
+                                    {resolved &&
+                                      resolved !== "loading" &&
+                                      resolved.resolved &&
+                                      resolved.kind !== "distortion" &&
+                                      (qfEditing === row.question_identifier ? (
+                                        <div className="mt-3 border-t border-border pt-3 space-y-2">
+                                          {Object.keys(qfEditForm).map((k) => (
+                                            <label key={k} className="block">
+                                              <span className="text-[11px] font-medium text-muted-foreground">
+                                                {prettyFieldLabel(k)}
+                                              </span>
+                                              <textarea
+                                                value={qfEditForm[k]}
+                                                onChange={(e) =>
+                                                  setQfEditForm((f) => ({ ...f, [k]: e.target.value }))
+                                                }
+                                                rows={k === "correctAnswer" ? 1 : 2}
+                                                className="mt-0.5 w-full rounded border border-border px-2 py-1 text-xs"
+                                              />
+                                            </label>
+                                          ))}
+                                          <div className="flex items-center gap-2">
+                                            <button
+                                              type="button"
+                                              onClick={() =>
+                                                saveEditQuestion(
+                                                  row.question_identifier,
+                                                  resolved,
+                                                  row.question_kind,
+                                                  row.trainer_type,
+                                                )
+                                              }
+                                              disabled={qfSaving.has(row.question_identifier)}
+                                              className="inline-flex items-center px-2 py-1 rounded text-xs font-medium border border-primary bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                                            >
+                                              {qfSaving.has(row.question_identifier) ? "Saving…" : "Save override"}
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={() => setQfEditing(null)}
+                                              className="inline-flex items-center px-2 py-1 rounded text-xs font-medium border border-border text-foreground hover:bg-secondary"
+                                            >
+                                              Cancel
+                                            </button>
+                                          </div>
+                                          <p className="text-[11px] text-muted-foreground">
+                                            Saves a reversible override — students see the edited version immediately; the original question is left untouched.
+                                          </p>
+                                        </div>
+                                      ) : (
+                                        <div className="mt-3 border-t border-border pt-3 flex items-center gap-2">
+                                          <button
+                                            type="button"
+                                            onClick={() => startEditQuestion(row.question_identifier, resolved)}
+                                            className="inline-flex items-center px-2 py-1 rounded text-xs font-medium border border-border text-foreground hover:bg-secondary"
+                                          >
+                                            Edit question
+                                          </button>
+                                          {qfOverrides.get(overrideKeyForIdentifier(row.question_identifier))?.override && (
+                                            <span className="text-[11px] text-amber-700 font-medium">
+                                              ✏️ Edited — students see an override
+                                            </span>
+                                          )}
+                                        </div>
+                                      ))}
+                                  </div>
                                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                                     Individual reports ({reports.length})
                                   </p>

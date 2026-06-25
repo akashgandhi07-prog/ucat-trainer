@@ -1,6 +1,7 @@
 import { supabase } from "./supabase";
 import type { SJTQuestion, SJTQuestionType } from "../types/sjt";
 import { normaliseQuestionMedia } from "../types/questionMedia";
+import { loadQuestionOverrides, applyOverride } from "./questionOverrides";
 
 const FETCH_TIMEOUT_MS = 10_000;
 
@@ -50,6 +51,7 @@ export async function fetchRandomSJTQuestion(
   type: SJTQuestionType,
   excludeIds: string[] = [],
   signal?: AbortSignal,
+  _depth = 0,
 ): Promise<SJTQuestion | null> {
   let request = supabase.rpc("get_random_sjt_question", {
     p_type: type,
@@ -68,14 +70,27 @@ export async function fetchRandomSJTQuestion(
     );
   });
 
+  let parsed: SJTQuestion | null;
   try {
     const { data, error } = await Promise.race([request, timeoutPromise]);
     if (error) throw error;
-    return parseSjtQuestion(data);
+    parsed = parseSjtQuestion(data);
   } catch (e) {
     if (isAbortError(e)) throw e;
     throw new Error(toErrorMessage(e));
   } finally {
     clearTimeout(timeoutId);
   }
+
+  if (!parsed) return null;
+
+  // Apply admin overrides: drop hidden questions (re-rolling, bounded) and
+  // merge any content edits. Fail-open via loadQuestionOverrides().
+  const overrides = await loadQuestionOverrides();
+  const merged = applyOverride(`sjt:${parsed.id}`, parsed, overrides);
+  if (merged == null) {
+    if (_depth >= 8) return null;
+    return fetchRandomSJTQuestion(type, [...excludeIds, parsed.id], signal, _depth + 1);
+  }
+  return merged;
 }

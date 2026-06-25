@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useLocation, Link, Navigate } from "react-router-dom";
 import { fetchNextInferencePassageId } from "../lib/inferenceApi";
 import Header from "../components/layout/Header";
@@ -24,6 +24,8 @@ import UcatGuidesPanel from "../components/layout/UcatGuidesPanel";
 import BreadcrumbNav from "../components/layout/BreadcrumbNav";
 import { trainerFaqs } from "../data/trainerFaqs";
 import { trackEvent, setActiveTrainer, clearActiveTrainer } from "../lib/analytics";
+import { loadQuestionOverrides, applyOverride } from "../lib/questionOverrides";
+import type { QuestionOverrideMap } from "../lib/questionOverrides";
 
 type Phase = "active" | "results";
 
@@ -143,10 +145,25 @@ export default function InferenceTrainerPage() {
     [difficulty],
   );
 
-  const questions: InferenceQuestion[] =
-    passage != null
-      ? getInferenceQuestionsForPassage(passage.id, passage.text)
-      : [];
+  // Admin overrides: hide flagged questions and merge content edits. Fail-open —
+  // the trainer renders unmodified until (and if) overrides load.
+  const [overridesMap, setOverridesMap] = useState<QuestionOverrideMap>(() => new Map());
+  useEffect(() => {
+    let alive = true;
+    void loadQuestionOverrides().then((m) => {
+      if (alive) setOverridesMap(m);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const questions: InferenceQuestion[] = useMemo(() => {
+    if (passage == null) return [];
+    return getInferenceQuestionsForPassage(passage.id, passage.text)
+      .map((q) => applyOverride(`inference:${passage.id}:${q.id}`, q, overridesMap))
+      .filter((q): q is InferenceQuestion => q != null);
+  }, [passage, overridesMap]);
   const effectiveQuestionCount = questions.length;
 
   useEffect(() => {

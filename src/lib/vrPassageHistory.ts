@@ -15,6 +15,7 @@
 import { PASSAGES, type Passage } from "../data/passages";
 import type { TrainingDifficulty } from "../types/training";
 import { supabase } from "./supabase";
+import { hiddenDistortionPassageIds } from "./questionOverrides";
 
 export type VrTrainerType = "speed_reading" | "rapid_recall" | "keyword_scanning";
 
@@ -153,7 +154,19 @@ export function pickUnseenPassage(
   candidates: Passage[],
   currentId?: string | null,
 ): Passage {
-  const source = candidates.length > 0 ? candidates : PASSAGES;
+  let source = candidates.length > 0 ? candidates : PASSAGES;
+
+  // The Speed Reading / Rapid Recall trainers generate distortion questions from
+  // a passage; an admin can hide a whole passage from that pool. Filter those out
+  // (best-effort: empty until the overrides snapshot loads).
+  if (trainerType === "speed_reading" || trainerType === "rapid_recall") {
+    const hidden = hiddenDistortionPassageIds();
+    if (hidden.size > 0) {
+      const filtered = source.filter((p) => !hidden.has(p.id));
+      if (filtered.length > 0) source = filtered;
+    }
+  }
+
   if (source.length === 0) {
     throw new Error("No passages available");
   }
