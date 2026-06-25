@@ -20,6 +20,9 @@ export const COMMON_TRAP_COPY: Record<string, string> = {
   "rounded-up-when-full-servings-required": "Rounding up when the question asks for complete portions only.",
   "speed-unit-conversion-reversed": "Reversing the km/h and m/s conversion, especially using ×3.6 and ÷3.6 the wrong way round.",
   "unnecessary-factor-of-1000": "Adding an unnecessary ×1000 or ÷1000 when the units are already equivalent.",
+  "compound-rate-units-not-converted": "In a rate question, converting only one unit instead of both the amount and the time before dividing.",
+  "unit-not-converted-before-dividing": "Dividing before converting both quantities to the same unit, so the counts do not match.",
+  "rounded-down-when-rounding-up-required": "Rounding down when full coverage means you must round up to the next whole unit.",
   "volume-unit-mismatch": "Confusing volume units such as litres, millilitres and cubic centimetres.",
   "wrong-denominator": "Using the wrong denominator for a rate, such as treating a per 100 value as a per 1 value.",
 
@@ -50,6 +53,11 @@ export const COMMON_TRAP_COPY: Record<string, string> = {
   "adds-probabilities-incorrectly": "Adding probabilities for 'at least one' instead of using 1 − P(none), which over-counts.",
   "same-probability-each-turn": "Assuming equal turns mean equal chances, ignoring that the first player gets the first attempt.",
   "applies-second-percent-to-total": "Applying a second percentage to the original total instead of to the new (already-changed) value.",
+  "reverse-percentage-add-back": "Adding the percentage back to a discounted figure instead of dividing to recover the original.",
+  "adds-percentages-instead-of-multiplying": "Adding two percentages of a whole instead of taking a percentage of a percentage.",
+  "applies-one-rate-to-whole-group": "Applying a single subgroup's rate to the whole group instead of weighting each subgroup separately.",
+  "averages-outcomes-ignoring-probability": "Averaging the possible values instead of weighting each by its probability.",
+  "misreads-ratio-condition": "Mishandling a 'twice as likely' or ratio condition when solving for an unknown probability.",
 
   // ── Decision Making: Venn / set logic ────────────────────────────────────
   "includes-all-three-incorrectly": "Letting the all-three overlap leak into an 'exactly two' count — it must be excluded.",
@@ -57,6 +65,13 @@ export const COMMON_TRAP_COPY: Record<string, string> = {
   "assumes-no-overlap": "Assuming sets do not overlap when the wording leaves the overlap unknown.",
   "double-counts-pair-overlap": "Counting people in a shared overlap region twice when totalling the sets.",
   "misinterprets-not-a": "Reading 'not A' as a different region than the wording requires (e.g. confusing it with 'neither').",
+  "forgets-maximum-overlap": "Forgetting that the overlap of two sets cannot exceed the size of the smaller set.",
+  "excludes-all-three": "Leaving the all-three group out of an 'at least two' count, which must include it.",
+  "answers-only-region-not-total-set": "Reporting an 'only' region when the question asks for the whole set total.",
+  "forgets-add-back-all-three": "Forgetting to add the all-three region back when using three-set inclusion-exclusion.",
+  "subtracts-people-not-mentions": "Subtracting people instead of mentions, so the double and triple counting is not undone.",
+  "confuses-total-with-only": "Treating a set total as if it were the 'only this set' region, or vice versa.",
+  "double-counts-overlap": "Adding two set totals without subtracting the shared overlap once.",
 };
 
 export function getCommonTrapCopy(trap: string): string {

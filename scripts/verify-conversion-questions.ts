@@ -36,6 +36,38 @@ const EXPECTED_ANSWERS: Record<string, number> = {
   conv_full_portions: 12,
   conv_minutes_seconds: 270,
   conv_price_per_litre: 1.5,
+  conv_mm_m: 6.5,
+  conv_cm_m_b: 2.5,
+  conv_kg_g_b: 2750,
+  conv_mg_g: 0.25,
+  conv_tonne_kg: 3200,
+  conv_ml_l_b: 1.25,
+  conv_l_ml_b: 300,
+  conv_hours_minutes_b: 210,
+  conv_seconds_minutes: 2.5,
+  conv_mixed_time_minutes_b: 165,
+  conv_speed_distance_40_min: 40,
+  conv_kmh_ms_b: 25,
+  conv_average_speed_b: 15,
+  conv_per_100g_sugar: 60,
+  conv_fuel_per_100km_b: 24.5,
+  conv_dose_mg_per_kg_b: 360,
+  conv_pence_pounds_b: 2.5,
+  conv_dollars_to_pounds: 80,
+  conv_m2_cm2_b: 30000,
+  conv_full_portions_b: 8,
+  conv_drip_rate: 2.5,
+  conv_dose_cost: 30,
+  conv_salt_concentration: 120,
+  conv_tablet_count: 6,
+  conv_journey_time: 22.5,
+  conv_fuel_cost: 22.5,
+  conv_paint_coverage: 3,
+  conv_recipe_scale: 4.5,
+  conv_average_speed_mixed_time: 72,
+  conv_concentration_mg: 4,
+  conv_floor_tiles: 120,
+  conv_tank_jugs: 24,
 };
 
 const REQUIRED_CATEGORIES = new Set([
@@ -55,7 +87,7 @@ function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
 }
 
-assert(CONVERSION_QUESTIONS.length === 35, `Expected 35 questions, found ${CONVERSION_QUESTIONS.length}`);
+assert(CONVERSION_QUESTIONS.length === 67, `Expected 67 questions, found ${CONVERSION_QUESTIONS.length}`);
 
 const seen = new Set<string>();
 const categories = new Set<string>();
