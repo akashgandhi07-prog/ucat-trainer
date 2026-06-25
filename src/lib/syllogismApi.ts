@@ -1,6 +1,17 @@
 import { supabase } from "./supabase";
 import type { SyllogismQuestion, LogicGroup } from "../types/syllogisms";
 import { normaliseQuestionMedia } from "../types/questionMedia";
+import { loadQuestionOverrides, applyOverride } from "./questionOverrides";
+
+/** Drop admin-hidden syllogisms and merge in any admin content edits. */
+async function applySyllogismOverrides(
+  list: SyllogismQuestion[],
+): Promise<SyllogismQuestion[]> {
+  const overrides = await loadQuestionOverrides();
+  return list
+    .map((q) => applyOverride(`syllogism:${q.id}`, q, overrides))
+    .filter((q): q is SyllogismQuestion => q != null);
+}
 
 const FETCH_TIMEOUT_MS = 10_000;
 
@@ -110,7 +121,7 @@ export async function fetchSyllogismMicroBatch(
     () => supabase.rpc("get_syllogism_micro_batch", { p_count: count }),
     signal,
   );
-  return parseQuestionArray(data);
+  return applySyllogismOverrides(parseQuestionArray(data));
 }
 
 export async function fetchSyllogismFoundationBatch(
@@ -121,7 +132,7 @@ export async function fetchSyllogismFoundationBatch(
     () => supabase.rpc("get_syllogism_foundation_batch", { p_count: count }),
     signal,
   );
-  return parseQuestionArray(data);
+  return applySyllogismOverrides(parseQuestionArray(data));
 }
 
 export async function fetchSyllogismMacroBlock(
@@ -135,7 +146,7 @@ export async function fetchSyllogismMacroBlock(
       }),
     signal,
   );
-  return parseQuestionArray(data);
+  return applySyllogismOverrides(parseQuestionArray(data));
 }
 
 // ─── Trainer history management ───────────────────────────────────────────────

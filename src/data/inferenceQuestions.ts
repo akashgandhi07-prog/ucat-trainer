@@ -1199,7 +1199,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
     if (q1) { questions.push({ id: "inf_36_q1", passageId: "pass_36", questionText: "Identify the part of the text from which we can infer why the superpowers avoided direct war.", correctSpans: [q1], explanation: "MAD likely prevented direct military confrontation.", difficulty: "medium", }); }
     const q2 = spanFor(text, "Instead it was fought through proxy wars and espionage.");
     if (q2) { questions.push({ id: "inf_36_q2", passageId: "pass_36", questionText: "Identify the part of the text from which we can infer how the Cold War was waged.", correctSpans: [q2], explanation: "Fought through proxy wars and espionage.", difficulty: "easy", }); }
-    const q3 = spanFor(text, "The collapse of the Berlin Wall symbolised the end of the conflict.");
+    const q3 = spanFor(text, "The collapse of the Berlin Wall symbolised the end of the conflict");
     if (q3) { questions.push({ id: "inf_36_q3", passageId: "pass_36", questionText: "Identify the part of the text from which we can infer what event marked the end of the Cold War.", correctSpans: [q3], explanation: "The Berlin Wall collapse symbolised the end.", difficulty: "easy", }); }
   }
   if (passageId === "pass_37") {
@@ -1698,7 +1698,7 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
     if (q1) { questions.push({ id: "inf_92_q1", passageId: "pass_92", questionText: "Identify the part of the text from which we can infer why the Atlantic slave trade existed.", correctSpans: [q1], explanation: "Demand for labour on plantations.", difficulty: "easy", }); }
     const q2 = spanFor(text, "The middle passage as this leg of the journey was known had a mortality rate that could exceed twenty percent.");
     if (q2) { questions.push({ id: "inf_92_q2", passageId: "pass_92", questionText: "Identify the part of the text from which we can infer how deadly the Atlantic crossing was.", correctSpans: [q2], explanation: "Mortality rate could exceed twenty percent.", difficulty: "medium", }); }
-    const q3 = spanFor(text, "The trade had profound demographic economic and social effects on Africa where some societies were destabilised and others grew powerful through participation in the trade.");
+    const q3 = spanFor(text, "The slave trade had profound demographic economic and social effects on Africa where some societies were destabilised and others grew powerful through participation in the trade.");
     if (q3) { questions.push({ id: "inf_92_q3", passageId: "pass_92", questionText: "Identify the part of the text from which we can infer the impact of the trade on Africa.", correctSpans: [q3], explanation: "Some societies destabilised; others grew powerful.", difficulty: "medium", }); }
     const q4 = spanFor(text, "The trade is now widely recognised as a crime against humanity.");
     if (q4) { questions.push({ id: "inf_92_q4", passageId: "pass_92", questionText: "Identify the part of the text from which we can infer how the trade is now viewed.", correctSpans: [q4], explanation: "Widely recognised as a crime against humanity.", difficulty: "easy", }); }
