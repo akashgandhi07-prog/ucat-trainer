@@ -326,21 +326,13 @@ export function TodayView({
           </button>
         ) : null}
         {!guestMode && plan ? (
-          <>
-            <button
-              type="button"
-              onClick={() => setShowRebuild(true)}
-              className="inline-flex items-center rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white hover:bg-primary/90"
-            >
-              Rebuild plan ahead
-            </button>
-            <Link
-              to="/study-plan/plan?rebuild=1"
-              className="text-xs text-muted-foreground underline underline-offset-2 hover:text-slate-700"
-            >
-              Open rebuild wizard on calendar
-            </Link>
-          </>
+          <button
+            type="button"
+            onClick={() => setShowRebuild(true)}
+            className="inline-flex items-center rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Rebuild plan ahead
+          </button>
         ) : guestMode ? (
           <p className="text-xs text-muted-foreground">
             Sign in to rebuild your timetable or edit future weeks from the calendar.
@@ -376,7 +368,6 @@ export function TodayView({
     return (
       <>
         <div className="p-6 md:p-10 max-w-2xl mx-auto space-y-6">
-          <PlannerToolbarLinks />
           <div className="text-center space-y-4 py-16">
           <div className="text-6xl">🛋️</div>
           <h1 className="text-2xl font-bold text-slate-900">Rest day</h1>
@@ -390,6 +381,7 @@ export function TodayView({
             🔥 {streak} day streak
           </div>
           </div>
+          <PlannerToolbarLinks />
         </div>
         {rebuildModal}
         <SessionLogSheet
@@ -429,7 +421,6 @@ export function TodayView({
           </button>
         </div>
       )}
-      <PlannerToolbarLinks />
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -544,6 +535,10 @@ export function TodayView({
         </div>
       )}
 
+      {/* Plan tools (secondary — your day's sessions come first) */}
+      <div className="pt-2">
+        <PlannerToolbarLinks />
+      </div>
     </div>
     {rebuildModal}
     <SessionLogSheet
