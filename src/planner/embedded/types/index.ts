@@ -47,6 +47,13 @@ export interface TimeAwayPeriod extends DateRange {
 }
 export type DifficultyRating = 1 | 2 | 3   // 1=too hard, 2=about right, 3=too easy
 
+/**
+ * Student-chosen effort level for a single week. Picked at the start of each week so
+ * a student can dial the plan up or down without rebuilding everything.
+ * 'standard' is the default; 'lighter' eases off; 'harder' pushes the week's load up.
+ */
+export type WeekIntensity = 'lighter' | 'standard' | 'harder'
+
 // ─── Database row types ───────────────────────────────────────────────────────
 
 export interface DBUser {
@@ -96,6 +103,8 @@ export interface DBPlanWeek {
   week_type: WeekType
   default_hours: number
   difficulty_rating: DifficultyRating | null
+  /** Student-chosen effort level for this week; defaults to 'standard'. */
+  intensity: WeekIntensity
   is_locked: boolean
   tutor_note: string | null
   created_at: string

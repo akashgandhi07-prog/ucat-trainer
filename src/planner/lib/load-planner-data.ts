@@ -22,7 +22,7 @@ export type SessionWithCompletion = DBSession & {
 export const PLAN_COLUMNS =
   'id, slug, student_id, tutor_id, exam_date, exam_time, current_situation, school_year, school_day_hours, weekend_hours, holiday_periods, has_prior_experience, confidence_vr, confidence_dm, confidence_qr, confidence_sjt, rest_days, ucat_sen, status, mock_target_total, mock_target_sjt_band, created_at, updated_at'
 export const PLAN_WEEK_COLUMNS =
-  'id, plan_id, week_number, week_start, week_type, default_hours, difficulty_rating, is_locked, tutor_note, created_at, updated_at'
+  'id, plan_id, week_number, week_start, week_type, default_hours, difficulty_rating, intensity, is_locked, tutor_note, created_at, updated_at'
 export const PLAN_DAY_COLUMNS =
   'id, plan_id, plan_week_id, day_date, availability, custom_hours, is_rest, created_at, updated_at'
 export const SESSION_COLUMNS =

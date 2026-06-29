@@ -152,6 +152,17 @@ export async function regenerateFutureWeeks(planId: string, fromWeekNumber: numb
     end: d.day_date,
   }))
 
+  // Carry each existing week's chosen intensity through the rebuild, keyed by its Monday.
+  // Without this every regenerate (mock logged, availability edit, exam-date change) would
+  // silently reset the student's per-week effort dials back to standard.
+  const weekIntensities: Record<string, 'lighter' | 'standard' | 'harder'> = {}
+  for (const wk of weeks ?? []) {
+    const intensity = (wk as { week_start?: string; intensity?: string }).intensity
+    if (wk.week_start && (intensity === 'lighter' || intensity === 'harder')) {
+      weekIntensities[wk.week_start] = intensity
+    }
+  }
+
   const inputs: PlanInputs = {
     planId,
     examDate: new Date(plan.exam_date),
@@ -181,6 +192,7 @@ export async function regenerateFutureWeeks(planId: string, fromWeekNumber: numb
     mockTargetTotal: plan.mock_target_total ?? null,
     mockTargetSjtBand: plan.mock_target_sjt_band ?? null,
     adherenceRatio,
+    weekIntensities,
     regenerateFromWeek: fromWeekNumber,
     ucatSen: plan.ucat_sen ?? false,
   }
