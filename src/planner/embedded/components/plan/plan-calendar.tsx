@@ -15,6 +15,7 @@ import {
 import { getPhase } from '@/lib/plan-engine'
 import { SessionLogSheet, type SessionLogSavePayload } from '@/components/sessions/session-log-sheet'
 import {
+  addTimeAwayPeriod,
   completeSession,
   rebalancePlan,
   saveExtraStudy as persistExtraStudy,
@@ -86,14 +87,26 @@ const TYPE_SHORT: Partial<Record<SessionType, string>> = {
   reflection:   'Reflect',
 }
 
+// Each section gets its own colour so a glance at the calendar reads as a real plan,
+// not a wall of grey. Greens and reds are intentionally avoided — they mean
+// "done" and "busy/blocked" elsewhere in the UI.
 const TYPE_PILL: Record<string, string> = {
-  vr_practice:  'bg-secondary text-foreground',
-  dm_practice:  'bg-secondary text-foreground',
-  qr_practice:  'bg-secondary text-foreground',
-  sjt_practice: 'bg-secondary text-foreground',
-  full_mock:    'bg-foreground text-card',
-  mini_mock:    'bg-secondary text-foreground',
-  reflection:   'bg-secondary text-muted-foreground',
+  vr_practice:  'bg-sky-100 text-sky-800',
+  dm_practice:  'bg-violet-100 text-violet-800',
+  qr_practice:  'bg-amber-100 text-amber-900',
+  sjt_practice: 'bg-rose-100 text-rose-800',
+  full_mock:    'bg-indigo-600 text-white',
+  mini_mock:    'bg-indigo-100 text-indigo-800',
+  reflection:   'bg-slate-100 text-slate-500',
+}
+
+// Solid swatch colours for the legend dots, matched to the pills above.
+const TYPE_DOT: Record<string, string> = {
+  vr_practice:  'bg-sky-400',
+  dm_practice:  'bg-violet-400',
+  qr_practice:  'bg-amber-400',
+  sjt_practice: 'bg-rose-400',
+  full_mock:    'bg-indigo-600',
 }
 
 function sessionDisplayLabel(session: Pick<DBSession, 'session_type' | 'notes'>): string {
@@ -170,10 +183,10 @@ function BlockDayButton({
 // ─── Day detail modal ─────────────────────────────────────────────────────────
 
 const SECTION_OPTS = [
-  { key: 'vr',  label: 'VR',  color: 'border-border bg-secondary text-foreground' },
-  { key: 'dm',  label: 'DM',  color: 'border-border bg-secondary text-foreground' },
-  { key: 'qr',  label: 'QR',  color: 'border-border bg-secondary text-foreground' },
-  { key: 'sjt', label: 'SJT', color: 'border-border bg-secondary text-foreground' },
+  { key: 'vr',  label: 'VR',  color: 'border-sky-200 bg-sky-100 text-sky-800' },
+  { key: 'dm',  label: 'DM',  color: 'border-violet-200 bg-violet-100 text-violet-800' },
+  { key: 'qr',  label: 'QR',  color: 'border-amber-200 bg-amber-100 text-amber-900' },
+  { key: 'sjt', label: 'SJT', color: 'border-rose-200 bg-rose-100 text-rose-800' },
 ] as const
 
 type ExtraSection = 'vr' | 'dm' | 'qr' | 'sjt'
@@ -1313,6 +1326,107 @@ function ExamDateEditModal({
   )
 }
 
+// ─── Add time off / holiday modal ─────────────────────────────────────────────
+
+function AddTimeAwayModal({
+  plan,
+  todayDate,
+  onClose,
+}: {
+  plan: DBPlan
+  todayDate: string
+  onClose: () => void
+}) {
+  const router = useRouter()
+  const [kind, setKind] = useState<'busy' | 'holiday'>('busy')
+  const [start, setStart] = useState('')
+  const [end, setEnd] = useState('')
+  const [label, setLabel] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  const canSave = !!start && !!end && end >= start && !saving
+
+  async function submit() {
+    setSaving(true)
+    setError('')
+    try {
+      await addTimeAwayPeriod({ planId: plan.id, start, end: end || start, kind, label: label || undefined })
+      toast.success(kind === 'holiday' ? 'Holiday added — re-spreading your plan' : 'Time off added — updating your plan')
+      router.refresh()
+      onClose()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not add this period')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4" onClick={() => !saving && onClose()} role="presentation">
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+      <div className="relative w-full max-w-md rounded-2xl border border-slate-100 bg-white shadow-2xl" onClick={e => e.stopPropagation()} role="dialog" aria-labelledby="add-time-away-title">
+        <div className="border-b border-slate-100 px-5 py-4">
+          <h2 id="add-time-away-title" className="text-lg font-bold text-slate-900">Add time off or a holiday</h2>
+          <p className="mt-1 text-xs text-muted-foreground">We&apos;ll save it and re-spread your plan around it. It stays put on every future rebuild.</p>
+        </div>
+        <div className="space-y-4 px-5 py-4">
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setKind('busy')}
+              className={`rounded-lg border-2 py-2.5 text-sm font-semibold transition-all ${kind === 'busy' ? 'border-rose-400 bg-rose-50 text-rose-700' : 'border-border text-muted-foreground hover:border-slate-300 bg-white'}`}
+            >
+              Time off
+              <span className="block text-[10px] font-normal opacity-70">No study scheduled</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setKind('holiday')}
+              className={`rounded-lg border-2 py-2.5 text-sm font-semibold transition-all ${kind === 'holiday' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:border-slate-300 bg-white'}`}
+            >
+              Free days
+              <span className="block text-[10px] font-normal opacity-70">More study time</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-600">From</label>
+              <input type="date" value={start} min={todayDate} max={plan.exam_date}
+                onChange={e => { setStart(e.target.value); if (!end || end < e.target.value) setEnd(e.target.value) }}
+                className="mt-1.5 h-10 w-full rounded-lg border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+            </div>
+            <div>
+              <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-600">To</label>
+              <input type="date" value={end} min={start || todayDate} max={plan.exam_date}
+                onChange={e => setEnd(e.target.value)}
+                className="mt-1.5 h-10 w-full rounded-lg border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+            </div>
+          </div>
+
+          <input type="text" value={label} placeholder={kind === 'busy' ? 'Label (e.g. Family trip)' : 'Label (e.g. Summer holidays)'}
+            onChange={e => setLabel(e.target.value)}
+            className="h-10 w-full rounded-lg border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+
+          {error && <p className="text-xs text-red-600">{error}</p>}
+
+          <div className="flex gap-2 pt-1">
+            <button type="button" disabled={saving} onClick={onClose}
+              className="flex-1 rounded-lg border border-border py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50">
+              Cancel
+            </button>
+            <button type="button" disabled={!canSave} onClick={submit}
+              className="flex-1 rounded-lg bg-primary py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50">
+              {saving ? 'Saving…' : 'Add & update plan'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Day cell ─────────────────────────────────────────────────────────────────
 
 function DayCell({
@@ -1632,6 +1746,7 @@ export function PlanCalendar({ plan, planDays, planWeeks, sessions, extraStudyLo
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [showRebuildAhead, setShowRebuildAhead] = useState(false)
   const [showExamDateEdit, setShowExamDateEdit] = useState(false)
+  const [showAddTimeAway, setShowAddTimeAway] = useState(false)
   const [pdfExporting, setPdfExporting] = useState(false)
 
   useEffect(() => {
@@ -1771,6 +1886,15 @@ export function PlanCalendar({ plan, planDays, planWeeks, sessions, extraStudyLo
           {!readOnly && (
             <button
               type="button"
+              onClick={() => setShowAddTimeAway(true)}
+              className="text-xs bg-white border border-border rounded-lg px-3 py-1.5 text-slate-600 hover:bg-slate-50 font-medium"
+            >
+              Add time off
+            </button>
+          )}
+          {!readOnly && (
+            <button
+              type="button"
               onClick={() => setShowRebuildAhead(true)}
               className="text-xs bg-white border border-border rounded-lg px-3 py-1.5 text-slate-600 hover:bg-slate-50 font-medium"
             >
@@ -1872,14 +1996,24 @@ export function PlanCalendar({ plan, planDays, planWeeks, sessions, extraStudyLo
           ))}
         </div>
 
-        {/* Hint */}
-        {!readOnly && (
-          <div className="px-4 py-3 border-t border-border">
-            <span className="text-xs text-slate-400">
-              Tap any day to view its sessions, log time or adjust it.
+        {/* Legend + hint */}
+        <div className="px-4 py-3 border-t border-border flex flex-wrap items-center gap-x-3 gap-y-1.5">
+          {([
+            ['VR', 'vr_practice'],
+            ['DM', 'dm_practice'],
+            ['QR', 'qr_practice'],
+            ['SJT', 'sjt_practice'],
+            ['Mock', 'full_mock'],
+          ] as [string, string][]).map(([label, type]) => (
+            <span key={label} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span className={`w-2.5 h-2.5 rounded-full ${TYPE_DOT[type]}`} />
+              {label}
             </span>
-          </div>
-        )}
+          ))}
+          {!readOnly && (
+            <span className="text-xs text-slate-400 ml-auto">Tap any day to view or log</span>
+          )}
+        </div>
       </div>
 
       {/* Day detail modal */}
@@ -1919,6 +2053,14 @@ export function PlanCalendar({ plan, planDays, planWeeks, sessions, extraStudyLo
         <ExamDateEditModal
           plan={plan}
           onClose={() => setShowExamDateEdit(false)}
+        />
+      )}
+
+      {showAddTimeAway && !readOnly && (
+        <AddTimeAwayModal
+          plan={plan}
+          todayDate={todayDate}
+          onClose={() => setShowAddTimeAway(false)}
         />
       )}
     </div>
