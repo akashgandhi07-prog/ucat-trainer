@@ -5,19 +5,21 @@ import { Link, useSearchParams, useNavigate, useLocation } from 'react-router-do
 import { Pencil } from 'lucide-react'
 import { toast } from 'sonner'
 import { useRouter } from '@/lib/app-navigation'
-import { DBPlan, DBPlanDay, DBSession, DBExtraStudyLog, SessionType } from '@/types'
+import { DBPlan, DBPlanDay, DBPlanWeek, DBSession, DBExtraStudyLog, SessionType, WeekIntensity } from '@/types'
 import {
-  addDays, toISODate, parseDate, startOfWeek, startOfMonth, isSameMonth,
+  addDays, toISODate, parseDate, startOfWeek, startOfMonth, isSameMonth, weeksUntil,
   SESSION_LABELS,
   creditedMinutesTowardPlan,
   suggestHoursFromRecentSessions,
 } from '@/lib/utils'
+import { getPhase } from '@/lib/plan-engine'
 import { SessionLogSheet, type SessionLogSavePayload } from '@/components/sessions/session-log-sheet'
 import {
   completeSession,
   rebalancePlan,
   saveExtraStudy as persistExtraStudy,
   setDayBlocked,
+  setWeekIntensity,
   updateExamDateTime,
   updatePlanDay,
 } from '@/lib/planner-client'
@@ -41,6 +43,7 @@ interface DayOverride {
 interface PlanCalendarProps {
   plan: DBPlan
   planDays: DBPlanDay[]
+  planWeeks?: DBPlanWeek[]
   sessions: SessionWithCompletion[]
   extraStudyLogs: DBExtraStudyLog[]
   readOnly?: boolean
@@ -103,6 +106,14 @@ function sessionCalendarLabel(session: Pick<DBSession, 'session_type' | 'notes'>
     return session.notes.trim().replace(/\s+Mock$/i, '')
   }
   return TYPE_SHORT[session.session_type] ?? session.session_type
+}
+
+/** Compact study-time label: minutes under an hour, else hours with at most one decimal. */
+function formatDuration(totalMinutes: number): string {
+  if (totalMinutes <= 0) return '0m'
+  if (totalMinutes < 60) return `${totalMinutes}m`
+  const hours = totalMinutes / 60
+  return `${Number.isInteger(hours) ? hours : hours.toFixed(1)}h`
 }
 
 // ─── Block day button ─────────────────────────────────────────────────────────
@@ -228,6 +239,10 @@ function DayDetailModal({
     return a + creditedMinutesTowardPlan(!!c.completed, s.duration_minutes, c.minutes)
   }, 0)
   const timeProgressPct = totalMinutes > 0 ? Math.round((creditedToday / totalMinutes) * 100) : 0
+
+  // Secondary tools (extra study, rebuild, availability) live behind one disclosure so
+  // the default view is just "what am I doing today" + logging.
+  const [advancedOpen, setAdvancedOpen] = useState(false)
 
   // ── Availability edit ────────────────────────────────────────────────────────
   const [editMode, setEditMode] = useState(false)
@@ -358,6 +373,33 @@ function DayDetailModal({
       setExtraStudyError(e instanceof Error ? e.message : 'Failed to save extra study')
     } finally {
       setSavingExtra(false)
+    }
+  }
+
+  const [markingAll, setMarkingAll] = useState(false)
+  const [markAllError, setMarkAllError] = useState('')
+
+  /** Fast path for "I did everything as planned": log every unlogged session at its full planned time. */
+  async function markAllDone() {
+    const pending = activeSessions.filter(s => !(completions.get(s.id)?.completed ?? s.completed))
+    if (pending.length === 0) return
+    setMarkingAll(true)
+    setMarkAllError('')
+    try {
+      for (const s of pending) {
+        await completeSession({
+          sessionId: s.id,
+          completed: true,
+          minutesCompleted: s.duration_minutes,
+          perceivedEffort: null,
+        })
+        setCompletions(prev => new Map(prev).set(s.id, { completed: true, minutes: s.duration_minutes }))
+      }
+      router.refresh()
+    } catch (e) {
+      setMarkAllError(e instanceof Error ? e.message : 'Could not log sessions')
+    } finally {
+      setMarkingAll(false)
     }
   }
 
@@ -548,6 +590,19 @@ function DayDetailModal({
                   )
                 })}
 
+                {isPastOrToday && !readOnly && completedCount < activeSessions.length && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={markAllDone}
+                      disabled={markingAll}
+                      className="w-full rounded-lg border border-green-200 bg-green-50 text-green-700 text-sm font-semibold py-2 hover:bg-green-100 disabled:opacity-50"
+                    >
+                      {markingAll ? 'Logging…' : 'Mark all as done (full time)'}
+                    </button>
+                    {markAllError && <p className="text-xs text-red-600 text-center">{markAllError}</p>}
+                  </>
+                )}
                 {isPastOrToday && !readOnly && (
                   <p className="text-xs text-slate-400 text-center pt-1">
                     Tap a session to log actual time (full block, partial, or not done).
@@ -572,7 +627,20 @@ function DayDetailModal({
             )}
           </div>
 
-          {isPastOrToday && !readOnly && (
+          {/* Disclosure: everything below is secondary (log extra study, rebuild, availability) */}
+          {!readOnly && !isExamDay && (
+            <button
+              type="button"
+              onClick={() => setAdvancedOpen(o => !o)}
+              className="flex w-full items-center justify-between border-t border-border px-5 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50"
+              aria-expanded={advancedOpen}
+            >
+              <span>{isFutureDay ? 'Adjust this day or rebuild ahead' : 'Log extra study or change availability'}</span>
+              <span className={`text-slate-400 transition-transform ${advancedOpen ? 'rotate-180' : ''}`}>⌄</span>
+            </button>
+          )}
+
+          {isPastOrToday && !readOnly && advancedOpen && (
             <div className="border-t border-border px-5 py-4 space-y-3 bg-slate-50">
               <div>
                 <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Extra study done</p>
@@ -620,12 +688,12 @@ function DayDetailModal({
             </div>
           )}
 
-          {isFutureDay && !isExamDay && !readOnly && (
+          {isFutureDay && !isExamDay && !readOnly && advancedOpen && (
             <div className="border-t border-border px-5 py-4 space-y-3">
               <div>
-                <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Adjust future focus</p>
+                <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Rebuild from this week</p>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Rebuild sessions from this calendar week onward. The weekday and weekend hours you enter are full targets by the weeks closest to your exam: further out, scheduled time ramps up weekly from about half those targets until it reaches the full numbers near the exam. Plans of three weeks or fewer use full strength from the start. Holiday periods still use weekend-style hours.
+                  Set your weekday and weekend hour targets and rebuild every week from here to your exam. Earlier weeks start lighter and ramp up toward these numbers near the exam.
                 </p>
               </div>
 
@@ -728,7 +796,7 @@ function DayDetailModal({
           )}
 
           {/* Quick day block (future non-structural-rest days only) */}
-          {isFutureDay && !readOnly && !isExamDay && !isStructuralRestDay && (
+          {isFutureDay && !readOnly && !isExamDay && !isStructuralRestDay && advancedOpen && (
             <BlockDayButton
               planId={planId}
               dateStr={dateStr}
@@ -738,7 +806,7 @@ function DayDetailModal({
           )}
 
           {/* Edit availability */}
-          {!readOnly && !isExamDay && (
+          {!readOnly && !isExamDay && advancedOpen && (
             <div className="border-t border-border px-5 py-4 space-y-3 bg-slate-50">
               {!editMode ? (
                 <button
@@ -1086,27 +1154,35 @@ function ExamDateEditModal({
   const { refetchProfile } = useAuth()
   const [examDate, setExamDate] = useState(plan.exam_date)
   const [examTime, setExamTime] = useState(plan.exam_time ?? '')
-  const [saving, setSaving] = useState(false)
+  const [saving, setSaving] = useState<'rebuild' | 'date-only' | null>(null)
   const [error, setError] = useState('')
 
-  async function submit() {
-    setSaving(true)
+  const deltaDays = Math.round(
+    (parseDate(examDate).getTime() - parseDate(plan.exam_date).getTime()) / 86_400_000,
+  )
+  const dateChanged = examDate !== plan.exam_date
+  const movedLater = deltaDays > 0
+  // A shift of a week or more is worth a clear, recommended re-spread of the whole plan.
+  const significantShift = Math.abs(deltaDays) >= 7
+
+  async function submit(regenerate: boolean) {
+    setSaving(regenerate ? 'rebuild' : 'date-only')
     setError('')
     try {
       await updateExamDateTime({
         planId: plan.id,
         examDate,
         examTime: examTime || null,
-        regenerate: true,
+        regenerate,
       })
       await refetchProfile()
-      toast.success('Exam date updated and plan rebuilt')
+      toast.success(regenerate ? 'Exam date updated and plan rebuilt' : 'Exam date updated')
       router.refresh()
       onClose()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not update exam date')
     } finally {
-      setSaving(false)
+      setSaving(null)
     }
   }
 
@@ -1128,7 +1204,7 @@ function ExamDateEditModal({
             Edit exam date
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Saving will update your dashboard date and rebuild the timetable from this week onward.
+            Change your UCAT date or time. If the date moves, we&apos;ll suggest re-spreading your plan to match.
           </p>
         </div>
         <div className="space-y-4 px-5 py-4">
@@ -1156,24 +1232,80 @@ function ExamDateEditModal({
               className="mt-1.5 h-10 w-full rounded-lg border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
+          {/* Smart suggestion when the date shifts meaningfully */}
+          {dateChanged && (
+            <div
+              className={`rounded-lg border px-3 py-2 text-xs ${
+                significantShift
+                  ? 'border-amber-200 bg-amber-50 text-amber-950'
+                  : 'border-border bg-secondary/60 text-slate-600'
+              }`}
+            >
+              <p className="font-semibold">
+                Your exam moves {Math.abs(deltaDays)} day{Math.abs(deltaDays) === 1 ? '' : 's'}{' '}
+                {movedLater ? 'later' : 'earlier'}.
+              </p>
+              <p className="mt-0.5">
+                {movedLater
+                  ? 'Rebuilding re-spreads your plan over the longer timeline — lighter now, ramping up as the new date approaches.'
+                  : 'Rebuilding compresses your plan and steps up the intensity to fit the shorter timeline.'}
+                {' '}Your per-week intensity choices and busy days are kept.
+              </p>
+            </div>
+          )}
+
           {error && <p className="text-xs text-red-600">{error}</p>}
-          <div className="flex gap-2 pt-1">
-            <button
-              type="button"
-              disabled={saving}
-              onClick={onClose}
-              className="flex-1 rounded-lg border border-border py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              disabled={saving || !examDate}
-              onClick={submit}
-              className="flex-1 rounded-lg bg-primary py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50"
-            >
-              {saving ? 'Rebuilding...' : 'Save and rebuild'}
-            </button>
+
+          <div className="space-y-2 pt-1">
+            {dateChanged ? (
+              <>
+                <button
+                  type="button"
+                  disabled={!!saving || !examDate}
+                  onClick={() => submit(true)}
+                  className="w-full rounded-lg bg-primary py-2.5 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {saving === 'rebuild' ? 'Rebuilding…' : 'Save & rebuild plan (recommended)'}
+                </button>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    disabled={!!saving}
+                    onClick={onClose}
+                    className="flex-1 rounded-lg border border-border py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!!saving || !examDate}
+                    onClick={() => submit(false)}
+                    className="flex-1 rounded-lg border border-border py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+                  >
+                    {saving === 'date-only' ? 'Saving…' : 'Save date only'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={!!saving}
+                  onClick={onClose}
+                  className="flex-1 rounded-lg border border-border py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={!!saving || !examDate}
+                  onClick={() => submit(false)}
+                  className="flex-1 rounded-lg bg-primary py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {saving ? 'Saving…' : 'Save'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1207,6 +1339,7 @@ function DayCell({
   const activeSessions = sessions.filter(s => s.session_type !== 'rest')
   const isRest = override ? override.isRest : (dayRecord?.is_rest ?? false)
   const isUnavailable = (override?.availability ?? dayRecord?.availability) === 'unavailable'
+  const dayTotalMinutes = activeSessions.reduce((a, s) => a + s.duration_minutes, 0)
   const completionPct =
     activeSessions.length === 0
       ? 0
@@ -1248,10 +1381,13 @@ function DayCell({
         ].join(' ')}>
           {cell.date.getDate()}
         </span>
-        {isExamDay && <span className="text-[9px] font-bold text-amber-600 uppercase tracking-wide">Exam</span>}
-        {isPlanStart && !isToday && !isExamDay && (
+        {isExamDay ? (
+          <span className="text-[9px] font-bold text-amber-600 uppercase tracking-wide">Exam</span>
+        ) : isPlanStart && !isToday ? (
           <span className="text-[9px] font-bold text-green-600 uppercase">Start</span>
-        )}
+        ) : dayTotalMinutes > 0 && !isUnavailable ? (
+          <span className="text-[10px] font-bold text-slate-500 tabular-nums">{formatDuration(dayTotalMinutes)}</span>
+        ) : null}
       </div>
 
       {/* Content */}
@@ -1276,7 +1412,8 @@ function DayCell({
                     <path d="M1 4l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 )}
-                {sessionCalendarLabel(s)}
+                <span>{sessionCalendarLabel(s)}</span>
+                <span className="font-normal opacity-70 tabular-nums">{s.duration_minutes}m</span>
               </span>
             ))}
             {extra > 0 && (
@@ -1299,11 +1436,190 @@ function DayCell({
   )
 }
 
+// ─── This-week structured summary ─────────────────────────────────────────────
+
+const PHASE_LABEL: Record<string, { name: string; blurb: string }> = {
+  foundations: { name: 'Foundations', blurb: 'Building technique on each section, untimed.' },
+  timed:       { name: 'Timed practice', blurb: 'Section practice against the clock.' },
+  mini_mock:   { name: 'Mini-mock phase', blurb: 'Short timed checkpoints before full mocks.' },
+  full_mock:   { name: 'Full-mock phase', blurb: 'Regular full mocks to build stamina and pacing.' },
+  final_week:  { name: 'Final push', blurb: 'Maximum intensity — mocks and review to peak on exam day.' },
+}
+
+const INTENSITY_OPTS: { key: WeekIntensity; label: string; hint: string }[] = [
+  { key: 'lighter',  label: 'Ease off',  hint: 'Lighter week' },
+  { key: 'standard', label: 'Standard',  hint: 'As planned' },
+  { key: 'harder',   label: 'Push hard', hint: 'Heavier week' },
+]
+
+function ThisWeekCard({
+  plan,
+  planWeeks,
+  sessions,
+  todayDate,
+  readOnly,
+  onOpenToday,
+}: {
+  plan: DBPlan
+  planWeeks: DBPlanWeek[]
+  sessions: SessionWithCompletion[]
+  todayDate: string
+  readOnly?: boolean
+  onOpenToday: () => void
+}) {
+  const router = useRouter()
+  const today = parseDate(todayDate)
+  const weekStart = startOfWeek(today, 1)
+  const weekStartIso = toISODate(weekStart)
+  const weekEndIso = toISODate(addDays(weekStart, 6))
+  const examDate = parseDate(plan.exam_date)
+
+  const weekSessions = sessions.filter(
+    s => s.session_type !== 'rest' && s.day_date >= weekStartIso && s.day_date <= weekEndIso,
+  )
+  const plannedMin = weekSessions.reduce((a, s) => a + s.duration_minutes, 0)
+  const creditedMin = weekSessions.reduce(
+    (a, s) => a + creditedMinutesTowardPlan(s.completed, s.duration_minutes, s.completed_minutes),
+    0,
+  )
+  const pct = plannedMin > 0 ? Math.round((creditedMin / plannedMin) * 100) : 0
+  const mocks = weekSessions.filter(s => s.session_type === 'full_mock' || s.session_type === 'mini_mock').length
+  // Sessions scheduled up to and including today that haven't been logged — the actionable backlog.
+  const dueUnlogged = weekSessions.filter(s => s.day_date <= todayDate && !s.completed).length
+  const weekHasSessions = weekSessions.length > 0
+
+  const weeksRemaining = weeksUntil(examDate, weekStart)
+  const phase = getPhase(weeksRemaining, plan.has_prior_experience)
+  const phaseInfo = PHASE_LABEL[phase] ?? PHASE_LABEL.timed
+  const daysToExam = Math.max(0, Math.round((examDate.getTime() - today.getTime()) / 86_400_000))
+
+  const currentWeek = planWeeks.find(w => w.week_start === weekStartIso)
+  const intensity: WeekIntensity = currentWeek?.intensity ?? 'standard'
+
+  const [saving, setSaving] = useState<WeekIntensity | null>(null)
+  const [error, setError] = useState('')
+
+  async function choose(next: WeekIntensity) {
+    if (readOnly || saving || next === intensity) return
+    setSaving(next)
+    setError('')
+    try {
+      await setWeekIntensity({ planId: plan.id, weekStart: weekStartIso, intensity: next })
+      router.refresh()
+      window.dispatchEvent(new CustomEvent('planner-refresh'))
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not update this week')
+    } finally {
+      setSaving(null)
+    }
+  }
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-bold uppercase tracking-wide text-primary">This week</span>
+            <span className="text-[11px] font-semibold text-muted-foreground">· {phaseInfo.name}</span>
+          </div>
+          <p className="mt-0.5 text-sm text-muted-foreground">{phaseInfo.blurb}</p>
+        </div>
+        <div className="text-right shrink-0">
+          <p className="text-lg font-bold text-slate-900 leading-none">{daysToExam}</p>
+          <p className="text-[11px] text-muted-foreground">days to exam</p>
+        </div>
+      </div>
+
+      {/* Stat strip */}
+      <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+        <div className="rounded-lg bg-secondary/60 py-2">
+          <p className="text-base font-bold text-slate-900 tabular-nums">{formatDuration(plannedMin)}</p>
+          <p className="text-[11px] text-muted-foreground">planned</p>
+        </div>
+        <div className="rounded-lg bg-secondary/60 py-2">
+          <p className="text-base font-bold text-slate-900 tabular-nums">{mocks}</p>
+          <p className="text-[11px] text-muted-foreground">{mocks === 1 ? 'mock' : 'mocks'}</p>
+        </div>
+        <div className="rounded-lg bg-secondary/60 py-2">
+          <p className="text-base font-bold text-slate-900 tabular-nums">{pct}%</p>
+          <p className="text-[11px] text-muted-foreground">done</p>
+        </div>
+      </div>
+      {/* Progress bar */}
+      <div className="mt-2 h-1.5 rounded-full bg-secondary overflow-hidden">
+        <div className="h-full rounded-full bg-green-500 transition-all" style={{ width: `${Math.min(100, pct)}%` }} />
+      </div>
+
+      {/* Primary action + backlog nudge */}
+      {!readOnly && (
+        <div className="mt-4 space-y-2">
+          <button
+            type="button"
+            onClick={onOpenToday}
+            className="w-full rounded-lg bg-primary py-2.5 text-sm font-semibold text-white hover:bg-primary/90"
+          >
+            Log today&apos;s study
+          </button>
+          {weekHasSessions && dueUnlogged > 0 ? (
+            <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5">
+              {dueUnlogged} session{dueUnlogged === 1 ? '' : 's'} up to today {dueUnlogged === 1 ? 'isn’t' : 'aren’t'} logged yet — tap a day to catch up.
+            </p>
+          ) : weekHasSessions ? (
+            <p className="text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-1.5">
+              You’re all caught up this week. Nice work — keep the momentum going.
+            </p>
+          ) : null}
+        </div>
+      )}
+
+      {/* Intensity picker */}
+      {!readOnly && (
+        <div className="mt-4">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
+            How hard do you want to go this week?
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            {INTENSITY_OPTS.map(opt => {
+              const active = intensity === opt.key
+              const busy = saving === opt.key
+              return (
+                <button
+                  key={opt.key}
+                  type="button"
+                  onClick={() => choose(opt.key)}
+                  disabled={!!saving}
+                  className={[
+                    'rounded-lg border-2 py-2 px-1 text-center transition-all disabled:opacity-60',
+                    active
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-border bg-white text-slate-600 hover:border-primary/40',
+                  ].join(' ')}
+                >
+                  <div className="text-xs font-bold">{busy ? '…' : opt.label}</div>
+                  <div className="text-[10px] opacity-70">{opt.hint}</div>
+                </button>
+              )
+            })}
+          </div>
+          {error && <p className="mt-1.5 text-xs text-red-600">{error}</p>}
+          {intensity !== 'standard' && !error && (
+            <p className="mt-1.5 text-[11px] text-muted-foreground">
+              {intensity === 'harder'
+                ? 'This week is dialled up — more sessions packed into your available days.'
+                : 'This week is eased off — fewer sessions so you can recover or catch up.'}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Main calendar ────────────────────────────────────────────────────────────
 
 const DOW_HEADERS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
-export function PlanCalendar({ plan, planDays, sessions, extraStudyLogs, readOnly, todayDate }: PlanCalendarProps) {
+export function PlanCalendar({ plan, planDays, planWeeks, sessions, extraStudyLogs, readOnly, todayDate }: PlanCalendarProps) {
   const today = parseDate(todayDate)
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -1509,6 +1825,21 @@ export function PlanCalendar({ plan, planDays, sessions, extraStudyLogs, readOnl
           </button>
         </div>
       </div>
+
+      {/* This-week structured summary + intensity dial */}
+      {planWeeks && planWeeks.length > 0 && (
+        <ThisWeekCard
+          plan={plan}
+          planWeeks={planWeeks}
+          sessions={sessions}
+          todayDate={todayDate}
+          readOnly={readOnly}
+          onOpenToday={() => {
+            setCurrentMonth(new Date(today.getFullYear(), today.getMonth(), 1))
+            setSelectedDate(todayDate)
+          }}
+        />
+      )}
 
       {/* Month navigation + stats */}
       <div className="bg-white rounded-2xl border border-border overflow-hidden shadow-sm">

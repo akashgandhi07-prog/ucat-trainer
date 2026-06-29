@@ -575,6 +575,47 @@ export async function rebalancePlan(input: {
   return { warnings }
 }
 
+/**
+ * Set a single week's effort level (lighter / standard / harder), then rebuild that week
+ * and everything after it so the chosen intensity takes effect immediately. The current
+ * week is included on purpose — a student dialling "harder" on Monday wants this week to
+ * change, not just the next one. Regeneration runs synchronously so the caller can show a
+ * spinner and refresh once the plan reflects the new intensity.
+ */
+export async function setWeekIntensity(input: {
+  planId: string
+  weekStart: string
+  intensity: 'lighter' | 'standard' | 'harder'
+}): Promise<void> {
+  const userId = await getCurrentUserId()
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.weekStart) || isNaN(Date.parse(input.weekStart))) {
+    throw new Error('weekStart must be a valid ISO date (YYYY-MM-DD)')
+  }
+  if (!['lighter', 'standard', 'harder'].includes(input.intensity)) {
+    throw new Error('intensity must be lighter, standard or harder')
+  }
+  const gate = await requireStudentOrTutorPlan(input.planId, userId)
+  if (!gate.ok) throw new Error(gate.message)
+
+  const { data: week, error: selErr } = await supabase
+    .from('plan_weeks')
+    .select('week_number')
+    .eq('plan_id', input.planId)
+    .eq('week_start', input.weekStart)
+    .maybeSingle()
+  if (selErr) throw new Error(selErr.message)
+  if (!week) throw new Error('Could not find that week in this plan')
+
+  const { error: upErr } = await supabase
+    .from('plan_weeks')
+    .update({ intensity: input.intensity })
+    .eq('plan_id', input.planId)
+    .eq('week_start', input.weekStart)
+  if (upErr) throw new Error(upErr.message)
+
+  await regenerateFutureWeeks(input.planId, week.week_number as number)
+}
+
 export async function saveWeeklyReflection(input: {
   planId: string
   weekNumber: number

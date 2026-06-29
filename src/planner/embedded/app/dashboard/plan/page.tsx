@@ -27,6 +27,12 @@ export default async function PlanPage() {
     .eq('plan_id', plan.id)
     .order('day_date')
 
+  const { data: planWeeks } = await sb
+    .from('plan_weeks')
+    .select('*')
+    .eq('plan_id', plan.id)
+    .order('week_number')
+
   const { data: sessions } = await sb
     .from(PLAN_TIMETABLE_TABLE)
     .select('*')
@@ -57,6 +63,7 @@ export default async function PlanPage() {
     <PlanCalendar
       plan={plan}
       planDays={planDays ?? []}
+      planWeeks={planWeeks ?? []}
       sessions={(sessions ?? []).map((s: any) => {
         const c = completionsBySession.get(s.id)
         return {

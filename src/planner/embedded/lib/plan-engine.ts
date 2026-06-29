@@ -7,7 +7,8 @@
 
 import {
   DBPlanWeek, DBPlanDay, DBSession,
-  Phase, SectionWeight, SessionType, WeekType, DifficultyRating, DateRange, UCATSection
+  Phase, SectionWeight, SessionType, WeekType, DifficultyRating, DateRange, UCATSection,
+  WeekIntensity
 } from '@/types'
 import { addDays, toISODate, parseDate, weeksUntil, startOfWeek, calendarDaysBetween } from './utils'
 import {
@@ -202,13 +203,35 @@ export function calcSectionWeights(
 // ─── Per-day hours ────────────────────────────────────────────────────────────
 
 /**
- * Ramp factor: 50% of max in week 1, linearly increasing to 100% by the final weeks.
- * Short plans (≤3 weeks) always run at full intensity.
+ * Where the weekly ramp starts, as a fraction of the student's stated max. We deliberately
+ * begin firm — students respond to a plan that asks something of them from week one — and
+ * climb to 100% by the final weeks. Short plans (≤3 weeks) always run at full intensity.
+ */
+const RAMP_START = 0.7
+
+/**
+ * Ramp factor: starts at {@link RAMP_START} of max in week 1, linearly increasing to 100%
+ * by the final weeks. Short plans (≤3 weeks) always run at full intensity.
  */
 function rampFactor(weekNumber: number, totalWeeks: number): number {
   if (totalWeeks <= 3) return 1.0
   const progress = (weekNumber - 1) / Math.max(totalWeeks - 1, 1)
-  return Math.min(0.5 + 0.5 * progress, 1.0)
+  return Math.min(RAMP_START + (1 - RAMP_START) * progress, 1.0)
+}
+
+/**
+ * Per-week effort multiplier from the student's chosen intensity for that week.
+ * 'harder' adds a meaningful push without blowing past sane bounds (the day-hour
+ * caps and mock-block fitting still apply); 'lighter' eases a tough week.
+ */
+export const WEEK_INTENSITY_FACTOR: Record<WeekIntensity, number> = {
+  lighter: 0.75,
+  standard: 1.0,
+  harder: 1.3,
+}
+
+export function weekIntensityFactor(intensity: WeekIntensity | null | undefined): number {
+  return WEEK_INTENSITY_FACTOR[intensity ?? 'standard'] ?? 1.0
 }
 
 function roundPlannerHours(h: number): number {
@@ -647,6 +670,12 @@ export interface PlanInputs {
   mockTargetSjtBand?: number | null
   /** Completed-vs-planned ratio over recent weeks (0..1.5); low adherence lightens the load */
   adherenceRatio?: number | null
+  /**
+   * Student-chosen effort level per week, keyed by that week's Monday (ISO date).
+   * Weeks not present default to 'standard'. Lets a student dial a single week up or
+   * down without changing their overall stated hours.
+   */
+  weekIntensities?: Record<string, WeekIntensity>
   regenerateFromWeek?: number
 }
 
@@ -654,6 +683,7 @@ interface WeekPlan {
   weekNumber: number
   weekStart: Date
   weekType: WeekType
+  intensity: WeekIntensity   // student-chosen effort level for the week
   defaultHours: number   // representative hours for the week (school day hours)
   days: {
     date: Date
@@ -702,6 +732,7 @@ export function generateFullPlan(inputs: PlanInputs): GeneratedPlan {
     restDays, busyPeriods, latestMockScores, weaknessTags,
     latestSjtBand, mockCount, mockTargetTotal, mockTargetSjtBand,
     adherenceRatio,
+    weekIntensities = {},
     difficultyAdjustment = 0,
     ucatSen = false,
   } = inputs
@@ -780,6 +811,11 @@ export function generateFullPlan(inputs: PlanInputs): GeneratedPlan {
     const phase = getPhase(weeksRemaining, hasPriorExperience)
     const weekType = weekTypeForWeek(weekStart, holidayPeriods)
 
+    // Student-chosen effort for this week (defaults to standard). Layered on top of the
+    // global loadFactor so a single tough or light week never rewrites the whole plan.
+    const weekIntensity: WeekIntensity = weekIntensities[toISODate(weekStart)] ?? 'standard'
+    const weekFactor = loadFactor * weekIntensityFactor(weekIntensity)
+
     const days: WeekPlan['days'] = []
     let weekMockCount = 0
 
@@ -795,7 +831,7 @@ export function generateFullPlan(inputs: PlanInputs): GeneratedPlan {
       const ds = toISODate(d)
       if (restDays.includes(d.getDay()) || busyDates.has(ds)) continue
       const h = hoursForDate(d, examDate, planStart, schoolDayHours, weekendHours, holidayPeriods, w + 1, totalWeeks)
-      weeklyAvailableMinutes += Math.round(h * 60 * loadFactor)
+      weeklyAvailableMinutes += Math.round(h * 60 * weekFactor)
     }
 
     const weeklyMockCap = weeklyMockTarget(weeksRemaining, totalWeeks, weeklyAvailableMinutes, ucatSen, mockCeilingBonus)
@@ -829,7 +865,7 @@ export function generateFullPlan(inputs: PlanInputs): GeneratedPlan {
         w + 1,
         totalWeeks,
       )
-      const availableMinutes = isRest || isPast ? 0 : Math.round(hours * 60 * loadFactor)
+      const availableMinutes = isRest || isPast ? 0 : Math.round(hours * 60 * weekFactor)
 
       let plannedSessions: PlannedSession[] = []
       if (!isRest && !isPast && availableMinutes >= 30) {
@@ -886,7 +922,7 @@ export function generateFullPlan(inputs: PlanInputs): GeneratedPlan {
       w + 1,
       totalWeeks,
     )
-    weeks.push({ weekNumber: w + 1, weekStart, weekType, defaultHours: rampedSchoolHours, days })
+    weeks.push({ weekNumber: w + 1, weekStart, weekType, intensity: weekIntensity, defaultHours: rampedSchoolHours, days })
   }
 
   return { weeks }
@@ -917,6 +953,7 @@ export function planToDBRows(
       week_type: week.weekType,
       default_hours: week.defaultHours,
       difficulty_rating: null,
+      intensity: week.intensity,
       is_locked: false,
       tutor_note: null,
     })
