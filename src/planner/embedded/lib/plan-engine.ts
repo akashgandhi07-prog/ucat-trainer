@@ -70,7 +70,7 @@ function rationaleForSession(
   }
   if (sessionType === 'mini_mock') {
     const focus = miniMockFocus ? `${SESSION_LABEL_SHORT[miniMockFocus]} ` : ''
-    const base = `${focus}mini mock: a short timed checkpoint before full mocks take over.`
+    const base = `${focus}mini mock — about ${SESSION_DURATIONS.mini_mock} min timed, then ~${REFLECTION_AFTER_MINI_MOCK_MIN} min reviewing your answers. Your checkpoint before full mocks take over.`
     return tagLine ? `${base} ${tagLine}` : base
   }
 
@@ -412,6 +412,8 @@ function plannedSessionDurationMinutes(
   previousType: SessionType | null,
 ): number {
   if (sessionType === 'full_mock') return fullMockMinutes(ucatSen)
+  // A mini mock is a single block: timed section + its built-in review.
+  if (sessionType === 'mini_mock') return SESSION_DURATIONS.mini_mock + REFLECTION_AFTER_MINI_MOCK_MIN
   if (sessionType === 'reflection') {
     return previousType === 'full_mock'
       ? REFLECTION_AFTER_MOCK_MIN
@@ -547,13 +549,15 @@ export function planDaySessions(
   }
 
   // ── Weeks 7-10 out: frequent section mini mocks ─────────────────────────────
+  // A mini mock is one self-contained block: the short timed section plus its review,
+  // baked into a single ~55-minute session rather than a mock + a separate, ambiguous
+  // "reflection" block. (Full mocks keep a standalone 2h debrief — that review is a
+  // major activity in its own right.)
   if (phase === 'mini_mock') {
     if (weekMockCount < weeklyMockCap) {
       if (remaining >= miniBlock) {
         sessions.push({ type: 'mini_mock', miniMockFocus: miniMockFocusForSlot(weights, weekMockCount) })
-        remaining -= SESSION_DURATIONS.mini_mock
-        sessions.push({ type: 'reflection' })
-        remaining -= REFLECTION_AFTER_MINI_MOCK_MIN
+        remaining -= miniBlock
         const weak = weakestPracticeSection(weights)
         if (remaining >= SESSION_DURATIONS[weak]) sessions.push({ type: weak })
         return { sessions }
@@ -562,12 +566,10 @@ export function planDaySessions(
     return planPracticeSessions(remaining, weights, true, tracker, currentDayIndex, confidence)
   }
 
-  // ── Timed / foundations: frequent 25-minute mini mocks once foundations start.
+  // ── Timed / foundations: frequent mini mocks (timed section + built-in review).
   if (weekMockCount < weeklyMockCap && remaining >= miniBlock) {
     sessions.push({ type: 'mini_mock', miniMockFocus: miniMockFocusForSlot(weights, weekMockCount) })
-    remaining -= SESSION_DURATIONS.mini_mock
-    sessions.push({ type: 'reflection' })
-    remaining -= REFLECTION_AFTER_MINI_MOCK_MIN
+    remaining -= miniBlock
     const weak = weakestPracticeSection(weights)
     if (remaining >= SESSION_DURATIONS[weak]) sessions.push({ type: weak })
     return { sessions }
