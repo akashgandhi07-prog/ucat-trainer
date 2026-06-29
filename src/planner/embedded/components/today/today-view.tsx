@@ -64,6 +64,7 @@ export function TodayView({
   const router = useRouter()
   const [localSessions, setLocalSessions] = useState(sessions)
   const [savingId, setSavingId] = useState<string | null>(null)
+  const [markingAllToday, setMarkingAllToday] = useState(false)
   const [markedBusy, setMarkedBusy] = useState(planDay?.is_rest ?? false)
   const [showBusyMenu, setShowBusyMenu] = useState(false)
   const [busySaving, setBusySaving] = useState(false)
@@ -288,6 +289,24 @@ export function TodayView({
       return { ok: false as const, error: 'Network error' }
     } finally {
       setSavingId(null)
+    }
+  }
+
+  /** Fast path for "I did everything as planned": log every unlogged session at its full planned time. */
+  async function markAllTodayDone() {
+    const pending = activeSessions.filter(s => !s.completed)
+    if (pending.length === 0 || markingAllToday) return
+    setMarkingAllToday(true)
+    try {
+      for (const s of pending) {
+        await persistSession(s.id, {
+          completed: true,
+          minutesCompleted: s.duration_minutes,
+          perceivedEffort: null,
+        })
+      }
+    } finally {
+      setMarkingAllToday(false)
     }
   }
 
@@ -524,6 +543,16 @@ export function TodayView({
         })}
         {activeSessions.length === 0 && (
           <p className="text-slate-400 text-sm text-center py-8">No sessions scheduled for today.</p>
+        )}
+        {totalCount > 0 && completedCount < totalCount && (
+          <button
+            type="button"
+            onClick={markAllTodayDone}
+            disabled={markingAllToday}
+            className="w-full rounded-lg border border-green-200 bg-green-50 text-green-700 text-sm font-semibold py-2.5 hover:bg-green-100 disabled:opacity-50"
+          >
+            {markingAllToday ? 'Logging…' : 'Mark all as done (full time)'}
+          </button>
         )}
       </div>
 
