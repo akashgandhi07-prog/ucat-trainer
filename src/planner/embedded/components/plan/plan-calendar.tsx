@@ -1733,18 +1733,6 @@ export function PlanCalendar({ plan, planDays, planWeeks, sessions, extraStudyLo
   const monthMocks = monthSessions.filter(s => s.session_type === 'full_mock' || s.session_type === 'mini_mock').length
   const monthHours = monthSessions.reduce((a, s) => a + s.duration_minutes, 0) / 60
 
-  // Whole-plan progress to date (sessions scheduled up to today, excluding rest)
-  const planWideStats = useMemo(() => {
-    const toDate = sessions.filter(s => s.session_type !== 'rest' && s.day_date <= todayDate)
-    const plannedMinutes = toDate.reduce((a, s) => a + s.duration_minutes, 0)
-    const loggedMinutes = toDate.reduce(
-      (a, s) => a + creditedMinutesTowardPlan(s.completed, s.duration_minutes, s.completed_minutes),
-      0,
-    )
-    const pct = plannedMinutes > 0 ? Math.round((loggedMinutes / plannedMinutes) * 100) : 0
-    return { plannedMinutes, loggedMinutes, pct }
-  }, [sessions, todayDate])
-
   // Jump helpers
   const canGoPrev = currentMonth > new Date(parseDate(planStart).getFullYear(), parseDate(planStart).getMonth(), 1)
   const canGoNext = currentMonth < new Date(parseDate(examDate).getFullYear(), parseDate(examDate).getMonth(), 1)
@@ -1754,7 +1742,7 @@ export function PlanCalendar({ plan, planDays, planWeeks, sessions, extraStudyLo
       {/* Page header */}
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <h1 className="text-2xl font-bold text-slate-900">Revision Plan</h1>
+          <h1 className="text-2xl font-bold text-slate-900">My Plan</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             Exam: {parseDate(examDate).toLocaleDateString('en-GB', {
               weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
@@ -1773,30 +1761,18 @@ export function PlanCalendar({ plan, planDays, planWeeks, sessions, extraStudyLo
               </button>
             )}
           </p>
-          {readOnly ? (
+          {readOnly && (
             <p className="mt-2 w-full text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
               Guest plan on this device only. Sign in to rebuild your timetable, edit future days and sync across devices. You can still download a PDF below.
-            </p>
-          ) : (
-            <p className="mt-2 text-xs text-muted-foreground max-w-xl">
-              Tap any day to change availability or hours, log extra practice or rebuild from that week. Use{' '}
-              <strong>Rebuild plan ahead</strong>
-              {' '}for a full refresh from a date you choose.
             </p>
           )}
         </div>
         <div className="flex flex-wrap gap-2 shrink-0 justify-end">
-          <Link
-            to="/mock-scores"
-            className="text-xs bg-white border border-border rounded-lg px-3 py-1.5 text-slate-600 hover:bg-slate-50 font-medium"
-          >
-            Log mock score
-          </Link>
           {!readOnly && (
             <button
               type="button"
               onClick={() => setShowRebuildAhead(true)}
-              className="text-xs bg-primary text-white rounded-lg px-3 py-1.5 hover:bg-primary/90 font-semibold shadow-sm transition-colors"
+              className="text-xs bg-white border border-border rounded-lg px-3 py-1.5 text-slate-600 hover:bg-slate-50 font-medium"
             >
               Rebuild plan ahead
             </button>
@@ -1808,20 +1784,6 @@ export function PlanCalendar({ plan, planDays, planWeeks, sessions, extraStudyLo
             className="text-xs bg-white border border-border rounded-lg px-3 py-1.5 text-slate-600 hover:bg-slate-50 font-medium disabled:opacity-50"
           >
             {pdfExporting ? 'Generating…' : 'Download PDF'}
-          </button>
-          <button
-            type="button"
-            onClick={() => setCurrentMonth(new Date(today.getFullYear(), today.getMonth(), 1))}
-            className="text-xs bg-white border border-border rounded-lg px-3 py-1.5 text-slate-600 hover:bg-slate-50 font-medium"
-          >
-            Today
-          </button>
-          <button
-            type="button"
-            onClick={() => setCurrentMonth(new Date(parseDate(examDate).getFullYear(), parseDate(examDate).getMonth(), 1))}
-            className="text-xs bg-white border border-border rounded-lg px-3 py-1.5 text-slate-600 hover:bg-slate-50 font-medium"
-          >
-            Exam month
           </button>
         </div>
       </div>
@@ -1853,19 +1815,26 @@ export function PlanCalendar({ plan, planDays, planWeeks, sessions, extraStudyLo
           </button>
           <div className="text-center">
             <h2 className="font-bold text-slate-900">{monthLabel(currentMonth)}</h2>
-            <div className="flex gap-4 mt-1 justify-center">
-              <span className="text-xs text-slate-400">{monthHours.toFixed(1)}h planned</span>
-              <span className="text-xs text-slate-400">{monthMocks} mock{monthMocks !== 1 ? 's' : ''}</span>
-              {monthSessions.length > 0 && (
-                <span className="text-xs text-slate-400">{monthProgressPct}% of planned time logged</span>
-              )}
+            <p className="text-xs text-slate-400 mt-0.5 tabular-nums">
+              {monthHours.toFixed(1)}h · {monthMocks} mock{monthMocks !== 1 ? 's' : ''}
+              {monthSessions.length > 0 && ` · ${monthProgressPct}% logged`}
+            </p>
+            <div className="flex gap-3 mt-1 justify-center">
+              <button
+                type="button"
+                onClick={() => setCurrentMonth(new Date(today.getFullYear(), today.getMonth(), 1))}
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                Today
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentMonth(new Date(parseDate(examDate).getFullYear(), parseDate(examDate).getMonth(), 1))}
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                Exam month
+              </button>
             </div>
-            {planWideStats.plannedMinutes > 0 && (
-              <p className="text-xs text-slate-400 mt-0.5 tabular-nums">
-                Whole plan: planned {(planWideStats.plannedMinutes / 60).toFixed(1)}h
-                {' · '}logged {(planWideStats.loggedMinutes / 60).toFixed(1)}h ({planWideStats.pct}%)
-              </p>
-            )}
           </div>
           <button
             onClick={() => setCurrentMonth(nextMonth)}
@@ -1903,28 +1872,14 @@ export function PlanCalendar({ plan, planDays, planWeeks, sessions, extraStudyLo
           ))}
         </div>
 
-        {/* Legend */}
-        <div className="px-4 py-3 border-t border-border flex flex-wrap gap-x-4 gap-y-1">
-          {([
-            ['VR', 'bg-foreground'],
-            ['DM', 'bg-foreground'],
-            ['QR', 'bg-foreground'],
-            ['SJT', 'bg-foreground'],
-            ['Full Mock', 'bg-foreground'],
-            ['Mini Mock', 'bg-muted-foreground'],
-            ['Reflection', 'bg-muted-foreground'],
-          ] as [string, string][]).map(([label, dot]) => (
-            <span key={label} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <span className={`w-2 h-2 rounded-full ${dot}`} />
-              {label}
+        {/* Hint */}
+        {!readOnly && (
+          <div className="px-4 py-3 border-t border-border">
+            <span className="text-xs text-slate-400">
+              Tap any day to view its sessions, log time or adjust it.
             </span>
-          ))}
-          {!readOnly && (
-            <span className="text-xs text-slate-400 ml-auto italic">
-              Click any day to view or edit
-            </span>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Day detail modal */}
