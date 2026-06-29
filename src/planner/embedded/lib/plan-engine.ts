@@ -602,10 +602,12 @@ function planPracticeSessions(
   // Fill the day's available time by cycling through the weighted sections rather than
   // stopping after three blocks — a student who set aside six hours should not see half
   // of it left unscheduled. Per-section and total caps keep the day varied and sane.
+  // No standalone reflection blocks here: reviewing your own work is part of a practice
+  // session. Dedicated reflection is only scheduled after mocks (where a real debrief adds
+  // value), keeping ordinary study days focused on actually doing questions.
   const perSection: Record<string, number> = {}
   let blocks = 0
   let cursor = 0
-  let sinceReflection = 0
 
   while (blocks < MAX_PRACTICE_BLOCKS) {
     let placed = false
@@ -618,23 +620,11 @@ function planPracticeSessions(
       remaining -= dur
       perSection[cand.type] = (perSection[cand.type] ?? 0) + 1
       blocks++
-      sinceReflection++
       cursor = (cursor + k + 1) % ranked.length
       placed = true
-      // Drop in a consolidation slot after every couple of blocks while time allows.
-      if (sinceReflection >= 2 && remaining >= REFLECTION_AFTER_PRACTICE_MIN) {
-        sessions.push({ type: 'reflection' })
-        remaining -= REFLECTION_AFTER_PRACTICE_MIN
-        sinceReflection = 0
-      }
       break
     }
     if (!placed) break
-  }
-
-  // Trailing reflection if we ended on practice with at least a couple of blocks done.
-  if (sinceReflection >= 1 && blocks >= 2 && remaining >= REFLECTION_AFTER_PRACTICE_MIN) {
-    sessions.push({ type: 'reflection' })
   }
 
   return { sessions }

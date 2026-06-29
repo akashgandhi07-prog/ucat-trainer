@@ -306,6 +306,70 @@ export async function saveTimeAwayPeriods(input: {
   }
 }
 
+/**
+ * Add a single time-away period directly from the calendar, then rebuild upcoming weeks.
+ * Self-contained and additive so it can't disturb existing rest days or other blocks:
+ *  - 'holiday' (more study time / day off school) is appended to plans.holiday_periods.
+ *  - 'busy' (no study) blocks each day in the range as an unavailable plan_day and clears
+ *    any sessions there.
+ * Both persist (holiday on the plan row, busy on plan_days) so the engine keeps honouring
+ * them on every future regeneration.
+ */
+export async function addTimeAwayPeriod(input: {
+  planId: string
+  start: string
+  end: string
+  kind: 'busy' | 'holiday'
+  label?: string
+}): Promise<void> {
+  const userId = await getCurrentUserId()
+  const isIso = (d: string) => /^\d{4}-\d{2}-\d{2}$/.test(d) && !isNaN(Date.parse(d))
+  if (!isIso(input.start) || !isIso(input.end) || input.end < input.start) {
+    throw new Error('Enter a valid start and end date.')
+  }
+  const gate = await requireStudentOrTutorPlan(input.planId, userId)
+  if (!gate.ok) throw new Error(gate.message)
+
+  if (input.kind === 'holiday') {
+    const { data: planRow, error: selErr } = await supabase
+      .from('plans')
+      .select('holiday_periods')
+      .eq('id', input.planId)
+      .maybeSingle()
+    if (selErr) throw new Error(selErr.message)
+    const existing: DateRange[] = Array.isArray(planRow?.holiday_periods)
+      ? (planRow!.holiday_periods as DateRange[])
+      : []
+    const next: DateRange[] = [
+      ...existing,
+      { start: input.start, end: input.end, label: input.label || undefined },
+    ].sort((a, b) => a.start.localeCompare(b.start))
+    const { error } = await supabase.from('plans').update({ holiday_periods: next }).eq('id', input.planId)
+    if (error) throw new Error(error.message)
+  } else {
+    const days = eachDay(input.start, input.end)
+    const { error: upErr } = await supabase.from('plan_days').upsert(
+      days.map((day_date) => ({
+        plan_id: input.planId,
+        day_date,
+        availability: 'unavailable' as const,
+        is_rest: true,
+        custom_hours: null,
+      })),
+      { onConflict: 'plan_id,day_date' },
+    )
+    if (upErr) throw new Error(upErr.message)
+    const { error: delErr } = await supabase
+      .from(PLAN_TIMETABLE_TABLE)
+      .delete()
+      .eq('plan_id', input.planId)
+      .in('day_date', days)
+    if (delErr) throw new Error(delErr.message)
+  }
+
+  scheduleRegenerateFromDate(input.planId, toISODate(new Date()))
+}
+
 /** Create a one-time tutor → student invite link (requires planner_role = tutor). */
 export async function createTutorInviteLink(): Promise<{ token: string; inviteUrl: string }> {
   const userId = await getCurrentUserId()
