@@ -14,7 +14,7 @@ import {
 import { useToast } from "../contexts/ToastContext";
 import { syncSignupToMailchimp } from "../lib/mailchimpSync";
 import type { AuthState } from "../types/session";
-import type { User } from "@supabase/supabase-js";
+import type { AuthChangeEvent, Session, User } from "@supabase/supabase-js";
 
 const GET_SESSION_RETRIES = 2;
 
@@ -228,9 +228,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let authListenerActive = true;
     let initialLoadDone = false;
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const handleAuthEvent = async (event: AuthChangeEvent, session: Session | null) => {
       authLog.info("Auth state changed", {
         event,
         hasSession: !!session,
@@ -398,6 +396,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (authListenerActive) setUser(u);
+    };
+
+    // supabase-js emits auth events (TOKEN_REFRESHED, USER_UPDATED, some SIGNED_IN
+    // paths) while holding the cross-tab auth lock, and awaits every subscriber
+    // callback before releasing it. Any awaited Supabase call inside the callback
+    // re-enters that lock and deadlocks the client permanently: every later query
+    // in this tab hangs forever and other tabs fail on lock timeouts until a full
+    // reload. The callback must therefore return synchronously; events are handled
+    // on a serialized queue so their processing order stays identical.
+    let processing = Promise.resolve();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      processing = processing
+        .then(() => handleAuthEvent(event, session))
+        .catch((err) => {
+          authLog.error("Auth event handling failed", { event, error: err });
+        });
     });
 
     return () => {
