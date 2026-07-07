@@ -325,6 +325,28 @@ const CHART_COLORS: Record<string, string> = {
   trainer_abandoned: "#f59e0b",
 };
 
+function funnelTotals(funnel: AnalyticsSummary["funnel"] | undefined): { started: number; completed: number } {
+  let started = 0;
+  let completed = 0;
+  for (const counts of Object.values(funnel ?? {})) {
+    started += counts.trainer_started ?? 0;
+    completed += counts.trainer_completed ?? 0;
+  }
+  return { started, completed };
+}
+
+function ratePct(numerator: number, denominator: number): string {
+  return denominator > 0 ? `${Math.round((numerator / denominator) * 100)}%` : "-";
+}
+
+function rateColorClass(numerator: number, denominator: number): string {
+  if (denominator <= 0) return "text-muted-foreground";
+  const r = numerator / denominator;
+  if (r >= 0.6) return "text-emerald-600";
+  if (r >= 0.3) return "text-amber-600";
+  return "text-red-600";
+}
+
 function buildChartData(byDay: AnalyticsSummary["by_day"]): Array<Record<string, string | number>> {
   if (!byDay?.length) return [];
   return byDay.map(({ date, events }) => {
@@ -1723,7 +1745,7 @@ export default function AdminPage() {
                 Export JSON
               </button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
               <div className="bg-card rounded-xl border border-border p-5">
                 <p className="text-sm font-medium text-muted-foreground">Unique sessions</p>
                 <p className="text-2xl font-bold text-foreground">{analytics.unique_sessions}</p>
@@ -1731,6 +1753,21 @@ export default function AdminPage() {
               <div className="bg-card rounded-xl border border-border p-5">
                 <p className="text-sm font-medium text-muted-foreground">Unique users (logged in)</p>
                 <p className="text-2xl font-bold text-foreground">{analytics.unique_users}</p>
+              </div>
+              <div className="bg-card rounded-xl border border-border p-5">
+                <p className="text-sm font-medium text-muted-foreground">Sign-ups</p>
+                <p className="text-2xl font-bold text-foreground">{analytics.event_counts?.sign_up ?? 0}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {ratePct(analytics.event_counts?.sign_up ?? 0, analytics.unique_sessions)} of sessions
+                </p>
+              </div>
+              <div className="bg-card rounded-xl border border-border p-5">
+                <p className="text-sm font-medium text-muted-foreground">Drills completed</p>
+                <p className="text-2xl font-bold text-foreground">{funnelTotals(analytics.funnel).completed}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {ratePct(funnelTotals(analytics.funnel).completed, funnelTotals(analytics.funnel).started)} of{" "}
+                  {funnelTotals(analytics.funnel).started} started
+                </p>
               </div>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1832,39 +1869,43 @@ export default function AdminPage() {
                         <th className="px-4 py-2 text-left font-medium text-foreground">Trainer</th>
                         <th className="px-4 py-2 text-right font-medium text-foreground">Opened</th>
                         <th className="px-4 py-2 text-right font-medium text-foreground">Started</th>
+                        <th className="px-4 py-2 text-right font-medium text-foreground">Start rate</th>
                         <th className="px-4 py-2 text-right font-medium text-foreground">Completed</th>
+                        <th className="px-4 py-2 text-right font-medium text-foreground">Completion</th>
                         <th className="px-4 py-2 text-right font-medium text-foreground">Abandoned</th>
                       </tr>
                     </thead>
                     <tbody>
                       {Object.entries(analytics.funnel)
-                        .sort(([a], [b]) => a.localeCompare(b))
-                        .map(([type, counts]) => (
-                          <tr key={type} className="border-b border-border">
-                            <td className="px-4 py-2 text-foreground">{type.replace(/_/g, " ")}</td>
-                            <td className="px-4 py-2 text-right font-medium">{counts.trainer_opened ?? 0}</td>
-                            <td className="px-4 py-2 text-right font-medium">{counts.trainer_started ?? 0}</td>
-                            <td className="px-4 py-2 text-right font-medium">{counts.trainer_completed ?? 0}</td>
-                            <td className="px-4 py-2 text-right font-medium">{counts.trainer_abandoned ?? 0}</td>
-                          </tr>
-                        ))}
+                        .sort(([, a], [, b]) => (b.trainer_opened ?? 0) - (a.trainer_opened ?? 0))
+                        .map(([type, counts]) => {
+                          const opened = counts.trainer_opened ?? 0;
+                          const started = counts.trainer_started ?? 0;
+                          const completed = counts.trainer_completed ?? 0;
+                          return (
+                            <tr key={type} className="border-b border-border">
+                              <td className="px-4 py-2 text-foreground">{type.replace(/_/g, " ")}</td>
+                              <td className="px-4 py-2 text-right font-medium">{opened}</td>
+                              <td className="px-4 py-2 text-right font-medium">{started}</td>
+                              <td className={`px-4 py-2 text-right font-semibold ${rateColorClass(started, opened)}`}>
+                                {ratePct(started, opened)}
+                              </td>
+                              <td className="px-4 py-2 text-right font-medium">{completed}</td>
+                              <td className={`px-4 py-2 text-right font-semibold ${rateColorClass(completed, started)}`}>
+                                {ratePct(completed, started)}
+                              </td>
+                              <td className="px-4 py-2 text-right font-medium">{counts.trainer_abandoned ?? 0}</td>
+                            </tr>
+                          );
+                        })}
                     </tbody>
                   </table>
                 </div>
-                <div className="px-4 py-3 border-t border-border bg-secondary/50">
-                  <p className="text-xs font-medium text-muted-foreground">Completed after start:</p>
-                  <p className="text-sm text-foreground mt-1">
-                    {Object.entries(analytics.funnel)
-                      .sort(([a], [b]) => a.localeCompare(b))
-                      .map(([type, counts]) => {
-                        const started = counts.trainer_started ?? 0;
-                        const completed = counts.trainer_completed ?? 0;
-                        const pct = started > 0 ? ((completed / started) * 100).toFixed(1) : "-";
-                        return `${type.replace(/_/g, " ")}: ${pct}%`;
-                      })
-                      .join(" · ")}
-                  </p>
-                </div>
+                <p className="px-4 py-3 border-t border-border bg-secondary/50 text-xs text-muted-foreground">
+                  Sorted by most opened. Rates: green ≥60%, amber ≥30%, red &lt;30%. A low start rate means the
+                  page isn&apos;t convincing visitors to begin; a low completion rate means the drill loses them
+                  midway.
+                </p>
               </div>
             )}
           </section>

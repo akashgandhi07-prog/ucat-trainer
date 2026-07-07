@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "npx eslint .",
+    "check": "tsc -b --noEmit && npx eslint .",
+    "backup": "bash scripts/backup.sh",
     "verify:qr-maths": "tsx scripts/verify-qr-question-maths.ts",
     "verify:conversion-questions": "tsx scripts/verify-conversion-questions.ts",
     "verify:conversion-generator": "tsx scripts/verify-conversion-generator.ts",

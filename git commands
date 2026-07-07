@@ -1,3 +1,9 @@
+# Replace the message in quotes with one short line saying what you changed,
+# e.g. git commit -m "Fix feedback modal validation toasts"
 git add .
-git commit -m "Describe your changeew here"
+git commit -m "WRITE WHAT YOU CHANGED HERE"
 git push
+
+# Safety net: run this any time to snapshot EVERYTHING (both apps, even
+# uncommitted work) into ~/Backups/ucat-trainer/
+npm run backup
