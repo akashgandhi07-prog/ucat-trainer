@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet-async";
+import { useEffect } from "react";
 import {
   SEO_CREATOR_PERSON_ID_FRAGMENT,
   SEO_CREATOR_SCHEMA,
@@ -34,6 +34,87 @@ interface SEOHeadProps {
 }
 
 const SITE_NAME = "TheUKCATPeople";
+
+/*
+ * Head management is done imperatively rather than via react-helmet-async:
+ * that library silently stops applying tags under React 19, which left every
+ * page serving the static index.html title/description. The effect below owns
+ * the managed tags directly, so behaviour is deterministic across SPA
+ * navigations, and pages without SEOHead fall back to the index.html defaults.
+ */
+const MANAGED_ATTR = "data-seo-managed";
+
+type MetaSpec = { attr: "name" | "property" | "http-equiv"; key: string; content: string };
+type LinkSpec = { rel: string; href: string; hreflang?: string };
+
+/** index.html defaults, captured once so unmount can restore them. */
+let defaultTitle: string | null = null;
+let defaultDescription: string | null = null;
+let defaultLang: string | null = null;
+
+function captureDefaults() {
+  if (defaultTitle === null) defaultTitle = document.title;
+  if (defaultDescription === null) {
+    defaultDescription =
+      document.head.querySelector<HTMLMetaElement>('meta[name="description"]')?.content ?? "";
+  }
+  if (defaultLang === null) defaultLang = document.documentElement.lang || "en";
+}
+
+function removeManagedTags() {
+  document.head
+    .querySelectorAll(`[${MANAGED_ATTR}]`)
+    .forEach((el) => el.remove());
+}
+
+function applyHead(
+  fullTitle: string,
+  description: string,
+  metas: MetaSpec[],
+  links: LinkSpec[],
+  jsonLdScripts: object[],
+) {
+  captureDefaults();
+  document.title = fullTitle;
+  document.documentElement.lang = "en-GB";
+
+  // The description meta exists statically in index.html: update it in place.
+  const descTag = document.head.querySelector<HTMLMetaElement>('meta[name="description"]');
+  if (descTag) descTag.content = description;
+
+  // Everything else is fully owned by SEOHead: rebuild from scratch each time.
+  removeManagedTags();
+  for (const spec of metas) {
+    const el = document.createElement("meta");
+    el.setAttribute(spec.attr, spec.key);
+    el.setAttribute("content", spec.content);
+    el.setAttribute(MANAGED_ATTR, "1");
+    document.head.appendChild(el);
+  }
+  for (const spec of links) {
+    const el = document.createElement("link");
+    el.setAttribute("rel", spec.rel);
+    el.setAttribute("href", spec.href);
+    if (spec.hreflang) el.setAttribute("hreflang", spec.hreflang);
+    el.setAttribute(MANAGED_ATTR, "1");
+    document.head.appendChild(el);
+  }
+  for (const jsonLd of jsonLdScripts) {
+    const el = document.createElement("script");
+    el.type = "application/ld+json";
+    el.text = JSON.stringify(jsonLd);
+    el.setAttribute(MANAGED_ATTR, "1");
+    document.head.appendChild(el);
+  }
+}
+
+function restoreDefaultHead() {
+  removeManagedTags();
+  if (defaultTitle !== null) document.title = defaultTitle;
+  if (defaultLang !== null) document.documentElement.lang = defaultLang;
+  const descTag = document.head.querySelector<HTMLMetaElement>('meta[name="description"]');
+  if (descTag && defaultDescription !== null) descTag.content = defaultDescription;
+}
 
 function creatorPersonId(siteBaseUrl: string) {
   return `${siteBaseUrl}/#${SEO_CREATOR_PERSON_ID_FRAGMENT}`;
@@ -240,59 +321,69 @@ export default function SEOHead({
     }
   }
 
-  return (
-    <Helmet htmlAttributes={{ lang: "en-GB" }}>
-      <title>{fullTitle}</title>
-      <meta name="description" content={description} />
-      <meta httpEquiv="content-language" content="en-GB" />
-      {!noindex && (
-        <>
-          <meta name="geo.region" content="GB" />
-          <meta name="geo.placename" content="United Kingdom" />
-        </>
-      )}
-      {noindex && <meta name="robots" content="noindex, nofollow" />}
-      {!noindex && (
-        <meta
-          name="robots"
-          content="index, follow, max-image-preview:large, max-snippet:-1"
-        />
-      )}
-      {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
-      {canonicalUrl && !noindex && (
-        <>
-          <link rel="alternate" hrefLang="en-gb" href={canonicalUrl} />
-          <link rel="alternate" hrefLang="x-default" href={canonicalUrl} />
-        </>
-      )}
-      <meta property="og:title" content={fullTitle} />
-      <meta property="og:description" content={description} />
-      <meta property="og:type" content="website" />
-      <meta property="og:locale" content="en_GB" />
-      <meta property="og:site_name" content="Free UCAT Skills Trainer" />
-      {canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
-      {imageUrl && (
-        <>
-          <meta property="og:image" content={imageUrl} />
-          <meta property="og:image:width" content={String(OG_IMAGE_DEFAULT_WIDTH)} />
-          <meta property="og:image:height" content={String(OG_IMAGE_DEFAULT_HEIGHT)} />
-          {imageAlt && <meta property="og:image:alt" content={imageAlt} />}
-        </>
-      )}
-      <meta name="twitter:card" content={imageUrl ? "summary_large_image" : "summary"} />
-      <meta name="twitter:title" content={fullTitle} />
-      <meta name="twitter:description" content={description} />
-      {!noindex && (
-        <meta name="twitter:site" content={effectiveTwitterSite} />
-      )}
-      {twitterCreator && <meta name="twitter:creator" content={twitterCreator} />}
-      {imageUrl && <meta name="twitter:image" content={imageUrl} />}
-      {imageUrl && imageAlt && <meta name="twitter:image:alt" content={imageAlt} />}
-      {scripts.map((jsonLd, i) => (
-        <script key={i} type="application/ld+json">
-          {JSON.stringify(jsonLd)}
-        </script>
-      ))}
-    </Helmet>
+  const metas: MetaSpec[] = [
+    { attr: "http-equiv", key: "content-language", content: "en-GB" },
+  ];
+  if (!noindex) {
+    metas.push(
+      { attr: "name", key: "geo.region", content: "GB" },
+      { attr: "name", key: "geo.placename", content: "United Kingdom" },
+      {
+        attr: "name",
+        key: "robots",
+        content: "index, follow, max-image-preview:large, max-snippet:-1",
+      },
+    );
+  } else {
+    metas.push({ attr: "name", key: "robots", content: "noindex, nofollow" });
+  }
+  metas.push(
+    { attr: "property", key: "og:title", content: fullTitle },
+    { attr: "property", key: "og:description", content: description },
+    { attr: "property", key: "og:type", content: "website" },
+    { attr: "property", key: "og:locale", content: "en_GB" },
+    { attr: "property", key: "og:site_name", content: "Free UCAT Skills Trainer" },
   );
+  if (canonicalUrl) metas.push({ attr: "property", key: "og:url", content: canonicalUrl });
+  if (imageUrl) {
+    metas.push(
+      { attr: "property", key: "og:image", content: imageUrl },
+      { attr: "property", key: "og:image:width", content: String(OG_IMAGE_DEFAULT_WIDTH) },
+      { attr: "property", key: "og:image:height", content: String(OG_IMAGE_DEFAULT_HEIGHT) },
+    );
+    if (imageAlt) metas.push({ attr: "property", key: "og:image:alt", content: imageAlt });
+  }
+  metas.push(
+    { attr: "name", key: "twitter:card", content: imageUrl ? "summary_large_image" : "summary" },
+    { attr: "name", key: "twitter:title", content: fullTitle },
+    { attr: "name", key: "twitter:description", content: description },
+  );
+  if (!noindex) metas.push({ attr: "name", key: "twitter:site", content: effectiveTwitterSite });
+  if (twitterCreator) metas.push({ attr: "name", key: "twitter:creator", content: twitterCreator });
+  if (imageUrl) {
+    metas.push({ attr: "name", key: "twitter:image", content: imageUrl });
+    if (imageAlt) metas.push({ attr: "name", key: "twitter:image:alt", content: imageAlt });
+  }
+
+  const links: LinkSpec[] = [];
+  if (canonicalUrl) {
+    links.push({ rel: "canonical", href: canonicalUrl });
+    if (!noindex) {
+      links.push(
+        { rel: "alternate", hreflang: "en-gb", href: canonicalUrl },
+        { rel: "alternate", hreflang: "x-default", href: canonicalUrl },
+      );
+    }
+  }
+
+  // Serialize so the effect re-runs exactly when any rendered tag changes.
+  const headSignature = JSON.stringify({ fullTitle, description, metas, links, scripts });
+
+  useEffect(() => {
+    applyHead(fullTitle, description, metas, links, scripts);
+    return restoreDefaultHead;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- headSignature covers every input above
+  }, [headSignature]);
+
+  return null;
 }

@@ -1,28 +1,29 @@
+import { Suspense } from "react";
 import { useNavigate } from "react-router-dom";
-import { isPlannerIntegrated } from "../lib/plannerUrl";
 import { useAppShell } from "../contexts/AppShellContext";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
-import UcatGuidesPanel from "../components/layout/UcatGuidesPanel";
 import SEOHead from "../components/seo/SEOHead";
-import TrainerFaqSection from "../components/seo/TrainerFaqSection";
-import { trainerFaqs } from "../data/trainerFaqs";
+import { lazyWithRetry } from "../lib/lazyWithRetry";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 import { TRUSTPILOT_STATS } from "../lib/trustpilotSocialProof";
 import {
-  LandingCredibility,
-  LandingDrillCatalog,
   LandingHero,
-  LandingHowItWorks,
-  LandingPaidSupport,
-  LandingPlanning,
-  LandingReviews,
   LandingSectionHub,
 } from "../components/landing/HomeLandingSections";
 
+// Everything below the fold (how-it-works, drill catalogue, planning, paid
+// support, reviews, credibility, guides and the FAQ + FAQPage JSON-LD) is code
+// split into its own chunk so the heavy data/copy it imports (trainerFaqs,
+// ProductUpsell copy, guides) leaves the eager main bundle. It renders on mount
+// inside Suspense with a minimal reserved-height fallback so layout does not jump.
+const HomeBelowFold = lazyWithRetry(
+  () => import("../components/landing/HomeBelowFold"),
+  "HomeBelowFold",
+);
+
 export default function HomePage() {
   const navigate = useNavigate();
-  const plannerOn = isPlannerIntegrated();
   const inAppShell = useAppShell();
   const base = getSiteBaseUrl();
   const canonicalUrl = base ? `${base}/` : undefined;
@@ -56,23 +57,9 @@ export default function HomePage() {
           onQuant={() => navigate("/ucat-quantitative-reasoning-practice")}
           onSjt={() => navigate("/ucat-sjt-practice")}
         />
-        <LandingHowItWorks />
-        <LandingDrillCatalog />
-        <LandingPlanning plannerOn={plannerOn} />
-        <LandingPaidSupport />
-        <LandingReviews />
-        <LandingCredibility />
-        <section className="py-10 sm:py-12 border-b border-border">
-          <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
-            <UcatGuidesPanel embedded context="home" />
-          </div>
-        </section>
-        <TrainerFaqSection
-          id="home-faq"
-          title="Common questions about this UCAT trainer"
-          intro="Answers to common questions about how to use this free UCAT practice platform alongside your main question bank and the official resources."
-          faqs={trainerFaqs.home}
-        />
+        <Suspense fallback={<div className="min-h-[60vh]" aria-hidden />}>
+          <HomeBelowFold />
+        </Suspense>
       </main>
       {!inAppShell ? <Footer /> : null}
     </div>

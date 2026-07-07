@@ -23,6 +23,8 @@ export default function DmTrainerPage({ trainerType }: Props) {
   const inAppShell = useAppShell();
   const base = getSiteBaseUrl();
   const canonicalUrl = base ? `${base}${config.canonicalPath}` : undefined;
+  const ogImageUrl = base ? `${base}/og-trainer.png` : undefined;
+  const ogImageAlt = `UCAT Decision Making ${config.title} trainer interface showing practice questions`;
   const breadcrumbs = base
     ? [
         { name: "Home", url: `${base}/` },
@@ -65,6 +67,8 @@ export default function DmTrainerPage({ trainerType }: Props) {
           title={config.seoTitle}
           description={config.seoDescription}
           canonicalUrl={canonicalUrl}
+          imageUrl={ogImageUrl}
+          imageAlt={ogImageAlt}
           breadcrumbs={breadcrumbs}
         />
         <div className="w-full min-h-0 bg-secondary">{content}</div>
@@ -78,6 +82,8 @@ export default function DmTrainerPage({ trainerType }: Props) {
         title={config.seoTitle}
         description={config.seoDescription}
         canonicalUrl={canonicalUrl}
+        imageUrl={ogImageUrl}
+        imageAlt={ogImageAlt}
         breadcrumbs={breadcrumbs}
       />
       <Header />

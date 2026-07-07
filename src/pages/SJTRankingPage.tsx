@@ -11,9 +11,10 @@ export default function SJTRankingPage() {
       icon={ArrowUpDown}
       title="Most / Least Appropriate"
       subtitle="Pick the best and worst response from three options."
-      seoTitle="UCAT SJT ranking trainer (UK)"
-      seoDescription="Practice choosing the most and least appropriate responses in UCAT SJT scenarios. Free trainer grounded in GMC Good Medical Practice."
+      seoTitle="UCAT SJT Most/Least Appropriate | Free Trainer"
+      seoDescription="Free UCAT SJT practice choosing the most and least appropriate responses in clinical scenarios. Full rationales grounded in GMC Good Medical Practice. No sign-up."
       canonicalPath="/ucat-sjt-ranking-trainer"
+      breadcrumbLabel="Most / Least Appropriate"
       faqId="sjt-ranking-faq"
       emptyMessage="No ranking questions available yet."
       introContent={

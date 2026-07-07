@@ -64,19 +64,19 @@
     <loc>https://ucat.theukcatpeople.co.uk/ucat-sjt-appropriateness-trainer</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
-    <lastmod>2026-05-16</lastmod>
+    <lastmod>2026-07-07</lastmod>
   </url>
   <url>
     <loc>https://ucat.theukcatpeople.co.uk/ucat-sjt-importance-trainer</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
-    <lastmod>2026-05-16</lastmod>
+    <lastmod>2026-07-07</lastmod>
   </url>
   <url>
     <loc>https://ucat.theukcatpeople.co.uk/ucat-sjt-ranking-trainer</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
-    <lastmod>2026-05-16</lastmod>
+    <lastmod>2026-07-07</lastmod>
   </url>
   <url>
     <loc>https://ucat.theukcatpeople.co.uk/ucat-unit-conversions-trainer</loc>
@@ -112,19 +112,19 @@
     <loc>https://ucat.theukcatpeople.co.uk/ucat-venn-logic-practice-questions</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
-    <lastmod>2026-06-14</lastmod>
+    <lastmod>2026-07-07</lastmod>
   </url>
   <url>
     <loc>https://ucat.theukcatpeople.co.uk/ucat-data-logic-practice-questions</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
-    <lastmod>2026-06-14</lastmod>
+    <lastmod>2026-07-07</lastmod>
   </url>
   <url>
     <loc>https://ucat.theukcatpeople.co.uk/ucat-argument-judge-practice-questions</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
-    <lastmod>2026-06-14</lastmod>
+    <lastmod>2026-07-07</lastmod>
   </url>
   <url>
     <loc>https://ucat.theukcatpeople.co.uk/ucat-vr-not-except-trainer</loc>
@@ -137,5 +137,17 @@
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
     <lastmod>2026-05-16</lastmod>
+  </url>
+  <url>
+    <loc>https://ucat.theukcatpeople.co.uk/study-plan</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2026-07-07</lastmod>
+  </url>
+  <url>
+    <loc>https://ucat.theukcatpeople.co.uk/mock-scores</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2026-07-07</lastmod>
   </url>
 </urlset>

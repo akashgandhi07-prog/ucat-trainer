@@ -11,9 +11,10 @@ export default function SJTAppropriatenessPage() {
       icon={Scale}
       title="Appropriateness Rater"
       subtitle="Rate each response on a 4-point scale. Half marks for the next best answer."
-      seoTitle="UCAT SJT appropriateness trainer (UK)"
-      seoDescription="Practice rating responses as Very Appropriate, Appropriate, Inappropriate or Very Inappropriate. Free UCAT SJT trainer grounded in GMC Good Medical Practice."
+      seoTitle="UCAT SJT Appropriateness Practice | Free Trainer"
+      seoDescription="Free UCAT SJT practice rating responses as Very Appropriate, Appropriate, Inappropriate or Very Inappropriate. Full rationales grounded in GMC Good Medical Practice."
       canonicalPath="/ucat-sjt-appropriateness-trainer"
+      breadcrumbLabel="Appropriateness"
       faqId="sjt-appropriateness-faq"
       emptyMessage="No appropriateness questions available yet."
       introContent={

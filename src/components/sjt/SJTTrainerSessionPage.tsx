@@ -33,6 +33,8 @@ type Props = {
   seoTitle: string;
   seoDescription: string;
   canonicalPath: string;
+  /** Short label for the final breadcrumb crumb (e.g. "Appropriateness"). */
+  breadcrumbLabel: string;
   faqId: string;
   emptyMessage: string;
   introContent: ReactNode;
@@ -47,6 +49,7 @@ export default function SJTTrainerSessionPage({
   seoTitle,
   seoDescription,
   canonicalPath,
+  breadcrumbLabel,
   faqId,
   emptyMessage,
   introContent,
@@ -83,6 +86,15 @@ export default function SJTTrainerSessionPage({
 
   const base = getSiteBaseUrl();
   const canonical = base ? `${base}${canonicalPath}` : undefined;
+  const ogImageUrl = base ? `${base}/og-trainer.png` : undefined;
+  const ogImageAlt = `UCAT SJT ${title} trainer interface showing a scenario and rating options`;
+  const breadcrumbs = base
+    ? [
+        { name: "Home", url: `${base}/` },
+        { name: "Situational Judgement", url: `${base}/ucat-sjt-practice` },
+        { name: breadcrumbLabel, url: `${base}${canonicalPath}` },
+      ]
+    : undefined;
   const sessionPct =
     sessionMax > 0
       ? Math.min(100, Math.round((sessionScore / sessionMax) * 100))
@@ -214,7 +226,14 @@ export default function SJTTrainerSessionPage({
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <SEOHead title={seoTitle} description={seoDescription} canonicalUrl={canonical} />
+      <SEOHead
+        title={seoTitle}
+        description={seoDescription}
+        canonicalUrl={canonical}
+        imageUrl={ogImageUrl}
+        imageAlt={ogImageAlt}
+        breadcrumbs={breadcrumbs}
+      />
       <Header />
       <main className="flex-1 py-5 sm:py-6 px-4">
         <div className="w-full max-w-6xl mx-auto">

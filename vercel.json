@@ -1,4 +1,20 @@
 {
+  "redirects": [
+    { "source": "/verbal", "destination": "/ucat-verbal-reasoning-practice", "permanent": true },
+    { "source": "/quantitative", "destination": "/ucat-quantitative-reasoning-practice", "permanent": true },
+    { "source": "/reader", "destination": "/ucat-verbal-reasoning-speed-reading-trainer", "permanent": true },
+    { "source": "/decision-making", "destination": "/ucat-decision-making-practice", "permanent": true },
+    { "source": "/train/rapid-recall", "destination": "/ucat-rapid-recall-trainer", "permanent": true },
+    { "source": "/train/keyword-scanning", "destination": "/ucat-keyword-scanning-trainer", "permanent": true },
+    { "source": "/train/inference", "destination": "/ucat-inference-trainer", "permanent": true },
+    { "source": "/train/mentalMaths", "destination": "/ucat-mental-maths-trainer", "permanent": true },
+    { "source": "/train/conversions", "destination": "/ucat-unit-conversions-trainer", "permanent": true },
+    { "source": "/train/syllogism/foundation", "destination": "/ucat-syllogism-foundations-trainer", "permanent": true },
+    { "source": "/train/syllogism/macro", "destination": "/ucat-syllogism-practice-macro-drills", "permanent": true },
+    { "source": "/train/syllogism/micro", "destination": "/ucat-syllogism-practice-micro-drills", "permanent": true },
+    { "source": "/train/calculator", "destination": "/ucat-calculator-trainer", "permanent": true },
+    { "source": "/dashboard/scores", "destination": "/mock-scores", "permanent": true }
+  ],
   "headers": [
     {
       "source": "/(.*)",

@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import { useAuth } from "../hooks/useAuth";
 import { useAuthModal } from "../contexts/AuthModalContext";
+import { useToast } from "../contexts/ToastContext";
 import { supabase } from "../lib/supabase";
 import { dashboardLog } from "../lib/logger";
 import Header from "../components/layout/Header";
@@ -433,6 +434,7 @@ export default function AdminPage() {
     sessionLoadFailed,
   } = useAuth();
   const { openAuthModal } = useAuthModal();
+  const { showToast } = useToast();
   const [dateRange, setDateRange] = useState<AdminDateRange>("30");
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
@@ -887,18 +889,28 @@ export default function AdminPage() {
     const parts = questionIdentifier.split(":");
     const rawId = parts.length >= 2 ? parts.slice(1).join(":") : null;
     if (!rawId) return;
-    setQfDeleting((prev) => new Set(prev).add(questionIdentifier));
-    // Foundation / micro / macro questions live in syllogism_questions; older ones in syllogisms.
+    // Foundation / micro / macro questions all live in public.syllogism_questions.
+    // Any other syllogism trainer type is a legacy kind with no table to delete from.
     const newSyllogismTrainers = ["syllogism_foundation", "syllogism_micro", "syllogism_macro"];
-    const tableName = newSyllogismTrainers.includes(trainerType) ? "syllogism_questions" : "syllogisms";
-    const { error: delErr } = await supabase
-      .from(tableName)
+    if (!newSyllogismTrainers.includes(trainerType)) {
+      showToast("Cannot delete this legacy question type.", { variant: "error" });
+      return;
+    }
+    setQfDeleting((prev) => new Set(prev).add(questionIdentifier));
+    // Verify the delete actually removed a row: RLS or a stale id can make the
+    // request succeed while deleting nothing, so treat an empty result as failure.
+    const { data: deletedRows, error: delErr } = await supabase
+      .from("syllogism_questions")
       .delete()
-      .eq("id", rawId);
-    if (delErr) {
+      .eq("id", rawId)
+      .select("id");
+    if (delErr || !deletedRows || deletedRows.length === 0) {
       dashboardLog.warn("Admin delete syllogism question failed", {
-        message: delErr.message,
-        code: delErr.code,
+        message: delErr?.message ?? "no rows deleted",
+        code: delErr?.code,
+      });
+      showToast("Failed to delete question. Nothing was removed.", {
+        variant: "error",
       });
     } else {
       // Also remove the feedback reports for this question
@@ -914,6 +926,7 @@ export default function AdminPage() {
         next.delete(questionIdentifier);
         return next;
       });
+      showToast("Question deleted.", { variant: "success" });
     }
     setQfDeleting((prev) => {
       const next = new Set(prev);

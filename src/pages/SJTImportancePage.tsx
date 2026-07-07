@@ -11,9 +11,10 @@ export default function SJTImportancePage() {
       icon={Star}
       title="Importance Rater"
       subtitle="Rate how important each consideration is when deciding what to do."
-      seoTitle="UCAT SJT importance trainer (UK)"
-      seoDescription="Practice rating considerations as Very Important, Important, Of Minor Importance or Not Important at All. Free UCAT SJT trainer grounded in GMC Good Medical Practice."
+      seoTitle="UCAT SJT Importance Practice | Free Rating Trainer"
+      seoDescription="Free UCAT SJT practice rating considerations as Very Important, Important, Of Minor Importance or Not Important at All. Rationales grounded in GMC Good Medical Practice."
       canonicalPath="/ucat-sjt-importance-trainer"
+      breadcrumbLabel="Importance"
       faqId="sjt-importance-faq"
       emptyMessage="No importance questions available yet."
       introContent={

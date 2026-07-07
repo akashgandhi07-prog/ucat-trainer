@@ -23,9 +23,9 @@ export const DM_TRAINER_CONFIGS: Record<DmTrainerType, DmTrainerConfig> = {
     title: "Venn Logic",
     hubDescription:
       "Build Venn diagrams from wording, avoid double counting, and master exactly, only, neither and must be true set logic.",
-    seoTitle: "UCAT Venn diagram practice questions (Decision Making)",
+    seoTitle: "UCAT Venn Diagram Practice Questions | Free Trainer",
     seoDescription:
-      "Free UCAT Decision Making Venn diagram practice questions. Train set logic, exactly two, total mentions and must-be-true reasoning for UK applicants.",
+      "Free UCAT Venn diagram practice questions for Decision Making. Train set logic, exactly two, total mentions and must-be-true reasoning. No sign-up needed.",
     canonicalPath: "/ucat-venn-logic-practice-questions",
     icon: Circle,
     skillSummary:
@@ -43,7 +43,7 @@ export const DM_TRAINER_CONFIGS: Record<DmTrainerType, DmTrainerConfig> = {
     title: "Data Logic",
     hubDescription:
       "Train the percentage, probability and comparison logic behind UCAT Decision Making data questions.",
-    seoTitle: "UCAT data and probability practice questions (Decision Making)",
+    seoTitle: "UCAT Data & Probability Practice | Free DM Trainer",
     seoDescription:
       "Free UCAT Decision Making practice for percentages, complements, survey denominators and at-least-one probability. Built for UK medicine applicants.",
     canonicalPath: "/ucat-data-logic-practice-questions",
@@ -63,9 +63,9 @@ export const DM_TRAINER_CONFIGS: Record<DmTrainerType, DmTrainerConfig> = {
     title: "Argument Judge",
     hubDescription:
       "Identify the exact aim of an argument question, spot irrelevant or assumption-based options, and choose the strongest argument.",
-    seoTitle: "UCAT strongest argument practice questions (Decision Making)",
+    seoTitle: "UCAT Strongest Argument Practice | Free DM Trainer",
     seoDescription:
-      "Free UCAT Decision Making practice for strongest argument and relevance judgement. Match the exact aim of each stem, not what sounds sensible.",
+      "Free UCAT Decision Making practice for strongest argument and relevance judgement. Learn to match the exact aim of each stem, not what merely sounds sensible.",
     canonicalPath: "/ucat-argument-judge-practice-questions",
     icon: Scale,
     skillSummary:
