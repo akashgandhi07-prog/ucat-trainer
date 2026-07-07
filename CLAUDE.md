@@ -21,7 +21,7 @@ npm run backup   # timestamped .tgz of the whole workspace to ~/Backups/ucat-tra
 - `src/pages/` — trainer pages plus `planner/`, `tutor/`, `admin/`; `src/planner/embedded` — the planner app source (eslint-ignored; edit with care, it has its own conventions)
 - `src/lib/` — supabase client, schemas, analytics, logging; `question-lab/` — question authoring pipeline
 - `supabase/` — migrations and edge functions (`send-weekly-summaries`, `unsubscribe`, `add-mailchimp-subscriber`, `generate-trainer-questions`)
-- `uk/` — the ORIGINAL standalone Next.js planner, its own separate git repo, superseded by `src/planner/embedded`. Ignored by this repo's git and eslint. Do not develop new planner features there.
+- `uk/` — historical: the original standalone Next.js planner once lived here (deleted locally July 2026; archived at `github.com/akashgandhi07-prog/ucat-planner-legacy`). Superseded by `src/planner/embedded`; the `unify:*` scripts that reference `uk/` are migration-era and no longer runnable.
 
 ## Copy rules (from `rules.md`)
 
