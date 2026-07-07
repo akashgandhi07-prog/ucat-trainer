@@ -43,3 +43,6 @@ supabase/functions/generate-trainer-questions/index.ts.bak
 
 # Supabase CLI local cache
 supabase/.temp/
+
+# nested legacy planner repo (has its own .git); superseded by src/planner/embedded
+/uk/
