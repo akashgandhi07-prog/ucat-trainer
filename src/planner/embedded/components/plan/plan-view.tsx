@@ -461,8 +461,8 @@ export function PlanView({ plan, planWeeks, planDays, sessions, canEdit, readOnl
                             <DayEditPopover
                               planId={plan.id}
                               dayDate={dateStr}
-                              currentAvailability={(day?.availability as any) ?? 'available'}
-                              currentHours={override?.hours ?? (day as any)?.custom_hours ?? null}
+                              currentAvailability={day?.availability ?? 'available'}
+                              currentHours={override?.hours ?? daysByDate.get(dateStr)?.custom_hours ?? null}
                               onUpdate={handleDayUpdate}
                               onClose={() => setEditingDate(null)}
                             />

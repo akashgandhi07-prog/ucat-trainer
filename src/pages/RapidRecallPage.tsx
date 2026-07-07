@@ -8,10 +8,9 @@ import type { QuestionBreakdownItem } from "../components/quiz/DistortionQuiz";
 import { useAuth } from "../hooks/useAuth";
 import type { Passage } from "../data/passages";
 import { appendGuestSession } from "../lib/guestSessions";
-import { newClientSessionId, upsertTrainerSession } from "../lib/trainerSessionLog";
 import type { TrainerSessionUpsert } from "../lib/trainerSessionLog";
 import { supabaseLog } from "../lib/logger";
-import { getSessionSaveErrorMessage } from "../lib/sessionSaveError";
+import { useTrainerSessionSave } from "../hooks/useTrainerSessionSave";
 import type { TrainingDifficulty } from "../types/training";
 import {
   getVrPassageCandidates,
@@ -73,21 +72,17 @@ export default function RapidRecallPage() {
   const [quizCorrect, setQuizCorrect] = useState(0);
   const [quizTotal, setQuizTotal] = useState(0);
   const [questionBreakdown, setQuestionBreakdown] = useState<QuestionBreakdownItem[]>([]);
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
   const [readingSeconds, setReadingSeconds] = useState<number | null>(null);
   const [passageModalOpen, setPassageModalOpen] = useState(false);
-  const hasAutoSavedRef = useRef(false);
-  const sessionIdRef = useRef(newClientSessionId());
-  const mountedRef = useRef(true);
+  const {
+    sessionIdRef,
+    hasAutoSavedRef,
+    saveError,
+    saving,
+    runSave,
+    resetSession,
+  } = useTrainerSessionSave();
   const { user } = useAuth();
-
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
 
   // Hydrate cross-device passage history once per page load (fire-and-forget).
   useEffect(() => {
@@ -156,63 +151,57 @@ export default function RapidRecallPage() {
     async (opts?: { skipRestart?: boolean }) => {
       const timeSeconds =
         readingSeconds != null ? readingSeconds : timeLimitSeconds + overtimeSeconds;
-      if (!user) {
-        appendGuestSession({
-          training_type: "rapid_recall",
+      await runSave(
+        {
+          user,
+          clientSessionId: sessionIdRef.current,
+          trainingType: "rapid_recall",
           difficulty,
-          wpm: null,
-          correct: quizCorrect,
-          total: quizTotal,
-          time_seconds: timeSeconds,
-          passage_id: passage?.id ?? null,
-          client_session_id: sessionIdRef.current,
-        });
-        return;
-      }
-      setSaveError(null);
-      setSaving(true);
-      const payload: TrainerSessionUpsert = {
-        training_type: "rapid_recall",
-        difficulty,
-        wpm: null,
-        correct: quizCorrect,
-        total: quizTotal,
-        time_seconds: timeSeconds,
-        passage_id: passage?.id ?? null,
-      };
-      const saved = await upsertTrainerSession(user.id, sessionIdRef.current, payload);
-      if (saved) {
-        supabaseLog.info("Rapid recall session saved", {
-          userId: user.id,
-          correct: quizCorrect,
-          total: quizTotal,
-        });
-        trackEvent("trainer_completed", { training_type: "rapid_recall", difficulty });
-        clearActiveTrainer();
-        if (!mountedRef.current) return;
-        setSaveError(null);
-        if (!opts?.skipRestart) {
-          sessionIdRef.current = newClientSessionId();
-          setPhase("reading");
-          setSecondsLeft(timeLimitSeconds);
-          setShowMoreTimeModal(false);
-          setOvertimeMode(false);
-          setOvertimeSeconds(0);
-        }
-      } else {
-        if (!mountedRef.current) return;
-        setSaveError(getSessionSaveErrorMessage(null));
-      }
-      if (mountedRef.current) setSaving(false);
+          buildGuestPayload: () => ({
+            training_type: "rapid_recall",
+            difficulty,
+            wpm: null,
+            correct: quizCorrect,
+            total: quizTotal,
+            time_seconds: timeSeconds,
+            passage_id: passage?.id ?? null,
+            client_session_id: sessionIdRef.current,
+          }),
+          buildAuthPayload: (): TrainerSessionUpsert => ({
+            training_type: "rapid_recall",
+            difficulty,
+            wpm: null,
+            correct: quizCorrect,
+            total: quizTotal,
+            time_seconds: timeSeconds,
+            passage_id: passage?.id ?? null,
+          }),
+          logSuccess: () => {
+            supabaseLog.info("Rapid recall session saved", {
+              userId: user!.id,
+              correct: quizCorrect,
+              total: quizTotal,
+            });
+          },
+          onRestart: () => {
+            resetSession();
+            setPhase("reading");
+            setSecondsLeft(timeLimitSeconds);
+            setShowMoreTimeModal(false);
+            setOvertimeMode(false);
+            setOvertimeSeconds(0);
+          },
+        },
+        opts,
+      );
     },
-    [user, quizCorrect, quizTotal, timeLimitSeconds, overtimeSeconds, readingSeconds, difficulty, passage?.id]
+    [user, quizCorrect, quizTotal, timeLimitSeconds, overtimeSeconds, readingSeconds, difficulty, passage?.id, runSave, resetSession, sessionIdRef]
   );
 
   useEffect(() => {
     if (phase !== "results" || hasAutoSavedRef.current) return;
     hasAutoSavedRef.current = true;
     if (user) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot auto-save on entering results; guarded by hasAutoSavedRef
       handleSaveProgress({ skipRestart: true });
     } else {
       appendGuestSession({
@@ -227,7 +216,7 @@ export default function RapidRecallPage() {
         client_session_id: sessionIdRef.current,
       });
     }
-  }, [phase, handleSaveProgress, user, quizCorrect, quizTotal, difficulty, readingSeconds, timeLimitSeconds, overtimeSeconds, passage?.id]);
+  }, [phase, handleSaveProgress, user, quizCorrect, quizTotal, difficulty, readingSeconds, timeLimitSeconds, overtimeSeconds, passage?.id, hasAutoSavedRef, sessionIdRef]);
 
   if (!passage) {
     return <Navigate to="/?mode=rapid_recall" replace />;
@@ -558,8 +547,7 @@ export default function RapidRecallPage() {
                     <button
                       type="button"
                       onClick={() => {
-                        hasAutoSavedRef.current = false;
-                        sessionIdRef.current = newClientSessionId();
+                        resetSession({ resetAutoSaveGuard: true });
                         setTimeLimitSeconds(nextTimeSuggestion);
                         setSecondsLeft(nextTimeSuggestion);
                         setOvertimeMode(false);
@@ -578,8 +566,7 @@ export default function RapidRecallPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      hasAutoSavedRef.current = false;
-                      sessionIdRef.current = newClientSessionId();
+                      resetSession({ resetAutoSaveGuard: true });
                       setSecondsLeft(timeLimitSeconds);
                         setOvertimeMode(false);
                         setOvertimeSeconds(0);

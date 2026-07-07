@@ -506,8 +506,10 @@ export function planDaySessions(
   confidence: { vr: number; dm: number; qr: number; sjt: number },
   ucatSen: boolean,
   /** Calendar days until the exam (1 = day before). */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- kept for call-site signature parity; passed by callers, reserved for future scheduling logic
   _daysUntilExamCal: number,
   /** Whole-weeks until exam from this week's Monday (same basis as {@link getPhase}). */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- kept for call-site signature parity; passed by callers, reserved for future scheduling logic
   _weeksRemainingForWeek: number,
 ): { sessions: PlannedSession[] } {
   if (isExamDay) return { sessions: [] }

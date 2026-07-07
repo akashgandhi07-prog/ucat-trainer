@@ -12,10 +12,10 @@ import { PASSAGES } from "../data/passages";
 import { getInferenceQuestionsForPassage, PASSAGE_IDS_WITH_INFERENCE } from "../data/inferenceQuestions";
 import type { InferenceQuestion, InferenceBreakdownItem } from "../types/inference";
 import { appendGuestSession } from "../lib/guestSessions";
-import { newClientSessionId, upsertTrainerSession } from "../lib/trainerSessionLog";
+import { upsertTrainerSession } from "../lib/trainerSessionLog";
 import type { TrainerSessionUpsert } from "../lib/trainerSessionLog";
 import { supabaseLog } from "../lib/logger";
-import { getSessionSaveErrorMessage } from "../lib/sessionSaveError";
+import { useTrainerSessionSave } from "../hooks/useTrainerSessionSave";
 import type { TrainingDifficulty } from "../types/training";
 import { getSiteBaseUrl } from "../lib/siteUrl";
 import SEOHead from "../components/seo/SEOHead";
@@ -92,12 +92,14 @@ export default function InferenceTrainerPage() {
   const [timedMode, setTimedMode] = useState<boolean>(() => readStoredTimedMode());
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const hasAutoSavedRef = useRef(false);
-  // Initialised in a mount effect below: impure calls aren't allowed during render.
-  const sessionIdRef = useRef("");
-  const mountedRef = useRef(true);
+  const {
+    sessionIdRef,
+    hasAutoSavedRef,
+    saveError,
+    saving,
+    runSave,
+    resetSession,
+  } = useTrainerSessionSave();
   const startTimeRef = useRef<number>(0);
   const passagePickAbortRef = useRef<AbortController | null>(null);
   const { user } = useAuth();
@@ -167,11 +169,8 @@ export default function InferenceTrainerPage() {
   const effectiveQuestionCount = questions.length;
 
   useEffect(() => {
-    mountedRef.current = true;
-    if (!sessionIdRef.current) sessionIdRef.current = newClientSessionId();
     if (!startTimeRef.current) startTimeRef.current = Date.now();
     return () => {
-      mountedRef.current = false;
       passagePickAbortRef.current?.abort();
     };
   }, []);
@@ -225,7 +224,7 @@ export default function InferenceTrainerPage() {
       window.removeEventListener("pagehide", saveOnExit);
       saveOnExit(); // covers SPA navigation (component unmounts without pagehide)
     };
-  }, []);
+  }, [sessionIdRef]);
 
   useEffect(() => {
     if (phase === "active") {
@@ -321,61 +320,56 @@ export default function InferenceTrainerPage() {
     async (opts?: { skipRestart?: boolean }) => {
       const correctToSave = phase === "results" ? runningCorrect : quizCorrect;
       const totalToSave = phase === "results" ? runningTotal : quizTotal;
-      if (!user) {
-        appendGuestSession({
-          training_type: "inference_trainer",
+      await runSave(
+        {
+          user,
+          clientSessionId: sessionIdRef.current,
+          trainingType: "inference_trainer",
           difficulty,
-          wpm: null,
-          correct: correctToSave,
-          total: totalToSave,
-          time_seconds: elapsedSeconds,
-          client_session_id: sessionIdRef.current,
-        });
-        return;
-      }
-      setSaveError(null);
-      setSaving(true);
-      const payload: TrainerSessionUpsert = {
-        training_type: "inference_trainer",
-        difficulty,
-        wpm: null,
-        correct: correctToSave,
-        total: totalToSave,
-        passage_id: passage?.id ?? null,
-        time_seconds: elapsedSeconds,
-      };
-      const saved = await upsertTrainerSession(user.id, sessionIdRef.current, payload);
-      if (saved) {
-        supabaseLog.info("Inference trainer session saved", {
-          userId: user.id,
-          correct: quizCorrect,
-          total: quizTotal,
-        });
-        trackEvent("trainer_completed", { training_type: "inference_trainer", difficulty });
-        clearActiveTrainer();
-        if (!mountedRef.current) return;
-        setSaveError(null);
-        if (!opts?.skipRestart) {
-          sessionIdRef.current = newClientSessionId();
-          savedOnExitRef.current = false;
-          setPhase("active");
-          setQuizCorrect(0);
-          setQuizTotal(0);
-          setQuestionBreakdown([]);
-          setRunningCorrect(0);
-          setRunningTotal(0);
-          setRunningBreakdown([]);
-          setQuizKey((k) => k + 1);
-          setCurrentIndex(0);
-          startTimeRef.current = Date.now();
-          setElapsedSeconds(0);
-          pickAndSetNextPassage(passage?.id ?? null);
-        }
-      } else {
-        if (!mountedRef.current) return;
-        setSaveError(getSessionSaveErrorMessage(null));
-      }
-      if (mountedRef.current) setSaving(false);
+          buildGuestPayload: () => ({
+            training_type: "inference_trainer",
+            difficulty,
+            wpm: null,
+            correct: correctToSave,
+            total: totalToSave,
+            time_seconds: elapsedSeconds,
+            client_session_id: sessionIdRef.current,
+          }),
+          buildAuthPayload: (): TrainerSessionUpsert => ({
+            training_type: "inference_trainer",
+            difficulty,
+            wpm: null,
+            correct: correctToSave,
+            total: totalToSave,
+            passage_id: passage?.id ?? null,
+            time_seconds: elapsedSeconds,
+          }),
+          logSuccess: () => {
+            supabaseLog.info("Inference trainer session saved", {
+              userId: user!.id,
+              correct: quizCorrect,
+              total: quizTotal,
+            });
+          },
+          onRestart: () => {
+            resetSession();
+            savedOnExitRef.current = false;
+            setPhase("active");
+            setQuizCorrect(0);
+            setQuizTotal(0);
+            setQuestionBreakdown([]);
+            setRunningCorrect(0);
+            setRunningTotal(0);
+            setRunningBreakdown([]);
+            setQuizKey((k) => k + 1);
+            setCurrentIndex(0);
+            startTimeRef.current = Date.now();
+            setElapsedSeconds(0);
+            pickAndSetNextPassage(passage?.id ?? null);
+          },
+        },
+        opts,
+      );
     },
     [
       user,
@@ -388,12 +382,14 @@ export default function InferenceTrainerPage() {
       difficulty,
       elapsedSeconds,
       pickAndSetNextPassage,
+      runSave,
+      resetSession,
+      sessionIdRef,
     ]
   );
 
   const handleRestart = useCallback(() => {
-    hasAutoSavedRef.current = false;
-    sessionIdRef.current = newClientSessionId();
+    resetSession({ resetAutoSaveGuard: true });
     savedOnExitRef.current = false;
     setPhase("active");
     setQuizCorrect(0);
@@ -407,13 +403,12 @@ export default function InferenceTrainerPage() {
     startTimeRef.current = Date.now();
     setElapsedSeconds(0);
     pickAndSetNextPassage(passage?.id ?? null);
-  }, [difficulty, passage?.id, pickAndSetNextPassage]);
+  }, [difficulty, passage?.id, pickAndSetNextPassage, resetSession]);
 
   useEffect(() => {
     if (phase !== "results" || hasAutoSavedRef.current) return;
     hasAutoSavedRef.current = true;
     if (user) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot auto-save on entering results; guarded by hasAutoSavedRef
       handleSaveProgress({ skipRestart: true });
     } else {
       appendGuestSession({
@@ -434,6 +429,8 @@ export default function InferenceTrainerPage() {
     runningTotal,
     elapsedSeconds,
     difficulty,
+    hasAutoSavedRef,
+    sessionIdRef,
   ]);
 
 

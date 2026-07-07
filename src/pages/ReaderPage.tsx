@@ -13,10 +13,9 @@ import SEOHead from "../components/seo/SEOHead";
 import TrainerFaqSection from "../components/seo/TrainerFaqSection";
 import UcatGuidesPanel from "../components/layout/UcatGuidesPanel";
 import { appendGuestSession } from "../lib/guestSessions";
-import { newClientSessionId, upsertTrainerSession } from "../lib/trainerSessionLog";
+import { useTrainerSessionSave } from "../hooks/useTrainerSessionSave";
 import type { TrainerSessionUpsert } from "../lib/trainerSessionLog";
 import { supabaseLog } from "../lib/logger";
-import { getSessionSaveErrorMessage } from "../lib/sessionSaveError";
 import type { TrainingDifficulty } from "../types/training";
 import {
   getVrPassageCandidates,
@@ -65,8 +64,6 @@ export default function ReaderPage() {
   const [quizCorrect, setQuizCorrect] = useState(0);
   const [quizTotal, setQuizTotal] = useState(0);
   const [questionBreakdown, setQuestionBreakdown] = useState<QuestionBreakdownItem[]>([]);
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const [saveInProgress, setSaveInProgress] = useState(false);
   const [guidedChunkingEnabled] = useState<boolean>(() => {
     if (configureState?.guidedChunkingEnabled != null) return configureState.guidedChunkingEnabled;
     return loadGuidedChunkingPrefs().enabled;
@@ -77,18 +74,16 @@ export default function ReaderPage() {
   });
   const [suggestedChunkSize, setSuggestedChunkSize] = useState<number | null>(null);
   const [readingTimeSeconds, setReadingTimeSeconds] = useState<number | null>(null);
-  const hasAutoSavedRef = useRef(false);
-  const sessionIdRef = useRef(newClientSessionId());
+  const {
+    sessionIdRef,
+    hasAutoSavedRef,
+    saveError,
+    saving: saveInProgress,
+    runSave,
+    resetSession,
+  } = useTrainerSessionSave();
   const readingStartTimeRef = useRef<number | null>(null);
-  const mountedRef = useRef(true);
   const { user } = useAuth();
-
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
 
   useEffect(() => {
     saveGuidedChunkingPrefs({ enabled: guidedChunkingEnabled, chunkSize: guidedChunkSize });
@@ -168,22 +163,6 @@ export default function ReaderPage() {
 
   const handleSaveProgress = useCallback(
     async (rating?: import("../components/quiz/ResultsView").WpmRating, opts?: { skipRestart?: boolean }) => {
-      if (!user) {
-        appendGuestSession({
-          training_type: "speed_reading",
-          difficulty,
-          wpm,
-          correct: quizCorrect,
-          total: quizTotal,
-          passage_id: passage?.id ?? null,
-          client_session_id: sessionIdRef.current,
-          ...(rating != null && { wpm_rating: rating }),
-          ...(readingTimeSeconds != null && readingTimeSeconds > 0 && { time_seconds: readingTimeSeconds }),
-        });
-        return;
-      }
-      setSaveError(null);
-      setSaveInProgress(true);
       const payload: TrainerSessionUpsert = {
         training_type: "speed_reading",
         difficulty,
@@ -194,36 +173,47 @@ export default function ReaderPage() {
         ...(rating != null && { wpm_rating: rating }),
         ...(readingTimeSeconds != null && readingTimeSeconds > 0 && { time_seconds: readingTimeSeconds }),
       };
-      const saved = await upsertTrainerSession(user.id, sessionIdRef.current, payload);
-      if (saved) {
-        supabaseLog.info("Speed reading session saved", {
-          userId: user.id,
-          wpm: payload.wpm,
-          correct: payload.correct,
-          total: payload.total,
-        });
-        trackEvent("trainer_completed", { training_type: "speed_reading", difficulty });
-        clearActiveTrainer();
-        if (!mountedRef.current) return;
-        setSaveError(null);
-        if (!opts?.skipRestart) {
-          sessionIdRef.current = newClientSessionId();
-          setPhase("reading");
-          setReadingKey((k) => k + 1);
-          readingStartTimeRef.current = null;
-        }
-      } else {
-        if (!mountedRef.current) return;
-        setSaveError(getSessionSaveErrorMessage(null));
-      }
-      if (mountedRef.current) setSaveInProgress(false);
+      await runSave(
+        {
+          user,
+          clientSessionId: sessionIdRef.current,
+          trainingType: "speed_reading",
+          difficulty,
+          buildGuestPayload: () => ({
+            training_type: "speed_reading",
+            difficulty,
+            wpm,
+            correct: quizCorrect,
+            total: quizTotal,
+            passage_id: passage?.id ?? null,
+            client_session_id: sessionIdRef.current,
+            ...(rating != null && { wpm_rating: rating }),
+            ...(readingTimeSeconds != null && readingTimeSeconds > 0 && { time_seconds: readingTimeSeconds }),
+          }),
+          buildAuthPayload: () => payload,
+          logSuccess: () => {
+            supabaseLog.info("Speed reading session saved", {
+              userId: user!.id,
+              wpm: payload.wpm,
+              correct: payload.correct,
+              total: payload.total,
+            });
+          },
+          onRestart: () => {
+            resetSession();
+            setPhase("reading");
+            setReadingKey((k) => k + 1);
+            readingStartTimeRef.current = null;
+          },
+        },
+        opts,
+      );
     },
-    [user, wpm, quizCorrect, quizTotal, passage?.id, difficulty, readingTimeSeconds]
+    [user, wpm, quizCorrect, quizTotal, passage?.id, difficulty, readingTimeSeconds, runSave, resetSession, sessionIdRef]
   );
 
   const handleRestart = useCallback(() => {
-    hasAutoSavedRef.current = false;
-    sessionIdRef.current = newClientSessionId();
+    resetSession({ resetAutoSaveGuard: true });
     setReadingTimeSeconds(null);
     setPhase("reading");
     setReadingKey((k) => k + 1);
@@ -231,14 +221,13 @@ export default function ReaderPage() {
       pickUnseenPassage("speed_reading", getVrPassageCandidates(difficulty, category), current?.id)
     );
     readingStartTimeRef.current = null;
-  }, [difficulty, category]);
+  }, [difficulty, category, resetSession]);
 
   const handleRestartWithWpm = useCallback(
     (newWpm: number) => {
       setWpm(Math.min(WPM_MAX, Math.max(WPM_MIN, newWpm)));
       setReadingTimeSeconds(null);
-      hasAutoSavedRef.current = false;
-      sessionIdRef.current = newClientSessionId();
+      resetSession({ resetAutoSaveGuard: true });
       setPhase("reading");
       setReadingKey((k) => k + 1);
       setPassage((current) =>
@@ -246,7 +235,7 @@ export default function ReaderPage() {
       );
       readingStartTimeRef.current = null;
     },
-    [difficulty, category]
+    [difficulty, category, resetSession]
   );
 
   const handleApplySuggestedChunkSize = useCallback(() => {
@@ -259,7 +248,6 @@ export default function ReaderPage() {
     if (phase !== "results" || hasAutoSavedRef.current) return;
     hasAutoSavedRef.current = true;
     if (user) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot auto-save on entering results; guarded by hasAutoSavedRef
       handleSaveProgress(undefined, { skipRestart: true });
     } else {
       appendGuestSession({
@@ -273,7 +261,7 @@ export default function ReaderPage() {
         ...(readingTimeSeconds != null && readingTimeSeconds > 0 && { time_seconds: readingTimeSeconds }),
       });
     }
-  }, [phase, handleSaveProgress, user, wpm, quizCorrect, quizTotal, passage?.id, difficulty, readingTimeSeconds]);
+  }, [phase, handleSaveProgress, user, wpm, quizCorrect, quizTotal, passage?.id, difficulty, readingTimeSeconds, hasAutoSavedRef, sessionIdRef]);
 
   const skipLinkClass =
     "absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-foreground font-medium rounded-lg ring-2 ring-primary opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";

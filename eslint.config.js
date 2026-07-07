@@ -10,7 +10,6 @@ export default defineConfig([
     'dist',
     'uk/**',
     '.npm-uk-ci-cache/**',
-    'src/planner/embedded/**',
     '.claire/**',
   ]),
   {

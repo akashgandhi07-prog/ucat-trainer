@@ -44,9 +44,6 @@ const choiceCardClass = (selected: boolean) =>
       : 'border-border bg-card hover:border-muted-foreground/40',
   )
 
-const fieldInputClass =
-  'h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring'
-
 const INITIAL_STATE: OnboardingState = {
   hasPriorExperience: null,
   fullName: '',

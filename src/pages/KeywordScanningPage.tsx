@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useLocation, Link, Navigate } from "react-router-dom";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
@@ -6,11 +6,10 @@ import { useAuth } from "../hooks/useAuth";
 import type { Passage } from "../data/passages";
 import { PASSAGES } from "../data/passages";
 import { appendGuestSession } from "../lib/guestSessions";
-import { newClientSessionId, upsertTrainerSession } from "../lib/trainerSessionLog";
 import type { TrainerSessionUpsert } from "../lib/trainerSessionLog";
 import { supabase } from "../lib/supabase";
 import { supabaseLog } from "../lib/logger";
-import { getSessionSaveErrorMessage } from "../lib/sessionSaveError";
+import { useTrainerSessionSave } from "../hooks/useTrainerSessionSave";
 import type { TrainingDifficulty } from "../types/training";
 import {
   getVrPassageCandidates,
@@ -96,21 +95,17 @@ export default function KeywordScanningPage() {
   const [startTime, setStartTime] = useState(() => Date.now());
   const [foundCount, setFoundCount] = useState(0);
   const [clickedWrong, setClickedWrong] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
   const [bestTimeSeconds, setBestTimeSeconds] = useState<number | null>(null);
   const [resultsElapsedSeconds, setResultsElapsedSeconds] = useState<number | null>(null);
-  const hasAutoSavedRef = useRef(false);
-  const sessionIdRef = useRef(newClientSessionId());
-  const mountedRef = useRef(true);
+  const {
+    sessionIdRef,
+    hasAutoSavedRef,
+    saveError,
+    saving,
+    runSave,
+    resetSession,
+  } = useTrainerSessionSave();
   const { user } = useAuth();
-
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
 
   // Hydrate cross-device passage history once per page load (fire-and-forget).
   useEffect(() => {
@@ -194,67 +189,58 @@ export default function KeywordScanningPage() {
 
   const handleSaveProgress = useCallback(
     async (opts?: { skipRestart?: boolean }) => {
-      if (!user) {
-        const timeSeconds = Math.max(1, Math.round((Date.now() - startTime) / 1000));
-        appendGuestSession({
-          training_type: "keyword_scanning",
-          wpm: null,
-          correct: foundCount,
-          total: targets.length,
-          time_seconds: timeSeconds,
-          difficulty,
-          passage_id: passage?.id ?? null,
-          client_session_id: sessionIdRef.current,
-        });
-        return;
-      }
-      setSaveError(null);
-      setSaving(true);
       const timeSeconds = Math.max(1, Math.round((Date.now() - startTime) / 1000));
-      const payload: TrainerSessionUpsert = {
-        training_type: "keyword_scanning",
-        difficulty,
-        wpm: null,
-        correct: foundCount,
-        total: targets.length,
-        time_seconds: timeSeconds,
-        passage_id: passage?.id ?? null,
-      };
-      const saved = await upsertTrainerSession(user.id, sessionIdRef.current, payload);
-      if (!saved) {
-        if (mountedRef.current) {
-          setSaveError(getSessionSaveErrorMessage(null));
-          setSaving(false);
-        }
-        return;
-      }
-      supabaseLog.info("Keyword scanning session saved", {
-        userId: user.id,
-        correct: foundCount,
-        total: targets.length,
-        time_seconds: timeSeconds,
-      });
-      trackEvent("trainer_completed", { training_type: "keyword_scanning", difficulty });
-      clearActiveTrainer();
-      if (!mountedRef.current) return;
-      setSaveError(null);
-      setSaving(false);
-      if (!opts?.skipRestart) {
-        sessionIdRef.current = newClientSessionId();
-        setPhase("scanning");
-        setFoundSet(new Set());
-        setFoundCount(0);
-        setStartTime(Date.now());
-      }
+      await runSave(
+        {
+          user,
+          clientSessionId: sessionIdRef.current,
+          trainingType: "keyword_scanning",
+          difficulty,
+          buildGuestPayload: () => ({
+            training_type: "keyword_scanning",
+            wpm: null,
+            correct: foundCount,
+            total: targets.length,
+            time_seconds: timeSeconds,
+            difficulty,
+            passage_id: passage?.id ?? null,
+            client_session_id: sessionIdRef.current,
+          }),
+          buildAuthPayload: (): TrainerSessionUpsert => ({
+            training_type: "keyword_scanning",
+            difficulty,
+            wpm: null,
+            correct: foundCount,
+            total: targets.length,
+            time_seconds: timeSeconds,
+            passage_id: passage?.id ?? null,
+          }),
+          logSuccess: () => {
+            supabaseLog.info("Keyword scanning session saved", {
+              userId: user!.id,
+              correct: foundCount,
+              total: targets.length,
+              time_seconds: timeSeconds,
+            });
+          },
+          onRestart: () => {
+            resetSession();
+            setPhase("scanning");
+            setFoundSet(new Set());
+            setFoundCount(0);
+            setStartTime(Date.now());
+          },
+        },
+        opts,
+      );
     },
-    [user, foundCount, targets.length, startTime, difficulty, passage?.id]
+    [user, foundCount, targets.length, startTime, difficulty, passage?.id, runSave, resetSession, sessionIdRef]
   );
 
   useEffect(() => {
     if (phase !== "results" || hasAutoSavedRef.current) return;
     hasAutoSavedRef.current = true;
     if (user) {
-      /* eslint-disable-next-line react-hooks/set-state-in-effect -- auto-save on results */
       handleSaveProgress({ skipRestart: true });
     } else {
       const timeSeconds = Math.max(1, Math.round((Date.now() - startTime) / 1000));
@@ -268,7 +254,7 @@ export default function KeywordScanningPage() {
         client_session_id: sessionIdRef.current,
       });
     }
-  }, [phase, user, handleSaveProgress, startTime, foundCount, targets.length, passage?.id]);
+  }, [phase, user, handleSaveProgress, startTime, foundCount, targets.length, passage?.id, hasAutoSavedRef, sessionIdRef]);
 
   if (!passage) {
     return <Navigate to="/?mode=keyword_scanning" replace />;
@@ -349,8 +335,7 @@ export default function KeywordScanningPage() {
             <button
               type="button"
               onClick={() => {
-                hasAutoSavedRef.current = false;
-                sessionIdRef.current = newClientSessionId();
+                resetSession({ resetAutoSaveGuard: true });
                 setPhase("scanning");
                 setFoundSet(new Set());
                 setFoundCount(0);

@@ -1862,8 +1862,8 @@ export function PlanCalendar({ plan, planDays, planWeeks, sessions, extraStudyLo
             Exam: {parseDate(examDate).toLocaleDateString('en-GB', {
               weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
             })}
-            {(plan as any).exam_time && (
-              <span className="ml-2 text-slate-400">at {(plan as any).exam_time}</span>
+            {plan.exam_time && (
+              <span className="ml-2 text-slate-400">at {plan.exam_time}</span>
             )}
             {!readOnly && (
               <button
