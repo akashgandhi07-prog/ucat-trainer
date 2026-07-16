@@ -277,6 +277,11 @@ export default function VerbalReasoningPage() {
     () => Math.round(PASSAGES.reduce((s, p) => s + wordCount(p), 0) / PASSAGES.length),
     []
   );
+  /** Distinct passage topics, derived from the bank so new categories appear automatically. */
+  const passageCategories = useMemo(
+    () => ["all", ...Array.from(new Set(PASSAGES.map((p) => p.category))).sort((a, b) => a.localeCompare(b))],
+    []
+  );
   const words = avgWordsSpeedReading;
   const estimatedSeconds = useMemo(
     () => Math.ceil((words / wpm) * 60),
@@ -689,7 +694,7 @@ export default function VerbalReasoningPage() {
                       Passage topic
                     </legend>
                     <div className="inline-flex flex-wrap gap-1.5">
-                      {(["all", "Ethics", "History", "Science"] as const).map((cat) => (
+                      {passageCategories.map((cat) => (
                         <button
                           key={cat}
                           type="button"
