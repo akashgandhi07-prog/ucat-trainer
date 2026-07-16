@@ -36,7 +36,7 @@ const SYNONYM_MAP: [RegExp, string[]][] = [
   [/\bsuggests\b/gi, ["indicates", "implies", "points to", "signals"]],
   [/\bdemonstrates\b/gi, ["shows", "illustrates", "confirms", "reveals"]],
   [/\bindicates\b/gi, ["shows", "suggests", "signals", "points to"]],
-  [/\bimplies\b/gi, ["suggests", "signals", "points to", "infers"]],
+  [/\bimplies\b/gi, ["suggests", "signals", "points to"]],
   [/\breveals\b/gi, ["shows", "exposes", "uncovers", "demonstrates"]],
   [/\billustrates\b/gi, ["shows", "demonstrates", "exemplifies", "highlights"]],
   [/\bhighlights\b/gi, ["underlines", "emphasises", "draws attention to", "stresses"]],
@@ -101,8 +101,9 @@ const SYNONYM_MAP: [RegExp, string[]][] = [
   [/\bnotes\b/gi, ["observes", "remarks", "points out", "records"]],
   [/\bobserved\b/gi, ["noted", "found", "detected", "recorded"]],
   [/\bobserves\b/gi, ["notes", "finds", "records", "remarks"]],
-  [/\bestablished\b/gi, ["shown", "confirmed", "demonstrated", "determined"]],
-  [/\bfound\b/gi, ["discovered", "identified", "determined", "established"]],
+  // no "established" entry: it means "set up" as often as "proven", and swaps
+  // like "programmes are established" → "programmes are demonstrated" change meaning
+  [/\bfound\b/gi, ["discovered", "identified", "determined"]],
   [/\bdetermined\b/gi, ["established", "found", "concluded", "ascertained"]],
   [/\bconcluded\b/gi, ["determined", "found", "established", "inferred"]],
   [/\brecognised\b/gi, ["acknowledged", "identified", "noted", "accepted"]],
@@ -203,14 +204,15 @@ const SYNONYM_MAP: [RegExp, string[]][] = [
   [/\bcontroversial\b/gi, ["disputed", "contentious", "debated", "contested"]],
   [/\bdisputed\b/gi, ["contested", "controversial", "debated", "challenged"]],
   [/\bcontentious\b/gi, ["controversial", "disputed", "debated", "divisive"]],
-  [/\bunclear\b/gi, ["ambiguous", "uncertain", "vague", "uncertain"]],
+  [/\bunclear\b/gi, ["ambiguous", "uncertain", "vague"]],
   [/\bambiguous\b/gi, ["unclear", "vague", "uncertain", "open to interpretation"]],
   [/\buncertain\b/gi, ["unclear", "ambiguous", "unsettled", "open"]],
   [/\bapparent\b/gi, ["evident", "clear", "obvious", "visible"]],
   [/\bevident\b/gi, ["apparent", "clear", "obvious", "plain"]],
   [/\bobvious\b/gi, ["clear", "evident", "apparent", "plain"]],
   [/\blimited\b/gi, ["restricted", "constrained", "narrow", "modest"]],
-  [/\bpotential\b/gi, ["possible", "prospective", "likely", "promising"]],
+  // "likely"/"promising" would upgrade the strength of "potential", changing the truth value
+  [/\bpotential\b/gi, ["possible", "prospective"]],
   [/\bpossible\b/gi, ["potential", "feasible", "plausible", "conceivable"]],
 
   // ── adverbs: frequency / degree ──
@@ -246,7 +248,7 @@ const SYNONYM_MAP: [RegExp, string[]][] = [
   [/\bpreviously\b/gi, ["earlier", "before", "formerly", "in the past"]],
   [/\bformerly\b/gi, ["previously", "earlier", "once", "in the past"]],
   [/\brecently\b/gi, ["in recent times", "lately", "of late", "in recent years"]],
-  [/\binceasingly\b/gi, ["more and more", "progressively", "ever more", "to a greater extent"]],
+  [/\bincreasingly\b/gi, ["more and more", "progressively", "ever more", "to a greater extent"]],
   [/\bprogressively\b/gi, ["increasingly", "gradually", "steadily", "over time"]],
   [/\bgradually\b/gi, ["progressively", "steadily", "over time", "little by little"]],
   [/\bsteadily\b/gi, ["gradually", "progressively", "consistently", "continuously"]],
@@ -263,7 +265,6 @@ const SYNONYM_MAP: [RegExp, string[]][] = [
   [/\bmoreover\b/gi, ["furthermore", "additionally", "in addition", "beyond this"]],
   [/\badditionally\b/gi, ["furthermore", "moreover", "in addition", "also"]],
   [/\bin addition\b/gi, ["furthermore", "moreover", "additionally", "also"]],
-  [/\bnevertheless\b/gi, ["however", "nonetheless", "even so", "despite this"]],
   [/\bby contrast\b/gi, ["in contrast", "on the other hand", "conversely", "whereas"]],
   [/\bin contrast\b/gi, ["by contrast", "on the other hand", "conversely", "whereas"]],
   [/\bconversely\b/gi, ["in contrast", "on the other hand", "by contrast", "whereas"]],
@@ -289,7 +290,8 @@ const SYNONYM_MAP: [RegExp, string[]][] = [
   [/\bgovernments\b/gi, ["authorities", "policymakers", "states", "administrations"]],
 
   // ── nouns: concepts ──
-  [/\bevidence\b/gi, ["data", "findings", "proof", "research"]],
+  // "proof" is stronger than "evidence", changing the truth value
+  [/\bevidence\b/gi, ["data", "findings", "research"]],
   [/\bfindings\b/gi, ["results", "evidence", "data", "conclusions"]],
   [/\bresults\b/gi, ["findings", "outcomes", "data", "conclusions"]],
   [/\boutcomes\b/gi, ["results", "findings", "consequences", "effects"]],
@@ -344,7 +346,8 @@ const SYNONYM_MAP: [RegExp, string[]][] = [
   [/\bhealthcare\b/gi, ["medicine", "medical care", "clinical practice", "health services"]],
   [/\bscience\b/gi, ["research", "scientific inquiry", "the sciences", "scientific study"]],
   [/\btechnology\b/gi, ["innovation", "technical development", "advances", "tools"]],
-  [/\bsociety\b/gi, ["communities", "the public", "people", "the population"]],
+  // no "society" entry: swaps break after articles ("a society" → "a the public")
+  // and shift meaning in phrases like "role in society"
 
   // ── multi-word phrases ──
   [/\bassociated with\b/gi, ["linked to", "connected to", "related to", "tied to"]],
@@ -391,12 +394,15 @@ function paraphrase(sentence: string): ParaphraseResult {
     const cased = match[0][0] === match[0][0].toUpperCase() && match[0][0] !== match[0][0].toLowerCase()
       ? replacement.charAt(0).toUpperCase() + replacement.slice(1)
       : replacement;
+    // Replace only the first occurrence so the fragment tracking stays accurate
+    const candidate = result.slice(0, match.index) + cased + result.slice(match.index + match[0].length);
+    // Skip swaps that collide with an article ("a society" → "a the public")
+    if (/\b(an?|the)\s+(an?|the)\b/i.test(candidate) && !/\b(an?|the)\s+(an?|the)\b/i.test(result)) continue;
     if (!firstOriginal) {
       firstOriginal = match[0];
       firstReplaced = cased;
     }
-    // Replace only the first occurrence so the fragment tracking stays accurate
-    result = result.slice(0, match.index) + cased + result.slice(match.index + match[0].length);
+    result = candidate;
     changes++;
   }
   return { text: result, originalFragment: firstOriginal, replacedFragment: firstReplaced };
@@ -412,41 +418,88 @@ type DistortionResult = {
   replacedFragment?: string;
 };
 
+// A passage saying "some X are Y" does not contradict "all X are Y" — without
+// contrast evidence in the sentence the strict T/F/CT answer is Can't Tell, not
+// False. So the False generators only flip existential quantifiers
+// (some/many/several/a few/certain/most) when the sentence itself signals a
+// contrast, e.g. "some argue X, although the evidence is mixed". Frequency and
+// modal hedges (often/usually/may) stay flippable everywhere: the passage's
+// explicit hedge contradicts a statement that presents the claim as absolute.
+const CONTRAST_MARKER_RE = /\b(while|whereas|however|but|although|though|not all|conversely|by contrast|in contrast)\b/i;
+// When the contrast is carried by a complementary-group word, flipping the
+// quantifier strands it ("While ALL cities were destroyed, OTHERS were
+// abandoned"), so existential flips also skip those sentences.
+const STRANDED_GROUP_RE = /\b(others?|rest|remainder)\b/i;
+function allowsExistentialFlip(s: string): boolean {
+  return CONTRAST_MARKER_RE.test(s) && !STRANDED_GROUP_RE.test(s);
+}
+
 // 1. Qualifier → absolute
 function distortQualifierToAbsolute(s: string): DistortionResult {
-  const re = /\b(some|many|often|could|frequently|sometimes|usually|might|may|can|occasionally|typically|generally|tends to|tend to)\b/gi;
-  if (!re.test(s)) return { text: s, applied: false };
-  let originalFragment = "";
-  let replacedFragment = "";
-  const text = s.replace(re, (match) => {
-    const replacements: Record<string, string> = {
-      some: "all", many: "all", often: "always", could: "will",
-      frequently: "always", sometimes: "always", usually: "always",
-      might: "will", may: "will", can: "will", occasionally: "always",
-      typically: "always", generally: "always", "tends to": "always",
-      "tend to": "always",
-    };
-    const lower = match.toLowerCase();
-    const rep = replacements[lower] ?? "all";
-    if (!originalFragment) {
-      originalFragment = match;
-      replacedFragment = match[0] === match[0].toUpperCase()
-        ? rep.charAt(0).toUpperCase() + rep.slice(1)
-        : rep;
-    }
-    return match[0] === match[0].toUpperCase() ? rep.charAt(0).toUpperCase() + rep.slice(1) : rep;
-  });
+  const re = allowsExistentialFlip(s)
+    ? /\b(some|many|often|could|frequently|sometimes|usually|might|may|can|occasionally|typically|generally|tends to|tend to)\b/i
+    : /\b(often|could|frequently|sometimes|usually|might|may|can|occasionally|typically|generally|tends to|tend to)\b/i;
+  const match = s.match(re);
+  if (!match || match.index == null) return { text: s, applied: false };
+  const replacements: Record<string, string> = {
+    some: "all", many: "all", often: "always", could: "will",
+    frequently: "always", sometimes: "always", usually: "always",
+    might: "will", may: "will", can: "will", occasionally: "always",
+    typically: "always", generally: "always", "tends to": "always",
+    "tend to": "always",
+  };
+  const rep = replacements[match[0].toLowerCase()] ?? "all";
+  const cased =
+    match[0][0] === match[0][0].toUpperCase() && match[0][0] !== match[0][0].toLowerCase()
+      ? rep.charAt(0).toUpperCase() + rep.slice(1)
+      : rep;
+  // Flip only the first hedge: one clean change per statement, matching the
+  // single-trap style of real UCAT items (and the explanation shown after).
+  const text = s.slice(0, match.index) + cased + s.slice(match.index + match[0].length);
   if (text === s) return { text: s, applied: false };
   return {
     text, applied: true,
-    label: `qualifier word changed to an absolute ("${originalFragment}" → "always"/"all"/"will")`,
-    originalFragment,
-    replacedFragment,
+    label: `qualifier word changed to an absolute ("${match[0]}" → "${cased}")`,
+    originalFragment: match[0],
+    replacedFragment: cased,
   };
+}
+
+// Common irregular past participles that don't end in -ed/-en, used to decide
+// whether has/have/had is acting as an auxiliary ("has been", "has made") or a
+// possession verb ("has a duty"), where negation insertion breaks the grammar.
+const IRREGULAR_PARTICIPLES = new Set([
+  "been", "done", "made", "found", "held", "become", "begun", "gone", "come",
+  "run", "set", "put", "led", "met", "kept", "won", "built", "brought",
+  "thought", "caught", "taught", "sold", "told", "felt", "left", "lost",
+  "meant", "sent", "spent", "stood", "understood", "sought", "fought",
+  "bound", "laid", "paid", "said", "read", "spread", "cut", "hit", "let",
+  "lain", "borne", "shown", "grown", "known", "drawn", "worn",
+]);
+
+function isParticipleLike(word: string): boolean {
+  const w = word.toLowerCase();
+  return /(ed|en)$/.test(w) || IRREGULAR_PARTICIPLES.has(w);
 }
 
 // 2. Negation flip - remove or add "not"
 function distortNegation(s: string): DistortionResult {
+  // Negating an existentially quantified claim ("Some rights are absolute" →
+  // "Some rights are not absolute") produces a statement the passage neither
+  // supports nor contradicts — Can't Tell, not False — so skip those sentences.
+  if (/^(some|many|several|a few|certain)\b/i.test(s.trim())) {
+    return { text: s, applied: false };
+  }
+  // Sentences built on a negative determiner ("No single theory has won...")
+  // become confusing double negatives when another "not" is inserted or an
+  // existing one is removed. ("no longer" is fine: it flips cleanly to "still".)
+  if (/\b(no(?!\s+longer)|none|neither|nothing|nobody)\b/i.test(s)) {
+    return { text: s, applied: false };
+  }
+  // With two or more negations, flipping them all scrambles the meaning rather
+  // than cleanly reversing it; leave those sentences to the other strategies.
+  const negationCount = (s.match(/\b(cannot|can't|never|no longer|not)\b/gi) ?? []).length;
+  if (negationCount > 1) return { text: s, applied: false };
   const negationMatch = s.match(/\b(cannot|can't|never|no longer|not)\b/i);
   if (negationMatch) {
     const originalFragment = negationMatch[0];
@@ -474,16 +527,24 @@ function distortNegation(s: string): DistortionResult {
       replacedFragment,
     };
   }
-  // Insert negation after the first auxiliary verb
-  const verbMatch = s.match(/\b(is|are|was|were|has|have|had|does|do|did|can|could|will|would|should)\b/i);
-  if (verbMatch && verbMatch.index != null) {
-    const idx = verbMatch.index + verbMatch[0].length;
-    const result = s.slice(0, idx) + " not" + s.slice(idx);
+  // Insert negation after the first usable auxiliary verb. has/have/had only
+  // count as auxiliaries when followed by a participle ("has been", "has
+  // accelerated"); after possessive uses the insertion reads as broken English
+  // ("have not a moral obligation"), so those are skipped and the scan moves
+  // on to the next auxiliary in the sentence.
+  const auxRe = /\b(is|are|was|were|has|have|had|does|do|did|can|could|will|would|should)\b/gi;
+  for (let m = auxRe.exec(s); m != null; m = auxRe.exec(s)) {
+    const aux = m[0].toLowerCase();
+    const nextMatch = s.slice(m.index + m[0].length).match(/^\s+([A-Za-z]+)/);
+    const next = nextMatch ? nextMatch[1] : "";
+    if ((aux === "has" || aux === "have" || aux === "had") && !isParticipleLike(next)) continue;
+    if ((aux === "does" || aux === "do" || aux === "did") && /^(little|much|more|so)$/i.test(next)) continue;
+    const idx = m.index + m[0].length;
     return {
-      text: result, applied: true,
-      label: `negation inserted after "${verbMatch[0]}"`,
-      originalFragment: verbMatch[0],
-      replacedFragment: verbMatch[0] + " not",
+      text: s.slice(0, idx) + " not" + s.slice(idx), applied: true,
+      label: `negation inserted after "${m[0]}"`,
+      originalFragment: m[0],
+      replacedFragment: m[0] + " not",
     };
   }
   return { text: s, applied: false };
@@ -521,22 +582,29 @@ function distortCausal(s: string): DistortionResult {
 
 // 4. Scope broadening
 function distortScope(s: string): DistortionResult {
-  const scopePhrases: [RegExp, string, string][] = [
-    [/\bin some\b/gi, "in all", '"in some" → "in all"'],
-    [/\bcertain\b/gi, "every", '"certain" → "every"'],
+  // Entries marked `gated` flip existential quantifiers, which only genuinely
+  // contradicts the passage when the sentence signals a contrast (see
+  // allowsExistentialFlip). Frequency flips (often/occasionally/rarely) are
+  // safe everywhere.
+  const scopePhrases: [RegExp, string, string, boolean][] = [
+    [/\bin some\b/gi, "in all", '"in some" → "in all"', true],
+    // "all" not "every": "certain" usually precedes a plural ("certain groups")
+    [/\bcertain\b/gi, "all", '"certain" → "all"', true],
     // Only replace "most" as a quantifier (e.g. "most countries"), NOT as a superlative.
     // Chained negative lookbehinds exclude "the most" and "at most".
-    [/(?<!the )(?<!at )\bmost\b/gi, "all", '"most" → "all"'],
-    [/\bseveral\b/gi, "all", '"several" → "all"'],
-    [/\ba few\b/gi, "all", '"a few" → "all"'],
-    [/\bspecific\b/gi, "universal", '"specific" → "universal"'],
-    [/\bparticular\b/gi, "universal", '"particular" → "universal"'],
-    [/\boccasionally\b/gi, "invariably", '"occasionally" → "invariably"'],
-    [/\brarely\b/gi, "commonly", '"rarely" → "commonly"'],
-    [/\bin many\b/gi, "in all", '"in many" → "in all"'],
-    [/\boften\b/gi, "always", '"often" → "always"'],
+    [/(?<!the )(?<!at )\bmost\b/gi, "all", '"most" → "all"', true],
+    [/\bseveral\b/gi, "all", '"several" → "all"', true],
+    [/\ba few\b/gi, "all", '"a few" → "all"', true],
+    [/\bspecific\b/gi, "universal", '"specific" → "universal"', true],
+    [/\bparticular\b/gi, "universal", '"particular" → "universal"', true],
+    [/\boccasionally\b/gi, "invariably", '"occasionally" → "invariably"', false],
+    [/\brarely\b/gi, "commonly", '"rarely" → "commonly"', false],
+    [/\bin many\b/gi, "in all", '"in many" → "in all"', true],
+    [/\boften\b/gi, "always", '"often" → "always"', false],
   ];
-  for (const [re, rep, label] of scopePhrases) {
+  const allowGated = allowsExistentialFlip(s);
+  for (const [re, rep, label, gated] of scopePhrases) {
+    if (gated && !allowGated) continue;
     const m = s.match(re);
     if (m) {
       return {
@@ -552,24 +620,28 @@ function distortScope(s: string): DistortionResult {
 
 // 5. Certainty injection
 function distortCertainty(s: string): DistortionResult {
-  const uncertainPhrases: [RegExp, string, string][] = [
-    [/\bit is (now )?widely believed\b/gi, "It is universally proven", '"widely believed" → "universally proven"'],
-    [/\bscientists argue\b/gi, "Scientists have proven", '"scientists argue" → "scientists have proven"'],
-    [/\bresearch suggests\b/gi, "Research has conclusively proven", '"research suggests" → "research has conclusively proven"'],
-    [/\bhistorians (have long )?debated\b/gi, "Historians unanimously agree", '"historians debated" → "historians unanimously agree"'],
-    [/\bsome ethicists argue\b/gi, "All ethicists agree", '"some ethicists argue" → "all ethicists agree"'],
-    [/\bcritics (of .+? )?argue\b/gi, "Everyone agrees", '"critics argue" → "everyone agrees"'],
-    [/\bis thought to\b/gi, "is proven to", '"is thought to" → "is proven to"'],
-    [/\bare thought to\b/gi, "are proven to", '"are thought to" → "are proven to"'],
-    [/\bappears to be\b/gi, "is definitely", '"appears to be" → "is definitely"'],
-    [/\bsuggests that\b/gi, "proves that", '"suggests that" → "proves that"'],
-    [/\bmay have\b/gi, "certainly had", '"may have" → "certainly had"'],
-    [/\bmight be\b/gi, "is definitely", '"might be" → "is definitely"'],
-    [/\bsome scholars\b/gi, "All scholars agree", '"some scholars" → "all scholars agree"'],
-    [/\bsome argue\b/gi, "It is universally agreed", '"some argue" → "it is universally agreed"'],
-    [/\bhas been suggested\b/gi, "has been conclusively proven", '"has been suggested" → "has been conclusively proven"'],
+  // "some X argue" → "all X agree" entries are gated like the scope flips:
+  // without contrast evidence, universalising "some" is Can't Tell, not False.
+  const uncertainPhrases: [RegExp, string, string, boolean][] = [
+    [/\bit is (now )?widely believed\b/gi, "It is universally proven", '"widely believed" → "universally proven"', false],
+    [/\bscientists argue\b/gi, "Scientists have proven", '"scientists argue" → "scientists have proven"', false],
+    [/\bresearch suggests\b/gi, "Research has conclusively proven", '"research suggests" → "research has conclusively proven"', false],
+    [/\bhistorians (have long )?debated\b/gi, "Historians unanimously agree", '"historians debated" → "historians unanimously agree"', false],
+    [/\bsome ethicists argue\b/gi, "All ethicists agree", '"some ethicists argue" → "all ethicists agree"', true],
+    [/\bcritics (of .+? )?argue\b/gi, "Everyone agrees", '"critics argue" → "everyone agrees"', false],
+    [/\bis thought to\b/gi, "is proven to", '"is thought to" → "is proven to"', false],
+    [/\bare thought to\b/gi, "are proven to", '"are thought to" → "are proven to"', false],
+    [/\bappears to be\b/gi, "is definitely", '"appears to be" → "is definitely"', false],
+    [/\bsuggests that\b/gi, "proves that", '"suggests that" → "proves that"', false],
+    // no "may have → certainly had" entry: it shifts tense as well as certainty
+    [/\bmight be\b/gi, "is definitely", '"might be" → "is definitely"', false],
+    [/\bsome scholars\b/gi, "All scholars agree", '"some scholars" → "all scholars agree"', true],
+    [/\bsome argue\b/gi, "It is universally agreed", '"some argue" → "it is universally agreed"', true],
+    [/\bhas been suggested\b/gi, "has been conclusively proven", '"has been suggested" → "has been conclusively proven"', false],
   ];
-  for (const [re, rep, label] of uncertainPhrases) {
+  const allowGated = allowsExistentialFlip(s);
+  for (const [re, rep, label, gated] of uncertainPhrases) {
+    if (gated && !allowGated) continue;
     const m = s.match(re);
     if (m) {
       return {
@@ -622,7 +694,36 @@ function applyDistortion(sentence: string): DistortionResult {
 }
 
 // ───────── "Can't Tell" question builder ─────────
-// Use the passage title to generate plausible-but-unverifiable statements
+// Preferred strategy: strengthen a hedge in a real passage sentence into a
+// claim the passage neither supports nor contradicts (e.g. "some" → "most").
+// This mirrors real UCAT Can't Tell items, which are on-topic content claims,
+// and avoids the gameable pattern where every Can't Tell is a meta-statement
+// about the author. The title templates below survive only as a fallback for
+// passages with no mutable hedge.
+
+type CantTellMutation = {
+  re: RegExp;
+  replacement: string;
+  label: string;
+};
+
+const CANT_TELL_MUTATIONS: CantTellMutation[] = [
+  { re: /\bin some\b/i, replacement: "in most", label: '"in some" strengthened to "in most": the passage confirms some cases, but never says how widespread this is' },
+  { re: /\bsome\b/i, replacement: "most", label: '"some" strengthened to "most": the passage confirms some, but never says how many' },
+  { re: /\bmany\b/i, replacement: "most", label: '"many" strengthened to "most": the passage does not say whether it is a majority' },
+  { re: /\bseveral\b/i, replacement: "most", label: '"several" strengthened to "most": the passage does not quantify beyond several' },
+  { re: /\boften\b/i, replacement: "more often than not", label: '"often" strengthened to "more often than not": the passage never states this happens in a majority of cases' },
+  { re: /\bfrequently\b/i, replacement: "more often than not", label: '"frequently" strengthened to "more often than not": the passage never states this happens in a majority of cases' },
+  { re: /\bsometimes\b/i, replacement: "usually", label: '"sometimes" strengthened to "usually": the passage does not say how common this is' },
+  { re: /\busually\b/i, replacement: "almost always", label: '"usually" strengthened to "almost always": the passage does not say how close to universal this is' },
+  { re: /\btypically\b/i, replacement: "almost always", label: '"typically" strengthened to "almost always": the passage does not say how close to universal this is' },
+  { re: /\bgenerally\b/i, replacement: "almost always", label: '"generally" strengthened to "almost always": the passage does not say how close to universal this is' },
+  { re: /\bcommonly\b/i, replacement: "almost universally", label: '"commonly" strengthened to "almost universally": the passage does not say how widespread this is' },
+  // Lookbehinds skip extent-of-variation uses ("varies widely", "differ widely"),
+  // where "almost universally" would be nonsense rather than a strengthened claim
+  { re: /(?<!\bvar(?:y|ies|ied)\s)(?<!\bvarying\s)(?<!\bdiffers?\s)(?<!\bdiffered\s)\bwidely\b/i, replacement: "almost universally", label: '"widely" strengthened to "almost universally": the passage does not say how widespread this is' },
+  { re: /\brarely\b/i, replacement: "almost never", label: '"rarely" strengthened to "almost never": the passage says this is rare, not that it almost never happens' },
+];
 
 const CANT_TELL_TITLE_TEMPLATES: ((title: string) => string)[] = [
   (t) => `The author personally advocates for policy changes related to ${t}`,
@@ -637,24 +738,63 @@ const CANT_TELL_TITLE_TEMPLATES: ((title: string) => string)[] = [
   (t) => `Government policy on ${t} has been directly influenced by arguments like those in this passage`,
 ];
 
+type CantTellQuestionParts = {
+  displayedSentence: string;
+  passageSnippet: string;
+  distortionLabel?: string;
+  originalFragment?: string;
+  replacedFragment?: string;
+};
+
+function mutateSentenceForCantTell(sentence: string): CantTellQuestionParts | null {
+  for (const { re, replacement, label } of CANT_TELL_MUTATIONS) {
+    const m = sentence.match(re);
+    if (!m || m.index == null) continue;
+    const cased =
+      m[0][0] === m[0][0].toUpperCase() && m[0][0] !== m[0][0].toLowerCase()
+        ? replacement.charAt(0).toUpperCase() + replacement.slice(1)
+        : replacement;
+    const mutated =
+      sentence.slice(0, m.index) + cased + sentence.slice(m.index + m[0].length);
+    if (!isGrammaticallyPlausible(sentence, mutated)) continue;
+    return {
+      displayedSentence: mutated,
+      passageSnippet: sentence,
+      distortionLabel: label,
+      originalFragment: m[0],
+      replacedFragment: cased,
+    };
+  }
+  return null;
+}
+
 function buildCantTellQuestion(
-  sentences: string[],
+  preferredSentences: string[],
+  allSentences: string[],
   passageTitle?: string
-): { displayedSentence: string; passageSnippet: string } | null {
-  if (sentences.length < 3) return null;
-  const snippet = pick(sentences);
+): CantTellQuestionParts | null {
+  if (allSentences.length === 0) return null;
 
-  // Use passage title when available - produces far more coherent Can't Tell statements
-  const topic = passageTitle
-    ? passageTitle.toLowerCase()
-    : null;
+  // Preferred: mutate a hedge in an unused sentence into an unverifiable claim.
+  // The False/True generators preferentially consume hedge-rich sentences, so
+  // when the unused pool has no mutable hedge, retry across the whole passage
+  // (reusing a sentence beats falling back to a formulaic meta-statement).
+  const preferredSet = new Set(preferredSentences);
+  const pools = [preferredSentences, allSentences.filter((s) => !preferredSet.has(s))];
+  for (const pool of pools) {
+    for (const sentence of shuffle(pool)) {
+      const mutated = mutateSentenceForCantTell(sentence);
+      if (mutated) return mutated;
+    }
+  }
 
-  if (!topic) return null;
-
+  // Fallback: meta-statement about the author/reception. Technically always
+  // Can't Tell, but formulaic, so only used when no sentence can be mutated.
+  if (!passageTitle) return null;
   const template = pick(CANT_TELL_TITLE_TEMPLATES);
   return {
-    displayedSentence: template(topic),
-    passageSnippet: snippet,
+    displayedSentence: template(passageTitle.toLowerCase()),
+    passageSnippet: pick(allSentences),
   };
 }
 
@@ -906,8 +1046,9 @@ function buildQuestions(passageText: string, count: number, passageTitle?: strin
 
   // Decide the mix: ~40% True (paraphrased), ~40% False (distorted), ~20% Can't Tell
   const numFalse = Math.max(1, Math.round(targetCount * 0.4));
-  // Only include Can't Tell if we have a passage title (otherwise they'd be incoherent)
-  const numCantTell = passageTitle ? Math.max(0, Math.min(1, Math.round(targetCount * 0.2))) : 0;
+  // Can't Tell items are built from passage sentences (title only needed for
+  // the fallback templates), so no longer gated on having a title.
+  const numCantTell = Math.max(0, Math.min(1, Math.round(targetCount * 0.2)));
   const numTrue = Math.max(1, targetCount - numFalse - numCantTell);
 
   // Build FALSE questions (distorted)
@@ -969,15 +1110,19 @@ function buildQuestions(passageText: string, count: number, passageTitle?: strin
     usedIndices.add(i);
   }
 
-  // Build CAN'T TELL question (only when passage title available for coherent statement)
+  // Build CAN'T TELL question, preferring sentences no other question used
   if (numCantTell > 0) {
-    const cantTell = buildCantTellQuestion(allSentences, passageTitle);
+    const unused = shuffledSentences.filter((_, i) => !usedIndices.has(i));
+    const cantTell = buildCantTellQuestion(unused, allSentences, passageTitle);
     if (cantTell) {
       questions.push({
         kind: "tfct",
         displayedSentence: cantTell.displayedSentence,
         correctAnswer: "cant_tell",
         passageSnippet: cantTell.passageSnippet,
+        distortionLabel: cantTell.distortionLabel,
+        originalFragment: cantTell.originalFragment,
+        replacedFragment: cantTell.replacedFragment,
       });
     }
   }

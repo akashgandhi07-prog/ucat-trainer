@@ -305,7 +305,11 @@ export default function ResultsView({
                             <p className="text-xs text-muted-foreground">The statement matches what the passage says.</p>
                           )}
                           {item.correctAnswerRaw === "cant_tell" && (
-                            <p className="text-xs text-muted-foreground">The passage doesn&apos;t contain enough information to confirm or deny the statement shown.</p>
+                            <p className="text-xs text-muted-foreground">
+                              {item.distortionLabel
+                                ? <>Trap: <span className="font-medium text-foreground">{item.distortionLabel}</span>. The passage doesn&apos;t confirm or deny the strengthened claim.</>
+                                : "The passage doesn't contain enough information to confirm or deny the statement shown."}
+                            </p>
                           )}
                         </>
                       )}
