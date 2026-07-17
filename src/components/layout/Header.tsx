@@ -45,8 +45,7 @@ const NAV: NavItem[] = [
       {
         heading: "Free Resources",
         items: [
-          { label: "Free Practice Questions", href: `${BASE}/ukcattuition-free-practice-questions`, description: "Official-style question bank" },
-          { label: "Free Strategy Consultation", href: `${BASE}/free-strategy-consultation`, description: "30-min expert call" },
+          { label: "Free Strategy Consultation", href: `${BASE}/free-strategy-consultation`, description: "15-min call to discuss tutoring packages" },
         ],
       },
     ],
@@ -94,7 +93,8 @@ const NAV: NavItem[] = [
         items: [
           { label: "Application Guide", href: `${BASE}/application-guide`, description: "Step-by-step admissions guide" },
           { label: "Free BMAT Past Papers", href: `${BASE}/free-bmat-past-papers-solutions`, description: "Full papers & worked solutions" },
-          { label: "How Universities Use UCAT", href: `${BASE}/medical-schools/ucat/how-universities-use-the-ucat`, description: "Threshold data by school" },
+          { label: "UCAT Score Calculator 2026", href: `${BASE}/application-guide/ucat/ucat-score-calculator`, description: "Convert raw marks to scaled scores" },
+          { label: "UCAT Cut Offs 2026", href: `${BASE}/medical-schools/ucat/how-universities-use-the-ucat`, description: "Threshold data by school" },
           { label: "UK Dental Schools Guide", href: `${BASE}/guide/dental-school/dentistry-university-uk`, description: "Rankings, entry reqs & tips" },
           { label: "UK Vet Schools Guide", href: `${BASE}/guide/vet-schools-uk`, description: "Every vet school compared" },
         ],

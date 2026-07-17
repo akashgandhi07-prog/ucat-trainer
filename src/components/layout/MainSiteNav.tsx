@@ -52,20 +52,6 @@ const MAIN_NAV: NavItem[] = [
             description: "Personalised sessions with an expert tutor",
           },
           {
-            label: "28 June 2026 · 1 Day Course",
-            href: `${BASE}/ucat-courses`,
-            description: "Intensive full-day group course, London",
-            badge: "Filling fast",
-            badgeColor: "amber",
-          },
-          {
-            label: "12 July 2026 · 1 Day Course",
-            href: `${BASE}/ucat-courses`,
-            description: "Intensive full-day group course, London",
-            badge: "Open",
-            badgeColor: "green",
-          },
-          {
             label: "UCAT Schools Course",
             href: `${BASE}/ucat-course-schools`,
             description: "We come to your school",
@@ -76,16 +62,9 @@ const MAIN_NAV: NavItem[] = [
         heading: "Free",
         items: [
           {
-            label: "Free Practice Questions",
-            href: `${BASE}/ukcattuition-free-practice-questions`,
-            description: "Official-style question bank",
-            badge: "Free",
-            badgeColor: "blue",
-          },
-          {
             label: "Free Strategy Consultation",
             href: `${BASE}/free-strategy-consultation`,
-            description: "15-min call with a UCAT expert",
+            description: "15-min call to discuss tutoring packages",
             badge: "Free",
             badgeColor: "blue",
           },
@@ -153,7 +132,14 @@ const MAIN_NAV: NavItem[] = [
             badgeColor: "blue",
           },
           {
-            label: "How Universities Use UCAT",
+            label: "UCAT Score Calculator 2026",
+            href: `${BASE}/application-guide/ucat/ucat-score-calculator`,
+            description: "Convert raw marks to scaled scores",
+            badge: "Free",
+            badgeColor: "blue",
+          },
+          {
+            label: "UCAT Cut Offs 2026",
             href: `${BASE}/medical-schools/ucat/how-universities-use-the-ucat`,
             description: "Score thresholds for every medical school",
           },
