@@ -288,39 +288,39 @@ export default function ReaderEngine({
       "flex flex-wrap justify-start gap-x-2 gap-y-1 text-[18px] leading-[1.8] mb-4 last:mb-0 text-ucat-body text-left font-sans";
 
     if (useChunking) {
-      // Group words into chunks. Each chunk is a wrapper that uses the same flex/gap
-      // layout as the paragraph so text positions stay identical-only the background changes.
-      const chunks: string[][] = [];
-      for (let i = 0; i < paragraphWords.length; i += effectiveChunkSize) {
-        chunks.push(paragraphWords.slice(i, i + effectiveChunkSize));
-      }
-
+      // Words stay individual flex items so lines fill naturally: wrapping each
+      // chunk in one inline-flex box made whole chunks unbreakable, so a line
+      // could only hold a whole number of chunks and paragraphs wrapped with a
+      // very ragged right edge. Chunk membership now only drives the highlight.
+      // Horizontal spacing comes from per-word padding rather than the parent's
+      // gap, so the highlight bar covers the spaces between words inside the
+      // current chunk; each chunk's last word uses a margin instead, keeping
+      // the bar flush with the chunk boundary.
+      const lastParagraphWord = paragraphWords.length - 1;
       return (
-        <div key={startIndex} className={baseClass}>
-          {chunks.map((chunkWords, chunkIdx) => {
-            const chunkStartIndex = startIndex + chunkIdx * effectiveChunkSize;
+        <div
+          key={startIndex}
+          className="flex flex-wrap justify-start gap-y-1 text-[18px] leading-[1.8] mb-4 last:mb-0 text-ucat-body text-left font-sans"
+        >
+          {paragraphWords.map((word, j) => {
+            const chunkStart = Math.floor(j / effectiveChunkSize) * effectiveChunkSize;
+            const chunkEnd = Math.min(chunkStart + effectiveChunkSize, paragraphWords.length);
             const isCurrentChunk = highlightEnabled &&
-              chunkStartIndex <= currentWordIndex &&
-              chunkStartIndex + chunkWords.length > currentWordIndex;
-            const isPastChunk = highlightEnabled &&
-              chunkStartIndex + chunkWords.length <= currentWordIndex;
-
-            const wrapperClass = `inline-flex flex-wrap gap-x-2 gap-y-1 transition-colors duration-75 ${
+              startIndex + chunkStart <= currentWordIndex &&
+              currentWordIndex < startIndex + chunkEnd;
+            const isPastChunk = highlightEnabled && startIndex + chunkEnd <= currentWordIndex;
+            const isChunkStart = j === chunkStart;
+            const isChunkEnd = j === chunkEnd - 1 || j === lastParagraphWord;
+            const className = `transition-colors duration-75 ${isChunkEnd ? "mr-2" : "pr-2"} ${
               isPastChunk ? "opacity-50" : "opacity-100"
             } ${
-              isCurrentChunk ? "bg-[#e0f2ff] rounded" : ""
+              isCurrentChunk
+                ? `bg-[#e0f2ff] text-[#005eb8]${isChunkStart ? " rounded-l" : ""}${isChunkEnd ? " rounded-r" : ""}`
+                : "text-ucat-body"
             }`;
-            const wordClass = isCurrentChunk
-              ? "text-[#005eb8]"
-              : "text-ucat-body";
-
             return (
-              <span key={chunkIdx} className={wrapperClass}>
-                {chunkWords.map((word, j) => (
-                  <span key={j} className={wordClass}>
-                    {word}
-                  </span>
-                ))}
+              <span key={j} className={className}>
+                {word}
               </span>
             );
           })}
