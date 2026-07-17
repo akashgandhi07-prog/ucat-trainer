@@ -104,7 +104,7 @@ type AdminQuestionFeedbackSectionProps = {
   qfEditForm: Record<string, string>;
   setQfEditForm: Dispatch<SetStateAction<Record<string, string>>>;
   qfSaving: Set<string>;
-  ensureResolved: (questionIdentifier: string, questionKind: string) => void;
+  ensureResolved: (questionIdentifier: string) => void;
   handleToggleHide: (
     questionIdentifier: string,
     questionKind: string,
@@ -347,7 +347,7 @@ export default function AdminQuestionFeedbackSection({
                               <button
                                 type="button"
                                 onClick={() => {
-                                  if (!isExpanded) ensureResolved(row.question_identifier, row.question_kind);
+                                  if (!isExpanded) ensureResolved(row.question_identifier);
                                   setExpandedQF((prev) => {
                                     const next = new Set(prev);
                                     if (isExpanded) { next.delete(row.question_identifier); } else { next.add(row.question_identifier); }

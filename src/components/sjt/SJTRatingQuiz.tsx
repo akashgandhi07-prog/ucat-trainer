@@ -7,7 +7,6 @@ import {
   IMPORTANCE_RATINGS,
   APPROPRIATENESS_LABELS,
   IMPORTANCE_LABELS,
-  getAdjacentRating,
 } from "../../types/sjt";
 import { cn } from "../../lib/cn";
 import QuestionMediaBlock from "../media/QuestionMediaBlock";
@@ -34,8 +33,11 @@ function scoreItem(
   type: "appropriateness" | "importance"
 ): 0 | 0.5 | 1 {
   if (userRating === correct) return 1;
-  if (getAdjacentRating(correct, type) === userRating) return 0.5;
-  return 0;
+  // Half marks for a near miss on either side of the correct rating,
+  // matching UCAT partial credit for adjacent answers.
+  const scale = getRatingScale(type) as string[];
+  const distance = Math.abs(scale.indexOf(userRating) - scale.indexOf(correct));
+  return distance === 1 ? 0.5 : 0;
 }
 
 export default function SJTRatingQuiz({ question, onComplete, onProgress }: Props) {

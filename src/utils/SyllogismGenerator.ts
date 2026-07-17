@@ -45,6 +45,16 @@ const RELATIVE_SOME_TEMPLATES: NounPair[] = [
   (s, p) => `Certain ${s.plural} are also ${p.plural}.`,
 ];
 
+/**
+ * Conclusion-safe "some" phrasings. Premises may say "at least one", so a
+ * conclusion must not over-claim with plural wording: "a few" or "certain"
+ * imply more than one, which "at least one" does not guarantee.
+ */
+const CONCLUSION_SOME_TEMPLATES: NounPair[] = [
+  (s, p) => `Some ${s.plural} are ${p.plural}.`,
+  (s, p) => `At least one ${s.singular} is ${p.article}.`,
+];
+
 const CATEGORICAL_NONE_TEMPLATES: NounPair[] = [
   (s, p) => `No ${s.plural} are ${p.plural}.`,
   (s, p) => `None of the ${s.plural} are ${p.plural}.`,
@@ -68,6 +78,9 @@ function buildCategoricalAllSentence(subject: NounEntry, predicate: NounEntry): 
 }
 function buildRelativeSomeSentence(subject: NounEntry, predicate: NounEntry): string {
   return pick(RELATIVE_SOME_TEMPLATES)(subject, predicate);
+}
+function buildSomeConclusionSentence(subject: NounEntry, predicate: NounEntry): string {
+  return pick(CONCLUSION_SOME_TEMPLATES)(subject, predicate);
 }
 function buildCategoricalNoneSentence(subject: NounEntry, predicate: NounEntry): string {
   return pick(CATEGORICAL_NONE_TEMPLATES)(subject, predicate);
@@ -202,7 +215,7 @@ function buildMacroChainBlock(
     },
     {
       stimulus_text: stimulus,
-      conclusion_text: buildRelativeSomeSentence(B, C).replace(/\.$/, ""),
+      conclusion_text: buildSomeConclusionSentence(B, C).replace(/\.$/, ""),
       is_correct: true,
       logic_group: "relative",
       trick_type: "macro_chain_BC_valid",
@@ -210,7 +223,7 @@ function buildMacroChainBlock(
     },
     {
       stimulus_text: stimulus,
-      conclusion_text: buildRelativeSomeSentence(A, C).replace(/\.$/, ""),
+      conclusion_text: buildSomeConclusionSentence(A, C).replace(/\.$/, ""),
       is_correct: false,
       logic_group: "relative",
       trick_type: "macro_chain_AC_false_overlap",
@@ -254,7 +267,7 @@ function buildCategoricalChain(
     },
     {
       stimulus_text: stimulus,
-      conclusion_text: buildRelativeSomeSentence(n.z, n.x).replace(/\.$/, ""),
+      conclusion_text: buildSomeConclusionSentence(n.z, n.x).replace(/\.$/, ""),
       is_correct: true,
       logic_group: "categorical",
       trick_type: "categorical_chain_some",
@@ -299,7 +312,7 @@ function buildRelativeOverlap(
   const questions: Omit<SyllogismQuestion, "id" | "macro_block_id">[] = [
     {
       stimulus_text: stimulus,
-      conclusion_text: buildRelativeSomeSentence(n.y, n.z).replace(/\.$/, ""),
+      conclusion_text: buildSomeConclusionSentence(n.y, n.z).replace(/\.$/, ""),
       is_correct: true,
       logic_group: "relative",
       trick_type: "relative_overlap_valid",

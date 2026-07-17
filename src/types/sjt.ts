@@ -138,17 +138,6 @@ export function getRatingShort(rating: SJTRating, type: "appropriateness" | "imp
   return IMPORTANCE_SHORT[rating as ImportanceRating];
 }
 
-export function getAdjacentRating(
-  rating: SJTRating,
-  type: "appropriateness" | "importance"
-): SJTRating | null {
-  const scale = type === "appropriateness" ? APPROPRIATENESS_RATINGS : IMPORTANCE_RATINGS;
-  const idx = (scale as string[]).indexOf(rating);
-  if (idx === -1) return null;
-  if (idx === 0) return scale[1];
-  return scale[idx - 1];
-}
-
 export type RatingAnswer = Record<string, SJTRating>;
 export type RankingAnswer = { most: string | null; least: string | null };
 

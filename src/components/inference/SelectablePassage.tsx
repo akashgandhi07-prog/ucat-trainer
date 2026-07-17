@@ -9,18 +9,26 @@ type SelectablePassageProps = {
   passageRef: RefObject<HTMLDivElement | null>;
   highlights?: HighlightSpan[];
   className?: string;
+  /** Sentence chosen by tapping (fallback when the DOM selection is unavailable, e.g. mobile). */
+  selectedSpan?: TextSpan | null;
+  onSelectSpan?: (span: TextSpan | null) => void;
 };
 
 /**
  * Renders passage text. If highlights are provided, renders with highlighted spans.
  * Otherwise renders plain selectable text.
- * Parent calls getSelectionFromDom(passageRef) to capture selection offsets.
+ * Parent calls getSelectionFromDom(passageRef) to capture selection offsets, with
+ * `selectedSpan` (set by tapping a sentence) as the fallback: mobile browsers,
+ * iOS Safari in particular, do not reliably keep a programmatic DOM selection
+ * alive until the Submit button is tapped.
  */
 export default function SelectablePassage({
   passageText,
   passageRef,
   highlights = [],
   className = "",
+  selectedSpan = null,
+  onSelectSpan,
 }: SelectablePassageProps) {
   const isDraggingRef = useRef(false);
   const pointerDownPosRef = useRef<{ x: number; y: number } | null>(null);
@@ -42,10 +50,16 @@ export default function SelectablePassage({
 
     const handleMouseUp: React.MouseEventHandler<HTMLDivElement> = () => {
       pointerDownPosRef.current = null;
+      // A drag means the user made their own selection; drop the tapped sentence
+      // so the custom selection wins at submit time.
+      if (isDraggingRef.current) {
+        onSelectSpan?.(null);
+      }
     };
 
-    const handleSentenceClick: React.MouseEventHandler<HTMLSpanElement> = (
-      event
+    const handleSentenceClick = (
+      event: React.MouseEvent<HTMLSpanElement>,
+      span: TextSpan
     ) => {
       // If the user dragged to create a custom selection, don't override it
       if (isDraggingRef.current) return;
@@ -54,19 +68,23 @@ export default function SelectablePassage({
       const range = document.createRange();
       range.selectNodeContents(node);
       const selection = window.getSelection();
-      if (!selection) return;
-      selection.removeAllRanges();
-      selection.addRange(range);
+      if (selection) {
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+      onSelectSpan?.(span);
     };
 
     const segments: ReactElement[] = [];
     const lines = passageText.split("\n");
+    let lineStart = 0;
 
     lines.forEach((line, lineIndex) => {
       if (lineIndex > 0) {
         segments.push(
           <span key={`nl-${lineIndex}`}>{"\n"}</span>
         );
+        lineStart += 1; // the "\n" separator
       }
 
       if (!line) {
@@ -80,16 +98,27 @@ export default function SelectablePassage({
         const sentenceText = match[0];
         if (!sentenceText) continue;
 
+        const start = lineStart + match.index;
+        const end = start + sentenceText.replace(/\s+$/, "").length;
+        const isSelected =
+          selectedSpan != null &&
+          selectedSpan.start === start &&
+          selectedSpan.end === end;
+
         segments.push(
           <span
             key={`s-${lineIndex}-${match.index}`}
-            onClick={handleSentenceClick}
-            className="cursor-pointer hover:bg-secondary transition-colors rounded-sm px-0.5 -mx-0.5"
+            onClick={(event) => handleSentenceClick(event, { start, end })}
+            className={`cursor-pointer transition-colors rounded-sm px-0.5 -mx-0.5 ${
+              isSelected ? "bg-primary/15 ring-1 ring-primary/30" : "hover:bg-secondary"
+            }`}
           >
             {sentenceText}
           </span>
         );
       }
+
+      lineStart += line.length;
     });
 
     return (
@@ -159,4 +188,3 @@ export default function SelectablePassage({
     </div>
   );
 }
-

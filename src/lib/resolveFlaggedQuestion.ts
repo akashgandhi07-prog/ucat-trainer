@@ -35,10 +35,7 @@ function str(v: unknown): string {
   return typeof v === "string" ? v : v == null ? "" : String(v);
 }
 
-export async function resolveFlaggedQuestion(
-  identifier: string,
-  questionKind: string,
-): Promise<ResolvedQuestion> {
+export async function resolveFlaggedQuestion(identifier: string): Promise<ResolvedQuestion> {
   const parts = identifier.split(":");
   const prefix = parts[0];
 
@@ -95,20 +92,18 @@ export async function resolveFlaggedQuestion(
 
     if (prefix === "syllogism") {
       const id = parts.slice(1).join(":");
-      for (const table of ["syllogism_questions", "syllogisms"]) {
-        const { data } = await supabase.from(table).select("*").eq("id", id).maybeSingle();
-        if (data) {
-          const row = data as Record<string, unknown>;
-          return {
-            kind: "syllogism",
-            resolved: true,
-            stem: str(row.stimulus_text),
-            question: str(row.conclusion_text),
-            correctAnswer: row.is_correct ? "Conclusion follows (True)" : "Does not follow (False)",
-            explanation: str(row.explanation),
-            extra: { logic_group: str(row.logic_group), trick_type: str(row.trick_type) },
-          };
-        }
+      const { data } = await supabase.from("syllogism_questions").select("*").eq("id", id).maybeSingle();
+      if (data) {
+        const row = data as Record<string, unknown>;
+        return {
+          kind: "syllogism",
+          resolved: true,
+          stem: str(row.stimulus_text),
+          question: str(row.conclusion_text),
+          correctAnswer: row.is_correct ? "Conclusion follows (True)" : "Does not follow (False)",
+          explanation: str(row.explanation),
+          extra: { logic_group: str(row.logic_group), trick_type: str(row.trick_type) },
+        };
       }
       return unresolved("syllogism", "Could not read this syllogism from the database (it may be RLS-restricted). Hiding still works.");
     }
@@ -116,29 +111,29 @@ export async function resolveFlaggedQuestion(
     if (prefix === "sjt") {
       const id = parts[1];
       const itemId = parts[2];
-      const tables =
-        questionKind === "sjt_ranking"
-          ? ["sjt_ranking_questions"]
-          : ["sjt_appropriateness_questions", "sjt_importance_questions", "sjt_ranking_questions"];
-      for (const table of tables) {
-        const { data } = await supabase.from(table).select("*").eq("id", id).maybeSingle();
-        if (data) {
-          const row = data as Record<string, unknown>;
-          const items = Array.isArray(row.items) ? (row.items as Record<string, unknown>[]) : [];
-          const flagged = items.find((it) => str(it.id) === itemId);
-          return {
-            kind: "sjt",
-            resolved: true,
-            stem: str(row.stem),
-            options: items.map((it) => ({ text: str(it.text), correct: itemId ? str(it.id) === itemId : undefined })),
-            explanation: str(flagged?.rationale ?? row.pivotInsight),
-            extra: {
-              domain: str(row.domain),
-              difficulty: str(row.difficulty),
-              flaggedItem: str(flagged?.text),
-            },
-          };
-        }
+      const { data } = await supabase.from("sjt_questions").select("*").eq("id", id).maybeSingle();
+      if (data) {
+        const row = data as Record<string, unknown>;
+        const items = Array.isArray(row.items) ? (row.items as Record<string, unknown>[]) : [];
+        const flagged = items.find((it) => str(it.id) === itemId);
+        const prettyRating = (it: Record<string, unknown>): string => {
+          const rating = str(it.correctRating ?? it.correct_rating);
+          return rating ? ` (correct: ${rating.replace(/_/g, " ")})` : "";
+        };
+        return {
+          kind: "sjt",
+          resolved: true,
+          stem: str(row.stem),
+          options: items.map((it) => ({
+            text: `${str(it.id) === itemId ? "🚩 " : ""}${str(it.text)}${prettyRating(it)}`,
+          })),
+          explanation: str(flagged?.rationale ?? row.pivot_insight),
+          extra: {
+            domain: str(row.domain),
+            difficulty: str(row.difficulty),
+            flaggedItem: str(flagged?.text),
+          },
+        };
       }
       return unresolved("sjt", "Could not read this SJT question from the database (it may be RLS-restricted). Hiding still works.");
     }

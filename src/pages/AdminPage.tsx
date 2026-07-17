@@ -459,10 +459,10 @@ export default function AdminPage() {
 
   const isFeedbackUpdating = (id: string): boolean => feedbackUpdatingIds.has(id);
 
-  const ensureResolved = (questionIdentifier: string, questionKind: string) => {
+  const ensureResolved = (questionIdentifier: string) => {
     if (qfResolved.has(questionIdentifier)) return;
     setQfResolved((prev) => new Map(prev).set(questionIdentifier, "loading"));
-    resolveFlaggedQuestion(questionIdentifier, questionKind)
+    resolveFlaggedQuestion(questionIdentifier)
       .then((res) =>
         setQfResolved((prev) => new Map(prev).set(questionIdentifier, res)),
       )

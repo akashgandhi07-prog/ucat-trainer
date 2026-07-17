@@ -195,6 +195,8 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       fs: { allow: [rootDir] },
+      // Honour an assigned port (e.g. from tooling that sets PORT) instead of always 5173.
+      port: Number(process.env.PORT) || 5173,
     },
     define: {
       'process.env.NEXT_PUBLIC_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL ?? ''),

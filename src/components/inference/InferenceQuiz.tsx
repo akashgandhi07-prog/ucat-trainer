@@ -63,6 +63,9 @@ export default function InferenceQuiz({
     explanation: string;
   } | null>(null);
   const [emptySelectionError, setEmptySelectionError] = useState(false);
+  // Sentence chosen by tapping in SelectablePassage. Used as a fallback when the
+  // DOM selection is gone by the time Submit is tapped (mobile browsers clear it).
+  const [tappedSpan, setTappedSpan] = useState<TextSpan | null>(null);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [questionSeconds, setQuestionSeconds] = useState(0);
   const [timedOut, setTimedOut] = useState(false);
@@ -85,7 +88,8 @@ export default function InferenceQuiz({
 
   const handleSubmit = useCallback(() => {
     setEmptySelectionError(false);
-    const userSpan = getSelectionFromPassage(passageRef, passageText);
+    const userSpan =
+      getSelectionFromPassage(passageRef, passageText) ?? tappedSpan;
 
     if (!userSpan || userSpan.start >= userSpan.end) {
       setEmptySelectionError(true);
@@ -123,7 +127,7 @@ export default function InferenceQuiz({
       correctText,
       explanation: current.explanation,
     });
-  }, [current, currentIndex, passageText]);
+  }, [current, currentIndex, passageText, tappedSpan]);
 
   const handleSkip = useCallback(() => {
     const correctSpan = current.correctSpans[0];
@@ -156,7 +160,8 @@ export default function InferenceQuiz({
   const handleTimeExpired = useCallback(() => {
     const correctSpan = current.correctSpans[0];
     const correctText = getSpanText(passageText, correctSpan);
-    const userSpan = getSelectionFromPassage(passageRef, passageText);
+    const userSpan =
+      getSelectionFromPassage(passageRef, passageText) ?? tappedSpan;
 
     let result: InferenceBreakdownItem["result"] = "incorrect";
     let userText = "";
@@ -194,7 +199,7 @@ export default function InferenceQuiz({
     });
     setTimedOut(true);
     setEmptySelectionError(false);
-  }, [current, currentIndex, passageText]);
+  }, [current, currentIndex, passageText, tappedSpan]);
 
   // Per-question clock: counts up while the question is open (paused on feedback).
   useEffect(() => {
@@ -217,6 +222,8 @@ export default function InferenceQuiz({
   const handleNext = useCallback(() => {
     setFeedback(null);
     setEmptySelectionError(false);
+    setTappedSpan(null);
+    window.getSelection()?.removeAllRanges();
     setQuestionSeconds(0);
     setTimedOut(false);
     if (isLastQuestion && onNextQuestion) {
@@ -271,6 +278,8 @@ export default function InferenceQuiz({
             passageText={passageText}
             passageRef={passageRef}
             highlights={highlights.length > 0 ? highlights : undefined}
+            selectedSpan={tappedSpan}
+            onSelectSpan={setTappedSpan}
           />
           <QuestionMediaBlock media={current?.media} placement="stem" className="mt-4" />
         </div>
@@ -281,7 +290,7 @@ export default function InferenceQuiz({
         <div className="bg-card rounded-xl border border-border p-6">
           <div className="mb-4 rounded-lg border border-border px-4 py-3 flex items-center justify-between gap-3">
             <p className="text-sm text-foreground font-medium">
-              Please select the relevant section(s) of text as requested below.
+              Tap a sentence in the passage to select it, or highlight the exact words, then submit.
             </p>
             {timedMode ? (
               <span
