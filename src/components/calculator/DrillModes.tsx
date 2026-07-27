@@ -184,6 +184,8 @@ export const SprintDrill = ({ onComplete, isActive, userKeystrokes, onQuestionCo
         keyStats: {} as Record<string, { total: number; correct: number }>
     });
     const startTimeRef = useRef<number>(0);
+    /** Guards against finishing twice (timer expiry racing the Finish button). */
+    const hasFinishedRef = useRef(false);
     const [displayScore, setDisplayScore] = useState(0);
 
     useEffect(() => {
@@ -227,6 +229,7 @@ export const SprintDrill = ({ onComplete, isActive, userKeystrokes, onQuestionCo
         if (!isActive) return;
         startTimeRef.current = Date.now();
         setTimeLeft(60);
+        hasFinishedRef.current = false;
         statsRef.current = {
             score: 0,
             totalQuestions: 0,
@@ -238,6 +241,8 @@ export const SprintDrill = ({ onComplete, isActive, userKeystrokes, onQuestionCo
     }, [isActive, difficulty]);
 
     const finishDrill = useCallback(() => {
+        if (hasFinishedRef.current) return;
+        hasFinishedRef.current = true;
         const timeElapsed = (Date.now() - startTimeRef.current) / 1000;
         const boundedElapsed = Math.min(60, Math.max(0, timeElapsed));
         const roundedSeconds = Math.round(boundedElapsed);
@@ -342,17 +347,20 @@ export const SprintDrill = ({ onComplete, isActive, userKeystrokes, onQuestionCo
     useEffect(() => {
         if (!isActive) return;
         const timer = setInterval(() => {
-            setTimeLeft(prev => {
-                if (prev <= 1) {
-                    clearInterval(timer);
-                    finishDrill();
-                    return 0;
-                }
-                return prev - 1;
-            });
+            setTimeLeft(prev => (prev <= 1 ? 0 : prev - 1));
         }, 1000);
         return () => clearInterval(timer);
-    }, [isActive, finishDrill]);
+    }, [isActive]);
+
+    // Ending the drill lives here rather than inside the setTimeLeft updater above.
+    // React runs updater functions during the render phase, so calling finishDrill
+    // there updated CalculatorPage mid-render ("Cannot update a component while
+    // rendering a different component"). finishDrill self-guards, so a changed
+    // callback identity re-running this effect cannot finish the drill twice.
+    useEffect(() => {
+        if (!isActive || timeLeft > 0) return;
+        finishDrill();
+    }, [isActive, timeLeft, finishDrill]);
 
     return (
         <DrillActiveArea
