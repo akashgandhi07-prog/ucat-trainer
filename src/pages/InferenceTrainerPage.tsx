@@ -89,6 +89,9 @@ export default function InferenceTrainerPage() {
     InferenceBreakdownItem[]
   >([]);
   const [quizKey, setQuizKey] = useState(0);
+  // True while the next passage is being fetched after finishing one, so the old
+  // passage's questions are never re-shown during the async pick.
+  const [advancing, setAdvancing] = useState(false);
   const [timedMode, setTimedMode] = useState<boolean>(() => readStoredTimedMode());
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
@@ -133,15 +136,18 @@ export default function InferenceTrainerPage() {
             const found = PASSAGES.find((p) => p.id === nextId) ?? null;
             if (found) {
               setPassage(found);
+              setAdvancing(false);
               return;
             }
           }
           // Fallback: local random picker
           setPassage(pickPassageWithInference(currentId, difficulty));
+          setAdvancing(false);
         })
         .catch(() => {
           if (controller.signal.aborted) return;
           setPassage(pickPassageWithInference(currentId, difficulty));
+          setAdvancing(false);
         });
     },
     [difficulty],
@@ -279,6 +285,7 @@ export default function InferenceTrainerPage() {
       scrollTrainerToTop();
       // Always move to a fresh passage: a quiz run already covers every question
       // in the current passage, so staying would replay identical questions.
+      setAdvancing(true);
       pickAndSetNextPassage(passage?.id ?? null);
       setQuizKey((k) => k + 1);
     },
@@ -521,18 +528,24 @@ export default function InferenceTrainerPage() {
             className="flex-1 py-6 px-4"
             tabIndex={-1}
           >
-            <InferenceQuiz
-              key={`${passage.id}-${quizKey}`}
-              passageText={passage.text}
-              questions={questions}
-              timedMode={timedMode}
-              onComplete={handleQuizComplete}
-              onNextQuestion={handleNextQuestion}
-              onProgressChange={handleProgressChange}
-              onBreakdownChange={handleBreakdownChange}
-              trainerType="inference_trainer"
-              passageId={passage.id}
-            />
+            {advancing ? (
+              <div className="w-full max-w-2xl mx-auto px-4 py-16 text-center text-muted-foreground text-sm">
+                Loading your next passage...
+              </div>
+            ) : (
+              <InferenceQuiz
+                key={`${passage.id}-${quizKey}`}
+                passageText={passage.text}
+                questions={questions}
+                timedMode={timedMode}
+                onComplete={handleQuizComplete}
+                onNextQuestion={handleNextQuestion}
+                onProgressChange={handleProgressChange}
+                onBreakdownChange={handleBreakdownChange}
+                trainerType="inference_trainer"
+                passageId={passage.id}
+              />
+            )}
           </main>
         </>
       )}

@@ -60,6 +60,73 @@ async function main() {
       process.exit(1);
     }
   }
+
+  // The trainer serves SJT from trainer_questions (see migration
+  // 20260520130000_sjt_rpc_question_lab.sql); sjt_questions is kept for rollback.
+  // Sync content into the live table too, matched on legacy_id, so seed edits
+  // actually reach users. Update-only: the question lab owns inserts there.
+  console.log("Syncing content into trainer_questions…");
+  let synced = 0;
+  const missing: string[] = [];
+  const drifted: string[] = [];
+  for (const row of rows) {
+    // Merge into the existing content JSON rather than replacing it, so keys the
+    // question lab owns (e.g. sourceDifficulty) survive the sync. Content is the
+    // only field the prevent_active_question_edit trigger allows on active rows;
+    // stem and difficulty changes must go through the question lab draft flow, so
+    // those are compared and reported as drift rather than written.
+    const { data: existing, error: readErr } = await supabase
+      .from("trainer_questions")
+      .select("id, content, stem, difficulty")
+      .eq("legacy_id", row.id)
+      .eq("trainer_type", `sjt-${row.type}`);
+    if (readErr) {
+      console.error(`trainer_questions read failed for ${row.id}:`, readErr.message);
+      process.exit(1);
+    }
+    if (!existing || existing.length === 0) {
+      missing.push(row.id);
+      continue;
+    }
+    // Seed difficulty vocabulary maps onto the question-lab scale.
+    const difficultyMap: Record<string, string> = {
+      foundation: "easy",
+      standard: "medium",
+      challenging: "hard",
+    };
+    const mappedDifficulty = difficultyMap[row.difficulty] ?? row.difficulty;
+    if (existing[0].stem !== row.stem || existing[0].difficulty !== mappedDifficulty) {
+      drifted.push(row.id);
+    }
+    const content = {
+      ...(existing[0].content as Record<string, unknown>),
+      domain: row.domain,
+      pivotInsight: row.pivot_insight,
+      gmpRef: row.gmp_ref,
+      items: row.items as unknown,
+    };
+    const { error } = await supabase
+      .from("trainer_questions")
+      .update({ content })
+      .eq("id", existing[0].id);
+    if (error) {
+      console.error(`trainer_questions sync failed for ${row.id}:`, error.message);
+      process.exit(1);
+    }
+    synced += 1;
+  }
+  console.log(`Synced ${synced} trainer_questions rows.`);
+  if (missing.length > 0) {
+    console.warn(
+      `No trainer_questions row for: ${missing.join(", ")} (add via question lab if these are new scenarios).`,
+    );
+  }
+  if (drifted.length > 0) {
+    console.warn(
+      `Stem or difficulty differs from the live table for: ${drifted.join(", ")}. ` +
+        "The live values were kept; structural edits go through the question lab draft flow.",
+    );
+  }
   console.log("Done.");
 }
 

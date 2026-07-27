@@ -13,8 +13,26 @@ function newId(): string {
   return crypto.randomUUID()
 }
 
-/** Upload a guest localStorage plan to Supabase after sign-in (if user has no active plan). */
-export async function migrateGuestPlannerToCloud(studentId: string): Promise<{
+let migrationInFlight: Promise<{ migrated: boolean; reason?: string }> | null = null
+
+/**
+ * Upload a guest localStorage plan to Supabase after sign-in (if user has no active plan).
+ * Concurrent calls (React StrictMode double-effects, sign-in event racing a page load)
+ * share one in-flight migration so the plan can never be uploaded twice.
+ */
+export function migrateGuestPlannerToCloud(studentId: string): Promise<{
+  migrated: boolean
+  reason?: string
+}> {
+  if (!migrationInFlight) {
+    migrationInFlight = doMigrateGuestPlannerToCloud(studentId).finally(() => {
+      migrationInFlight = null
+    })
+  }
+  return migrationInFlight
+}
+
+async function doMigrateGuestPlannerToCloud(studentId: string): Promise<{
   migrated: boolean
   reason?: string
 }> {
