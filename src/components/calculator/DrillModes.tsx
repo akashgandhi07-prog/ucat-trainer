@@ -150,7 +150,7 @@ const getExpectedKeystrokes = (text: string): string[] => {
         return keys;
     }
 
-    const tokens = text.match(/(\d+|\+|-|\*|\/|x|÷|%)/g);
+    const tokens = text.match(/(\d+|\+|-|\*|\/|x|×|÷|%)/g);
     if (!tokens) return [];
 
     const keys: string[] = [];

@@ -1484,7 +1484,8 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
   }
   if (passageId === "pass_72") {
     const q1 = spanFor(text, "If the historical data used to train the algorithm is biased the AI will likely replicate those biases in its decisions.");
-    if (q1) { questions.push({ id: "inf_72_q1", passageId: "pass_72", questionText: "Identify the part of the text from which we can infer why AI hiring can perpetuate bias.", correctSpans: [q1], explanation: "Biased training data leads to replicated biases.", difficulty: "medium", }); }
+    const q1alt = spanFor(text, "For example if a company has historically hired more men for technical roles the AI might learn to favour male candidates.");
+    if (q1) { questions.push({ id: "inf_72_q1", passageId: "pass_72", questionText: "Identify the part of the text from which we can infer why AI hiring can perpetuate bias.", correctSpans: [q1], alternateSpans: q1alt ? [q1alt] : undefined, explanation: "Biased training data leads to replicated biases.", difficulty: "medium", }); }
     const q2 = spanFor(text, "Furthermore the use of AI in interviews to analyse facial expressions or tone of voice is controversial as it lacks a clear scientific basis and can disadvantage people with disabilities or different cultural backgrounds.");
     if (q2) { questions.push({ id: "inf_72_q2", passageId: "pass_72", questionText: "Identify the part of the text from which we can infer a concern about AI interview analysis.", correctSpans: [q2], explanation: "Lacks scientific basis; can disadvantage disabled or different cultures.", difficulty: "medium", }); }
     const q3 = spanFor(text, "Proponents argue that AI can make hiring more efficient and objective by removing human biases and focusing on the most relevant skills and qualifications.");

@@ -90,6 +90,15 @@ export function addGuestMockScore(score: Omit<DBMockScore, 'id' | 'created_at'>)
   return row
 }
 
+export function deleteGuestMockScore(scoreId: string): void {
+  const bundle = getGuestPlanner()
+  if (!bundle) return
+  saveGuestPlanner({
+    ...bundle,
+    mockScores: bundle.mockScores.filter((s) => s.id !== scoreId),
+  })
+}
+
 export function updateGuestMockTargets(
   mockTargetTotal: number | null,
   mockTargetSjtBand: number | null,

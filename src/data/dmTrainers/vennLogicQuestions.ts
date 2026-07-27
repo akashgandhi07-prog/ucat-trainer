@@ -52,7 +52,7 @@ export const VENN_LOGIC_QUESTIONS: DmTrainerQuestion[] = [
     trainerType: "venn-logic",
     difficulty: "medium",
     stem:
-      "A group were asked how they like their eggs cooked. 14 liked boiled, 11 liked scrambled and 12 liked fried. 6 liked all three ways. 3 liked exactly two ways. 2 liked none of them.",
+      "A group were asked how they like their eggs cooked, and each person could name more than one way. 14 liked boiled, 11 liked scrambled and 12 liked fried (each count includes everyone who named that way). 6 liked all three ways. 3 liked exactly two ways. 2 liked none of them.",
     question: "How many people were asked?",
     options: [
       { id: "A", text: "20" },

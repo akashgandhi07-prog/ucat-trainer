@@ -499,11 +499,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
       {
         id: "app-004-c",
         text: "Screenshot the post and share it with other classmates as a warning about social media misuse.",
-        correctRating: "inappropriate",
+        correctRating: "very_inappropriate",
         rationale:
-          "While the intention to educate peers may be well-meaning, sharing the post further distributes the potential privacy breach to a wider audience. It compounds the problem rather than resolving it. This is inappropriate even though it comes from a place of professional concern.",
+          "Screenshotting and redistributing the post actively spreads the patient-identifiable image to a wider audience. This is not merely a failure to help: it is a fresh confidentiality breach in its own right, and each share multiplies the risk to the patient. Good intentions do not change what the action does. A warning to classmates could be given without reproducing the image at all.",
         whyNotAdjacent:
-          "This is 'Inappropriate' rather than 'Very Inappropriate' because the underlying motivation, raising awareness, is professionally sound. The method is the problem.",
+          "This is 'Very Inappropriate' rather than 'Inappropriate' because the action itself commits a further breach of confidentiality. Intent is not a defence for a confidentiality breach, and an educational aim could be achieved without sharing the image.",
       },
       {
         id: "app-004-d",
@@ -848,7 +848,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         rationale:
           "Documenting without acting on evident distress is inadequate. Clinical records should accurately reflect a patient's state, but documentation is not a substitute for appropriate action. Noting that a patient was distressed while proceeding regardless is a failure to respond to a patient safety and dignity concern.",
         whyNotAdjacent:
-          "This is 'Inappropriate'. Documenting a concern while doing nothing to address it is not a responsible professional response.",
+          "This is 'Inappropriate' rather than 'Very Inappropriate' because two factors partially mitigate it: the carer has stated this behaviour is Brendan's usual presentation, so there is genuine uncertainty about whether it signals distress, and documenting shows the team member has at least recognised and recorded the concern rather than dismissing it. Compare the response that defers entirely to the carer: that abandons professional judgement altogether, which is why it is rated 'Very Inappropriate' while this one is not.",
       },
     ],
   },
@@ -1061,7 +1061,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         text: "Make the call as instructed and tell Mrs Patel her results are fine.",
         correctRating: "very_inappropriate",
         rationale:
-          "Telling a patient with an abnormal finding that their results are fine is a false statement about their health that could delay investigation of a potentially significant finding. GMP is unequivocal that patients have the right to accurate information about their health.",
+          "Telling a patient with an abnormal finding that their results are fine is a false statement about their health that could delay investigation of a potentially significant finding. The GMC's Good Medical Practice (GMP) guidance is unequivocal that patients have the right to accurate information about their health.",
         whyNotAdjacent:
           "This is correctly 'Very Inappropriate'. False reassurance about abnormal results is dishonest and potentially harmful.",
       },

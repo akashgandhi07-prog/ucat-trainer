@@ -56,21 +56,35 @@ export default function StudyPlanPage() {
     const timer = window.setTimeout(() => {
       if (!cancelled) setCloudReady(false)
     }, 25_000)
-    import('../../planner/lib/load-planner-data')
-      .then(({ fetchActivePlan, isMocksOnlyPlaceholderPlan }) =>
-        fetchActivePlan(userId).then((plan) => {
-          if (!cancelled) {
-            window.clearTimeout(timer)
-            setCloudReady(!!plan && !isMocksOnlyPlaceholderPlan(plan))
-          }
-        }),
-      )
-      .catch(() => {
+    void (async () => {
+      try {
+        const { fetchActivePlan, isMocksOnlyPlaceholderPlan } = await import(
+          '../../planner/lib/load-planner-data'
+        )
+        const plan = await fetchActivePlan(userId)
+        let ready = !!plan && !isMocksOnlyPlaceholderPlan(plan)
+        // Signed-in user with a stranded guest plan and no cloud plan: migrate it
+        // now. The sign-in event migration only fires on SIGNED_IN, so a returning
+        // session never picks the guest plan up, and leaving it stranded used to
+        // cause a /study-plan <-> /study-plan/plan redirect loop.
+        if (!ready && !plan && hasGuestPlanner()) {
+          const { migrateGuestPlannerToCloud } = await import(
+            '../../planner/lib/migrate-guest-planner'
+          )
+          const result = await migrateGuestPlannerToCloud(userId)
+          ready = result.migrated
+        }
+        if (!cancelled) {
+          window.clearTimeout(timer)
+          setCloudReady(ready)
+        }
+      } catch {
         if (!cancelled) {
           window.clearTimeout(timer)
           setCloudReady(false)
         }
-      })
+      }
+    })()
     return () => {
       cancelled = true
       window.clearTimeout(timer)
@@ -85,7 +99,10 @@ export default function StudyPlanPage() {
     )
   }
 
-  if (hasGuestPlanner() || cloudReady) {
+  // Guest data only drives routing for signed-out visitors. For signed-in users
+  // /study-plan/plan renders the cloud plan, so redirecting them there on guest
+  // data alone ping-pongs back here forever when they have no cloud plan.
+  if (cloudReady || (!user && hasGuestPlanner())) {
     return <Navigate to="/study-plan/plan" replace />
   }
 

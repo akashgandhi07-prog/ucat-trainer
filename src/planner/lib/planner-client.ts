@@ -507,6 +507,29 @@ export async function addMockScore(input: {
   return row
 }
 
+export async function deleteMockScore(input: {
+  planId: string
+  scoreId: string
+}): Promise<void> {
+  const userId = await getCurrentUserId()
+  const gate = await requireStudentOrTutorPlan(input.planId, userId)
+  if (!gate.ok) throw new Error(gate.message)
+
+  const { error } = await supabase
+    .from('mock_scores')
+    .delete()
+    .eq('id', input.scoreId)
+    .eq('plan_id', input.planId)
+  if (error) throw new Error(error.message)
+
+  // Mock history feeds weighting and intensity, so rebuild upcoming weeks.
+  const { data: weeks } = await supabase
+    .from('plan_weeks')
+    .select('week_number, week_start')
+    .eq('plan_id', input.planId)
+  scheduleRegenerateFromNextWeek(input.planId, weeks)
+}
+
 export async function updateMockTargets(input: {
   planId: string
   mockTargetTotal: number | null

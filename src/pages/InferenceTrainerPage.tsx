@@ -277,13 +277,10 @@ export default function InferenceTrainerPage() {
       setRunningTotal((t) => t + total);
       setRunningBreakdown((b) => [...b, ...breakdown]);
       scrollTrainerToTop();
-      const stayOnSamePassage = Math.random() < 0.5;
-      if (stayOnSamePassage && passage) {
-        setQuizKey((k) => k + 1);
-      } else {
-        pickAndSetNextPassage(passage?.id ?? null);
-        setQuizKey((k) => k + 1);
-      }
+      // Always move to a fresh passage: a quiz run already covers every question
+      // in the current passage, so staying would replay identical questions.
+      pickAndSetNextPassage(passage?.id ?? null);
+      setQuizKey((k) => k + 1);
     },
     [passage, pickAndSetNextPassage]
   );
@@ -403,7 +400,7 @@ export default function InferenceTrainerPage() {
     startTimeRef.current = Date.now();
     setElapsedSeconds(0);
     pickAndSetNextPassage(passage?.id ?? null);
-  }, [difficulty, passage?.id, pickAndSetNextPassage, resetSession]);
+  }, [passage?.id, pickAndSetNextPassage, resetSession]);
 
   useEffect(() => {
     if (phase !== "results" || hasAutoSavedRef.current) return;

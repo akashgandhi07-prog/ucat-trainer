@@ -8,14 +8,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { formatDate, parseDate, scoreColor, toISODate } from '@/lib/utils'
 import { MOCK_WEAKNESS_OPTIONS } from '@/lib/mock-weaknesses'
-import { addGuestMockScore, getGuestPlanner, updateGuestMockTargets } from '@/lib/guest-planner-store'
-import { addMockScore, rebalancePlan, updateMockTargets } from '@/lib/planner-client'
+import { addGuestMockScore, deleteGuestMockScore, getGuestPlanner, updateGuestMockTargets } from '@/lib/guest-planner-store'
+import { addMockScore, deleteMockScore, rebalancePlan, updateMockTargets } from '@/lib/planner-client'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts'
-import { BarChart3, Pencil, X, Check } from 'lucide-react'
+import { BarChart3, Pencil, X, Check, Trash2 } from 'lucide-react'
 import { UCAT_APPLICATION_LINKS } from '../../../../data/ucatGuides'
 import { useAppShell } from '../../../../contexts/AppShellContext'
 import { appContentWidthClass } from '../../../../lib/appContentLayout'
@@ -161,6 +161,7 @@ export function MockScoresView({
 
   const [showForm, setShowForm] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   /** Sections offered for extra focus after a weak mock (null = no prompt showing). */
   const [postMockPrompt, setPostMockPrompt] = useState<string[] | null>(null)
@@ -311,6 +312,29 @@ export function MockScoresView({
       setError(err instanceof Error ? err.message : 'Failed to save mock score')
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleDeleteScore(score: DBMockScore) {
+    if (deletingId) return
+    const confirmed = window.confirm(
+      `Delete the mock logged on ${formatDate(parseDate(score.logged_date))}? You can log it again with the correct scores.`,
+    )
+    if (!confirmed) return
+    setDeletingId(score.id)
+    setError(null)
+    try {
+      if (guestMode) {
+        deleteGuestMockScore(score.id)
+      } else {
+        await deleteMockScore({ planId, scoreId: score.id })
+      }
+      setScores(prev => prev.filter(s => s.id !== score.id))
+      toast.success('Mock score deleted')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Could not delete the mock score')
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -936,6 +960,7 @@ export function MockScoresView({
                   <th className="px-4 py-3 text-xs font-semibold text-foreground uppercase tracking-wide">SJT</th>
                   <th className="px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Total</th>
                   <th className="px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Avg</th>
+                  {!readOnly && <th className="px-4 py-3" aria-label="Actions" />}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -979,6 +1004,20 @@ export function MockScoresView({
                       <td className="px-4 py-3 font-semibold text-slate-900">
                         {avg ?? '-'}
                       </td>
+                      {!readOnly && (
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            type="button"
+                            onClick={() => void handleDeleteScore(score)}
+                            disabled={deletingId !== null}
+                            className="text-slate-300 hover:text-red-500 disabled:opacity-40 transition-colors"
+                            aria-label={`Delete mock logged on ${formatDate(parseDate(score.logged_date))}`}
+                            title="Delete this entry"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   )
                 })}
