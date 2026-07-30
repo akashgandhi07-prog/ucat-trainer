@@ -337,7 +337,10 @@ const SYNONYM_MAP: [RegExp, string[]][] = [
   [/\baim\b/gi, ["purpose", "goal", "objective", "intention"]],
   [/\bgoal\b/gi, ["aim", "purpose", "objective", "target"]],
   [/\bobjective\b/gi, ["aim", "goal", "purpose", "target"]],
-  [/\bdebate\b/gi, ["discussion", "controversy", "argument", "dispute"]],
+  // "debate" is a verb as often as a noun ("critics still debate whether..."),
+  // so only noun/verb words are safe here: "still discussion whether" is broken
+  // English. "dispute" works in both roles.
+  [/\bdebate\b/gi, ["dispute"]],
   [/\bdiscussion\b/gi, ["debate", "dialogue", "examination", "consideration"]],
   [/\bcontroversy\b/gi, ["debate", "dispute", "disagreement", "argument"]],
 
@@ -434,6 +437,17 @@ function allowsExistentialFlip(s: string): boolean {
   return CONTRAST_MARKER_RE.test(s) && !STRANDED_GROUP_RE.test(s);
 }
 
+// Strengthening a hedge that already sits under a negation reverses the
+// direction of the change: "no amount of observation could establish" becomes
+// "no amount of observation will establish", which is a WEAKER claim than the
+// passage makes and is therefore still supported. The item would be keyed False
+// when the honest answer is True, so skip hedges with a negator before them.
+const NEGATOR_RE =
+  /\b(no|not|never|cannot|can't|neither|none|nothing|nobody|without|rarely|seldom|hardly)\b/i;
+function isUnderNegation(sentence: string, index: number): boolean {
+  return NEGATOR_RE.test(sentence.slice(0, index));
+}
+
 // 1. Qualifier → absolute
 function distortQualifierToAbsolute(s: string): DistortionResult {
   const re = allowsExistentialFlip(s)
@@ -441,6 +455,7 @@ function distortQualifierToAbsolute(s: string): DistortionResult {
     : /\b(often|could|frequently|sometimes|usually|might|may|can|occasionally|typically|generally|tends to|tend to)\b/i;
   const match = s.match(re);
   if (!match || match.index == null) return { text: s, applied: false };
+  if (isUnderNegation(s, match.index)) return { text: s, applied: false };
   const replacements: Record<string, string> = {
     some: "all", many: "all", often: "always", could: "will",
     frequently: "always", sometimes: "always", usually: "always",
@@ -487,7 +502,10 @@ function distortNegation(s: string): DistortionResult {
   // Negating an existentially quantified claim ("Some rights are absolute" →
   // "Some rights are not absolute") produces a statement the passage neither
   // supports nor contradicts — Can't Tell, not False — so skip those sentences.
-  if (/^(some|many|several|a few|certain)\b/i.test(s.trim())) {
+  // The quantifier does not have to open the sentence: "Descartes replied that
+  // some knowledge cannot come from experience alone" → "...some knowledge can
+  // come from experience alone" is the same trap, so scan the whole sentence.
+  if (/\b(some|many|several|a few|certain)\b/i.test(s)) {
     return { text: s, applied: false };
   }
   // Sentences built on a negative determiner ("No single theory has won...")
@@ -607,6 +625,7 @@ function distortScope(s: string): DistortionResult {
     if (gated && !allowGated) continue;
     const m = s.match(re);
     if (m) {
+      if (m.index != null && isUnderNegation(s, m.index)) continue;
       return {
         text: s.replace(re, rep), applied: true,
         label: `scope broadened: ${label}`,
@@ -644,6 +663,7 @@ function distortCertainty(s: string): DistortionResult {
     if (gated && !allowGated) continue;
     const m = s.match(re);
     if (m) {
+      if (m.index != null && isUnderNegation(s, m.index)) continue;
       return {
         text: s.replace(re, rep), applied: true,
         label: `hedging language made absolute: ${label}`,

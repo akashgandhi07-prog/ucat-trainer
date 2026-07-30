@@ -532,7 +532,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
     items: [
       {
         id: "app-005-a",
-        text: "At the earliest safe opportunity, check on the patient, speak to Sandra privately to acknowledge her concern, and suggest she documents it formally.",
+        text: "Wait until the ward round has finished, then check on the patient, speak to Sandra privately to acknowledge her concern, and suggest she documents it formally.",
         correctRating: "appropriate",
         rationale:
           "This response takes Sandra's concern seriously and acts in a measured way. Checking the patient and encouraging formal documentation are reasonable steps for a senior student. However, waiting until after the full ward round may delay action when deterioration is possible. GMP requires patient safety concerns to be followed up promptly.",
