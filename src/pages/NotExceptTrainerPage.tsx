@@ -230,6 +230,9 @@ export default function NotExceptTrainerPage() {
         <main id="main-content" className="flex-1 flex flex-col py-12 px-4" tabIndex={-1}>
           <div className="w-full max-w-4xl mx-auto mb-4">
             <BreadcrumbNav items={breadcrumbs} />
+            <h1 className="mt-3 text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+              UCAT NOT and EXCEPT Trainer
+            </h1>
           </div>
           <div className="flex-1 flex items-center justify-center">
             <div className="w-full max-w-md mx-auto text-center">
@@ -297,6 +300,13 @@ export default function NotExceptTrainerPage() {
         <div className="max-w-2xl mx-auto">
           <div className="mb-4">
             <BreadcrumbNav items={breadcrumbs} />
+            <h1 className="mt-3 text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+              UCAT NOT and EXCEPT Trainer
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Spot the statement that is NOT supported by the passage. Free NOT and EXCEPT
+              question practice for UCAT Verbal Reasoning.
+            </p>
           </div>
 
           {phase === "reading" && (

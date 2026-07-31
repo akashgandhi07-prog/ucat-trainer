@@ -296,6 +296,13 @@ export default function ReaderPage() {
       <main id="main-content" className="flex-1 flex flex-col py-8 px-4 min-w-0" tabIndex={-1}>
         <div className="w-full max-w-5xl mx-auto mb-4">
           <BreadcrumbNav items={readerBreadcrumbs} />
+          <h1 className="mt-3 text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+            UCAT Speed Reading Trainer
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground max-w-2xl">
+            Free speed reading practice for UCAT Verbal Reasoning: read a timed passage at your
+            target words per minute, then answer questions to check comprehension.
+          </p>
         </div>
         <div className="flex-1 flex items-center justify-center">
         {phase === "reading" && (

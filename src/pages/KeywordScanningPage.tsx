@@ -292,6 +292,9 @@ export default function KeywordScanningPage() {
         <main id="main-content" className="flex-1 flex flex-col py-12 px-4" tabIndex={-1}>
           <div className="w-full max-w-4xl mx-auto mb-4">
             <BreadcrumbNav items={breadcrumbs} />
+            <h1 className="mt-3 text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+              UCAT Keyword Scanning Trainer
+            </h1>
           </div>
           <div className="flex-1 flex items-center justify-center">
             <div className="w-full max-w-md mx-auto text-center">
@@ -386,6 +389,15 @@ export default function KeywordScanningPage() {
       <Header />
       <main id="main-content" className="flex-1 py-10 px-4" tabIndex={-1}>
         <div className="max-w-2xl mx-auto">
+          <div className="mb-5">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+              UCAT Keyword Scanning Trainer
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Find the target words hidden in a dense passage as fast as you can. Free scanning
+              practice for UCAT Verbal Reasoning.
+            </p>
+          </div>
           <div className="bg-card rounded-xl border border-border p-5 mb-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-3">

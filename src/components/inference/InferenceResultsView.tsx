@@ -36,9 +36,9 @@ export default function InferenceResultsView({
           SESSION COMPLETE
         </span>
       </div>
-      <h1 className="text-2xl font-bold text-foreground mb-1">
-        Inference Trainer - Results
-      </h1>
+      <h2 className="text-2xl font-bold text-foreground mb-1">
+        Inference Trainer: Results
+      </h2>
       <p className="text-muted-foreground text-sm mb-8">
         {passageTitle ? passageTitle : "Session complete"}
       </p>

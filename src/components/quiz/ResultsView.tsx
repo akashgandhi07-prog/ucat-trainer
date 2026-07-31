@@ -88,9 +88,9 @@ export default function ResultsView({
           DRILL COMPLETE
         </span>
       </div>
-      <h1 className="text-2xl font-bold text-foreground mb-1">
+      <h2 className="text-2xl font-bold text-foreground mb-1">
         Performance Analytics
-      </h1>
+      </h2>
       <p className="text-muted-foreground text-sm mb-8">
         Speed Reading{passageTitle ? ` · ${passageTitle}` : ""}
       </p>

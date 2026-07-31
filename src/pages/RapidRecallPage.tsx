@@ -274,7 +274,18 @@ export default function RapidRecallPage() {
         Skip to main content
       </a>
       <Header />
-      <main id="main-content" className={`flex-1 py-12 px-4 ${phase === "results" ? "" : "flex items-center justify-center"}`} tabIndex={-1}>
+      <div className="px-4 pt-8">
+        <div className="w-full max-w-3xl mx-auto">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+            UCAT Rapid Recall Trainer
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground max-w-2xl">
+            Read the passage before the timer runs out, then answer true or false questions from
+            memory. Free Verbal Reasoning practice for the UCAT.
+          </p>
+        </div>
+      </div>
+      <main id="main-content" className={`flex-1 pb-12 pt-6 px-4 ${phase === "results" ? "" : "flex items-center justify-center"}`} tabIndex={-1}>
         {phase === "reading" && (
           <div className="w-full max-w-3xl">
             <RecallModeExplainer />

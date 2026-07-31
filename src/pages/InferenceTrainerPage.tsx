@@ -496,6 +496,18 @@ export default function InferenceTrainerPage() {
       </a>
       <Header />
 
+      <div className="px-4 pt-6">
+        <div className="max-w-5xl mx-auto">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+            UCAT Inference Trainer
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground max-w-2xl">
+            Practise inference questions for UCAT Verbal Reasoning: select the evidence that
+            supports or rejects a conclusion, using only what the passage says.
+          </p>
+        </div>
+      </div>
+
       {phase === "active" && (
         <>
           <div className="px-4 pt-4">
