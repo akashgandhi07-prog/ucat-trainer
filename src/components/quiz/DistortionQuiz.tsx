@@ -20,11 +20,94 @@ function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+// A sentence that leans on an unresolved pronoun or demonstrative to point back
+// at an earlier sentence reads as broken when shown on its own, e.g. "Without it
+// the Earth would be uninhabitable" or "They argued that quality of life...".
+// Such sentences are skipped as question sources so no statement asks the student
+// to judge a claim whose subject is missing from the sentence itself.
+const DANGLING_PRONOUNS = new Set([
+  "it", "its", "they", "them", "their", "theirs",
+  "he", "she", "him", "his", "her", "hers", "such",
+]);
+const DANGLING_DEMONSTRATIVES = new Set(["this", "that", "these", "those"]);
+// Leading connectives/prepositions that can precede an anaphor: "Without it...",
+// "On this view...", "Despite these findings...".
+const DANGLING_LEADING_CONNECTIVES = new Set([
+  "without", "with", "because", "since", "despite", "for", "by", "from",
+  "on", "in", "although", "though", "while", "after", "before", "besides",
+  "through", "given", "unlike", "as", "during", "upon", "amid", "against",
+]);
+// A following auxiliary/verb marks a demonstrative as a pronoun ("This is/was/brings")
+// rather than a determiner introducing a fresh noun phrase ("This trend", "These rules").
+const DANGLING_DEMONSTRATIVE_VERBS = new Set([
+  "is", "was", "are", "were", "has", "have", "had", "will", "would", "can",
+  "could", "may", "might", "must", "should", "does", "did", "brings", "means",
+  "makes", "leads", "results", "gives", "shows", "raises", "creates", "occurs",
+  "happens", "reflects", "suggests", "indicates", "involves", "refers", "applies",
+  "remains", "becomes", "proves", "explains", "requires", "allows", "causes",
+  "enables", "ensures", "prevents", "reduces", "increases",
+]);
+
+function startsWithDanglingReference(sentence: string): boolean {
+  const words = sentence
+    .toLowerCase()
+    .replace(/[^a-z\s']/g, " ")
+    .split(/\s+/)
+    .filter(Boolean);
+  if (words.length === 0) return false;
+  const [first, second = ""] = words;
+
+  // Bare subject/object pronoun opener: "It ...", "They ...", "Such ...".
+  if (DANGLING_PRONOUNS.has(first)) return true;
+
+  // Demonstrative used pronominally: "This is ...", "These are ...", "That brings ...".
+  if (DANGLING_DEMONSTRATIVES.has(first) && DANGLING_DEMONSTRATIVE_VERBS.has(second)) {
+    return true;
+  }
+
+  // Leading connective + anaphor: "Without it ...", "On this ...", "Despite these ...".
+  if (
+    DANGLING_LEADING_CONNECTIVES.has(first) &&
+    (DANGLING_PRONOUNS.has(second) || DANGLING_DEMONSTRATIVES.has(second))
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
 function splitSentences(text: string): string[] {
   return text
     .split(/(?<=[.!?])\s+/)
     .map((s) => s.trim())
-    .filter((s) => s.length > 20);
+    .filter((s) => s.length > 20 && !startsWithDanglingReference(s));
+}
+
+// Word transformations (paraphrase, distortion) can leave the wrong indefinite
+// article, e.g. "a largely" → "a entirely" or "a widely" → "a almost universally".
+// Only unambiguous onsets are corrected; onsets whose sound is not derivable from
+// spelling ("university" vs "unprecedented", "European", "one") are left untouched.
+// Verified to change no "a"/"an" in the original passage bank.
+function articleFor(nextWord: string): "a" | "an" | null {
+  const w = nextWord.toLowerCase();
+  if (!/^[a-z]/.test(w)) return null;
+  if (/^(u|eu|one|once)/.test(w)) return null;
+  if (/^(hour|honest|honou?r|heir)/.test(w)) return "an";
+  if (/^[aeio]/.test(w)) return "an";
+  return "a";
+}
+
+function fixIndefiniteArticles(text: string): string {
+  return text.replace(
+    /\b(a|an)(\s+)([A-Za-z][A-Za-z'-]*)/g,
+    (whole, art: string, sp: string, word: string) => {
+      const correct = articleFor(word);
+      if (!correct || correct === art.toLowerCase()) return whole;
+      const cased =
+        art[0] === art[0].toUpperCase() ? correct[0].toUpperCase() + correct.slice(1) : correct;
+      return cased + sp + word;
+    }
+  );
 }
 
 // ───────── synonym paraphrasing ─────────
@@ -122,8 +205,9 @@ const SYNONYM_MAP: [RegExp, string[]][] = [
   [/\bprovide\b/gi, ["offer", "supply", "give", "afford"]],
   [/\bprovides\b/gi, ["offers", "supplies", "gives", "affords"]],
   [/\bprovided\b/gi, ["offered", "supplied", "given", "afforded"]],
-  [/\boffer\b/gi, ["provide", "supply", "present", "give"]],
-  [/\boffers\b/gi, ["provides", "supplies", "presents", "gives"]],
+  // "offer" is far more often a noun than a verb in these passages ("an offer",
+  // "counter offer", "offer to sell"), where verb synonyms produce garbage like
+  // "an give" or "the terms of the supply", so it is deliberately not swapped.
   [/\butilise\b/gi, ["use", "employ", "apply", "make use of"]],
   [/\butilises\b/gi, ["uses", "employs", "applies", "makes use of"]],
   [/\butilised\b/gi, ["used", "employed", "applied", "made use of"]],
@@ -290,8 +374,9 @@ const SYNONYM_MAP: [RegExp, string[]][] = [
   [/\bgovernments\b/gi, ["authorities", "policymakers", "states", "administrations"]],
 
   // ── nouns: concepts ──
-  // "proof" is stronger than "evidence", changing the truth value
-  [/\bevidence\b/gi, ["data", "findings", "research"]],
+  // "proof" is stronger than "evidence", changing the truth value; "findings" is
+  // plural and breaks agreement ("there is findings"), so it is excluded here.
+  [/\bevidence\b/gi, ["data", "research"]],
   [/\bfindings\b/gi, ["results", "evidence", "data", "conclusions"]],
   [/\bresults\b/gi, ["findings", "outcomes", "data", "conclusions"]],
   [/\boutcomes\b/gi, ["results", "findings", "consequences", "effects"]],
@@ -401,6 +486,14 @@ function paraphrase(sentence: string): ParaphraseResult {
     const candidate = result.slice(0, match.index) + cased + result.slice(match.index + match[0].length);
     // Skip swaps that collide with an article ("a society" → "a the public")
     if (/\b(an?|the)\s+(an?|the)\b/i.test(candidate) && !/\b(an?|the)\s+(an?|the)\b/i.test(result)) continue;
+    // Skip swaps that break "a"/"an" agreement with the new word ("an important"
+    // → "an crucial", "a option" → "a alternative"), which reads as a typo.
+    const precedingArticle = result.slice(0, match.index).match(/\b(an?)\s+$/i);
+    if (precedingArticle) {
+      const isAn = precedingArticle[1].toLowerCase() === "an";
+      const startsVowel = /^[aeiou]/i.test(cased);
+      if (isAn !== startsVowel) continue;
+    }
     if (!firstOriginal) {
       firstOriginal = match[0];
       firstReplaced = cased;
@@ -1147,7 +1240,12 @@ function buildQuestions(passageText: string, count: number, passageTitle?: strin
     }
   }
 
-  return shuffle(mcQuestion ? [...questions, mcQuestion] : questions);
+  const finalized = (mcQuestion ? [...questions, mcQuestion] : questions).map((q) =>
+    q.kind === "tfct"
+      ? { ...q, displayedSentence: fixIndefiniteArticles(q.displayedSentence) }
+      : { ...q, options: q.options.map((o) => ({ ...o, text: fixIndefiniteArticles(o.text) })) }
+  );
+  return shuffle(finalized);
 }
 
 export default function DistortionQuiz({

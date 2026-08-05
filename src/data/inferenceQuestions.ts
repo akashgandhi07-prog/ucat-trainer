@@ -1110,7 +1110,8 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
     const q2 = spanFor(text, "The migration of Germanic tribes such as the Visigoths and Vandals overwhelmed the Roman frontiers which were already poorly defended due to a lack of manpower and funds.");
     if (q2) { questions.push({ id: "inf_27_q2", passageId: "pass_27", questionText: "Identify the part of the text from which we can infer that the empire was militarily weakened before invasions.", correctSpans: [q2], explanation: "Frontiers were already poorly defended due to lack of manpower and funds.", difficulty: "hard", }); }
     const q3 = spanFor(text, "It is likely that no single cause was responsible but rather a perfect storm of military economic and political crises.");
-    if (q3) { questions.push({ id: "inf_27_q3", passageId: "pass_27", questionText: "Identify the part of the text from which we can infer that the collapse resulted from several factors together.", correctSpans: [q3], explanation: "No single cause but a perfect storm of military, economic, and political crises.", difficulty: "medium", }); }
+    const q3Alt = spanFor(text, "However modern scholarship tends to emphasise a combination of external pressures and internal structural failures.");
+    if (q3) { questions.push({ id: "inf_27_q3", passageId: "pass_27", questionText: "Identify the part of the text from which we can infer that the collapse resulted from several factors together.", correctSpans: [q3], alternateSpans: q3Alt ? [q3Alt] : undefined, explanation: "No single cause but a perfect storm of military, economic, and political crises.", difficulty: "medium", }); }
   }
 
   // pass_28: Ocean Acidification
@@ -1642,7 +1643,8 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
   // pass_87: Antibiotic Stewardship
   if (passageId === "pass_87") {
     const q1 = spanFor(text, "Antibiotic stewardship refers to coordinated interventions designed to improve and measure the appropriate use of antibiotics.");
-    if (q1) { questions.push({ id: "inf_87_q1", passageId: "pass_87", questionText: "Identify the part of the text from which we can infer what stewardship programmes aim to do.", correctSpans: [q1], explanation: "Improve and measure the appropriate use of antibiotics.", difficulty: "easy", }); }
+    const q1Alt = spanFor(text, "The goal is to maximise the benefit to the patient while minimising the development of resistance and the risk of side effects such as Clostridioides difficile infection.");
+    if (q1) { questions.push({ id: "inf_87_q1", passageId: "pass_87", questionText: "Identify the part of the text from which we can infer what stewardship programmes aim to do.", correctSpans: [q1], alternateSpans: q1Alt ? [q1Alt] : undefined, explanation: "Improve and measure the appropriate use of antibiotics.", difficulty: "easy", }); }
     const q2 = spanFor(text, "Evidence shows that stewardship programs reduce unnecessary antibiotic use and improve patient outcomes.");
     if (q2) { questions.push({ id: "inf_87_q2", passageId: "pass_87", questionText: "Identify the part of the text from which we can infer that stewardship is supported by evidence.", correctSpans: [q2], explanation: "Reduce unnecessary use and improve outcomes.", difficulty: "easy", }); }
     const q3 = spanFor(text, "Resistance to stewardship can come from clinicians who fear that restricting antibiotics will harm patients or who are reluctant to change established practice.");

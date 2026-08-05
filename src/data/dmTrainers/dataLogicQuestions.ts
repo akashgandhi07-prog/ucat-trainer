@@ -935,9 +935,9 @@ export const DATA_LOGIC_QUESTIONS: DmTrainerQuestion[] = [
     explanation: "Total detentions = 10 × 4.4 = 44. Known detentions = 4×4 + 2×2 + 1 = 21. Remaining total = 23. Let Charlie = x, Marie = x + 2, Robert = x + 3. Then x + x + 2 + x + 3 = 23, so 3x + 5 = 23, x = 6, and Robert = 9.",
     generalRule: "For average puzzles, find the total first, then build an equation for the unknown subgroup.",
     wrongOptionReasons: {
-      A: "Incorrect - this is Charlie's number of detentions.",
-      B: "Incorrect - this is Marie's number of detentions.",
-      C: "Incorrect - one less than Robert due to relation error.",
+      A: "Incorrect - this is Charlie's number of detentions, the smallest of the three unknowns.",
+      B: "Incorrect - 7 matches no pupil; it usually comes from mis-splitting the remaining 23 detentions.",
+      C: "Incorrect - this is Marie's number of detentions. Robert gets one more than Marie, so this is one short.",
       D: "Correct - Robert gets 9 detentions.",
     },
     keyInsight: "Translate the comparison wording carefully before solving the equation.",
