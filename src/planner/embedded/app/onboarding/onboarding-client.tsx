@@ -12,6 +12,7 @@ import { calendarDaysBetween, parseDate, toISODate, weeksUntil, DAY_NAMES_FULL }
 import { buildGuestPlannerFromOnboarding } from '@/lib/build-guest-plan'
 import { getGuestPlanner, saveGuestPlanner } from '@/lib/guest-planner-store'
 import { createPlanFromOnboarding } from '@/lib/create-plan-from-onboarding'
+import { isMocksOnlyPlaceholderPlan } from '@/lib/load-planner-data'
 import { cn } from '../../../../lib/cn'
 import { APP_CONTENT_X } from '../../../../lib/appContentLayout'
 import { PlannerOnboardingAside } from '../../../../components/layout/ProductUpsell'
@@ -98,22 +99,37 @@ export default function OnboardingClient({
 
   // Redirect to dashboard if already has an active plan
   useEffect(() => {
-    const guest = getGuestPlanner()
-    if (guest?.plan) {
-      router.replace('/dashboard')
-      return
-    }
+    let cancelled = false
     const sb = createClient()
-    sb.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return
-      sb.from('plans')
-        .select('id')
+
+    void (async () => {
+      const { data: { user } } = await sb.auth.getUser()
+      if (cancelled) return
+
+      // Guest data routes signed-out visitors only. A signed-in user whose guest plan
+      // never migrated has nothing for the dashboard to show, so it bounces straight
+      // back here.
+      if (!user) {
+        if (getGuestPlanner()?.plan) router.replace('/dashboard')
+        return
+      }
+
+      const { data } = await sb
+        .from('plans')
+        .select('id, exam_date')
         .eq('student_id', user.id)
         .eq('status', 'active')
         .limit(1)
         .maybeSingle()
-        .then(({ data }) => { if (data) router.replace('/dashboard') })
-    })
+      if (cancelled || !data) return
+
+      // A mocks-only placeholder plan (created just by opening Mock Scores) has no
+      // timetable, so the dashboard redirects back to onboarding: treating it as a
+      // real plan here loops the two pages against each other forever.
+      if (!isMocksOnlyPlaceholderPlan(data)) router.replace('/dashboard')
+    })()
+
+    return () => { cancelled = true }
   }, [router])
 
   function update(partial: Partial<OnboardingState>) {

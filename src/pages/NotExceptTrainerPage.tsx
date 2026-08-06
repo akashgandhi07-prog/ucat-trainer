@@ -4,7 +4,12 @@ import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import { useAuth } from "../hooks/useAuth";
 import type { Passage } from "../data/passages";
-import { pickNewRandomPassage } from "../lib/passages";
+import {
+  getVrPassageCandidates,
+  hydrateSeenFromCloud,
+  markPassageSeen,
+  pickUnseenPassage,
+} from "../lib/vrPassageHistory";
 import { generateExceptSet } from "../components/quiz/DistortionQuiz";
 import type { ExceptQuestion } from "../components/quiz/DistortionQuiz";
 import { appendGuestSession } from "../lib/guestSessions";
@@ -58,7 +63,9 @@ export default function NotExceptTrainerPage() {
 
   const [phase, setPhase] = useState<Phase>("reading");
   const [passage, setPassage] = useState<Passage>(
-    () => state?.passage ?? pickNewRandomPassage(null, difficulty)
+    () =>
+      state?.passage ??
+      pickUnseenPassage(TRAINING_TYPE, getVrPassageCandidates(difficulty))
   );
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
@@ -82,8 +89,14 @@ export default function NotExceptTrainerPage() {
     };
   }, []);
 
+  // Hydrate cross-device passage history once per page load (fire-and-forget).
+  useEffect(() => {
+    if (user) void hydrateSeenFromCloud(user.id);
+  }, [user]);
+
   useEffect(() => {
     if (phase === "reading") {
+      markPassageSeen(TRAINING_TYPE, passage.id);
       trackEvent("trainer_started", {
         training_type: TRAINING_TYPE,
         difficulty,
@@ -185,7 +198,9 @@ export default function NotExceptTrainerPage() {
   const handleRestart = useCallback(() => {
     hasAutoSavedRef.current = false;
     sessionIdRef.current = newClientSessionId();
-    setPassage((cur) => pickNewRandomPassage(cur.id, difficulty));
+    setPassage((cur) =>
+      pickUnseenPassage(TRAINING_TYPE, getVrPassageCandidates(difficulty), cur.id)
+    );
     setPhase("reading");
     setCurrentIndex(0);
     setSelected(null);

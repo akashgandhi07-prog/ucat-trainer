@@ -23,6 +23,7 @@
       "@/lib/app-link": ["./src/planner/shim/app-link.tsx"],
       "@/lib/supabase/client": ["./src/planner/shim/supabase-client.ts"],
       "@/lib/create-plan-from-onboarding": ["./src/planner/lib/create-plan-from-onboarding.ts"],
+      "@/lib/load-planner-data": ["./src/planner/lib/load-planner-data.ts"],
       "@/lib/planner-client": ["./src/planner/lib/planner-client.ts"],
       "@/lib/export-plan-pdf": ["./src/planner/lib/export-plan-pdf.ts"],
       "@/components/guest/guest-sign-in-cta": ["./src/planner/shim/guest-sign-in-cta.tsx"],

@@ -212,10 +212,14 @@ function pickPassageForTrainer(
   return pickUnseenPassage(trainer, getVrPassageCandidates(level, cat));
 }
 
-/** The three trainers that draw from the local passage bank (inference has DB-backed rotation). */
-const VR_BANK_TRAINERS: VrTrainerType[] = ["speed_reading", "rapid_recall", "keyword_scanning"];
+/**
+ * The three trainers that draw from the local passage bank and appear as modes on this
+ * hub (inference has DB-backed rotation; NOT/EXCEPT shares the bank but is its own page).
+ */
+type VrBankTrainer = Extract<VrTrainerType, TrainingType>;
+const VR_BANK_TRAINERS: VrBankTrainer[] = ["speed_reading", "rapid_recall", "keyword_scanning"];
 
-function computeBankProgress(): Record<VrTrainerType, { seen: number; total: number }> {
+function computeBankProgress(): Record<VrBankTrainer, { seen: number; total: number }> {
   return {
     speed_reading: getBankProgress("speed_reading", PASSAGES.length),
     rapid_recall: getBankProgress("rapid_recall", PASSAGES.length),

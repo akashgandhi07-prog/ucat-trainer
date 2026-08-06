@@ -183,6 +183,7 @@ export default defineConfig(({ mode }) => {
           plannerLib,
           'create-plan-from-onboarding.ts',
         ),
+        '@/lib/load-planner-data': path.resolve(plannerLib, 'load-planner-data.ts'),
         '@/lib/planner-client': path.resolve(plannerLib, 'planner-client.ts'),
         '@/lib/export-plan-pdf': path.resolve(plannerLib, 'export-plan-pdf.ts'),
         '@/components/guest/guest-sign-in-cta': path.resolve(

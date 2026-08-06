@@ -17,7 +17,11 @@ import type { TrainingDifficulty } from "../types/training";
 import { supabase } from "./supabase";
 import { hiddenDistortionPassageIds } from "./questionOverrides";
 
-export type VrTrainerType = "speed_reading" | "rapid_recall" | "keyword_scanning";
+export type VrTrainerType =
+  | "speed_reading"
+  | "rapid_recall"
+  | "keyword_scanning"
+  | "not_except";
 
 const STORAGE_KEY = "vr_seen_passages_v1";
 /** Cap per trainer so the stored list stays small even as the bank grows. */
@@ -26,7 +30,12 @@ const MAX_SEEN_IDS = 300;
 type SeenMap = Partial<Record<VrTrainerType, string[]>>;
 
 function isVrTrainerType(value: unknown): value is VrTrainerType {
-  return value === "speed_reading" || value === "rapid_recall" || value === "keyword_scanning";
+  return (
+    value === "speed_reading" ||
+    value === "rapid_recall" ||
+    value === "keyword_scanning" ||
+    value === "not_except"
+  );
 }
 
 function loadSeenMap(): SeenMap {
@@ -156,10 +165,14 @@ export function pickUnseenPassage(
 ): Passage {
   let source = candidates.length > 0 ? candidates : PASSAGES;
 
-  // The Speed Reading / Rapid Recall trainers generate distortion questions from
-  // a passage; an admin can hide a whole passage from that pool. Filter those out
-  // (best-effort: empty until the overrides snapshot loads).
-  if (trainerType === "speed_reading" || trainerType === "rapid_recall") {
+  // The Speed Reading / Rapid Recall / NOT-EXCEPT trainers generate distortion
+  // questions from a passage; an admin can hide a whole passage from that pool.
+  // Filter those out (best-effort: empty until the overrides snapshot loads).
+  if (
+    trainerType === "speed_reading" ||
+    trainerType === "rapid_recall" ||
+    trainerType === "not_except"
+  ) {
     const hidden = hiddenDistortionPassageIds();
     if (hidden.size > 0) {
       const filtered = source.filter((p) => !hidden.has(p.id));
