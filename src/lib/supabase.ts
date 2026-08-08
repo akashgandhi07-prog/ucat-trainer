@@ -1,4 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
+// Side-effect import, and it must stay above createClient(): this module reads the auth
+// fragment (#type=recovery) at evaluation time, before the client starts stripping it.
+import './authUrlSnapshot';
 
 // Client uses only the anon key; service role key must never be referenced in client code.
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;

@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { getAuthUrlSnapshot } from "../lib/authUrlSnapshot";
 import { withRetry } from "../lib/retry";
 import { STALE_SESSION_EVENT } from "../lib/authError";
 import { authLog } from "../lib/logger";
@@ -80,10 +82,13 @@ async function tryMailchimpJwtBackup(sessionUser: User, caller: string): Promise
 
 const GET_SESSION_BASE_MS = 600;
 
+const RESET_PASSWORD_PATH = "/reset-password";
+
 const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { showToast } = useToast();
+  const navigate = useNavigate();
   const [user, setUser] = useState<AuthState["user"]>(null);
   const [profile, setProfile] = useState<AuthState["profile"]>(null);
   const [loading, setLoading] = useState(true);
@@ -108,6 +113,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!mountedRef.current) return;
     setProfile(p);
   }, []);
+
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
+
+  /**
+   * A recovery link that Supabase could not redirect precisely lands on the home page
+   * instead of the reset form, and supabase-js quietly turns the token into a normal
+   * session - so the user looks signed in and is never asked for a new password. Route
+   * any recovery landing to the form, wherever it came ashore.
+   */
+  const goToResetPassword = useCallback((source: string) => {
+    if (typeof window === "undefined") return;
+    if (window.location.pathname === RESET_PASSWORD_PATH) return;
+    authLog.info("Password recovery link detected - routing to reset form", {
+      source,
+      from: window.location.pathname,
+    });
+    navigateRef.current(RESET_PASSWORD_PATH, { replace: true });
+  }, []);
+
+  // Covers the case where supabase-js emitted PASSWORD_RECOVERY before this provider
+  // subscribed, which leaves the auth listener below with nothing to react to.
+  useEffect(() => {
+    if (getAuthUrlSnapshot().isRecovery) goToResetPassword("url_snapshot");
+  }, [goToResetPassword]);
 
   /**
    * A locally stored token can outlive its session (revoked, user deleted, refresh
@@ -237,6 +267,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const u = session?.user ?? null;
       setSessionLoadFailed(false);
+
+      // Fires instead of SIGNED_IN when the session came from a recovery link, and it can
+      // arrive before INITIAL_SESSION - so it is handled ahead of the initialLoadDone gate
+      // below, which would otherwise drop it. INITIAL_SESSION still runs afterwards and
+      // does the profile work; this branch only gets the user to the password form.
+      if (event === "PASSWORD_RECOVERY") {
+        setUser(u);
+        setLoading(false);
+        goToResetPassword("auth_event");
+        return;
+      }
 
       // INITIAL_SESSION is the first event - use it instead of manual loadSession
       if (event === "INITIAL_SESSION") {
@@ -420,7 +461,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       authListenerActive = false;
       subscription.unsubscribe();
     };
-  }, [fetchProfile, showToast, bootstrapProfile, handleStaleSession]);
+  }, [fetchProfile, showToast, bootstrapProfile, handleStaleSession, goToResetPassword]);
 
   // Fallback: if INITIAL_SESSION never fires (e.g. edge case / env), stop loading after a short delay
   const loadingRef = useRef(loading);

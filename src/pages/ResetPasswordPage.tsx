@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import { supabase } from "../lib/supabase";
+import { getAuthUrlSnapshot } from "../lib/authUrlSnapshot";
 import { authLog } from "../lib/logger";
 import { validatePassword, getPasswordRequirementHint } from "../lib/passwordValidation";
 import { useToast } from "../contexts/ToastContext";
@@ -24,7 +25,14 @@ export default function ResetPasswordPage() {
       setHasSession(!!session);
       if (!session) {
         setStatus("no_session");
-        setMessage("Use the link from your reset email to set a new password. Links expire in 1 hour.");
+        // Supabase puts the reason in the fragment when it rejects a link (expired,
+        // already used); saying which one it was beats a generic prompt.
+        const linkError = getAuthUrlSnapshot().errorDescription;
+        setMessage(
+          linkError
+            ? `${linkError}. Request a new reset link and open it within 1 hour.`
+            : "Use the link from your reset email to set a new password. Links expire in 1 hour.",
+        );
       }
     });
     return () => {
@@ -62,10 +70,13 @@ export default function ResetPasswordPage() {
       return;
     }
 
+    // Deliberately no auto-redirect. A timed bounce to the home page reads as "nothing
+    // happened" on a phone - the toast is gone before it is noticed, and the landing page
+    // gives no sign the password changed or that the user is already signed in. Confirm
+    // in place and let them choose to move on.
     authLog.info("Password updated successfully");
     setStatus("success");
-    showToast("Password updated. You can now sign in with your new password.", { variant: "success" });
-    setTimeout(() => navigate("/", { replace: true }), 1500);
+    showToast("Password updated. You are signed in.", { variant: "success" });
   };
 
   const inputClass =
@@ -157,7 +168,26 @@ export default function ResetPasswordPage() {
             )}
 
             {hasSession === true && status === "success" && (
-              <p className="text-green-600">Password updated. Redirecting you to the home page…</p>
+              <div className="rounded-lg border border-training-success bg-training-success-muted px-4 py-4">
+                <p className="font-medium text-foreground">Password updated</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  You’re signed in on this device already. Use your new password next time you sign in.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => navigate("/dashboard", { replace: true })}
+                  className="mt-4 w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
+                >
+                  Go to my dashboard
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate("/", { replace: true })}
+                  className="mt-2 w-full px-4 py-2 border border-border text-foreground rounded-lg hover:bg-secondary"
+                >
+                  Back to home
+                </button>
+              </div>
             )}
 
             {hasSession === null && (

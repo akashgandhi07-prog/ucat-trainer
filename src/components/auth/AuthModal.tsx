@@ -7,6 +7,7 @@ import { authLog } from "../../lib/logger";
 import { getPasswordRequirementHint } from "../../lib/passwordValidation";
 import { getAuthSchema, type AuthFormData } from "../../lib/authSchema";
 import { trackEvent } from "../../lib/analytics";
+import { getAuthRedirectBaseUrl } from "../../lib/siteUrl";
 import type { Stream } from "../../lib/profileApi";
 import type { AuthModalMode } from "../../contexts/AuthModalContext";
 
@@ -62,10 +63,7 @@ function getUserFriendlyAuthError(rawMessage: string): string {
 type Mode = AuthModalMode;
 
 function getResetRedirectUrl(): string {
-  if (typeof window === "undefined") return "";
-  const origin = window.location.origin;
-  const path = "/reset-password";
-  return `${origin}${path}`;
+  return `${getAuthRedirectBaseUrl()}/reset-password`;
 }
 
 export default function AuthModal({ isOpen, onClose, initialMode = "login" }: AuthModalProps) {
