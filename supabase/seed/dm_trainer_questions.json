@@ -2187,7 +2187,7 @@
       }
     ],
     "correct_answer": "C",
-    "explanation": "Plan X expected total cost = £20 + 0.25 × £80 = £20 + £20 = £40. Plan Y costs £35. Considering only expected total cost, Plan Y is cheaper.",
+    "explanation": "Expected cost averages the possible outcomes, weighted by how likely each one is. With Plan X, 25% of the time you pay £20 + £80 = £100, and 75% of the time you pay just £20. Multiplying 0.25 × £80 = £20 gives the average extra charge: if four people chose Plan X, on average one of them would pay the £80, so spread across all four that is £20 each. Plan X's expected total is therefore £20 + £20 = £40, while Plan Y always costs £35, so Plan Y is cheaper on average.",
     "skill_tag": "expected-value",
     "common_trap": "ignores-variable-risk",
     "optional_working_steps": null,
