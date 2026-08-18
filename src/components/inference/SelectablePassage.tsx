@@ -136,24 +136,36 @@ export default function SelectablePassage({
     );
   }
 
-  // Build segments with highlights
-  const segments: { start: number; end: number; type?: "correct" | "incorrect" }[] = [];
-  const sorted = [...highlights].sort((a, b) => a.span.start - b.span.start);
-
-  let pos = 0;
-  for (const h of sorted) {
-    if (h.span.start > pos) {
-      segments.push({ start: pos, end: h.span.start });
-    }
-    segments.push({
-      start: h.span.start,
-      end: h.span.end,
-      type: h.type,
-    });
-    pos = Math.max(pos, h.span.end);
+  // Build segments with highlights. Spans can overlap (a wrong selection often
+  // partially covers the correct span), so segment at every boundary and give
+  // each slice a single type: rendering each highlight's full range would
+  // repeat the overlapping text.
+  const boundaries = new Set<number>([0, passageText.length]);
+  for (const h of highlights) {
+    boundaries.add(Math.max(0, Math.min(h.span.start, passageText.length)));
+    boundaries.add(Math.max(0, Math.min(h.span.end, passageText.length)));
   }
-  if (pos < passageText.length) {
-    segments.push({ start: pos, end: passageText.length });
+  const points = [...boundaries].sort((a, b) => a - b);
+
+  const segments: { start: number; end: number; type?: "correct" | "incorrect" }[] = [];
+  for (let i = 0; i < points.length - 1; i++) {
+    const start = points[i];
+    const end = points[i + 1];
+    if (start >= end) continue;
+    const covering = highlights.filter(
+      (h) => h.span.start <= start && h.span.end >= end
+    );
+    const type = covering.some((h) => h.type === "correct")
+      ? ("correct" as const)
+      : covering.length > 0
+        ? ("incorrect" as const)
+        : undefined;
+    const prev = segments[segments.length - 1];
+    if (prev && prev.end === start && prev.type === type) {
+      prev.end = end;
+    } else {
+      segments.push({ start, end, type });
+    }
   }
 
   return (

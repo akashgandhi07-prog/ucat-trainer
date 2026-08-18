@@ -1301,7 +1301,8 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
   }
   if (passageId === "pass_49") {
     const q1 = spanFor(text, "Neuroplasticity also plays a crucial role in recovery from stroke. Through rehabilitation patients can retrain undamaged parts of the brain to take over functions previously managed by damaged areas.");
-    if (q1) { questions.push({ id: "inf_49_q1", passageId: "pass_49", questionText: "Identify the part of the text from which we can infer how stroke recovery can occur.", correctSpans: [q1], explanation: "Retrain undamaged parts to take over functions of damaged areas.", difficulty: "medium", }); }
+    const q1Alt = spanFor(text, "Through rehabilitation patients can retrain undamaged parts of the brain to take over functions previously managed by damaged areas.");
+    if (q1) { questions.push({ id: "inf_49_q1", passageId: "pass_49", questionText: "Identify the part of the text from which we can infer how stroke recovery can occur.", correctSpans: [q1], alternateSpans: q1Alt ? [q1Alt] : undefined, explanation: "Retrain undamaged parts to take over functions of damaged areas.", difficulty: "medium", }); }
     const q2 = spanFor(text, "However plasticity can also be maladaptive in certain conditions like chronic tinnitus where the brain rewires itself in a way that causes suffering.");
     if (q2) { questions.push({ id: "inf_49_q2", passageId: "pass_49", questionText: "Identify the part of the text from which we can infer that brain rewiring can be harmful.", correctSpans: [q2], explanation: "Plasticity can be maladaptive and cause suffering.", difficulty: "medium", }); }
     const q3 = spanFor(text, "For a long time it was believed that the adult brain was a static organ unable to generate new neurons.");

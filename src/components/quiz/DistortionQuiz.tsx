@@ -331,7 +331,9 @@ const SYNONYM_MAP: [RegExp, string[]][] = [
   [/\bthereafter\b/gi, ["subsequently", "afterwards", "later", "following this"]],
   [/\bpreviously\b/gi, ["earlier", "before", "formerly", "in the past"]],
   [/\bformerly\b/gi, ["previously", "earlier", "once", "in the past"]],
-  [/\brecently\b/gi, ["in recent times", "lately", "of late", "in recent years"]],
+  // "More recently" / "most recently" are units; swapping just "recently"
+  // strands the comparative ("More in recent years").
+  [/(?<!more )(?<!most )\brecently\b/gi, ["in recent times", "lately", "of late", "in recent years"]],
   [/\bincreasingly\b/gi, ["more and more", "progressively", "ever more", "to a greater extent"]],
   [/\bprogressively\b/gi, ["increasingly", "gradually", "steadily", "over time"]],
   [/\bgradually\b/gi, ["progressively", "steadily", "over time", "little by little"]],
@@ -607,6 +609,12 @@ function distortNegation(s: string): DistortionResult {
   if (/\b(no(?!\s+longer)|none|neither|nothing|nobody)\b/i.test(s)) {
     return { text: s, applied: false };
   }
+  // "at all" is a negative polarity item: removing the negation that licenses
+  // it strands it ("the good may be provided at all"), so leave these
+  // sentences to the other strategies.
+  if (/\bat all\b/i.test(s)) {
+    return { text: s, applied: false };
+  }
   // With two or more negations, flipping them all scrambles the meaning rather
   // than cleanly reversing it; leave those sentences to the other strategies.
   const negationCount = (s.match(/\b(cannot|can't|never|no longer|not)\b/gi) ?? []).length;
@@ -701,9 +709,14 @@ function distortScope(s: string): DistortionResult {
     [/\bin some\b/gi, "in all", '"in some" → "in all"', true],
     // "all" not "every": "certain" usually precedes a plural ("certain groups")
     [/\bcertain\b/gi, "all", '"certain" → "all"', true],
-    // Only replace "most" as a quantifier (e.g. "most countries"), NOT as a superlative.
-    // Chained negative lookbehinds exclude "the most" and "at most".
-    [/(?<!the )(?<!at )\bmost\b/gi, "all", '"most" → "all"', true],
+    // Only replace "most" as a quantifier (e.g. "most countries"), NOT as a
+    // superlative or adverb ("matter most", "most importantly", "is most
+    // profound"). Blacklisting superlative contexts proved leaky, so require a
+    // clear quantifier shape instead: "most of ...", "most people", or "most"
+    // followed by a plural-looking noun (word ending in s, excluding
+    // function words like "is"). Skipping a real quantifier is harmless; the
+    // other strategies still apply.
+    [/(?<!the )(?<!at )\bmost\b(?=\s+(?:of\b|people\b|(?!(?:is|was|has|does|as|its|this)\b)[A-Za-z]+s\b))/gi, "all", '"most" → "all"', true],
     [/\bseveral\b/gi, "all", '"several" → "all"', true],
     [/\ba few\b/gi, "all", '"a few" → "all"', true],
     [/\bspecific\b/gi, "universal", '"specific" → "universal"', true],
@@ -719,11 +732,17 @@ function distortScope(s: string): DistortionResult {
     const m = s.match(re);
     if (m) {
       if (m.index != null && isUnderNegation(s, m.index)) continue;
+      // Preserve the capitalisation of the word being replaced, so a
+      // sentence-initial "Most systems..." becomes "All systems..."
+      const cased =
+        m[0][0] === m[0][0].toUpperCase() && m[0][0] !== m[0][0].toLowerCase()
+          ? rep.charAt(0).toUpperCase() + rep.slice(1)
+          : rep;
       return {
-        text: s.replace(re, rep), applied: true,
+        text: s.replace(re, cased), applied: true,
         label: `scope broadened: ${label}`,
         originalFragment: m[0],
-        replacedFragment: rep,
+        replacedFragment: cased,
       };
     }
   }
