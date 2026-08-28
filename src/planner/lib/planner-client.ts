@@ -624,6 +624,10 @@ export async function rebalancePlan(input: {
   }
 
   const adjusted: string[] = []
+  // Confidence bottoms out at 1, after which a rebuild cannot add any more
+  // emphasis. Saying so beats regenerating an identical plan in silence, which
+  // students read as the rebuild being broken.
+  const alreadyMaxed: string[] = []
   for (const key of input.needsMore) {
     if (!SECTION_KEYS.has(key)) continue
     const col =
@@ -638,6 +642,7 @@ export async function rebalancePlan(input: {
     const next = bumpPracticeConfidence(prev)
     patch[col] = next
     if (next !== prev) adjusted.push(key.toUpperCase())
+    else alreadyMaxed.push(key.toUpperCase())
   }
 
   const { error: upErr } = await supabase.from('plans').update(patch).eq('id', input.planId)
@@ -657,6 +662,11 @@ export async function rebalancePlan(input: {
   if (adjusted.length > 0) {
     warnings.push(
       `Practice emphasis increased for ${adjusted.join(', ')} (confidence nudged toward more scheduled time).`,
+    )
+  }
+  if (alreadyMaxed.length > 0) {
+    warnings.push(
+      `${alreadyMaxed.join(', ')} ${alreadyMaxed.length === 1 ? 'is' : 'are'} already at maximum practice emphasis, so this rebuild applied your hours only. To shift the balance further, update your mock scores or targets on the mock scores page.`,
     )
   }
   return { warnings }

@@ -186,15 +186,30 @@ export function calcSectionWeights(
   }
 
   const mainSum = vr + dm + qr
-  // SJT starts at 60% of the main average, then responds to actual SJT performance:
-  // a band worse than target (or band 3-4 with no target set) pulls in more SJT time.
-  let sjt = (mainSum / 3) * 0.6 + (tagWeights?.sjt ?? 0)
+  const mainAvg = mainSum / 3
+  // SJT starts at 60% of the main average, scaled by the student's own SJT
+  // confidence. That confidence was previously passed in and never read, so the
+  // planner's "more practice on SJT" toggle silently did nothing; a neutral 3
+  // still gives exactly the old 60%.
+  let sjt = mainAvg * 0.6 * (confTerm(confidence.sjt) / 3) + (tagWeights?.sjt ?? 0)
   const band = signals?.sjtBand ?? null
   const targetBand = signals?.targetSjtBand ?? null
   if (band != null) {
-    if (targetBand != null && band > targetBand) sjt += (band - targetBand) * 0.8
-    else if (targetBand == null && band >= 3) sjt += (band - 2) * 0.6
+    // Band gap: how far short of the target the last mock landed (1 best … 4 weakest).
+    const gap = targetBand != null ? band - targetBand : band >= 3 ? band - 2 : 0
+    // Scale the boost against the other sections rather than adding a flat 0.8
+    // per band. A flat add sat on the same scale as a whole section, so a
+    // student who logged band 3 and targeted band 1 - an ordinary combination -
+    // pushed SJT above VR, DM and QR and got an almost entirely SJT plan.
+    if (gap > 0) sjt += mainAvg * 0.2 * Math.min(gap, 3)
   }
+  // However weak the band, the automatic boost never lets SJT outrank the
+  // numbered section that needs the most work. Students reported plans that were
+  // "all SJT for the majority of the days" with no way to change them. A student
+  // who has explicitly said SJT is their weakest area may go a little past that
+  // ceiling, because there the emphasis is what they asked for.
+  const sjtCeiling = Math.max(vr, dm, qr) * (confidence.sjt <= 2 ? 1.25 : 1)
+  sjt = Math.min(sjt, sjtCeiling)
 
   const total = vr + dm + qr + sjt
   return { vr: vr / total, dm: dm / total, qr: qr / total, sjt: sjt / total }
@@ -451,11 +466,22 @@ function urgencyBoost(
 
 // ─── Session planning ─────────────────────────────────────────────────────────
 
-function weakestPracticeSection(weights: SectionWeight): SessionType {
+/**
+ * The single practice block that fills the time left after a mock. The spacing
+ * boost is applied here too: without it the weights sit so close together that
+ * the sort always returned the same section, so every mock day ended with the
+ * same drill and consecutive weeks were identical.
+ */
+function weakestPracticeSection(
+  weights: SectionWeight,
+  tracker: SectionTracker,
+  currentDayIndex: number,
+  confidence: { vr: number; dm: number; qr: number; sjt: number },
+): SessionType {
   return (([
-    { type: 'vr_practice' as SessionType, weight: weights.vr },
-    { type: 'dm_practice' as SessionType, weight: weights.dm },
-    { type: 'qr_practice' as SessionType, weight: weights.qr },
+    { type: 'vr_practice' as SessionType, weight: weights.vr + urgencyBoost('vr', tracker, currentDayIndex, confidence) },
+    { type: 'dm_practice' as SessionType, weight: weights.dm + urgencyBoost('dm', tracker, currentDayIndex, confidence) },
+    { type: 'qr_practice' as SessionType, weight: weights.qr + urgencyBoost('qr', tracker, currentDayIndex, confidence) },
   ]).sort((a, b) => b.weight - a.weight))[0].type
 }
 
@@ -477,13 +503,18 @@ function rankedMiniMockFocuses(weights: SectionWeight): UCATSection[] {
 
 function miniMockFocusForSlot(weights: SectionWeight, slot: number): UCATSection {
   const ranked = rankedMiniMockFocuses(weights)
+  // The top-ranked section leads the cycle but no longer takes half of every
+  // week's mini mocks: at 3 slots in 6 a single section filled 3 of the 5
+  // weekday mocks, so every week read the same and students asked why their
+  // plan was one subtest. Two slots for each of the top two keeps the emphasis
+  // without crowding the other sections out.
   const focusCycle: UCATSection[] = [
     ranked[0],
     ranked[1] ?? ranked[0],
-    ranked[0],
     ranked[2] ?? ranked[0],
     ranked[0],
     ranked[3] ?? ranked[0],
+    ranked[1] ?? ranked[0],
   ]
   return focusCycle[slot % focusCycle.length]
 }
@@ -528,7 +559,7 @@ export function planDaySessions(
       sessions.push({ type: 'reflection' })
       remaining -= REFLECTION_AFTER_MOCK_MIN
       // Use any leftover time for targeted practice
-      const weak = weakestPracticeSection(weights)
+      const weak = weakestPracticeSection(weights, tracker, currentDayIndex, confidence)
       if (remaining >= SESSION_DURATIONS[weak]) sessions.push({ type: weak })
       return { sessions }
     }
@@ -543,7 +574,7 @@ export function planDaySessions(
       remaining -= fullMock
       sessions.push({ type: 'reflection' })
       remaining -= REFLECTION_AFTER_MOCK_MIN
-      const weak = weakestPracticeSection(weights)
+      const weak = weakestPracticeSection(weights, tracker, currentDayIndex, confidence)
       if (remaining >= SESSION_DURATIONS[weak]) sessions.push({ type: weak })
       return { sessions }
     }
@@ -560,7 +591,7 @@ export function planDaySessions(
       if (remaining >= miniBlock) {
         sessions.push({ type: 'mini_mock', miniMockFocus: miniMockFocusForSlot(weights, weekMockCount) })
         remaining -= miniBlock
-        const weak = weakestPracticeSection(weights)
+        const weak = weakestPracticeSection(weights, tracker, currentDayIndex, confidence)
         if (remaining >= SESSION_DURATIONS[weak]) sessions.push({ type: weak })
         return { sessions }
       }
@@ -572,7 +603,7 @@ export function planDaySessions(
   if (weekMockCount < weeklyMockCap && remaining >= miniBlock) {
     sessions.push({ type: 'mini_mock', miniMockFocus: miniMockFocusForSlot(weights, weekMockCount) })
     remaining -= miniBlock
-    const weak = weakestPracticeSection(weights)
+    const weak = weakestPracticeSection(weights, tracker, currentDayIndex, confidence)
     if (remaining >= SESSION_DURATIONS[weak]) sessions.push({ type: weak })
     return { sessions }
   }
@@ -670,6 +701,11 @@ export interface PlanInputs {
    * down without changing their overall stated hours.
    */
   weekIntensities?: Record<string, WeekIntensity>
+  /**
+   * Informational only. The engine always generates from this Monday; callers
+   * trim and renumber afterwards in prepareRegeneratedRows. Setting it does not
+   * move the start of the generated plan.
+   */
   regenerateFromWeek?: number
 }
 
