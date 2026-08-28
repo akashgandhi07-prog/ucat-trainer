@@ -797,7 +797,7 @@ export const DATA_LOGIC_QUESTIONS: DmTrainerQuestion[] = [
       { id: "D", text: "They have equal expected repair cost." },
     ],
     correctAnswer: "A",
-    explanation: "Expected repair cost for A = 0.6 × £0 + 0.4 × £100 = £40. Machine B always costs £50. Considering only expected repair cost, Machine A is cheaper.",
+    explanation: "Expected cost averages the possible outcomes, weighted by how likely each one is. With Machine A, 40% of the time you pay £100 and 60% of the time you pay nothing, so 0.4 × £100 = £40 is the average bill: if ten machines were repaired, on average four of them would cost £100, which is £40 each across all ten. Machine B costs £50 every time. Comparing £40 with £50, Machine A is cheaper on average, even though it is the only one that can ever produce a £100 bill.",
     generalRule: "Expected value = sum of probability × outcome across all possible outcomes.",
     wrongOptionReasons: {
       A: "Correct - Machine A's expected cost is £40, lower than £50.",
