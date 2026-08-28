@@ -56,6 +56,14 @@ export function useSyllogismLogic(mode: SyllogismMode) {
 
   const startedAtRef = useRef<number>(0);
   const lastAnswerAtRef = useRef<number>(0);
+  /**
+   * Reading the explanation should not cost the student time on the clock, so
+   * the timer banks the seconds run so far and stops while the answer is being
+   * reviewed. `runningSinceRef` is null whenever the clock is paused.
+   */
+  const bankedMsRef = useRef<number>(0);
+  const runningSinceRef = useRef<number | null>(null);
+  const [timerPaused, setTimerPaused] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   /** Micro: set when submitAnswer is called so Space can advance before state flushes. */
   const justAnsweredIndexRef = useRef<number | null>(null);
@@ -101,6 +109,30 @@ export function useSyllogismLogic(mode: SyllogismMode) {
     }
   }, [loading, questions.length, sessionFinished, mode]);
 
+  const elapsedMs = useCallback(() => {
+    const running = runningSinceRef.current;
+    return bankedMsRef.current + (running == null ? 0 : Date.now() - running);
+  }, []);
+
+  /** Stop the clock while the student reads why they were right or wrong. */
+  const pauseTimer = useCallback(() => {
+    if (runningSinceRef.current == null) return;
+    bankedMsRef.current += Date.now() - runningSinceRef.current;
+    runningSinceRef.current = null;
+    setTotalElapsedSeconds(Math.floor(bankedMsRef.current / 1000));
+    setTimerPaused(true);
+  }, []);
+
+  /** Restart the clock on the next question, and start that question's decision
+   *  time from now so the explanation reading time is not charged to it. */
+  const resumeTimer = useCallback(() => {
+    if (runningSinceRef.current != null) return;
+    const now = Date.now();
+    runningSinceRef.current = now;
+    lastAnswerAtRef.current = now;
+    setTimerPaused(false);
+  }, []);
+
   useEffect(() => {
     if (questions.length === 0 || sessionFinished) {
       if (intervalRef.current) {
@@ -110,9 +142,7 @@ export function useSyllogismLogic(mode: SyllogismMode) {
       return;
     }
     intervalRef.current = setInterval(() => {
-      setTotalElapsedSeconds(
-        Math.floor((Date.now() - startedAtRef.current) / 1000)
-      );
+      setTotalElapsedSeconds(Math.floor(elapsedMs() / 1000));
     }, 1000);
     return () => {
       if (intervalRef.current) {
@@ -120,12 +150,15 @@ export function useSyllogismLogic(mode: SyllogismMode) {
         intervalRef.current = null;
       }
     };
-  }, [questions.length, sessionFinished]);
+  }, [questions.length, sessionFinished, elapsedMs]);
 
   const resetTiming = () => {
     const now = Date.now();
     startedAtRef.current = now;
     lastAnswerAtRef.current = now;
+    bankedMsRef.current = 0;
+    runningSinceRef.current = now;
+    setTimerPaused(false);
     setTotalElapsedSeconds(0);
     setDecisionTimes([]);
   };
@@ -309,13 +342,14 @@ export function useSyllogismLogic(mode: SyllogismMode) {
       if (userAnswers[idx] !== null) return;
       recordDecisionTime();
       justAnsweredIndexRef.current = idx;
+      if (isLinearMode) pauseTimer();
       setUserAnswers((prev) => {
         const next = [...prev];
         next[idx] = answer;
         return next;
       });
     },
-    [questions.length, currentIndex, userAnswers, recordDecisionTime]
+    [questions.length, currentIndex, userAnswers, recordDecisionTime, isLinearMode, pauseTimer]
   );
 
   const setAnswerForIndex = useCallback((index: number, answer: boolean) => {
@@ -435,6 +469,7 @@ export function useSyllogismLogic(mode: SyllogismMode) {
     const justAnswered = justAnsweredIndexRef.current === currentIndex;
     if (!hasAnswer && !justAnswered) return;
     justAnsweredIndexRef.current = null;
+    resumeTimer();
     if (currentIndex === questions.length - 1) {
       if (mode === "foundation") {
         void (async () => {
@@ -460,6 +495,7 @@ export function useSyllogismLogic(mode: SyllogismMode) {
     sessionFinished,
     finishSession,
     appendFoundationQuestions,
+    resumeTimer,
   ]);
 
   // Keep finishSessionRef pointing at the latest callback (avoids stale closure in exit handler).
@@ -476,6 +512,7 @@ export function useSyllogismLogic(mode: SyllogismMode) {
     userAnswers,
     decisionTimes,
     totalElapsedSeconds,
+    timerPaused,
     loading,
     error,
     sessionFinished,

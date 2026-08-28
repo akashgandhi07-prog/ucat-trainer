@@ -40,6 +40,7 @@ export default function FoundationDrill() {
     currentIndex,
     userAnswers,
     totalElapsedSeconds,
+    timerPaused,
     loading,
     error,
     sessionFinished,
@@ -121,7 +122,7 @@ export default function FoundationDrill() {
             <div className="flex flex-col items-end gap-2 shrink-0">
               <div className="text-right">
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Time
+                  {timerPaused ? "Time · paused" : "Time"}
                 </p>
                 <p className="text-sm font-semibold text-foreground">
                   {totalElapsedSeconds}s

@@ -34,6 +34,7 @@ export default function MicroDrill() {
     currentIndex,
     userAnswers,
     totalElapsedSeconds,
+    timerPaused,
     loading,
     error,
     sessionFinished,
@@ -113,7 +114,7 @@ export default function MicroDrill() {
               </div>
               <div className="text-right shrink-0">
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Time
+                  {timerPaused ? "Time · paused" : "Time"}
                 </p>
                 <p className="text-sm font-semibold text-foreground">
                   {totalElapsedSeconds}s
