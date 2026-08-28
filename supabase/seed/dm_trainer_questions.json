@@ -1358,7 +1358,7 @@
     "options": [
       {
         "id": "A",
-        "text": "16"
+        "text": "28"
       },
       {
         "id": "B",
@@ -1370,10 +1370,10 @@
       },
       {
         "id": "D",
-        "text": "28"
+        "text": "16"
       }
     ],
-    "correct_answer": "A",
+    "correct_answer": "D",
     "explanation": "Each pairwise total includes the 4 who used all three. Exactly two = (12 − 4) + (9 − 4) + (7 − 4) = 8 + 5 + 3 = 16.",
     "skill_tag": "exactly-two",
     "common_trap": "includes-all-three-incorrectly",
@@ -1400,7 +1400,7 @@
     "options": [
       {
         "id": "A",
-        "text": "35"
+        "text": "39"
       },
       {
         "id": "B",
@@ -1408,14 +1408,14 @@
       },
       {
         "id": "C",
-        "text": "39"
+        "text": "35"
       },
       {
         "id": "D",
         "text": "41"
       }
     ],
-    "correct_answer": "C",
+    "correct_answer": "A",
     "explanation": "Total mentions = 22 + 19 + 16 = 57. All-three mentions = 7 × 3 = 21. Exactly-two mentions = 9 × 2 = 18. Exactly-one people = 57 − 21 − 18 = 18. Total = 18 + 9 + 7 + 5 = 39.",
     "skill_tag": "total-mentions",
     "common_trap": "confuses-exactly-and-at-least",
@@ -1485,7 +1485,7 @@
       },
       {
         "id": "B",
-        "text": "11"
+        "text": "22"
       },
       {
         "id": "C",
@@ -1493,10 +1493,10 @@
       },
       {
         "id": "D",
-        "text": "22"
+        "text": "11"
       }
     ],
-    "correct_answer": "B",
+    "correct_answer": "D",
     "explanation": "The two set sizes add to 22 + 19 = 41, which is 11 more than the 30 students. That excess must be shared, so at least 11 study both. Minimum overlap = A + B − total = 41 − 30 = 11.",
     "skill_tag": "minimum-overlap",
     "common_trap": "assumes-no-overlap",
@@ -1521,11 +1521,11 @@
     "options": [
       {
         "id": "A",
-        "text": "17"
+        "text": "26"
       },
       {
         "id": "B",
-        "text": "26"
+        "text": "17"
       },
       {
         "id": "C",
@@ -1536,7 +1536,7 @@
         "text": "40"
       }
     ],
-    "correct_answer": "B",
+    "correct_answer": "A",
     "explanation": "The overlap cannot be larger than the smaller set. Only 26 people can drive, so at most 26 can do both, achieved when every driver can also swim.",
     "skill_tag": "maximum-overlap",
     "common_trap": "forgets-maximum-overlap",
@@ -1565,7 +1565,7 @@
       },
       {
         "id": "B",
-        "text": "23"
+        "text": "35"
       },
       {
         "id": "C",
@@ -1573,10 +1573,10 @@
       },
       {
         "id": "D",
-        "text": "35"
+        "text": "23"
       }
     ],
-    "correct_answer": "B",
+    "correct_answer": "D",
     "explanation": "Everyone likes at least one drink, so there is no none group. Exactly-one = 50 − exactly-two − all-three = 50 − 21 − 6 = 23.",
     "skill_tag": "exactly-one",
     "common_trap": "excludes-all-three",
@@ -1600,11 +1600,11 @@
     "options": [
       {
         "id": "A",
-        "text": "28"
+        "text": "38"
       },
       {
         "id": "B",
-        "text": "38"
+        "text": "28"
       },
       {
         "id": "C",
@@ -1615,7 +1615,7 @@
         "text": "50"
       }
     ],
-    "correct_answer": "B",
+    "correct_answer": "A",
     "explanation": "Both = 40% of 120 = 48. Let x = neither. 'No cat' = only-dog + neither = 50, so only-dog = 50 − x. 'No dog' = only-cat + neither = 60, so only-cat = 60 − x. Equation: (60 − x) + (50 − x) + 48 + x = 120 → 158 − x = 120 → x = 38.",
     "skill_tag": "negative-wording",
     "common_trap": "misinterprets-not-a",
@@ -1648,14 +1648,14 @@
       },
       {
         "id": "C",
-        "text": "24"
+        "text": "30"
       },
       {
         "id": "D",
-        "text": "30"
+        "text": "24"
       }
     ],
-    "correct_answer": "C",
+    "correct_answer": "D",
     "explanation": "No guitar-and-drums means the all-three region is 0. Piano and drums = 2 × 6 = 12. Known regions: only-guitar 7, only-piano 8, guitar+piano 6, piano+drums 12. Only-drums = 45 − 7 − 8 − 6 − 12 = 12. Drums total = only-drums 12 + piano+drums 12 = 24.",
     "skill_tag": "three-set-fill",
     "common_trap": "answers-only-region-not-total-set",
@@ -1689,14 +1689,14 @@
       },
       {
         "id": "C",
-        "text": "55"
+        "text": "59"
       },
       {
         "id": "D",
-        "text": "59"
+        "text": "55"
       }
     ],
-    "correct_answer": "C",
+    "correct_answer": "D",
     "explanation": "Three-set inclusion-exclusion: union = 30 + 25 + 20 − 10 − 8 − 6 + 4 = 75 − 24 + 4 = 55.",
     "skill_tag": "inclusion-exclusion-three-set",
     "common_trap": "forgets-add-back-all-three",
@@ -1722,7 +1722,7 @@
     "options": [
       {
         "id": "A",
-        "text": "7"
+        "text": "11"
       },
       {
         "id": "B",
@@ -1730,14 +1730,14 @@
       },
       {
         "id": "C",
-        "text": "11"
+        "text": "7"
       },
       {
         "id": "D",
         "text": "13"
       }
     ],
-    "correct_answer": "C",
+    "correct_answer": "A",
     "explanation": "Customers in X who also bought another product = (X and Y) + (X and Z) − all-three = 5 + 4 − 2 = 7. Only X = total X − 7 = 18 − 7 = 11.",
     "skill_tag": "only-one-set",
     "common_trap": "double-counts-pair-overlap",
@@ -1762,7 +1762,7 @@
     "options": [
       {
         "id": "A",
-        "text": "11"
+        "text": "30"
       },
       {
         "id": "B",
@@ -1774,10 +1774,10 @@
       },
       {
         "id": "D",
-        "text": "30"
+        "text": "11"
       }
     ],
-    "correct_answer": "D",
+    "correct_answer": "A",
     "explanation": "Overlap ranges from max(0, 33 + 28 − 50) = 11 up to min(33, 28) = 28. So 11, 20 and 28 are all possible, but 30 exceeds the maximum of 28 and is impossible.",
     "skill_tag": "impossible-overlap",
     "common_trap": "forgets-maximum-overlap",
@@ -1807,7 +1807,7 @@
       },
       {
         "id": "B",
-        "text": "63"
+        "text": "75"
       },
       {
         "id": "C",
@@ -1815,10 +1815,10 @@
       },
       {
         "id": "D",
-        "text": "75"
+        "text": "63"
       }
     ],
-    "correct_answer": "B",
+    "correct_answer": "D",
     "explanation": "Total mentions = 54 + 48 + 39 = 141. All-three mentions = 12 × 3 = 36. Exactly-two mentions = 21 × 2 = 42. Exactly-one people = 141 − 36 − 42 = 63.",
     "skill_tag": "total-mentions",
     "common_trap": "subtracts-people-not-mentions",
@@ -1843,7 +1843,7 @@
     "options": [
       {
         "id": "A",
-        "text": "15 members are not on the events committee."
+        "text": "No member is on all three committees."
       },
       {
         "id": "B",
@@ -1855,10 +1855,10 @@
       },
       {
         "id": "D",
-        "text": "No member is on all three committees."
+        "text": "15 members are not on the events committee."
       }
     ],
-    "correct_answer": "A",
+    "correct_answer": "D",
     "explanation": "Everyone is on at least one committee, so the 40 − 25 = 15 who are not on events must be on finance or outreach. The split of those 15, and how many of the 25 are events-only, cannot be determined.",
     "skill_tag": "complement-in-universal-set",
     "common_trap": "confuses-total-with-only",
@@ -1868,7 +1868,7 @@
     "review": {
       "calculationChecked": true,
       "ambiguityRisk": "low",
-      "whySafeToInclude": "Only the complement is determined; B, C and D each assert undetermined sub-regions."
+      "whySafeToInclude": "Only the complement is determined; A, B and C each assert undetermined sub-regions."
     },
     "is_active": true
   },
@@ -1886,7 +1886,7 @@
       },
       {
         "id": "B",
-        "text": "28"
+        "text": "62"
       },
       {
         "id": "C",
@@ -1894,10 +1894,10 @@
       },
       {
         "id": "D",
-        "text": "62"
+        "text": "28"
       }
     ],
-    "correct_answer": "B",
+    "correct_answer": "D",
     "explanation": "Union = 88 + 64 − 30 = 122 (subtract the overlap once). Neither = 150 − 122 = 28.",
     "skill_tag": "union-complement",
     "common_trap": "double-counts-overlap",
@@ -1926,7 +1926,7 @@
       },
       {
         "id": "B",
-        "text": "11"
+        "text": "23"
       },
       {
         "id": "C",
@@ -1934,10 +1934,10 @@
       },
       {
         "id": "D",
-        "text": "23"
+        "text": "11"
       }
     ],
-    "correct_answer": "B",
+    "correct_answer": "D",
     "explanation": "Let exactly-one = e1, exactly-two = e2, all-three = 12. People: e1 + e2 + 12 = 60. Mentions: e1 + 2·e2 + 3·12 = 40 + 30 + 25 = 95. Subtracting the first from the second: e2 + 2·12 = 35, so e2 = 35 − 24 = 11.",
     "skill_tag": "total-mentions",
     "common_trap": "confuses-exactly-and-at-least",
@@ -3479,7 +3479,7 @@
     "options": [
       {
         "id": "A",
-        "text": "15%"
+        "text": "25%"
       },
       {
         "id": "B",
@@ -3487,14 +3487,14 @@
       },
       {
         "id": "C",
-        "text": "25%"
+        "text": "15%"
       },
       {
         "id": "D",
         "text": "30%"
       }
     ],
-    "correct_answer": "C",
+    "correct_answer": "A",
     "explanation": "Convert the raw count: 75 ÷ 300 × 100 = 25% cardiac. Known percentages = 28 + 25 + 22 = 75%. Trauma = 100 − 75 = 25%.",
     "skill_tag": "missing-percentage",
     "common_trap": "raw-number-treated-as-percentage",
@@ -3528,14 +3528,14 @@
       },
       {
         "id": "C",
-        "text": "60%"
+        "text": "72%"
       },
       {
         "id": "D",
-        "text": "72%"
+        "text": "60%"
       }
     ],
-    "correct_answer": "C",
+    "correct_answer": "D",
     "explanation": "The denominator is respondents, not everyone surveyed. 162 ÷ 270 × 100 = 60%.",
     "skill_tag": "denominator",
     "common_trap": "wrong-denominator",
@@ -3563,7 +3563,7 @@
       },
       {
         "id": "B",
-        "text": "0.488"
+        "text": "0.600"
       },
       {
         "id": "C",
@@ -3571,10 +3571,10 @@
       },
       {
         "id": "D",
-        "text": "0.600"
+        "text": "0.488"
       }
     ],
-    "correct_answer": "B",
+    "correct_answer": "D",
     "explanation": "Use the complement. P(no jam on one run) = 0.8. P(no jam on all three) = 0.8³ = 0.512. P(at least one jam) = 1 − 0.512 = 0.488.",
     "skill_tag": "at-least-one",
     "common_trap": "adds-probabilities-incorrectly",
@@ -3600,7 +3600,7 @@
     "options": [
       {
         "id": "A",
-        "text": "Plan A, because its expected total cost is £60."
+        "text": "Plan B, because its £55 cost is below Plan A's expected total of £60."
       },
       {
         "id": "B",
@@ -3608,14 +3608,14 @@
       },
       {
         "id": "C",
-        "text": "Plan B, because its £55 cost is below Plan A's expected total of £60."
+        "text": "Plan A, because its expected total cost is £60."
       },
       {
         "id": "D",
         "text": "They are equal in expected cost."
       }
     ],
-    "correct_answer": "C",
+    "correct_answer": "A",
     "explanation": "Plan A expected total = 30 + 0.2 × 150 = 30 + 30 = £60. Plan B = £55. Considering only expected cost, Plan B (£55) is cheaper than Plan A (£60).",
     "skill_tag": "expected-value",
     "common_trap": "compares-single-outcome",
@@ -3627,7 +3627,7 @@
     "review": {
       "calculationChecked": true,
       "ambiguityRisk": "low",
-      "whySafeToInclude": "Expected-value comparison is explicit; A states the right number but the wrong conclusion."
+      "whySafeToInclude": "Expected-value comparison is explicit; C states the right number but the wrong conclusion."
     },
     "is_active": true
   },
@@ -3641,7 +3641,7 @@
     "options": [
       {
         "id": "A",
-        "text": "10%"
+        "text": "25%"
       },
       {
         "id": "B",
@@ -3649,14 +3649,14 @@
       },
       {
         "id": "C",
-        "text": "25%"
+        "text": "10%"
       },
       {
         "id": "D",
         "text": "80%"
       }
     ],
-    "correct_answer": "C",
+    "correct_answer": "A",
     "explanation": "Increase = £50 − £40 = £10. Percentage increase = 10 ÷ 40 × 100 = 25%.",
     "skill_tag": "percentage-change",
     "common_trap": "uses-new-value-as-denominator",
@@ -3681,7 +3681,7 @@
     "options": [
       {
         "id": "A",
-        "text": "£198"
+        "text": "£220"
       },
       {
         "id": "B",
@@ -3693,10 +3693,10 @@
       },
       {
         "id": "D",
-        "text": "£220"
+        "text": "£198"
       }
     ],
-    "correct_answer": "A",
+    "correct_answer": "D",
     "explanation": "Increase: 200 × 1.10 = £220. Decrease: 220 × 0.90 = £198. The 10% reduction is taken from £220, not from the original £200, so the price does not return to £200.",
     "skill_tag": "successive-percentage",
     "common_trap": "applies-second-percent-to-total",
@@ -3765,7 +3765,7 @@
       },
       {
         "id": "B",
-        "text": "Clinic B, with a rate of 8% versus 6%."
+        "text": "They cannot be compared."
       },
       {
         "id": "C",
@@ -3773,10 +3773,10 @@
       },
       {
         "id": "D",
-        "text": "They cannot be compared."
+        "text": "Clinic B, with a rate of 8% versus 6%."
       }
     ],
-    "correct_answer": "B",
+    "correct_answer": "D",
     "explanation": "Clinic A rate = 9 ÷ 150 = 6%. Clinic B rate = 16 ÷ 200 = 8%. Clinic B has the higher rate, even though both groups differ in size.",
     "skill_tag": "rate-comparison",
     "common_trap": "compares-raw-counts",
@@ -3787,7 +3787,7 @@
     "review": {
       "calculationChecked": true,
       "ambiguityRisk": "low",
-      "whySafeToInclude": "Both rates are exact whole percentages; only B states the correct comparison."
+      "whySafeToInclude": "Both rates are exact whole percentages; only D states the correct comparison."
     },
     "is_active": true
   },
@@ -3809,14 +3809,14 @@
       },
       {
         "id": "C",
-        "text": "36"
+        "text": "40"
       },
       {
         "id": "D",
-        "text": "40"
+        "text": "36"
       }
     ],
-    "correct_answer": "C",
+    "correct_answer": "D",
     "explanation": "Total points = 8 × 12 = 96. The five known players scored 10 + 14 + 9 + 13 + 14 = 60. Remaining three = 96 − 60 = 36.",
     "skill_tag": "average-total",
     "common_trap": "works-with-average-directly",
@@ -3842,7 +3842,7 @@
     "options": [
       {
         "id": "A",
-        "text": "£36,000"
+        "text": "£60,000"
       },
       {
         "id": "B",
@@ -3850,14 +3850,14 @@
       },
       {
         "id": "C",
-        "text": "£60,000"
+        "text": "£36,000"
       },
       {
         "id": "D",
         "text": "£90,000"
       }
     ],
-    "correct_answer": "C",
+    "correct_answer": "A",
     "explanation": "Equipment is 3 parts and receives £18,000, so one part = £6,000. The ratio has 5 + 3 + 2 = 10 parts, so the total = 10 × £6,000 = £60,000.",
     "skill_tag": "ratio",
     "common_trap": "treats-given-as-total",
@@ -3890,14 +3890,14 @@
       },
       {
         "id": "C",
-        "text": "0.40"
+        "text": "0.60"
       },
       {
         "id": "D",
-        "text": "0.60"
+        "text": "0.40"
       }
     ],
-    "correct_answer": "C",
+    "correct_answer": "D",
     "explanation": "The three probabilities sum to 1. Let blue = x and green = 2x. Then 0.4 + x + 2x = 1, so 3x = 0.6 and x = 0.2. Green = 2x = 0.4.",
     "skill_tag": "missing-probability",
     "common_trap": "misreads-ratio-condition",
@@ -3931,14 +3931,14 @@
       },
       {
         "id": "C",
-        "text": "No, because the relationship between age and condition X is unknown."
+        "text": "No, because percentages cannot be combined at all."
       },
       {
         "id": "D",
-        "text": "No, because percentages cannot be combined at all."
+        "text": "No, because the relationship between age and condition X is unknown."
       }
     ],
-    "correct_answer": "C",
+    "correct_answer": "D",
     "explanation": "Multiplying 0.3 × 0.5 = 0.15 is only valid if age and condition X are independent, which is not stated. Without that, the overlap cannot be pinned down.",
     "skill_tag": "insufficient-information",
     "common_trap": "assumes-independence",
@@ -3964,7 +3964,7 @@
       },
       {
         "id": "B",
-        "text": "£9"
+        "text": "£60"
       },
       {
         "id": "C",
@@ -3972,10 +3972,10 @@
       },
       {
         "id": "D",
-        "text": "£60"
+        "text": "£9"
       }
     ],
-    "correct_answer": "B",
+    "correct_answer": "D",
     "explanation": "Expected payout = 0.5 × £0 + 0.4 × £10 + 0.1 × £50 = 0 + 4 + 5 = £9.",
     "skill_tag": "expected-value",
     "common_trap": "averages-outcomes-ignoring-probability",
@@ -4041,11 +4041,11 @@
     "options": [
       {
         "id": "A",
-        "text": "50"
+        "text": "56"
       },
       {
         "id": "B",
-        "text": "56"
+        "text": "50"
       },
       {
         "id": "C",
@@ -4056,7 +4056,7 @@
         "text": "110"
       }
     ],
-    "correct_answer": "B",
+    "correct_answer": "A",
     "explanation": "Adults with bicycles = 30% of 120 = 36. Children with bicycles = 25% of 80 = 20. Total = 36 + 20 = 56.",
     "skill_tag": "weighted-total",
     "common_trap": "applies-one-rate-to-whole-group",
