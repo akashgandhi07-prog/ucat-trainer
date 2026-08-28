@@ -30,15 +30,25 @@ function isDateInLockedDbWeek(
   return false
 }
 
-/** Calendar dates for unlocked DB weeks being replaced (includes orphan days after week row delete). */
+/**
+ * Calendar dates for unlocked DB weeks being replaced (includes orphan days after
+ * week row delete). Dates before `notBefore` are left alone: the generator emits
+ * nothing for days already past, so clearing the elapsed part of the anchor week
+ * deleted those sessions for good, and `session_completions` cascaded with them —
+ * a student who rebuilt on a Thursday lost Monday to Wednesday's logged work.
+ */
 export function collectDatesToClearBeforeRegenerate(
   weeks: PlanWeekRow[],
   fromWeekNumber: number,
+  notBefore?: string,
 ): Set<string> {
   const dates = new Set<string>()
   for (const w of weeks) {
     if (w.week_number < fromWeekNumber || w.is_locked) continue
-    for (const d of datesForDbWeek(w.week_start)) dates.add(d)
+    for (const d of datesForDbWeek(w.week_start)) {
+      if (notBefore && d < notBefore) continue
+      dates.add(d)
+    }
   }
   return dates
 }
@@ -58,6 +68,8 @@ export function prepareRegeneratedRows(
   newWeeks: WeekInsert[],
   newDays: DayInsert[],
   newSessions: SessionInsert[],
+  /** Today, so an in-progress week keeps the days it has already spent. */
+  todayIso?: string,
 ): {
   datesToClear: string[]
   futureNewWeeks: WeekInsert[]
@@ -66,28 +78,39 @@ export function prepareRegeneratedRows(
   futureWeekRowIds: string[]
 } {
   const lockedWeekNumbers = new Set(weeks.filter((w) => w.is_locked).map((w) => w.week_number))
+  // The anchor week may be the current one, in which case only the remainder of
+  // it is rebuilt.
+  const floorDateIso = todayIso && todayIso > fromDateIso ? todayIso : fromDateIso
 
   const eligibleWeeks = newWeeks
     .filter((w) => w.week_start >= fromDateIso)
     .sort((a, b) => a.week_start.localeCompare(b.week_start))
 
+  // Locked weeks keep their numbers and their rows, so numbering straight through
+  // from the anchor would hand a new week a number a locked week already owns and
+  // trip the plan_weeks (plan_id, week_number) unique constraint, aborting the
+  // whole regeneration.
   let nextWeekNumber = fromWeekNumber
+  const takeWeekNumber = () => {
+    while (lockedWeekNumbers.has(nextWeekNumber)) nextWeekNumber++
+    return nextWeekNumber++
+  }
   const futureNewWeeks = eligibleWeeks.map((w) => ({
     ...w,
-    week_number: nextWeekNumber++,
+    week_number: takeWeekNumber(),
   }))
   const futureWeekIds = new Set(futureNewWeeks.map((w) => w.id))
 
   const futureNewDays = newDays.filter(
     (d) =>
       futureWeekIds.has(d.plan_week_id) &&
-      d.day_date >= fromDateIso &&
+      d.day_date >= floorDateIso &&
       !isDateInLockedDbWeek(d.day_date, weeks, lockedWeekNumbers),
   )
   const futureDayIds = new Set(futureNewDays.map((d) => d.id))
   const futureNewSessions = newSessions.filter((s) => futureDayIds.has(s.plan_day_id))
 
-  const datesToClear = collectDatesToClearBeforeRegenerate(weeks, fromWeekNumber)
+  const datesToClear = collectDatesToClearBeforeRegenerate(weeks, fromWeekNumber, floorDateIso)
   for (const d of futureNewDays) datesToClear.add(d.day_date)
 
   const futureWeekRowIds = weeks

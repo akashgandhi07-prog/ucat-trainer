@@ -10,7 +10,7 @@ import {
   anchorDateForRegenerate,
   prepareRegeneratedRows,
 } from '../embedded/lib/regenerate-plan-cleanup'
-import { addDays, toISODate } from '../embedded/lib/utils'
+import { addDays, parseDate, toISODate } from '../embedded/lib/utils'
 import { supabase } from '../../lib/supabase'
 import { invalidateActivePlanCache, PLAN_COLUMNS, PLAN_WEEK_COLUMNS } from './load-planner-data'
 
@@ -165,7 +165,10 @@ export async function regenerateFutureWeeks(planId: string, fromWeekNumber: numb
 
   const inputs: PlanInputs = {
     planId,
-    examDate: new Date(plan.exam_date),
+    // parseDate, not new Date(): the latter reads a bare YYYY-MM-DD as UTC
+    // midnight, which lands on the previous day west of Greenwich and would
+    // shift every rebuilt plan by a day. Plan creation already uses parseDate.
+    examDate: parseDate(plan.exam_date),
     hasPriorExperience: plan.has_prior_experience,
     confidence: {
       vr: plan.confidence_vr,
@@ -219,6 +222,7 @@ export async function regenerateFutureWeeks(planId: string, fromWeekNumber: numb
     newWeeks,
     newDays,
     newSessions,
+    toISODate(new Date()),
   )
 
   // One transactional round trip: deletes and inserts succeed or fail together, so a

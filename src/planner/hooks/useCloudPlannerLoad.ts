@@ -48,6 +48,10 @@ export function useCloudPlannerLoad<T>(
   const retry = useCallback(() => setRetryKey((k) => k + 1), [])
 
   useEffect(() => {
+    // No user yet (signed out, or the session is still restoring). Leave the
+    // current state alone and wait: userId is a dependency, so this effect re-runs
+    // as soon as it arrives. Callers gate on `user` before rendering the payload,
+    // so nothing from a previous user is shown in the meantime.
     if (!userId) return
 
     const generation = ++generationRef.current

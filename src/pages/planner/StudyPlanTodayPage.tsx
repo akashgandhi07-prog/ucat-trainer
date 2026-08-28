@@ -13,6 +13,9 @@ import type { DBPlan } from '../../planner/embedded/types'
 
 type TodayPayload = Record<string, unknown>
 
+/** How long Today waits for the PDF/hours extras before rendering without them. */
+const CALENDAR_EXTRAS_TIMEOUT_MS = 6_000
+
 function CloudTodayView() {
   const { user } = useAuth()
   const refreshTick = useCloudPlannerRefresh()
@@ -21,20 +24,28 @@ function CloudTodayView() {
     const { loadTodayDashboard, loadPlanCalendar } = await import(
       '../../planner/lib/load-planner-data'
     )
-    const [dash, cal] = await Promise.all([
-      loadTodayDashboard(userId, plan),
-      loadPlanCalendar(userId, plan),
+    // The calendar pulls every day, session and completion in the plan, but Today
+    // needs it only for the PDF export button and the hours hint. It used to be
+    // awaited alongside the dashboard inside one 12s budget, so on a slow
+    // connection the whole page failed to load however often students refreshed.
+    // Give it its own shorter budget and carry on without it if it misses.
+    const calendar = Promise.race([
+      loadPlanCalendar(userId, plan).catch(() => null),
+      new Promise<null>((resolve) => window.setTimeout(() => resolve(null), CALENDAR_EXTRAS_TIMEOUT_MS)),
     ])
+    const [dash, cal] = await Promise.all([loadTodayDashboard(userId, plan), calendar])
     return {
       ...(dash as object),
       plan,
-      plannerPdf: {
-        plan: cal.plan,
-        planDays: cal.planDays,
-        sessions: cal.sessions,
-        todayDate: cal.todayDate,
-      },
-      hoursSuggestion: cal.hoursSuggestion ?? null,
+      plannerPdf: cal
+        ? {
+            plan: cal.plan,
+            planDays: cal.planDays,
+            sessions: cal.sessions,
+            todayDate: cal.todayDate,
+          }
+        : null,
+      hoursSuggestion: cal?.hoursSuggestion ?? null,
     }
   }, [])
 
