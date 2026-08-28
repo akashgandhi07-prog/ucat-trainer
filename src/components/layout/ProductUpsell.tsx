@@ -68,6 +68,45 @@ function trackClick(
   });
 }
 
+/**
+ * `upsell_impression` is a session-level counter, not a render counter: it fires at most
+ * ONCE per tab session per (placement, offer, course) so the metric reads as "sessions
+ * that saw this upsell". Guarded in sessionStorage (survives route changes and remounts
+ * within the tab) with an in-memory fallback when storage is unavailable.
+ */
+const IMPRESSION_GUARD_KEY = "ucat_upsell_impressions_seen";
+const impressionsSeenInMemory = new Set<string>();
+
+function impressionKey(placement: UpsellPlacement, offer: UpsellOffer, courseId: string | null): string {
+  return `${placement}|${offer}|${courseId ?? ""}`;
+}
+
+function hasSeenImpression(key: string): boolean {
+  if (impressionsSeenInMemory.has(key)) return true;
+  try {
+    const raw = sessionStorage.getItem(IMPRESSION_GUARD_KEY);
+    const seen: unknown = raw ? JSON.parse(raw) : [];
+    return Array.isArray(seen) && seen.includes(key);
+  } catch {
+    return false;
+  }
+}
+
+function markImpressionSeen(key: string): void {
+  impressionsSeenInMemory.add(key);
+  try {
+    const raw = sessionStorage.getItem(IMPRESSION_GUARD_KEY);
+    const parsed: unknown = raw ? JSON.parse(raw) : [];
+    const seen = Array.isArray(parsed) ? (parsed as string[]) : [];
+    if (!seen.includes(key)) {
+      seen.push(key);
+      sessionStorage.setItem(IMPRESSION_GUARD_KEY, JSON.stringify(seen));
+    }
+  } catch {
+    /* sessionStorage unavailable: in-memory guard still applies */
+  }
+}
+
 function useImpression(
   placement: UpsellPlacement,
   offer: UpsellOffer,
@@ -78,12 +117,23 @@ function useImpression(
   const sent = useRef(false);
   useEffect(() => {
     if (!enabled || sent.current) return;
+    const key = impressionKey(placement, offer, courseId);
+    if (hasSeenImpression(key)) {
+      sent.current = true;
+      return;
+    }
     const el = ref.current;
     if (!el) return;
     const obs = new IntersectionObserver(
       (entries) => {
         if (sent.current || !entries.some((e) => e.isIntersecting)) return;
+        if (hasSeenImpression(key)) {
+          sent.current = true;
+          obs.disconnect();
+          return;
+        }
         sent.current = true;
+        markImpressionSeen(key);
         trackEvent("upsell_impression", { offer, placement, course_id: courseId });
         obs.disconnect();
       },

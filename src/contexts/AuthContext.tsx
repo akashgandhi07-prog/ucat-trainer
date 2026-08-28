@@ -257,6 +257,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let authListenerActive = true;
     let initialLoadDone = false;
+    // Last user id this listener has seen a session for. Kept in the closure (not React
+    // state) so it is current even when a SIGNED_IN is queued before React re-renders.
+    let knownUserId: string | null = null;
 
     const handleAuthEvent = async (event: AuthChangeEvent, session: Session | null) => {
       authLog.info("Auth state changed", {
@@ -283,6 +286,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (event === "INITIAL_SESSION") {
         setUser(u);
         initialLoadDone = true;
+        knownUserId = u?.id ?? null;
         // Always clear auth loading here. Never gate on authListenerActive: React Strict Mode
         // can tear the listener down before this runs, which would strand the app on loading.
         setLoading(false);
@@ -322,7 +326,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!authListenerActive) return;
 
       if (event === "SIGNED_IN" && session?.user) {
-        trackEvent("sign_in");
+        // supabase-js re-emits SIGNED_IN from _recoverAndRefresh on every tab
+        // hidden -> visible transition (and on some token refresh paths), not only on
+        // a real login. Only count it as a sign-in when the user was not already
+        // known to this tab, i.e. a genuine logged-out -> logged-in transition.
+        const wasAlreadySignedIn = knownUserId === session.user.id;
+        knownUserId = session.user.id;
+        if (!wasAlreadySignedIn) trackEvent("sign_in");
         // Ids are assigned and persisted to localStorage BEFORE uploading, so a
         // partially-failed merge retried on the next sign-in upserts the same rows
         // instead of duplicating the user's history.
@@ -419,6 +429,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           authLog.error("Profile update after sign-in failed", profileErr);
         }
       } else if (event === "SIGNED_OUT") {
+        knownUserId = null;
         const exitingId = userRef.current?.id;
         if (exitingId && typeof sessionStorage !== "undefined") {
           try {
@@ -431,6 +442,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         authLog.info("User signed out", { prevUserId: userRef.current?.id });
         if (authListenerActive) setProfile(null);
       } else if (u) {
+        knownUserId = u.id;
         if (authListenerActive) await fetchProfile(u.id);
       } else {
         if (authListenerActive) setProfile(null);

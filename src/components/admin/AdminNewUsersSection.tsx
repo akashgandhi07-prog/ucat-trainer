@@ -14,6 +14,14 @@ export type NewUserRow = {
   total_questions: number;
   session_correct: number;
   event_counts: Record<string, number>;
+  /**
+   * Optional (added by supabase/pending/0001_admin_new_users_7day.sql). Raw analytics
+   * rows are kept for 7 days and the daily rollup has no user grain, so event_counts
+   * only cover events on/after event_counts_since. event_counts_partial is true when
+   * the user signed up before that cut-off.
+   */
+  event_counts_since?: string | null;
+  event_counts_partial?: boolean;
 };
 
 /** Human-readable labels for analytics event names (so admins know what each event means). */
@@ -94,6 +102,7 @@ export default function AdminNewUsersSection({ newUsers }: AdminNewUsersSectionP
       </div>
       <p className="text-sm text-muted-foreground mb-2">
         Sign-ups in the selected date range, with full name and what they&apos;ve looked at and done (page views, drills, sessions).
+        Page-view and drill-started counts come from raw analytics, which is kept for 7 days; session and question counts are complete.
       </p>
       {newUsers.length > 0 && (
         <p className="text-sm text-foreground mb-4">
@@ -129,8 +138,11 @@ export default function AdminNewUsersSection({ newUsers }: AdminNewUsersSectionP
               if (row.mental_maths) sessions.push(`${row.mental_maths} mental maths`);
               if (row.syllogism_micro) sessions.push(`${row.syllogism_micro} syllogism micro`);
               if (row.syllogism_macro) sessions.push(`${row.syllogism_macro} syllogism macro`);
+              const eventsLabel = row.event_counts_partial && row.event_counts_since
+                ? `Events since ${new Date(row.event_counts_since).toLocaleDateString(undefined, { dateStyle: "medium" })}: `
+                : "";
               const activityParts = [
-                eventParts.length ? eventParts.join("; ") : null,
+                eventParts.length ? `${eventsLabel}${eventParts.join("; ")}` : null,
                 sessions.length ? `Sessions: ${sessions.join("; ")}` : null,
                 row.total_questions > 0 ? `${row.total_questions} questions answered` : null,
               ].filter(Boolean);
