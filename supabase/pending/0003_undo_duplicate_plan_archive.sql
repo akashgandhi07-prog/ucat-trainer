@@ -6,8 +6,8 @@
 -- shadow plan was re-pointed at the plan its student actually uses. Nothing was
 -- deleted. Running this restores the exact previous state.
 --
--- Note: 0002_one_active_plan_per_student.sql must be dropped first, or these
--- updates will violate it.
+-- Note: the plans_one_active_per_student index (applied 2026-08-28 as migration
+-- 20260828103600) must be dropped first, or these updates will violate it.
 --
 --   drop index if exists public.plans_one_active_per_student;
 
