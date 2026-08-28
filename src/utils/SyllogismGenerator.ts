@@ -182,8 +182,12 @@ function pickNounQuadFromSamePool(): {
   const pool = pick([MEDICAL_NOUNS, NONSENSE_NOUNS, ABSTRACT_NOUNS]);
   const shuffled = shuffle([...pool]);
   if (shuffled.length < 4) {
-    const extra = pick([MEDICAL_NOUNS, NONSENSE_NOUNS, ABSTRACT_NOUNS].flat());
-    while (shuffled.length < 4) shuffled.push(extra);
+    // A short pool must still yield four distinct terms: repeating one collapses
+    // a chain slot, which turns an "invalid" conclusion into a restated premise.
+    for (const candidate of shuffle([MEDICAL_NOUNS, NONSENSE_NOUNS, ABSTRACT_NOUNS].flat())) {
+      if (shuffled.length >= 4) break;
+      if (!shuffled.some((entry) => entry.singular === candidate.singular)) shuffled.push(candidate);
+    }
   }
   return {
     A: shuffled[0],

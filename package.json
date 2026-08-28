@@ -14,6 +14,7 @@
     "verify:conversion-questions": "tsx scripts/verify-conversion-questions.ts",
     "verify:conversion-generator": "tsx scripts/verify-conversion-generator.ts",
     "verify:dm-trainers": "tsx scripts/verify-dm-trainer-questions.ts",
+    "verify:syllogisms": "tsx scripts/verify-syllogism-questions.ts",
     "export:dm-trainers": "tsx scripts/exportDmTrainerQuestionsJson.ts",
     "seed:dm-trainers": "npm run export:dm-trainers && tsx scripts/seedDmTrainerQuestions.ts",
     "seed:syllogisms": "tsx scripts/seedSyllogisms.ts",
