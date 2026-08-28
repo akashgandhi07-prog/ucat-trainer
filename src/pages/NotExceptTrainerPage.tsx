@@ -10,8 +10,8 @@ import {
   markPassageSeen,
   pickUnseenPassage,
 } from "../lib/vrPassageHistory";
-import { generateExceptSet } from "../components/quiz/DistortionQuiz";
-import type { ExceptQuestion } from "../components/quiz/DistortionQuiz";
+import { generateExceptSet } from "../utils/distortionEngine";
+import type { ExceptQuestion } from "../utils/distortionEngine";
 import { appendGuestSession } from "../lib/guestSessions";
 import type { GuestSessionPayload } from "../lib/guestSessions";
 import { newClientSessionId, upsertTrainerSession } from "../lib/trainerSessionLog";

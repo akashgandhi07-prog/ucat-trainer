@@ -4,7 +4,7 @@ import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import DistortionQuiz from "../components/quiz/DistortionQuiz";
 import ReReadPassageModal from "../components/quiz/ReReadPassageModal";
-import type { QuestionBreakdownItem } from "../components/quiz/DistortionQuiz";
+import type { QuestionBreakdownItem } from "../utils/distortionEngine";
 import { useAuth } from "../hooks/useAuth";
 import type { Passage } from "../data/passages";
 import { appendGuestSession } from "../lib/guestSessions";

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import type { QuestionBreakdownItem } from "./DistortionQuiz";
+import type { QuestionBreakdownItem } from "../../utils/distortionEngine";
 import ReReadPassageModal from "./ReReadPassageModal";
 import { PostDrillUpsell } from "../layout/ProductUpsell";
 

@@ -6,7 +6,7 @@ import BreadcrumbNav from "../components/layout/BreadcrumbNav";
 import ReaderEngine from "../components/reader/ReaderEngine";
 import DistortionQuiz from "../components/quiz/DistortionQuiz";
 import ResultsView from "../components/quiz/ResultsView";
-import type { QuestionBreakdownItem } from "../components/quiz/DistortionQuiz";
+import type { QuestionBreakdownItem } from "../utils/distortionEngine";
 import { useAuth } from "../hooks/useAuth";
 import type { Passage } from "../data/passages";
 import SEOHead from "../components/seo/SEOHead";
