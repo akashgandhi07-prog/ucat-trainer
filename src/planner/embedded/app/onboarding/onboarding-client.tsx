@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { BookOpen, Timer } from 'lucide-react'
 import { useRouter } from '@/lib/app-navigation'
 import { OnboardingState, TimeAwayPeriod, CurrentSituation, SchoolYear } from '@/types'
@@ -83,6 +83,7 @@ export default function OnboardingClient({
   const [state, setState] = useState<OnboardingState>(INITIAL_STATE)
   const [requiredAnswers, setRequiredAnswers] = useState<RequiredAnswers>(INITIAL_REQUIRED_ANSWERS)
   const [loading, setLoading] = useState(false)
+  const submittingRef = useRef(false)
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
     if (!profilePrefill) return
@@ -151,6 +152,12 @@ export default function OnboardingClient({
 
   async function handleSubmit() {
     if (!allStepsComplete(state, requiredAnswers)) return
+    // setLoading is asynchronous, so a quick second click can re-enter this before
+    // the button re-renders. Two concurrent runs each archive the other's plan and
+    // then insert their own, which is how 19 students ended up with two active
+    // plans and a timetable that appeared to change on its own.
+    if (submittingRef.current) return
+    submittingRef.current = true
     setLoading(true)
     setError(null)
 
@@ -176,6 +183,7 @@ export default function OnboardingClient({
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Something went wrong')
     } finally {
+      submittingRef.current = false
       setLoading(false)
     }
   }
@@ -287,7 +295,7 @@ export default function OnboardingClient({
                   Continue →
                 </Button>
               ) : (
-                <Button onClick={handleSubmit} loading={loading} disabled={!canAdvance(step, state, requiredAnswers)}>
+                <Button onClick={handleSubmit} loading={loading} disabled={loading || !canAdvance(step, state, requiredAnswers)}>
                   Generate my plan
                 </Button>
               )}

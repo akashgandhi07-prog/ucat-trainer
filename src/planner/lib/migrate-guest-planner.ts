@@ -1,5 +1,5 @@
 import { supabase } from '../../lib/supabase'
-import { fetchActivePlan, invalidateActivePlanCache } from './load-planner-data'
+import { fetchActivePlan, isMocksOnlyPlaceholderPlan, invalidateActivePlanCache } from './load-planner-data'
 import {
   clearGuestPlanner,
   generateSlug,
@@ -40,7 +40,11 @@ async function doMigrateGuestPlannerToCloud(studentId: string): Promise<{
   if (!bundle) return { migrated: false, reason: 'no_guest_plan' }
 
   const existing = await fetchActivePlan(studentId)
-  if (existing) {
+  // A mocks-only placeholder is not a timetable: it exists purely so mock_scores
+  // has a plan_id to point at. Treating it as "already has a plan" deleted the
+  // guest timetable without uploading it, leaving the student with no plan
+  // anywhere and a /study-plan that bounced them back to onboarding forever.
+  if (existing && !isMocksOnlyPlaceholderPlan(existing)) {
     clearGuestPlanner()
     return { migrated: false, reason: 'already_has_plan' }
   }
@@ -73,6 +77,13 @@ async function doMigrateGuestPlannerToCloud(studentId: string): Promise<{
 
   const { error: planErr } = await supabase.from('plans').insert(planRow)
   if (planErr) throw new Error(planErr.message)
+
+  // Retire the mocks-only placeholder we just migrated over, so the student is
+  // left with exactly one active plan. Their logged mocks move across with it.
+  if (existing && isMocksOnlyPlaceholderPlan(existing)) {
+    await supabase.from('mock_scores').update({ plan_id: planId }).eq('plan_id', existing.id)
+    await supabase.from('plans').update({ status: 'archived' }).eq('id', existing.id)
+  }
 
   const planWeeks = bundle.planWeeks.map((w) => ({
     ...w,

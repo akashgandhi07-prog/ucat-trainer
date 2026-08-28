@@ -3,7 +3,7 @@ import { generateFullPlan, planToDBRows, type PlanInputs } from '../embedded/lib
 import { PLAN_TIMETABLE_TABLE } from '../embedded/lib/planner-db-tables'
 import { generateSlug, parseDate, toISODate } from '../embedded/lib/utils'
 import { supabase } from '../../lib/supabase'
-import { invalidateActivePlanCache } from './load-planner-data'
+import { fetchActivePlan, invalidateActivePlanCache } from './load-planner-data'
 
 export type CreatePlanFromOnboardingInput = {
   state: OnboardingState
@@ -84,6 +84,14 @@ export async function createPlanFromOnboarding({
     .single()
 
   if (planError || !plan) {
+    // Once the one-active-plan-per-student index is in place a genuinely
+    // concurrent submit loses the insert race. The other run has already built a
+    // plan for this student, so surface that instead of an error.
+    const existing = await fetchActivePlan(user.id)
+    if (existing) {
+      invalidateActivePlanCache(user.id)
+      return
+    }
     throw new Error(planError?.message ?? 'Plan creation failed')
   }
 
@@ -107,6 +115,17 @@ export async function createPlanFromOnboarding({
       },
       { onConflict: 'id' },
     )
+
+  // Archive again, now excluding the row we just inserted. The pre-insert archive
+  // above cannot stop two concurrent runs: both archive nothing, both insert, and
+  // the student is left with two active plans that the app alternates between.
+  // Re-running it here leaves exactly one active plan whichever run finishes last.
+  await supabase
+    .from('plans')
+    .update({ status: 'archived' })
+    .eq('student_id', user.id)
+    .eq('status', 'active')
+    .neq('id', plan.id)
 
   await supabase.from('plan_members').insert({ plan_id: plan.id, user_id: user.id, role: 'student' })
   if (tutorId) {

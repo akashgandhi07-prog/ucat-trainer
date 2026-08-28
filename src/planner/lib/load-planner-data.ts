@@ -94,7 +94,14 @@ async function fetchActivePlanUncached(studentId: string): Promise<DBPlan | null
       .select(PLAN_COLUMNS)
       .eq('student_id', studentId)
       .eq('status', 'active')
+      // A handful of students have two active plans created in the same instant
+      // (a double submit during onboarding). Ordering on created_at alone leaves
+      // the tie for Postgres to break, so those students could be served a
+      // different plan on each load: work logged against one, a rebuild applied
+      // to the other, and a timetable that appeared not to change. The id keeps
+      // the choice stable until the duplicates are cleaned up.
       .order('created_at', { ascending: false })
+      .order('id', { ascending: true })
       .limit(1)
       .abortSignal(controller.signal)
       .maybeSingle()
