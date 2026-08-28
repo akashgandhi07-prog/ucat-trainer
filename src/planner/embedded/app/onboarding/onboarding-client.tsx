@@ -760,7 +760,7 @@ function Step6({
 
       <Button
         type="button"
-        variant={answered && state.timeAwayPeriods.length === 0 ? 'default' : 'outline'}
+        variant={answered && state.timeAwayPeriods.length === 0 ? 'primary' : 'outline'}
         onClick={() => {
           onUpdate({ timeAwayPeriods: [] })
           onAnswer()
@@ -886,7 +886,7 @@ function Step7({
       </p>
       <Button
         type="button"
-        variant={answered && state.restDays.length === 0 ? 'default' : 'outline'}
+        variant={answered && state.restDays.length === 0 ? 'primary' : 'outline'}
         onClick={() => {
           onUpdate({ restDays: [] })
           onAnswer()

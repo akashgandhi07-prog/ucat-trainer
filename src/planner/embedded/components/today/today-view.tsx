@@ -377,6 +377,9 @@ export function TodayView({
         id: sheetSession.id,
         session_type: sheetSession.session_type,
         duration_minutes: sheetSession.duration_minutes,
+        // The sheet titles a mini mock from its notes ("Mini SJT Mock"); without
+        // this it fell back to the generic session label.
+        notes: sheetSession.notes,
         completed: sheetSession.completed,
         completed_minutes: sheetSession.completed_minutes ?? null,
         perceived_effort: sheetSession.perceived_effort ?? null,

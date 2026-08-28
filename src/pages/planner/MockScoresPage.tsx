@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ComponentProps } from 'react'
 import { MockScoresView } from '@/components/plan/mock-scores-view'
 import { GuestScoresPage } from '@/components/guest/guest-scores-page'
 import { hasGuestPlanner } from '@/lib/guest-planner-store'
@@ -13,7 +13,7 @@ function CloudMockScoresView() {
   const { user } = useAuth()
   const userId = user?.id
   const refreshTick = useCloudPlannerRefresh()
-  const [data, setData] = useState<Record<string, unknown> | null>(null)
+  const [data, setData] = useState<ComponentProps<typeof MockScoresView> | null>(null)
   const [loadError, setLoadError] = useState(false)
 
   useEffect(() => {
@@ -28,7 +28,7 @@ function CloudMockScoresView() {
       const plan = await ensureActivePlanForMocks(userId)
       if (cancelled) return
       const loaded = await loadMockScores(plan)
-      if (!cancelled) setData(loaded as Record<string, unknown>)
+      if (!cancelled) setData(loaded)
     }).catch(() => {
       if (!cancelled) setLoadError(true)
     }).finally(() => {
@@ -48,7 +48,7 @@ function CloudMockScoresView() {
   }
   if (!data) return <PlannerLoading />
 
-  return <MockScoresView {...(data as object)} />
+  return <MockScoresView {...data} />
 }
 
 export default function MockScoresPage() {

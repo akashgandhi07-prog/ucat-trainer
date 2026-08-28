@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ComponentProps } from 'react'
 import { Navigate } from 'react-router-dom'
 import { ReflectView } from '@/components/plan/reflect-view'
 import { GuestReflectPage } from '@/components/guest/guest-reflect-page'
@@ -13,7 +13,7 @@ function CloudReflectView() {
   const { user } = useAuth()
   const userId = user?.id
   const refreshTick = useCloudPlannerRefresh()
-  const [data, setData] = useState<Record<string, unknown> | null>(null)
+  const [data, setData] = useState<ComponentProps<typeof ReflectView> | null>(null)
   const [missingPlan, setMissingPlan] = useState(false)
   const [loadError, setLoadError] = useState(false)
   const [retryKey, setRetryKey] = useState(0)
@@ -35,7 +35,7 @@ function CloudReflectView() {
       }
       setMissingPlan(false)
       const loaded = await loadReflect(plan.id)
-      if (!cancelled) setData(loaded as Record<string, unknown>)
+      if (!cancelled) setData(loaded)
     }).catch(() => {
       if (!cancelled) setLoadError(true)
     }).finally(() => {
@@ -51,7 +51,7 @@ function CloudReflectView() {
   if (loadError) return <PlannerLoadError message="Could not load your reflections. Check your connection and try again." onRetry={() => setRetryKey((k) => k + 1)} />
   if (!data) return <PlannerLoading />
 
-  return <ReflectView {...(data as object)} />
+  return <ReflectView {...data} />
 }
 
 export default function StudyPlanReflectPage() {

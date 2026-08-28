@@ -425,7 +425,9 @@ function DayDetailModal({
         sessionId,
         completed: payload.completed,
         minutesCompleted: payload.minutesCompleted,
-        perceivedEffort: payload.perceivedEffort,
+        // The sheet leaves this undefined when the student skips the effort
+        // rating; completeSession takes null for "not given".
+        perceivedEffort: payload.perceivedEffort ?? null,
       })
       setCompletions(prev => {
         const next = new Map(prev)

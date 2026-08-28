@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, type ComponentProps } from 'react'
 import { Navigate } from 'react-router-dom'
 import { TodayView } from '@/components/today/today-view'
 import { GuestTodayPage } from '@/components/guest/guest-today-page'
@@ -11,7 +11,7 @@ import PlannerLoading from '../../planner/components/PlannerLoading'
 import PlannerLoadError from '../../planner/components/PlannerLoadError'
 import type { DBPlan } from '../../planner/embedded/types'
 
-type TodayPayload = Record<string, unknown>
+type TodayPayload = ComponentProps<typeof TodayView>
 
 /** How long Today waits for the PDF/hours extras before rendering without them. */
 const CALENDAR_EXTRAS_TIMEOUT_MS = 6_000
@@ -35,7 +35,7 @@ function CloudTodayView() {
     ])
     const [dash, cal] = await Promise.all([loadTodayDashboard(userId, plan), calendar])
     return {
-      ...(dash as object),
+      ...dash,
       plan,
       plannerPdf: cal
         ? {

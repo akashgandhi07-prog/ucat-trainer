@@ -29,7 +29,7 @@ function CloudPlanView() {
   if (load.status === 'loading' && !load.data) return <PlannerLoading />
   if (!load.data) return <PlannerLoading />
 
-  return <PlanCalendar {...(load.data as object)} />
+  return <PlanCalendar {...load.data} />
 }
 
 export default function StudyPlanPlanPage() {

@@ -101,14 +101,19 @@ export function prepareRegeneratedRows(
   }))
   const futureWeekIds = new Set(futureNewWeeks.map((w) => w.id))
 
+  // plan_week_id / plan_day_id are nullable on the row types: an orphan row
+  // belongs to no future week or day, so it is never carried over.
   const futureNewDays = newDays.filter(
     (d) =>
+      d.plan_week_id != null &&
       futureWeekIds.has(d.plan_week_id) &&
       d.day_date >= floorDateIso &&
       !isDateInLockedDbWeek(d.day_date, weeks, lockedWeekNumbers),
   )
   const futureDayIds = new Set(futureNewDays.map((d) => d.id))
-  const futureNewSessions = newSessions.filter((s) => futureDayIds.has(s.plan_day_id))
+  const futureNewSessions = newSessions.filter(
+    (s) => s.plan_day_id != null && futureDayIds.has(s.plan_day_id),
+  )
 
   const datesToClear = collectDatesToClearBeforeRegenerate(weeks, fromWeekNumber, floorDateIso)
   for (const d of futureNewDays) datesToClear.add(d.day_date)
