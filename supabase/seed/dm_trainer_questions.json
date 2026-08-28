@@ -40,7 +40,7 @@
     "trainer_type": "venn-logic",
     "difficulty": "medium",
     "sort_order": 1,
-    "stem": "A group were asked how they like their eggs cooked. 14 liked boiled, 11 liked scrambled and 12 liked fried. 6 liked all three ways. 3 liked exactly two ways. 2 liked none of them.",
+    "stem": "A group were asked how they like their eggs cooked, and each person could name more than one way. 14 liked boiled, 11 liked scrambled and 12 liked fried (each count includes everyone who named that way). 6 liked all three ways. 3 liked exactly two ways. 2 liked none of them.",
     "question": "How many people were asked?",
     "options": [
       {
@@ -1349,6 +1349,611 @@
     "is_active": true
   },
   {
+    "id": "venn-exactly-two-pairwise-002",
+    "trainer_type": "venn-logic",
+    "difficulty": "medium",
+    "sort_order": 35,
+    "stem": "A survey asked which of three apps people used: Maps, Music and Mail. 12 used Maps and Music, 9 used Maps and Mail, 7 used Music and Mail, and 4 used all three. Each pairwise figure includes those who used all three.",
+    "question": "How many people used exactly two of the apps?",
+    "options": [
+      {
+        "id": "A",
+        "text": "16"
+      },
+      {
+        "id": "B",
+        "text": "20"
+      },
+      {
+        "id": "C",
+        "text": "24"
+      },
+      {
+        "id": "D",
+        "text": "28"
+      }
+    ],
+    "correct_answer": "A",
+    "explanation": "Each pairwise total includes the 4 who used all three. Exactly two = (12 − 4) + (9 − 4) + (7 − 4) = 8 + 5 + 3 = 16.",
+    "skill_tag": "exactly-two",
+    "common_trap": "includes-all-three-incorrectly",
+    "optional_working_steps": [
+      "Maps & Music only = 12 − 4 = 8.",
+      "Maps & Mail only = 9 − 4 = 5.",
+      "Music & Mail only = 7 − 4 = 3.",
+      "Exactly two = 8 + 5 + 3 = 16."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Pairwise figures explicitly include all-three; one subtraction per pair gives a unique answer."
+    },
+    "is_active": true
+  },
+  {
+    "id": "venn-total-mentions-005",
+    "trainer_type": "venn-logic",
+    "difficulty": "medium",
+    "sort_order": 36,
+    "stem": "A group were asked which of three streaming services they use: P, Q and R. 22 use P, 19 use Q and 16 use R. 7 use all three. 9 use exactly two. 5 use none of them.",
+    "question": "How many people are in the group?",
+    "options": [
+      {
+        "id": "A",
+        "text": "35"
+      },
+      {
+        "id": "B",
+        "text": "37"
+      },
+      {
+        "id": "C",
+        "text": "39"
+      },
+      {
+        "id": "D",
+        "text": "41"
+      }
+    ],
+    "correct_answer": "C",
+    "explanation": "Total mentions = 22 + 19 + 16 = 57. All-three mentions = 7 × 3 = 21. Exactly-two mentions = 9 × 2 = 18. Exactly-one people = 57 − 21 − 18 = 18. Total = 18 + 9 + 7 + 5 = 39.",
+    "skill_tag": "total-mentions",
+    "common_trap": "confuses-exactly-and-at-least",
+    "optional_working_steps": [
+      "Mentions = 22 + 19 + 16 = 57.",
+      "Exactly-one = 57 − 21 − 18 = 18.",
+      "Total = 18 + 9 + 7 + 5 = 39."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Mentions balance (18×1 + 9×2 + 7×3 = 57); all regions non-negative; total unique."
+    },
+    "is_active": true
+  },
+  {
+    "id": "venn-unknown-overlap-003",
+    "trainer_type": "venn-logic",
+    "difficulty": "hard",
+    "sort_order": 37,
+    "stem": "There are 70 people in a hall. 45 have a smartphone. 12 have a tablet. People may have both or neither.",
+    "question": "Which of the following must be true?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Between 13 and 25 inclusive have neither device."
+      },
+      {
+        "id": "B",
+        "text": "Exactly 13 people have neither device."
+      },
+      {
+        "id": "C",
+        "text": "Exactly 33 people have a smartphone but not a tablet."
+      },
+      {
+        "id": "D",
+        "text": "Exactly 57 people have a smartphone or a tablet."
+      }
+    ],
+    "correct_answer": "A",
+    "explanation": "Neither = 70 − union. Maximum union = 45 + 12 = 57 (no overlap), giving minimum neither = 13. Minimum union = 45 (all tablet owners also have a smartphone), giving maximum neither = 25. So neither must lie between 13 and 25 inclusive.",
+    "skill_tag": "unknown-overlap",
+    "common_trap": "assumes-no-overlap",
+    "optional_working_steps": [
+      "Max union = 45 + 12 = 57, so min neither = 13.",
+      "Min union = 45, so max neither = 25."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "45 + 12 = 57 < 70 so overlap is not forced; only the range for neither must be true."
+    },
+    "is_active": true
+  },
+  {
+    "id": "venn-minimum-overlap-002",
+    "trainer_type": "venn-logic",
+    "difficulty": "medium",
+    "sort_order": 38,
+    "stem": "In a class of 30 students, 22 study French and 19 study Spanish.",
+    "question": "What is the smallest possible number of students who study both languages?",
+    "options": [
+      {
+        "id": "A",
+        "text": "8"
+      },
+      {
+        "id": "B",
+        "text": "11"
+      },
+      {
+        "id": "C",
+        "text": "19"
+      },
+      {
+        "id": "D",
+        "text": "22"
+      }
+    ],
+    "correct_answer": "B",
+    "explanation": "The two set sizes add to 22 + 19 = 41, which is 11 more than the 30 students. That excess must be shared, so at least 11 study both. Minimum overlap = A + B − total = 41 − 30 = 11.",
+    "skill_tag": "minimum-overlap",
+    "common_trap": "assumes-no-overlap",
+    "optional_working_steps": [
+      "A + B = 22 + 19 = 41.",
+      "Excess over total = 41 − 30 = 11 = minimum overlap."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Inclusion-exclusion forces a minimum overlap of 11; only one option matches."
+    },
+    "is_active": true
+  },
+  {
+    "id": "venn-maximum-overlap-001",
+    "trainer_type": "venn-logic",
+    "difficulty": "medium",
+    "sort_order": 39,
+    "stem": "A team of 40 people were surveyed. 26 can drive and 31 can swim.",
+    "question": "What is the largest possible number of people who can both drive and swim?",
+    "options": [
+      {
+        "id": "A",
+        "text": "17"
+      },
+      {
+        "id": "B",
+        "text": "26"
+      },
+      {
+        "id": "C",
+        "text": "31"
+      },
+      {
+        "id": "D",
+        "text": "40"
+      }
+    ],
+    "correct_answer": "B",
+    "explanation": "The overlap cannot be larger than the smaller set. Only 26 people can drive, so at most 26 can do both, achieved when every driver can also swim.",
+    "skill_tag": "maximum-overlap",
+    "common_trap": "forgets-maximum-overlap",
+    "optional_working_steps": [
+      "Smaller set = drivers = 26.",
+      "Maximum overlap = 26."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Maximum overlap is bounded by the smaller set; only one option fits."
+    },
+    "is_active": true
+  },
+  {
+    "id": "venn-exactly-one-atleastone-001",
+    "trainer_type": "venn-logic",
+    "difficulty": "medium",
+    "sort_order": 40,
+    "stem": "A group of 50 people each like at least one of tea, coffee and juice. 6 like all three. 21 like exactly two of them. The rest like exactly one.",
+    "question": "How many people like exactly one of the drinks?",
+    "options": [
+      {
+        "id": "A",
+        "text": "18"
+      },
+      {
+        "id": "B",
+        "text": "23"
+      },
+      {
+        "id": "C",
+        "text": "29"
+      },
+      {
+        "id": "D",
+        "text": "35"
+      }
+    ],
+    "correct_answer": "B",
+    "explanation": "Everyone likes at least one drink, so there is no none group. Exactly-one = 50 − exactly-two − all-three = 50 − 21 − 6 = 23.",
+    "skill_tag": "exactly-one",
+    "common_trap": "excludes-all-three",
+    "optional_working_steps": [
+      "Exactly-one = 50 − 21 − 6 = 23."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "No none group; partition gives a single answer."
+    },
+    "is_active": true
+  },
+  {
+    "id": "venn-negative-wording-004",
+    "trainer_type": "venn-logic",
+    "difficulty": "hard",
+    "sort_order": 41,
+    "stem": "In a street of 120 houses, 40% have both a cat and a dog. 50 houses do not have a cat. 60 houses do not have a dog.",
+    "question": "How many houses have neither a cat nor a dog?",
+    "options": [
+      {
+        "id": "A",
+        "text": "28"
+      },
+      {
+        "id": "B",
+        "text": "38"
+      },
+      {
+        "id": "C",
+        "text": "48"
+      },
+      {
+        "id": "D",
+        "text": "50"
+      }
+    ],
+    "correct_answer": "B",
+    "explanation": "Both = 40% of 120 = 48. Let x = neither. 'No cat' = only-dog + neither = 50, so only-dog = 50 − x. 'No dog' = only-cat + neither = 60, so only-cat = 60 − x. Equation: (60 − x) + (50 − x) + 48 + x = 120 → 158 − x = 120 → x = 38.",
+    "skill_tag": "negative-wording",
+    "common_trap": "misinterprets-not-a",
+    "optional_working_steps": [
+      "Both = 0.4 × 120 = 48.",
+      "(60 − x) + (50 − x) + 48 + x = 120 → x = 38."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "All four regions non-negative at x = 38 (22, 12, 48, 38 sum to 120); one solution."
+    },
+    "is_active": true
+  },
+  {
+    "id": "venn-three-set-instruments-001",
+    "trainer_type": "venn-logic",
+    "difficulty": "hard",
+    "sort_order": 42,
+    "stem": "45 pupils each play at least one of three instruments: guitar, piano and drums. No pupil plays both guitar and drums. 6 play guitar and piano. Twice as many play piano and drums. 8 play only piano. 7 play only guitar.",
+    "question": "How many pupils play drums in total?",
+    "options": [
+      {
+        "id": "A",
+        "text": "12"
+      },
+      {
+        "id": "B",
+        "text": "18"
+      },
+      {
+        "id": "C",
+        "text": "24"
+      },
+      {
+        "id": "D",
+        "text": "30"
+      }
+    ],
+    "correct_answer": "C",
+    "explanation": "No guitar-and-drums means the all-three region is 0. Piano and drums = 2 × 6 = 12. Known regions: only-guitar 7, only-piano 8, guitar+piano 6, piano+drums 12. Only-drums = 45 − 7 − 8 − 6 − 12 = 12. Drums total = only-drums 12 + piano+drums 12 = 24.",
+    "skill_tag": "three-set-fill",
+    "common_trap": "answers-only-region-not-total-set",
+    "optional_working_steps": [
+      "Piano + drums = 2 × 6 = 12.",
+      "Only-drums = 45 − 7 − 8 − 6 − 12 = 12.",
+      "Drums total = 12 + 12 = 24."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "No guitar-and-drums forces all-three = 0; regions sum to 45; answer unique."
+    },
+    "is_active": true
+  },
+  {
+    "id": "venn-inclusion-exclusion-001",
+    "trainer_type": "venn-logic",
+    "difficulty": "hard",
+    "sort_order": 43,
+    "stem": "In a year group, 30 study Art, 25 study Drama and 20 study Music. 10 study Art and Drama, 8 study Art and Music, 6 study Drama and Music, and 4 study all three. Each pairwise figure includes those who study all three.",
+    "question": "How many students study at least one of the three subjects?",
+    "options": [
+      {
+        "id": "A",
+        "text": "45"
+      },
+      {
+        "id": "B",
+        "text": "51"
+      },
+      {
+        "id": "C",
+        "text": "55"
+      },
+      {
+        "id": "D",
+        "text": "59"
+      }
+    ],
+    "correct_answer": "C",
+    "explanation": "Three-set inclusion-exclusion: union = 30 + 25 + 20 − 10 − 8 − 6 + 4 = 75 − 24 + 4 = 55.",
+    "skill_tag": "inclusion-exclusion-three-set",
+    "common_trap": "forgets-add-back-all-three",
+    "optional_working_steps": [
+      "Singles = 30 + 25 + 20 = 75.",
+      "Pairs = 10 + 8 + 6 = 24.",
+      "Union = 75 − 24 + 4 = 55."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Standard three-set inclusion-exclusion; pairwise figures stated to include all-three."
+    },
+    "is_active": true
+  },
+  {
+    "id": "venn-only-one-from-three-001",
+    "trainer_type": "venn-logic",
+    "difficulty": "hard",
+    "sort_order": 44,
+    "stem": "Customers each bought at least one of three products. 18 bought product X in total. 5 bought X and Y, 4 bought X and Z, and 2 bought all three. The pairwise figures include those who bought all three.",
+    "question": "How many customers bought only product X?",
+    "options": [
+      {
+        "id": "A",
+        "text": "7"
+      },
+      {
+        "id": "B",
+        "text": "9"
+      },
+      {
+        "id": "C",
+        "text": "11"
+      },
+      {
+        "id": "D",
+        "text": "13"
+      }
+    ],
+    "correct_answer": "C",
+    "explanation": "Customers in X who also bought another product = (X and Y) + (X and Z) − all-three = 5 + 4 − 2 = 7. Only X = total X − 7 = 18 − 7 = 11.",
+    "skill_tag": "only-one-set",
+    "common_trap": "double-counts-pair-overlap",
+    "optional_working_steps": [
+      "In X and another = 5 + 4 − 2 = 7.",
+      "Only X = 18 − 7 = 11."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Overlap-within-X computed by inclusion-exclusion; only-X is unique."
+    },
+    "is_active": true
+  },
+  {
+    "id": "venn-impossible-overlap-002",
+    "trainer_type": "venn-logic",
+    "difficulty": "medium",
+    "sort_order": 45,
+    "stem": "A group has 50 people. 33 own a bike and 28 own a scooter.",
+    "question": "Which of the following is NOT a possible number of people who own both?",
+    "options": [
+      {
+        "id": "A",
+        "text": "11"
+      },
+      {
+        "id": "B",
+        "text": "20"
+      },
+      {
+        "id": "C",
+        "text": "28"
+      },
+      {
+        "id": "D",
+        "text": "30"
+      }
+    ],
+    "correct_answer": "D",
+    "explanation": "Overlap ranges from max(0, 33 + 28 − 50) = 11 up to min(33, 28) = 28. So 11, 20 and 28 are all possible, but 30 exceeds the maximum of 28 and is impossible.",
+    "skill_tag": "impossible-overlap",
+    "common_trap": "forgets-maximum-overlap",
+    "optional_working_steps": [
+      "Minimum overlap = 33 + 28 − 50 = 11.",
+      "Maximum overlap = min(33, 28) = 28.",
+      "30 > 28, so 30 is impossible."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Only one option falls outside the [11, 28] range."
+    },
+    "is_active": true
+  },
+  {
+    "id": "venn-total-mentions-magazines-001",
+    "trainer_type": "venn-logic",
+    "difficulty": "hard",
+    "sort_order": 46,
+    "stem": "120 people were asked which of three magazines they read: A, B and C. 54 read A, 48 read B and 39 read C. 12 read all three. 21 read exactly two. The rest read exactly one or none.",
+    "question": "How many people read exactly one magazine?",
+    "options": [
+      {
+        "id": "A",
+        "text": "57"
+      },
+      {
+        "id": "B",
+        "text": "63"
+      },
+      {
+        "id": "C",
+        "text": "69"
+      },
+      {
+        "id": "D",
+        "text": "75"
+      }
+    ],
+    "correct_answer": "B",
+    "explanation": "Total mentions = 54 + 48 + 39 = 141. All-three mentions = 12 × 3 = 36. Exactly-two mentions = 21 × 2 = 42. Exactly-one people = 141 − 36 − 42 = 63.",
+    "skill_tag": "total-mentions",
+    "common_trap": "subtracts-people-not-mentions",
+    "optional_working_steps": [
+      "Mentions = 54 + 48 + 39 = 141.",
+      "Exactly-one = 141 − 36 − 42 = 63."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Mentions balance (63×1 + 21×2 + 12×3 = 141); the none group is not requested."
+    },
+    "is_active": true
+  },
+  {
+    "id": "venn-complement-universal-001",
+    "trainer_type": "venn-logic",
+    "difficulty": "medium",
+    "sort_order": 47,
+    "stem": "Every member of a 40-person club volunteers for at least one of three committees: events, finance and outreach. 25 members are on the events committee.",
+    "question": "Which of the following must be true?",
+    "options": [
+      {
+        "id": "A",
+        "text": "15 members are not on the events committee."
+      },
+      {
+        "id": "B",
+        "text": "15 members are on the finance committee only."
+      },
+      {
+        "id": "C",
+        "text": "25 members are on the events committee only."
+      },
+      {
+        "id": "D",
+        "text": "No member is on all three committees."
+      }
+    ],
+    "correct_answer": "A",
+    "explanation": "Everyone is on at least one committee, so the 40 − 25 = 15 who are not on events must be on finance or outreach. The split of those 15, and how many of the 25 are events-only, cannot be determined.",
+    "skill_tag": "complement-in-universal-set",
+    "common_trap": "confuses-total-with-only",
+    "optional_working_steps": [
+      "Not on events = 40 − 25 = 15."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Only the complement is determined; B, C and D each assert undetermined sub-regions."
+    },
+    "is_active": true
+  },
+  {
+    "id": "venn-neither-from-union-002",
+    "trainer_type": "venn-logic",
+    "difficulty": "medium",
+    "sort_order": 48,
+    "stem": "150 people were surveyed about visiting two cities. 88 visited Rome, 64 visited Paris, and 30 visited both.",
+    "question": "How many visited neither city?",
+    "options": [
+      {
+        "id": "A",
+        "text": "22"
+      },
+      {
+        "id": "B",
+        "text": "28"
+      },
+      {
+        "id": "C",
+        "text": "34"
+      },
+      {
+        "id": "D",
+        "text": "62"
+      }
+    ],
+    "correct_answer": "B",
+    "explanation": "Union = 88 + 64 − 30 = 122 (subtract the overlap once). Neither = 150 − 122 = 28.",
+    "skill_tag": "union-complement",
+    "common_trap": "double-counts-overlap",
+    "optional_working_steps": [
+      "Union = 88 + 64 − 30 = 122.",
+      "Neither = 150 − 122 = 28."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Standard two-set union then complement; answer unique."
+    },
+    "is_active": true
+  },
+  {
+    "id": "venn-exactly-two-mentions-002",
+    "trainer_type": "venn-logic",
+    "difficulty": "hard",
+    "sort_order": 49,
+    "stem": "60 people each like at least one of three sauces: ketchup, mustard and mayo. 40 like ketchup, 30 like mustard and 25 like mayo. 12 like all three sauces.",
+    "question": "How many people like exactly two of the sauces?",
+    "options": [
+      {
+        "id": "A",
+        "text": "9"
+      },
+      {
+        "id": "B",
+        "text": "11"
+      },
+      {
+        "id": "C",
+        "text": "13"
+      },
+      {
+        "id": "D",
+        "text": "23"
+      }
+    ],
+    "correct_answer": "B",
+    "explanation": "Let exactly-one = e1, exactly-two = e2, all-three = 12. People: e1 + e2 + 12 = 60. Mentions: e1 + 2·e2 + 3·12 = 40 + 30 + 25 = 95. Subtracting the first from the second: e2 + 2·12 = 35, so e2 = 35 − 24 = 11.",
+    "skill_tag": "total-mentions",
+    "common_trap": "confuses-exactly-and-at-least",
+    "optional_working_steps": [
+      "Mentions = 40 + 30 + 25 = 95.",
+      "Mentions − total = 95 − 60 = 35 = e2 + 2·12.",
+      "e2 = 35 − 24 = 11."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "All-at-least-one gives union 60; mentions 95; e2 solved uniquely as 11 with e1 = 37 ≥ 0."
+    },
+    "is_active": true
+  },
+  {
     "id": "data-complement-001",
     "trainer_type": "data-logic",
     "difficulty": "easy",
@@ -2150,7 +2755,7 @@
       }
     ],
     "correct_answer": "A",
-    "explanation": "Expected repair cost for A = 0.6 × £0 + 0.4 × £100 = £40. Machine B always costs £50. Considering only expected repair cost, Machine A is cheaper.",
+    "explanation": "Expected cost averages the possible outcomes, weighted by how likely each one is. With Machine A, 40% of the time you pay £100 and 60% of the time you pay nothing, so 0.4 × £100 = £40 is the average bill: if ten machines were repaired, on average four of them would cost £100, which is £40 each across all ten. Machine B costs £50 every time. Comparing £40 with £50, Machine A is cheaper on average, even though it is the only one that can ever produce a £100 bill.",
     "skill_tag": "expected-value",
     "common_trap": "compares-single-outcome",
     "optional_working_steps": null,
@@ -2865,6 +3470,609 @@
     "is_active": true
   },
   {
+    "id": "data-missing-percentage-005",
+    "trainer_type": "data-logic",
+    "difficulty": "medium",
+    "sort_order": 40,
+    "stem": "300 hospital admissions each had exactly one primary cause. 28% were respiratory, 75 were cardiac, 22% were infection, and the rest were trauma.",
+    "question": "What percentage of admissions were due to trauma?",
+    "options": [
+      {
+        "id": "A",
+        "text": "15%"
+      },
+      {
+        "id": "B",
+        "text": "20%"
+      },
+      {
+        "id": "C",
+        "text": "25%"
+      },
+      {
+        "id": "D",
+        "text": "30%"
+      }
+    ],
+    "correct_answer": "C",
+    "explanation": "Convert the raw count: 75 ÷ 300 × 100 = 25% cardiac. Known percentages = 28 + 25 + 22 = 75%. Trauma = 100 − 75 = 25%.",
+    "skill_tag": "missing-percentage",
+    "common_trap": "raw-number-treated-as-percentage",
+    "optional_working_steps": [
+      "Cardiac = 75 ÷ 300 = 25%.",
+      "Known = 28 + 25 + 22 = 75%.",
+      "Trauma = 100 − 75 = 25%."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Exactly one cause makes categories exhaustive; the remaining percentage is unique."
+    },
+    "is_active": true
+  },
+  {
+    "id": "data-denominator-004",
+    "trainer_type": "data-logic",
+    "difficulty": "medium",
+    "sort_order": 41,
+    "stem": "A survey was sent to 450 staff. 270 responded. Of those who responded, 162 supported the proposed change.",
+    "question": "What percentage of respondents supported the change?",
+    "options": [
+      {
+        "id": "A",
+        "text": "36%"
+      },
+      {
+        "id": "B",
+        "text": "48%"
+      },
+      {
+        "id": "C",
+        "text": "60%"
+      },
+      {
+        "id": "D",
+        "text": "72%"
+      }
+    ],
+    "correct_answer": "C",
+    "explanation": "The denominator is respondents, not everyone surveyed. 162 ÷ 270 × 100 = 60%.",
+    "skill_tag": "denominator",
+    "common_trap": "wrong-denominator",
+    "optional_working_steps": [
+      "162 ÷ 270 × 100 = 60%."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Question names respondents as the denominator; 36% is the precise wrong-denominator trap."
+    },
+    "is_active": true
+  },
+  {
+    "id": "data-at-least-one-004",
+    "trainer_type": "data-logic",
+    "difficulty": "hard",
+    "sort_order": 42,
+    "stem": "A machine has a 0.2 probability of jamming on each run. The runs are independent and it is run 3 times.",
+    "question": "What is the probability that it jams at least once? (to 3 decimal places)",
+    "options": [
+      {
+        "id": "A",
+        "text": "0.200"
+      },
+      {
+        "id": "B",
+        "text": "0.488"
+      },
+      {
+        "id": "C",
+        "text": "0.512"
+      },
+      {
+        "id": "D",
+        "text": "0.600"
+      }
+    ],
+    "correct_answer": "B",
+    "explanation": "Use the complement. P(no jam on one run) = 0.8. P(no jam on all three) = 0.8³ = 0.512. P(at least one jam) = 1 − 0.512 = 0.488.",
+    "skill_tag": "at-least-one",
+    "common_trap": "adds-probabilities-incorrectly",
+    "optional_working_steps": [
+      "P(no jam) = 0.8.",
+      "P(none in 3) = 0.8³ = 0.512.",
+      "P(at least one) = 1 − 0.512 = 0.488."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Independence stated; complement gives a single value to 3 dp."
+    },
+    "is_active": true
+  },
+  {
+    "id": "data-expected-cost-003",
+    "trainer_type": "data-logic",
+    "difficulty": "hard",
+    "sort_order": 43,
+    "stem": "Plan A costs £30 upfront plus a 20% chance of a £150 surcharge. Plan B costs a flat £55 with no surcharge.",
+    "question": "Considering only expected total cost, which plan is cheaper?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Plan A, because its expected total cost is £60."
+      },
+      {
+        "id": "B",
+        "text": "Plan A, because £30 is less than £55."
+      },
+      {
+        "id": "C",
+        "text": "Plan B, because its £55 cost is below Plan A's expected total of £60."
+      },
+      {
+        "id": "D",
+        "text": "They are equal in expected cost."
+      }
+    ],
+    "correct_answer": "C",
+    "explanation": "Plan A expected total = 30 + 0.2 × 150 = 30 + 30 = £60. Plan B = £55. Considering only expected cost, Plan B (£55) is cheaper than Plan A (£60).",
+    "skill_tag": "expected-value",
+    "common_trap": "compares-single-outcome",
+    "optional_working_steps": [
+      "Plan A expected = 30 + 0.2 × 150 = 60.",
+      "Plan B = 55.",
+      "55 < 60, so Plan B is cheaper."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Expected-value comparison is explicit; A states the right number but the wrong conclusion."
+    },
+    "is_active": true
+  },
+  {
+    "id": "data-percentage-change-002",
+    "trainer_type": "data-logic",
+    "difficulty": "medium",
+    "sort_order": 44,
+    "stem": "A monthly subscription rises from £40 to £50.",
+    "question": "What is the percentage increase?",
+    "options": [
+      {
+        "id": "A",
+        "text": "10%"
+      },
+      {
+        "id": "B",
+        "text": "20%"
+      },
+      {
+        "id": "C",
+        "text": "25%"
+      },
+      {
+        "id": "D",
+        "text": "80%"
+      }
+    ],
+    "correct_answer": "C",
+    "explanation": "Increase = £50 − £40 = £10. Percentage increase = 10 ÷ 40 × 100 = 25%.",
+    "skill_tag": "percentage-change",
+    "common_trap": "uses-new-value-as-denominator",
+    "optional_working_steps": [
+      "Change = 50 − 40 = 10.",
+      "10 ÷ 40 × 100 = 25%."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Standard percentage increase; B is the divide-by-new-price trap."
+    },
+    "is_active": true
+  },
+  {
+    "id": "data-successive-percentage-001",
+    "trainer_type": "data-logic",
+    "difficulty": "hard",
+    "sort_order": 45,
+    "stem": "A £200 item is first increased by 10%, and then the new price is reduced by 10%.",
+    "question": "What is the final price?",
+    "options": [
+      {
+        "id": "A",
+        "text": "£198"
+      },
+      {
+        "id": "B",
+        "text": "£200"
+      },
+      {
+        "id": "C",
+        "text": "£202"
+      },
+      {
+        "id": "D",
+        "text": "£220"
+      }
+    ],
+    "correct_answer": "A",
+    "explanation": "Increase: 200 × 1.10 = £220. Decrease: 220 × 0.90 = £198. The 10% reduction is taken from £220, not from the original £200, so the price does not return to £200.",
+    "skill_tag": "successive-percentage",
+    "common_trap": "applies-second-percent-to-total",
+    "optional_working_steps": [
+      "200 × 1.1 = 220.",
+      "220 × 0.9 = 198."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Compounding is explicit; B is the 'they cancel' trap."
+    },
+    "is_active": true
+  },
+  {
+    "id": "data-reverse-percentage-002",
+    "trainer_type": "data-logic",
+    "difficulty": "hard",
+    "sort_order": 46,
+    "stem": "After a 20% discount, a coat costs £72.",
+    "question": "What was the original price?",
+    "options": [
+      {
+        "id": "A",
+        "text": "£86.40"
+      },
+      {
+        "id": "B",
+        "text": "£90"
+      },
+      {
+        "id": "C",
+        "text": "£92"
+      },
+      {
+        "id": "D",
+        "text": "£144"
+      }
+    ],
+    "correct_answer": "B",
+    "explanation": "After a 20% discount the price is 80% of the original. So original × 0.8 = 72, giving original = 72 ÷ 0.8 = £90.",
+    "skill_tag": "reverse-percentage",
+    "common_trap": "reverse-percentage-add-back",
+    "optional_working_steps": [
+      "Discounted = 80% of original.",
+      "Original = 72 ÷ 0.8 = £90."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Reverse percentage check (£90 − 20% = £72) confirms the answer; A is the add-back trap."
+    },
+    "is_active": true
+  },
+  {
+    "id": "data-rate-comparison-002",
+    "trainer_type": "data-logic",
+    "difficulty": "medium",
+    "sort_order": 47,
+    "stem": "Clinic A recorded complications in 9 of 150 patients. Clinic B recorded complications in 16 of 200 patients.",
+    "question": "Which clinic has the higher complication rate?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Clinic A, with a rate of 6% versus 8%."
+      },
+      {
+        "id": "B",
+        "text": "Clinic B, with a rate of 8% versus 6%."
+      },
+      {
+        "id": "C",
+        "text": "Both are equal at 7%."
+      },
+      {
+        "id": "D",
+        "text": "They cannot be compared."
+      }
+    ],
+    "correct_answer": "B",
+    "explanation": "Clinic A rate = 9 ÷ 150 = 6%. Clinic B rate = 16 ÷ 200 = 8%. Clinic B has the higher rate, even though both groups differ in size.",
+    "skill_tag": "rate-comparison",
+    "common_trap": "compares-raw-counts",
+    "optional_working_steps": [
+      "A = 9 ÷ 150 = 6%.",
+      "B = 16 ÷ 200 = 8%."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Both rates are exact whole percentages; only B states the correct comparison."
+    },
+    "is_active": true
+  },
+  {
+    "id": "data-average-total-002",
+    "trainer_type": "data-logic",
+    "difficulty": "medium",
+    "sort_order": 48,
+    "stem": "A team of 8 players scored an average of 12 points each. Five of the players scored 10, 14, 9, 13 and 14 points.",
+    "question": "How many points did the remaining three players score in total?",
+    "options": [
+      {
+        "id": "A",
+        "text": "30"
+      },
+      {
+        "id": "B",
+        "text": "34"
+      },
+      {
+        "id": "C",
+        "text": "36"
+      },
+      {
+        "id": "D",
+        "text": "40"
+      }
+    ],
+    "correct_answer": "C",
+    "explanation": "Total points = 8 × 12 = 96. The five known players scored 10 + 14 + 9 + 13 + 14 = 60. Remaining three = 96 − 60 = 36.",
+    "skill_tag": "average-total",
+    "common_trap": "works-with-average-directly",
+    "optional_working_steps": [
+      "Total = 8 × 12 = 96.",
+      "Known five = 60.",
+      "Remaining = 96 − 60 = 36."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Average reconstruction with integer subtotal; unique answer."
+    },
+    "is_active": true
+  },
+  {
+    "id": "data-ratio-002",
+    "trainer_type": "data-logic",
+    "difficulty": "medium",
+    "sort_order": 49,
+    "stem": "A budget is split between staff, equipment and marketing in the ratio 5:3:2. Equipment receives £18,000.",
+    "question": "What is the total budget?",
+    "options": [
+      {
+        "id": "A",
+        "text": "£36,000"
+      },
+      {
+        "id": "B",
+        "text": "£54,000"
+      },
+      {
+        "id": "C",
+        "text": "£60,000"
+      },
+      {
+        "id": "D",
+        "text": "£90,000"
+      }
+    ],
+    "correct_answer": "C",
+    "explanation": "Equipment is 3 parts and receives £18,000, so one part = £6,000. The ratio has 5 + 3 + 2 = 10 parts, so the total = 10 × £6,000 = £60,000.",
+    "skill_tag": "ratio",
+    "common_trap": "treats-given-as-total",
+    "optional_working_steps": [
+      "One part = 18,000 ÷ 3 = 6,000.",
+      "Total = 10 × 6,000 = 60,000."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Integer parts; the given share maps cleanly to three parts."
+    },
+    "is_active": true
+  },
+  {
+    "id": "data-missing-probability-002",
+    "trainer_type": "data-logic",
+    "difficulty": "medium",
+    "sort_order": 50,
+    "stem": "A spinner lands on red, blue or green. The probability of red is 0.4, and green is twice as likely as blue.",
+    "question": "What is the probability of green?",
+    "options": [
+      {
+        "id": "A",
+        "text": "0.20"
+      },
+      {
+        "id": "B",
+        "text": "0.30"
+      },
+      {
+        "id": "C",
+        "text": "0.40"
+      },
+      {
+        "id": "D",
+        "text": "0.60"
+      }
+    ],
+    "correct_answer": "C",
+    "explanation": "The three probabilities sum to 1. Let blue = x and green = 2x. Then 0.4 + x + 2x = 1, so 3x = 0.6 and x = 0.2. Green = 2x = 0.4.",
+    "skill_tag": "missing-probability",
+    "common_trap": "misreads-ratio-condition",
+    "optional_working_steps": [
+      "0.4 + x + 2x = 1.",
+      "3x = 0.6, x = 0.2.",
+      "Green = 2x = 0.4."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Outcomes sum to 1 and the ratio condition fixes a unique split."
+    },
+    "is_active": true
+  },
+  {
+    "id": "data-conditional-prob-001",
+    "trainer_type": "data-logic",
+    "difficulty": "hard",
+    "sort_order": 51,
+    "stem": "In a clinic, 30% of patients have condition X and 50% of patients are over 60. No information is given about whether age and condition X are related.",
+    "question": "Can the percentage of patients who are over 60 AND have condition X be determined?",
+    "options": [
+      {
+        "id": "A",
+        "text": "Yes, it is 15%."
+      },
+      {
+        "id": "B",
+        "text": "Yes, it is 80%."
+      },
+      {
+        "id": "C",
+        "text": "No, because the relationship between age and condition X is unknown."
+      },
+      {
+        "id": "D",
+        "text": "No, because percentages cannot be combined at all."
+      }
+    ],
+    "correct_answer": "C",
+    "explanation": "Multiplying 0.3 × 0.5 = 0.15 is only valid if age and condition X are independent, which is not stated. Without that, the overlap cannot be pinned down.",
+    "skill_tag": "insufficient-information",
+    "common_trap": "assumes-independence",
+    "optional_working_steps": null,
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Independence is explicitly not provided, so the joint percentage is undetermined."
+    },
+    "is_active": true
+  },
+  {
+    "id": "data-expected-value-003",
+    "trainer_type": "data-logic",
+    "difficulty": "hard",
+    "sort_order": 52,
+    "stem": "A game pays out £0 with probability 0.5, £10 with probability 0.4, and £50 with probability 0.1.",
+    "question": "What is the expected payout of one game?",
+    "options": [
+      {
+        "id": "A",
+        "text": "£6"
+      },
+      {
+        "id": "B",
+        "text": "£9"
+      },
+      {
+        "id": "C",
+        "text": "£20"
+      },
+      {
+        "id": "D",
+        "text": "£60"
+      }
+    ],
+    "correct_answer": "B",
+    "explanation": "Expected payout = 0.5 × £0 + 0.4 × £10 + 0.1 × £50 = 0 + 4 + 5 = £9.",
+    "skill_tag": "expected-value",
+    "common_trap": "averages-outcomes-ignoring-probability",
+    "optional_working_steps": [
+      "0.4 × 10 = 4.",
+      "0.1 × 50 = 5.",
+      "Expected = 0 + 4 + 5 = £9."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Probabilities sum to 1; expected value is a single weighted sum."
+    },
+    "is_active": true
+  },
+  {
+    "id": "data-percentage-of-percentage-001",
+    "trainer_type": "data-logic",
+    "difficulty": "medium",
+    "sort_order": 53,
+    "stem": "In a school, 60% of students study a language. Of those who study a language, 25% study French.",
+    "question": "What percentage of all students study French?",
+    "options": [
+      {
+        "id": "A",
+        "text": "12%"
+      },
+      {
+        "id": "B",
+        "text": "15%"
+      },
+      {
+        "id": "C",
+        "text": "25%"
+      },
+      {
+        "id": "D",
+        "text": "35%"
+      }
+    ],
+    "correct_answer": "B",
+    "explanation": "French students are 25% of the 60% who study a language: 0.25 × 0.60 = 0.15 = 15% of all students.",
+    "skill_tag": "percentage-of-percentage",
+    "common_trap": "adds-percentages-instead-of-multiplying",
+    "optional_working_steps": [
+      "0.25 × 0.60 = 0.15.",
+      "0.15 = 15%."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Nested percentage resolves to a single product; D is the subtract-the-percentages trap."
+    },
+    "is_active": true
+  },
+  {
+    "id": "data-weighted-total-001",
+    "trainer_type": "data-logic",
+    "difficulty": "hard",
+    "sort_order": 54,
+    "stem": "Of 200 people, 120 are adults and 80 are children. 30% of the adults and 25% of the children own a bicycle.",
+    "question": "How many of the 200 people own a bicycle?",
+    "options": [
+      {
+        "id": "A",
+        "text": "50"
+      },
+      {
+        "id": "B",
+        "text": "56"
+      },
+      {
+        "id": "C",
+        "text": "60"
+      },
+      {
+        "id": "D",
+        "text": "110"
+      }
+    ],
+    "correct_answer": "B",
+    "explanation": "Adults with bicycles = 30% of 120 = 36. Children with bicycles = 25% of 80 = 20. Total = 36 + 20 = 56.",
+    "skill_tag": "weighted-total",
+    "common_trap": "applies-one-rate-to-whole-group",
+    "optional_working_steps": [
+      "Adults: 0.30 × 120 = 36.",
+      "Children: 0.25 × 80 = 20.",
+      "Total = 36 + 20 = 56."
+    ],
+    "review": {
+      "calculationChecked": true,
+      "ambiguityRisk": "low",
+      "whySafeToInclude": "Each subgroup rate applied to its own size; sum is exact."
+    },
+    "is_active": true
+  },
+  {
     "id": "arg-health-lunches-001",
     "trainer_type": "argument-judge",
     "difficulty": "easy",
@@ -2874,8 +4082,8 @@
     "options": [
       {
         "id": "A",
-        "text": "Yes, school lunches may help children concentrate in class.",
-        "label": "true-but-irrelevant"
+        "text": "Yes, school lunches can help support good eating habits in children.",
+        "label": "directly-relevant"
       },
       {
         "id": "B",
@@ -2884,8 +4092,8 @@
       },
       {
         "id": "C",
-        "text": "Yes, school lunches can help support good eating habits in children.",
-        "label": "directly-relevant"
+        "text": "Yes, school lunches may help children concentrate in class.",
+        "label": "true-but-irrelevant"
       },
       {
         "id": "D",
@@ -2893,17 +4101,17 @@
         "label": "does-not-answer-aim"
       }
     ],
-    "correct_answer": "C",
+    "correct_answer": "A",
     "explanation": "The stated aim is improving children's health. Good eating habits are a direct mechanism for achieving better health. Concentration, cost savings, and food waste do not address the health aim.",
     "skill_tag": "identify-aim",
     "common_trap": "true-but-irrelevant",
     "optional_working_steps": null,
     "review": {
       "exactAim": "improve children's health",
-      "whyCorrect": "C links school lunches to good eating habits, which links to health.",
-      "whyAIsWrong": "A discusses concentration, not health.",
+      "whyCorrect": "A links school lunches to good eating habits, which links to health.",
+      "whyAIsWrong": "A is the correct answer.",
       "whyBIsWrong": "B discusses saving money, not health.",
-      "whyCIsWrong": "C is the correct answer.",
+      "whyCIsWrong": "C discusses concentration, not health.",
       "whyDIsWrong": "D discusses waste, not a health benefit from lunches.",
       "ambiguityRisk": "low",
       "whySafeToInclude": "The aim is explicit and only one option targets health most directly."
@@ -2925,13 +4133,13 @@
       },
       {
         "id": "B",
-        "text": "Yes, electronic counting would provide results more rapidly and with less chance of error.",
-        "label": "only-addresses-one-criterion"
+        "text": "No, the necessary equipment would be expensive, electronic voting may discourage some voters, and hackers might interfere with the result.",
+        "label": "directly-relevant"
       },
       {
         "id": "C",
-        "text": "No, the necessary equipment would be expensive, electronic voting may discourage some voters, and hackers might interfere with the result.",
-        "label": "directly-relevant"
+        "text": "Yes, electronic counting would provide results more rapidly and with less chance of error.",
+        "label": "only-addresses-one-criterion"
       },
       {
         "id": "D",
@@ -2939,20 +4147,20 @@
         "label": "vague"
       }
     ],
-    "correct_answer": "C",
-    "explanation": "The stem lists three criteria: reduce costs, increase accuracy, and improve turnout. C addresses all three: expensive equipment (costs), hackers interfering (accuracy), and discouraging some voters (turnout). A addresses turnout only. B addresses accuracy only. D is vague and engages with none.",
+    "correct_answer": "B",
+    "explanation": "The stem lists three criteria: reduce costs, increase accuracy, and improve turnout. B addresses all three: expensive equipment (costs), hackers interfering (accuracy), and discouraging some voters (turnout). A addresses turnout only. C addresses accuracy only. D is vague and engages with none.",
     "skill_tag": "multi-criteria",
     "common_trap": "only-addresses-one-criterion",
     "optional_working_steps": null,
     "review": {
       "exactAim": "reduce costs, increase accuracy and improve turnout",
-      "whyCorrect": "C responds to cost, turnout and accuracy in one argument.",
+      "whyCorrect": "B responds to cost, turnout and accuracy in one argument.",
       "whyAIsWrong": "A focuses on convenience and turnout only.",
-      "whyBIsWrong": "B focuses on speed and accuracy only.",
-      "whyCIsWrong": "C is the correct answer.",
+      "whyBIsWrong": "B is the correct answer.",
+      "whyCIsWrong": "C focuses on speed and accuracy only.",
       "whyDIsWrong": "D does not engage with the three criteria.",
       "ambiguityRisk": "low",
-      "whySafeToInclude": "Three criteria are explicit. Only C addresses all of them."
+      "whySafeToInclude": "Three criteria are explicit. Only B addresses all of them."
     },
     "is_active": true
   },
@@ -2966,8 +4174,8 @@
     "options": [
       {
         "id": "A",
-        "text": "Yes, family members may help where possible, but society should ensure care is available when family cannot provide it.",
-        "label": "directly-relevant"
+        "text": "No, families should learn to stick together by caring for relatives themselves.",
+        "label": "partially-relevant"
       },
       {
         "id": "B",
@@ -2976,8 +4184,8 @@
       },
       {
         "id": "C",
-        "text": "No, families should learn to stick together by caring for relatives themselves.",
-        "label": "partially-relevant"
+        "text": "Yes, family members may help where possible, but society should ensure care is available when family cannot provide it.",
+        "label": "directly-relevant"
       },
       {
         "id": "D",
@@ -2985,20 +4193,20 @@
         "label": "unsupported-assumption"
       }
     ],
-    "correct_answer": "A",
-    "explanation": "A addresses the full scope: who is ultimately responsible when older people cannot care for themselves, including cases where families genuinely cannot help. B covers only mental illness in a subset of cases. C tells families to care, but does not resolve the scenario where family care is impossible. D assumes everyone can save enough money - unsupported.",
+    "correct_answer": "C",
+    "explanation": "C addresses the full scope: who is ultimately responsible when older people cannot care for themselves, including cases where families genuinely cannot help. B covers only mental illness in a subset of cases. A tells families to care, but does not resolve the scenario where family care is impossible. D assumes everyone can save enough money - unsupported.",
     "skill_tag": "scope",
     "common_trap": "too-narrow",
     "optional_working_steps": null,
     "review": {
       "exactAim": "who should ultimately be responsible for care when older people cannot care for themselves",
-      "whyCorrect": "A balances family help with society's ultimate responsibility when family care is not possible.",
-      "whyAIsWrong": "A is the correct answer.",
+      "whyCorrect": "C balances family help with society's ultimate responsibility when family care is not possible.",
+      "whyAIsWrong": "A does not address inability of families to provide care.",
       "whyBIsWrong": "B is too narrow because it only discusses mental illness.",
-      "whyCIsWrong": "C does not address inability of families to provide care.",
+      "whyCIsWrong": "C is the correct answer.",
       "whyDIsWrong": "D relies on the unsupported assumption that everyone can save enough.",
       "ambiguityRisk": "low",
-      "whySafeToInclude": "A matches the full scope of the stem. Wrong options fail on scope or assumptions."
+      "whySafeToInclude": "C matches the full scope of the stem. Wrong options fail on scope or assumptions."
     },
     "is_active": true
   },
@@ -3012,8 +4220,8 @@
     "options": [
       {
         "id": "A",
-        "text": "Yes, shared workwear may promote team identity, and stronger team identity can improve workplace performance.",
-        "label": "directly-relevant"
+        "text": "No, uniforms are always unpopular with employees.",
+        "label": "unsupported-assumption"
       },
       {
         "id": "B",
@@ -3027,24 +4235,24 @@
       },
       {
         "id": "D",
-        "text": "No, uniforms are always unpopular with employees.",
-        "label": "unsupported-assumption"
+        "text": "Yes, shared workwear may promote team identity, and stronger team identity can improve workplace performance.",
+        "label": "directly-relevant"
       }
     ],
-    "correct_answer": "A",
-    "explanation": "A provides a direct mechanism: uniforms → team identity → improved performance (productivity). B assumes all employees waste significant choosing time AND that saved time becomes productive output - neither is established. C overclaims with 'every form'. D makes an unsupported absolute claim and never links to productivity.",
+    "correct_answer": "D",
+    "explanation": "D provides a direct mechanism: uniforms → team identity → improved performance (productivity). B assumes all employees waste significant choosing time AND that saved time becomes productive output - neither is established. C overclaims with 'every form'. A makes an unsupported absolute claim and never links to productivity.",
     "skill_tag": "unsupported-assumption",
     "common_trap": "unsupported-assumption",
     "optional_working_steps": null,
     "review": {
       "exactAim": "whether workplace uniforms will boost productivity",
-      "whyCorrect": "A gives a direct chain from uniforms to team identity to performance.",
-      "whyAIsWrong": "A is the correct answer.",
+      "whyCorrect": "D gives a direct chain from uniforms to team identity to performance.",
+      "whyAIsWrong": "A makes a blanket claim about popularity without linking to productivity.",
       "whyBIsWrong": "B assumes uniform time savings become productive output for all staff.",
       "whyCIsWrong": "C claims uniforms remove every form of inequality.",
-      "whyDIsWrong": "D makes a blanket claim about popularity without linking to productivity.",
+      "whyDIsWrong": "D is the correct answer.",
       "ambiguityRisk": "low",
-      "whySafeToInclude": "Only A links uniforms to productivity with a plausible mechanism."
+      "whySafeToInclude": "Only D links uniforms to productivity with a plausible mechanism."
     },
     "is_active": true
   },
@@ -3196,8 +4404,8 @@
     "options": [
       {
         "id": "A",
-        "text": "Yes, energy drinks contain high levels of caffeine and sugar, which can be harmful to children's physical and mental health.",
-        "label": "directly-relevant"
+        "text": "No, parents are responsible for what their children buy and consume.",
+        "label": "does-not-answer-aim"
       },
       {
         "id": "B",
@@ -3211,24 +4419,24 @@
       },
       {
         "id": "D",
-        "text": "No, parents are responsible for what their children buy and consume.",
-        "label": "does-not-answer-aim"
+        "text": "Yes, energy drinks contain high levels of caffeine and sugar, which can be harmful to children's physical and mental health.",
+        "label": "directly-relevant"
       }
     ],
-    "correct_answer": "A",
-    "explanation": "A gives a broad, evidence-based reason covering the full scope of harm - both caffeine and sugar, both physical and mental health, across all under-16s. B is too narrow: academic performance is one consequence for a subset of older children. C makes an unsupported assumption about what 'most children' know. D deflects to parental responsibility rather than addressing whether the drinks are harmful.",
+    "correct_answer": "D",
+    "explanation": "D gives a broad, evidence-based reason covering the full scope of harm - both caffeine and sugar, both physical and mental health, across all under-16s. B is too narrow: academic performance is one consequence for a subset of older children. C makes an unsupported assumption about what 'most children' know. A deflects to parental responsibility rather than addressing whether the drinks are harmful.",
     "skill_tag": "scope",
     "common_trap": "too-narrow",
     "optional_working_steps": null,
     "review": {
       "exactAim": "should children under 16 be prohibited from buying energy drinks",
-      "whyCorrect": "A gives a broad, evidence-based reason covering the full scope of harm (physical and mental health).",
-      "whyAIsWrong": "A is the correct answer.",
+      "whyCorrect": "D gives a broad, evidence-based reason covering the full scope of harm (physical and mental health).",
+      "whyAIsWrong": "A argues about responsibility rather than whether children should be protected from the product.",
       "whyBIsWrong": "B focuses only on academic performance in secondary students, not the full range of health harms.",
       "whyCIsWrong": "C assumes 'most children' are aware of risks - an unsupported claim that does not justify allowing purchase.",
-      "whyDIsWrong": "D argues about responsibility rather than whether children should be protected from the product.",
+      "whyDIsWrong": "D is the correct answer.",
       "ambiguityRisk": "low",
-      "whySafeToInclude": "B is a deliberate too-narrow trap (academic performance is one consequence, not the full harm picture). C is an unsupported assumption. D deflects to parental responsibility. Only A addresses the full scope of the question."
+      "whySafeToInclude": "B is a deliberate too-narrow trap (academic performance is one consequence, not the full harm picture). C is an unsupported assumption. A deflects to parental responsibility. Only D addresses the full scope of the question."
     },
     "is_active": true
   },
@@ -3288,13 +4496,13 @@
     "options": [
       {
         "id": "A",
-        "text": "Yes, charging for bags has been shown to significantly reduce the number of plastic bags used.",
-        "label": "directly-relevant"
+        "text": "Yes, a plastic bag charge will reduce the income of the supermarket.",
+        "label": "true-but-irrelevant"
       },
       {
         "id": "B",
-        "text": "Yes, a plastic bag charge will reduce the income of the supermarket.",
-        "label": "true-but-irrelevant"
+        "text": "Yes, charging for bags has been shown to significantly reduce the number of plastic bags used.",
+        "label": "directly-relevant"
       },
       {
         "id": "C",
@@ -3307,20 +4515,20 @@
         "label": "does-not-answer-aim"
       }
     ],
-    "correct_answer": "A",
-    "explanation": "The aim is reducing plastic waste. A links the charge directly to reduced plastic bag usage, which directly reduces plastic waste. B states that the charge reduces supermarket income - a financial impact irrelevant to plastic waste. C discusses biodegradable bags, a different intervention entirely. D raises customer choice without addressing plastic waste.",
+    "correct_answer": "B",
+    "explanation": "The aim is reducing plastic waste. B links the charge directly to reduced plastic bag usage, which directly reduces plastic waste. A states that the charge reduces supermarket income - a financial impact irrelevant to plastic waste. C discusses biodegradable bags, a different intervention entirely. D raises customer choice without addressing plastic waste.",
     "skill_tag": "identify-aim",
     "common_trap": "true-but-irrelevant",
     "optional_working_steps": null,
     "review": {
       "exactAim": "reduce plastic waste",
-      "whyCorrect": "A connects the charge mechanism directly to reduced bag usage, addressing the aim.",
-      "whyAIsWrong": "A is the correct answer.",
-      "whyBIsWrong": "B is about supermarket revenue, not plastic waste.",
+      "whyCorrect": "B connects the charge mechanism directly to reduced bag usage, addressing the aim.",
+      "whyAIsWrong": "A is about supermarket revenue, not plastic waste.",
+      "whyBIsWrong": "B is the correct answer.",
       "whyCIsWrong": "C discusses an alternative product rather than addressing whether the charge reduces plastic waste.",
       "whyDIsWrong": "D discusses freedom without engaging with the plastic waste aim.",
       "ambiguityRisk": "low",
-      "whySafeToInclude": "The aim is explicit. B and C are true statements that are clearly irrelevant to plastic waste. D is a common 'personal freedom' distractor."
+      "whySafeToInclude": "The aim is explicit. A and C are true statements that are clearly irrelevant to plastic waste. D is a common 'personal freedom' distractor."
     },
     "is_active": true
   },
@@ -3344,29 +4552,29 @@
       },
       {
         "id": "C",
-        "text": "No, foot patrols cover less ground than car patrols and are therefore less effective at reducing crime.",
-        "label": "only-addresses-one-criterion"
+        "text": "No, the cost of additional officers required for foot patrols, the limited reach compared to car patrols, and the potential for foot patrols to be perceived as intrusive by some residents would all need to be considered.",
+        "label": "directly-relevant"
       },
       {
         "id": "D",
-        "text": "No, the cost of additional officers required for foot patrols, the limited reach compared to car patrols, and the potential for foot patrols to be perceived as intrusive by some residents would all need to be considered.",
-        "label": "directly-relevant"
+        "text": "No, foot patrols cover less ground than car patrols and are therefore less effective at reducing crime.",
+        "label": "only-addresses-one-criterion"
       }
     ],
-    "correct_answer": "D",
-    "explanation": "The stem gives three criteria: reduce crime, improve community relations and save money. D addresses all three: additional officer costs (money), limited ground coverage (crime), and potential perception of intrusiveness (community relations). A addresses community relations and some crime deterrence, but not cost. B discusses officer fitness - not a stated criterion. C addresses crime coverage only.",
+    "correct_answer": "C",
+    "explanation": "The stem gives three criteria: reduce crime, improve community relations and save money. C addresses all three: additional officer costs (money), limited ground coverage (crime), and potential perception of intrusiveness (community relations). A addresses community relations and some crime deterrence, but not cost. B discusses officer fitness - not a stated criterion. D addresses crime coverage only.",
     "skill_tag": "multi-criteria",
     "common_trap": "only-addresses-one-criterion",
     "optional_working_steps": null,
     "review": {
       "exactAim": "reduce crime, improve community relations and save money",
-      "whyCorrect": "D engages with cost (staffing), crime coverage (limited reach) and community relations (perceived intrusiveness) - all three criteria.",
+      "whyCorrect": "C engages with cost (staffing), crime coverage (limited reach) and community relations (perceived intrusiveness) - all three criteria.",
       "whyAIsWrong": "A addresses community relations and crime deterrence but does not address cost.",
       "whyBIsWrong": "B discusses officer fitness, which is not one of the three stated criteria.",
-      "whyCIsWrong": "C addresses crime coverage only, ignoring community relations and cost.",
-      "whyDIsWrong": "D is the correct answer.",
+      "whyCIsWrong": "C is the correct answer.",
+      "whyDIsWrong": "D addresses crime coverage only, ignoring community relations and cost.",
       "ambiguityRisk": "low",
-      "whySafeToInclude": "Three explicit criteria make it verifiable which options address how many. A tempts students who spot two matching criteria and stop there. Only D covers all three."
+      "whySafeToInclude": "Three explicit criteria make it verifiable which options address how many. A tempts students who spot two matching criteria and stop there. Only C covers all three."
     },
     "is_active": true
   },
@@ -3380,8 +4588,8 @@
     "options": [
       {
         "id": "A",
-        "text": "Yes, flexible hours allow employees to better manage family and personal commitments, which can reduce stress and improve wellbeing.",
-        "label": "directly-relevant"
+        "text": "No, flexible hours are more expensive for employers to administer.",
+        "label": "does-not-answer-aim"
       },
       {
         "id": "B",
@@ -3395,24 +4603,24 @@
       },
       {
         "id": "D",
-        "text": "No, flexible hours are more expensive for employers to administer.",
-        "label": "does-not-answer-aim"
+        "text": "Yes, flexible hours allow employees to better manage family and personal commitments, which can reduce stress and improve wellbeing.",
+        "label": "directly-relevant"
       }
     ],
-    "correct_answer": "A",
-    "explanation": "The aim is improving workplace wellbeing. A provides a clear mechanism: flexible hours → better management of personal commitments → reduced stress → improved wellbeing. B establishes popularity, not a wellbeing benefit. C raises scheduling difficulties - an operational concern for managers, not a wellbeing argument. D raises administration costs - an employer cost concern, not a wellbeing argument.",
+    "correct_answer": "D",
+    "explanation": "The aim is improving workplace wellbeing. D provides a clear mechanism: flexible hours → better management of personal commitments → reduced stress → improved wellbeing. B establishes popularity, not a wellbeing benefit. C raises scheduling difficulties - an operational concern for managers, not a wellbeing argument. A raises administration costs - an employer cost concern, not a wellbeing argument.",
     "skill_tag": "identify-aim",
     "common_trap": "true-but-irrelevant",
     "optional_working_steps": null,
     "review": {
       "exactAim": "improve workplace wellbeing",
-      "whyCorrect": "A gives a direct mechanism: flexible hours → better personal management → reduced stress → improved wellbeing.",
-      "whyAIsWrong": "A is the correct answer.",
+      "whyCorrect": "D gives a direct mechanism: flexible hours → better personal management → reduced stress → improved wellbeing.",
+      "whyAIsWrong": "A raises employer costs, which does not address employee wellbeing.",
       "whyBIsWrong": "B establishes popularity, not a wellbeing benefit.",
       "whyCIsWrong": "C raises scheduling, which is an operational concern unrelated to employee wellbeing.",
-      "whyDIsWrong": "D raises employer costs, which does not address employee wellbeing.",
+      "whyDIsWrong": "D is the correct answer.",
       "ambiguityRisk": "low",
-      "whySafeToInclude": "The aim is single and explicit. B is the primary trap: 'popular' sounds positive but does not demonstrate a wellbeing improvement. C and D are clear distractors addressing the employer rather than the aim."
+      "whySafeToInclude": "The aim is single and explicit. B is the primary trap: 'popular' sounds positive but does not demonstrate a wellbeing improvement. C and A are clear distractors addressing the employer rather than the aim."
     },
     "is_active": true
   },
@@ -3472,13 +4680,13 @@
     "options": [
       {
         "id": "A",
-        "text": "Yes, lower speeds give drivers more time to react to hazards, reducing both the likelihood and the severity of accidents.",
-        "label": "directly-relevant"
+        "text": "Yes, most motorway accidents occur in the outside lane.",
+        "label": "true-but-irrelevant"
       },
       {
         "id": "B",
-        "text": "Yes, most motorway accidents occur in the outside lane.",
-        "label": "true-but-irrelevant"
+        "text": "Yes, lower speeds give drivers more time to react to hazards, reducing both the likelihood and the severity of accidents.",
+        "label": "directly-relevant"
       },
       {
         "id": "C",
@@ -3491,20 +4699,20 @@
         "label": "unsupported-assumption"
       }
     ],
-    "correct_answer": "A",
-    "explanation": "The aim is reducing motorway accidents. A identifies two direct mechanisms: greater reaction time reduces accident likelihood, and lower impact speed reduces severity. B states a fact about accident location but gives no reason why reducing the limit would help. C raises journey times and economic productivity - a different aim entirely. D makes an unsupported assumption by implying emergency braking makes 70mph as safe as 60mph for all vehicles.",
+    "correct_answer": "B",
+    "explanation": "The aim is reducing motorway accidents. B identifies two direct mechanisms: greater reaction time reduces accident likelihood, and lower impact speed reduces severity. A states a fact about accident location but gives no reason why reducing the limit would help. C raises journey times and economic productivity - a different aim entirely. D makes an unsupported assumption by implying emergency braking makes 70mph as safe as 60mph for all vehicles.",
     "skill_tag": "identify-aim",
     "common_trap": "true-but-irrelevant",
     "optional_working_steps": null,
     "review": {
       "exactAim": "reduce traffic accidents on motorways",
-      "whyCorrect": "A links lower speed directly to accident likelihood and severity, addressing both aspects of the aim.",
-      "whyAIsWrong": "A is the correct answer.",
-      "whyBIsWrong": "B states where accidents happen but gives no reason why reducing the limit would reduce them.",
+      "whyCorrect": "B links lower speed directly to accident likelihood and severity, addressing both aspects of the aim.",
+      "whyAIsWrong": "A states where accidents happen but gives no reason why reducing the limit would reduce them.",
+      "whyBIsWrong": "B is the correct answer.",
       "whyCIsWrong": "C raises journey times and economic output, which are not the stated aim.",
       "whyDIsWrong": "D assumes all modern cars have emergency braking and that this technology eliminates any speed-related risk - both unsupported.",
       "ambiguityRisk": "low",
-      "whySafeToInclude": "B is a true-but-irrelevant trap: the outside-lane statistic sounds relevant to motorway safety but does not address the speed-limit proposal. D is an unsupported assumption about technology coverage."
+      "whySafeToInclude": "A is a true-but-irrelevant trap: the outside-lane statistic sounds relevant to motorway safety but does not address the speed-limit proposal. D is an unsupported assumption about technology coverage."
     },
     "is_active": true
   },
@@ -3518,8 +4726,8 @@
     "options": [
       {
         "id": "A",
-        "text": "Yes, coding develops logical and structured thinking linked to literacy, gives every pupil equal access to digital skills regardless of background, and directly prepares them for an increasingly digital jobs market.",
-        "label": "directly-relevant"
+        "text": "No, not all teachers are trained to teach coding, which would make implementation difficult.",
+        "label": "does-not-answer-aim"
       },
       {
         "id": "B",
@@ -3528,8 +4736,8 @@
       },
       {
         "id": "C",
-        "text": "No, not all teachers are trained to teach coding, which would make implementation difficult.",
-        "label": "does-not-answer-aim"
+        "text": "Yes, coding develops logical and structured thinking linked to literacy, gives every pupil equal access to digital skills regardless of background, and directly prepares them for an increasingly digital jobs market.",
+        "label": "directly-relevant"
       },
       {
         "id": "D",
@@ -3537,20 +4745,20 @@
         "label": "vague"
       }
     ],
-    "correct_answer": "A",
-    "explanation": "The stem specifies three criteria: improve literacy, reduce inequality and prepare for the digital workplace. A addresses all three with distinct mechanisms: structured thinking supports literacy, universal access reduces inequality, and digital skills prepare pupils for jobs. B states that coding is popular - irrelevant to the three aims. C raises a staffing implementation challenge - not an argument against the aims being valid. D is vague and does not engage with any of the three criteria.",
+    "correct_answer": "C",
+    "explanation": "The stem specifies three criteria: improve literacy, reduce inequality and prepare for the digital workplace. C addresses all three with distinct mechanisms: structured thinking supports literacy, universal access reduces inequality, and digital skills prepare pupils for jobs. B states that coding is popular - irrelevant to the three aims. A raises a staffing implementation challenge - not an argument against the aims being valid. D is vague and does not engage with any of the three criteria.",
     "skill_tag": "multi-criteria",
     "common_trap": "true-but-irrelevant",
     "optional_working_steps": null,
     "review": {
       "exactAim": "improve literacy, reduce inequality and prepare children for the digital workplace",
-      "whyCorrect": "A addresses all three criteria with distinct, plausible mechanisms.",
-      "whyAIsWrong": "A is the correct answer.",
+      "whyCorrect": "C addresses all three criteria with distinct, plausible mechanisms.",
+      "whyAIsWrong": "A raises a staffing implementation issue, not a reason why the three aims are invalid.",
       "whyBIsWrong": "B cites popularity, which does not address literacy, inequality or workplace readiness.",
-      "whyCIsWrong": "C raises a staffing implementation issue, not a reason why the three aims are invalid.",
+      "whyCIsWrong": "C is the correct answer.",
       "whyDIsWrong": "D asserts that other subjects come first but does not address whether coding would achieve the three stated aims.",
       "ambiguityRisk": "low",
-      "whySafeToInclude": "Three explicit criteria make scoring verifiable. B is the primary trap (popular = sounds good, but irrelevant to the aims). C and D address implementation and prioritisation rather than the aims themselves."
+      "whySafeToInclude": "Three explicit criteria make scoring verifiable. B is the primary trap (popular = sounds good, but irrelevant to the aims). A and D address implementation and prioritisation rather than the aims themselves."
     },
     "is_active": true
   },
@@ -3564,8 +4772,8 @@
     "options": [
       {
         "id": "A",
-        "text": "Yes, protected cycle lanes may encourage some people to cycle instead of driving.",
-        "label": "directly-relevant"
+        "text": "No, some cyclists prefer quiet side roads.",
+        "label": "too-narrow"
       },
       {
         "id": "B",
@@ -3579,24 +4787,24 @@
       },
       {
         "id": "D",
-        "text": "No, some cyclists prefer quiet side roads.",
-        "label": "too-narrow"
+        "text": "Yes, protected cycle lanes may encourage some people to cycle instead of driving.",
+        "label": "directly-relevant"
       }
     ],
-    "correct_answer": "A",
-    "explanation": "The aim is reducing traffic congestion. A gives a direct mechanism: protected cycle lanes may shift some journeys from cars to bikes, reducing traffic. The other options discuss health, helmet cost or a subset of cyclists, not congestion.",
+    "correct_answer": "D",
+    "explanation": "The aim is reducing traffic congestion. D gives a direct mechanism: protected cycle lanes may shift some journeys from cars to bikes, reducing traffic. The other options discuss health, helmet cost or a subset of cyclists, not congestion.",
     "skill_tag": "identify-aim",
     "common_trap": "true-but-irrelevant",
     "optional_working_steps": null,
     "review": {
       "exactAim": "reduce traffic congestion",
-      "whyCorrect": "A links lanes to fewer car journeys.",
-      "whyAIsWrong": "A is the correct answer.",
+      "whyCorrect": "D links lanes to fewer car journeys.",
+      "whyAIsWrong": "A is too narrow and does not address overall congestion.",
       "whyBIsWrong": "B discusses health, not congestion.",
       "whyCIsWrong": "C discusses helmet cost, not congestion.",
-      "whyDIsWrong": "D is too narrow and does not address overall congestion.",
+      "whyDIsWrong": "D is the correct answer.",
       "ambiguityRisk": "low",
-      "whySafeToInclude": "Only A directly targets congestion."
+      "whySafeToInclude": "Only D directly targets congestion."
     },
     "is_active": true
   },
@@ -3656,13 +4864,13 @@
     "options": [
       {
         "id": "A",
-        "text": "Yes, expansion would create construction and airport jobs, could fund better rail links, and can include limits on night flights and emissions controls.",
-        "label": "directly-relevant"
+        "text": "Yes, airport expansion would create more jobs locally.",
+        "label": "only-addresses-one-criterion"
       },
       {
         "id": "B",
-        "text": "Yes, airport expansion would create more jobs locally.",
-        "label": "only-addresses-one-criterion"
+        "text": "Yes, expansion would create construction and airport jobs, could fund better rail links, and can include limits on night flights and emissions controls.",
+        "label": "directly-relevant"
       },
       {
         "id": "C",
@@ -3675,16 +4883,16 @@
         "label": "vague"
       }
     ],
-    "correct_answer": "A",
-    "explanation": "The stem gives three criteria: employment, transport links and environmental harm. A addresses all three. B addresses only employment, C addresses popularity rather than the three criteria, and D is vague.",
+    "correct_answer": "B",
+    "explanation": "The stem gives three criteria: employment, transport links and environmental harm. B addresses all three. A addresses only employment, C addresses popularity rather than the three criteria, and D is vague.",
     "skill_tag": "multi-criteria",
     "common_trap": "only-addresses-one-criterion",
     "optional_working_steps": null,
     "review": {
       "exactAim": "employment, transport links and environmental harm",
-      "whyCorrect": "A covers all three.",
-      "whyAIsWrong": "A is the correct answer.",
-      "whyBIsWrong": "B addresses employment only.",
+      "whyCorrect": "B covers all three.",
+      "whyAIsWrong": "A addresses employment only.",
+      "whyBIsWrong": "B is the correct answer.",
       "whyCIsWrong": "C addresses popularity rather than the stated criteria.",
       "whyDIsWrong": "D is vague and does not address any criterion.",
       "ambiguityRisk": "low",
@@ -3702,8 +4910,8 @@
     "options": [
       {
         "id": "A",
-        "text": "Yes, later opening would give students who work during the day more time to use the library.",
-        "label": "directly-relevant"
+        "text": "No, some students prefer studying at home.",
+        "label": "too-narrow"
       },
       {
         "id": "B",
@@ -3712,8 +4920,8 @@
       },
       {
         "id": "C",
-        "text": "No, some students prefer studying at home.",
-        "label": "too-narrow"
+        "text": "Yes, later opening would give students who work during the day more time to use the library.",
+        "label": "directly-relevant"
       },
       {
         "id": "D",
@@ -3721,20 +4929,20 @@
         "label": "true-but-irrelevant"
       }
     ],
-    "correct_answer": "A",
-    "explanation": "The aim is access to study spaces for working students. A directly explains how later opening improves that access. The other options do not address the target group or the stated aim.",
+    "correct_answer": "C",
+    "explanation": "The aim is access to study spaces for working students. C directly explains how later opening improves that access. The other options do not address the target group or the stated aim.",
     "skill_tag": "target-group",
     "common_trap": "ignores-target-group",
     "optional_working_steps": null,
     "review": {
       "exactAim": "improve access to study spaces for working students",
-      "whyCorrect": "A addresses access and target group.",
-      "whyAIsWrong": "A is the correct answer.",
+      "whyCorrect": "C addresses access and target group.",
+      "whyAIsWrong": "A ignores working students who need study-space access.",
       "whyBIsWrong": "B is about appearance, not access.",
-      "whyCIsWrong": "C ignores working students who need study-space access.",
+      "whyCIsWrong": "C is the correct answer.",
       "whyDIsWrong": "D is about replacement costs, not later opening.",
       "ambiguityRisk": "low",
-      "whySafeToInclude": "Only A matches aim and group."
+      "whySafeToInclude": "Only C matches aim and group."
     },
     "is_active": true
   },
@@ -3748,8 +4956,8 @@
     "options": [
       {
         "id": "A",
-        "text": "Yes, a higher price may discourage some people from buying sugary snacks regularly.",
-        "label": "directly-relevant"
+        "text": "No, shops sell many different types of snacks.",
+        "label": "vague"
       },
       {
         "id": "B",
@@ -3763,22 +4971,22 @@
       },
       {
         "id": "D",
-        "text": "No, shops sell many different types of snacks.",
-        "label": "vague"
+        "text": "Yes, a higher price may discourage some people from buying sugary snacks regularly.",
+        "label": "directly-relevant"
       }
     ],
-    "correct_answer": "A",
-    "explanation": "The aim is healthier diets. A gives a direct mechanism: higher price may reduce regular sugary snack purchases. B is about revenue, C is about enjoyment, and D is vague.",
+    "correct_answer": "D",
+    "explanation": "The aim is healthier diets. D gives a direct mechanism: higher price may reduce regular sugary snack purchases. B is about revenue, C is about enjoyment, and A is vague.",
     "skill_tag": "identify-aim",
     "common_trap": "true-but-irrelevant",
     "optional_working_steps": null,
     "review": {
       "exactAim": "encourage healthier diets",
-      "whyCorrect": "A links price to reduced sugary snack consumption.",
-      "whyAIsWrong": "A is the correct answer.",
+      "whyCorrect": "D links price to reduced sugary snack consumption.",
+      "whyAIsWrong": "A is vague and unrelated to the tax effect.",
       "whyBIsWrong": "B is about revenue, not healthier diets.",
       "whyCIsWrong": "C is about enjoyment, not diet improvement.",
-      "whyDIsWrong": "D is vague and unrelated to the tax effect.",
+      "whyDIsWrong": "D is the correct answer.",
       "ambiguityRisk": "low",
       "whySafeToInclude": "Self-contained mechanism."
     },
@@ -3840,13 +5048,13 @@
     "options": [
       {
         "id": "A",
-        "text": "Yes, flexible visiting may allow patients to receive emotional support when they most need it.",
-        "label": "directly-relevant"
+        "text": "Yes, visitors may find hospital car parks expensive.",
+        "label": "true-but-irrelevant"
       },
       {
         "id": "B",
-        "text": "Yes, visitors may find hospital car parks expensive.",
-        "label": "true-but-irrelevant"
+        "text": "Yes, flexible visiting may allow patients to receive emotional support when they most need it.",
+        "label": "directly-relevant"
       },
       {
         "id": "C",
@@ -3859,16 +5067,16 @@
         "label": "overclaim"
       }
     ],
-    "correct_answer": "A",
-    "explanation": "The aim is patient recovery. A gives a plausible recovery-related mechanism through emotional support. B is about visitor cost, C is vague, and D is an unsupported absolute.",
+    "correct_answer": "B",
+    "explanation": "The aim is patient recovery. B gives a plausible recovery-related mechanism through emotional support. A is about visitor cost, C is vague, and D is an unsupported absolute.",
     "skill_tag": "mechanism-quality",
     "common_trap": "vague-argument",
     "optional_working_steps": null,
     "review": {
       "exactAim": "improve patient recovery",
-      "whyCorrect": "A links visiting to emotional support and recovery.",
-      "whyAIsWrong": "A is the correct answer.",
-      "whyBIsWrong": "B is about visitor cost, not patient recovery.",
+      "whyCorrect": "B links visiting to emotional support and recovery.",
+      "whyAIsWrong": "A is about visitor cost, not patient recovery.",
+      "whyBIsWrong": "B is the correct answer.",
       "whyCIsWrong": "C is too vague to show an effect on recovery.",
       "whyDIsWrong": "D overclaims that every visitor interrupts care.",
       "ambiguityRisk": "low",
@@ -3886,8 +5094,8 @@
     "options": [
       {
         "id": "A",
-        "text": "Yes, a homework-free weekend may give pupils protected time to rest.",
-        "label": "directly-relevant"
+        "text": "No, homework always improves exam results.",
+        "label": "overclaim"
       },
       {
         "id": "B",
@@ -3896,8 +5104,8 @@
       },
       {
         "id": "C",
-        "text": "No, homework always improves exam results.",
-        "label": "overclaim"
+        "text": "Yes, a homework-free weekend may give pupils protected time to rest.",
+        "label": "directly-relevant"
       },
       {
         "id": "D",
@@ -3905,17 +5113,17 @@
         "label": "too-narrow"
       }
     ],
-    "correct_answer": "A",
-    "explanation": "The aim is reducing stress. A directly links the ban to rest time. B is about preference, C is an unsupported absolute, and D is too narrow because enjoyment of some tasks does not answer overall stress.",
+    "correct_answer": "C",
+    "explanation": "The aim is reducing stress. C directly links the ban to rest time. B is about preference, A is an unsupported absolute, and D is too narrow because enjoyment of some tasks does not answer overall stress.",
     "skill_tag": "identify-aim",
     "common_trap": "different-aim",
     "optional_working_steps": null,
     "review": {
       "exactAim": "reduce stress among pupils",
-      "whyCorrect": "A links homework-free weekends to rest.",
-      "whyAIsWrong": "A is the correct answer.",
+      "whyCorrect": "C links homework-free weekends to rest.",
+      "whyAIsWrong": "A overclaims and shifts to exam results.",
       "whyBIsWrong": "B is about weekday/weekend preference, not stress.",
-      "whyCIsWrong": "C overclaims and shifts to exam results.",
+      "whyCIsWrong": "C is the correct answer.",
       "whyDIsWrong": "D is too narrow to answer overall stress reduction.",
       "ambiguityRisk": "low",
       "whySafeToInclude": "Clear stated aim."
@@ -3932,8 +5140,8 @@
     "options": [
       {
         "id": "A",
-        "text": "Yes, online consultations may be easier for some patients to attend, can reduce travel-related non-attendance, and can be triaged so urgent cases are seen face to face.",
-        "label": "directly-relevant"
+        "text": "No, doctors should never use computers during consultations.",
+        "label": "overclaim"
       },
       {
         "id": "B",
@@ -3947,22 +5155,22 @@
       },
       {
         "id": "D",
-        "text": "No, doctors should never use computers during consultations.",
-        "label": "overclaim"
+        "text": "Yes, online consultations may be easier for some patients to attend, can reduce travel-related non-attendance, and can be triaged so urgent cases are seen face to face.",
+        "label": "directly-relevant"
       }
     ],
-    "correct_answer": "A",
-    "explanation": "The stem gives three criteria: access, missed appointments and patient safety. A addresses all three. B addresses convenience/access only, C is a partial concern, and D is an unsupported absolute.",
+    "correct_answer": "D",
+    "explanation": "The stem gives three criteria: access, missed appointments and patient safety. D addresses all three. B addresses convenience/access only, C is a partial concern, and A is an unsupported absolute.",
     "skill_tag": "multi-criteria",
     "common_trap": "only-addresses-one-criterion",
     "optional_working_steps": null,
     "review": {
       "exactAim": "access, missed appointments and safety",
-      "whyCorrect": "A addresses all three.",
-      "whyAIsWrong": "A is the correct answer.",
+      "whyCorrect": "D addresses all three.",
+      "whyAIsWrong": "A overclaims with unsupported never wording.",
       "whyBIsWrong": "B addresses convenience for one subgroup only.",
       "whyCIsWrong": "C is a partial access concern and misses the other criteria.",
-      "whyDIsWrong": "D overclaims with unsupported never wording.",
+      "whyDIsWrong": "D is the correct answer.",
       "ambiguityRisk": "low",
       "whySafeToInclude": "Strong UCAT-style multi-criteria item."
     },
@@ -4024,13 +5232,13 @@
     "options": [
       {
         "id": "A",
-        "text": "Yes, pupils who have eaten breakfast may be less distracted by hunger in morning lessons.",
-        "label": "directly-relevant"
+        "text": "Yes, breakfast food is often popular.",
+        "label": "true-but-irrelevant"
       },
       {
         "id": "B",
-        "text": "Yes, breakfast food is often popular.",
-        "label": "true-but-irrelevant"
+        "text": "Yes, pupils who have eaten breakfast may be less distracted by hunger in morning lessons.",
+        "label": "directly-relevant"
       },
       {
         "id": "C",
@@ -4043,16 +5251,16 @@
         "label": "does-not-answer-aim"
       }
     ],
-    "correct_answer": "A",
-    "explanation": "The aim is concentration in morning lessons. A links breakfast to reduced hunger, which directly relates to concentration. The other options miss the aim or are too narrow.",
+    "correct_answer": "B",
+    "explanation": "The aim is concentration in morning lessons. B links breakfast to reduced hunger, which directly relates to concentration. The other options miss the aim or are too narrow.",
     "skill_tag": "mechanism-quality",
     "common_trap": "too-narrow",
     "optional_working_steps": null,
     "review": {
       "exactAim": "help pupils concentrate",
-      "whyCorrect": "A links hunger and concentration.",
-      "whyAIsWrong": "A is the correct answer.",
-      "whyBIsWrong": "B is about popularity, not concentration.",
+      "whyCorrect": "B links hunger and concentration.",
+      "whyAIsWrong": "A is about popularity, not concentration.",
+      "whyBIsWrong": "B is the correct answer.",
       "whyCIsWrong": "C is too narrow because breakfasts are not limited to cereal.",
       "whyDIsWrong": "D does not answer whether concentration improves.",
       "ambiguityRisk": "low",
@@ -4070,8 +5278,8 @@
     "options": [
       {
         "id": "A",
-        "text": "Yes, lower fares may encourage more people to use buses instead of cars, make commuting cheaper for workers, and reduce the number of cars on the road.",
-        "label": "directly-relevant"
+        "text": "No, some people prefer driving.",
+        "label": "partially-relevant"
       },
       {
         "id": "B",
@@ -4080,8 +5288,8 @@
       },
       {
         "id": "C",
-        "text": "No, some people prefer driving.",
-        "label": "partially-relevant"
+        "text": "Yes, lower fares may encourage more people to use buses instead of cars, make commuting cheaper for workers, and reduce the number of cars on the road.",
+        "label": "directly-relevant"
       },
       {
         "id": "D",
@@ -4089,17 +5297,17 @@
         "label": "does-not-answer-aim"
       }
     ],
-    "correct_answer": "A",
-    "explanation": "A addresses all three criteria: pollution through fewer car journeys, access to work through cheaper commuting, and congestion through fewer cars. The other options do not cover the criteria.",
+    "correct_answer": "C",
+    "explanation": "C addresses all three criteria: pollution through fewer car journeys, access to work through cheaper commuting, and congestion through fewer cars. The other options do not cover the criteria.",
     "skill_tag": "multi-criteria",
     "common_trap": "partial-objection",
     "optional_working_steps": null,
     "review": {
       "exactAim": "pollution, work access and congestion",
-      "whyCorrect": "A addresses all three.",
-      "whyAIsWrong": "A is the correct answer.",
+      "whyCorrect": "C addresses all three.",
+      "whyAIsWrong": "A is only a partial objection.",
       "whyBIsWrong": "B is vague and does not address the aims.",
-      "whyCIsWrong": "C is only a partial objection.",
+      "whyCIsWrong": "C is the correct answer.",
       "whyDIsWrong": "D is unrelated to pollution, work access or congestion.",
       "ambiguityRisk": "low",
       "whySafeToInclude": "Good future template."
@@ -4116,8 +5324,8 @@
     "options": [
       {
         "id": "A",
-        "text": "Yes, keeping phones away from pupils during lessons may reduce opportunities to check messages or apps.",
-        "label": "directly-relevant"
+        "text": "No, lockers come in different sizes.",
+        "label": "vague"
       },
       {
         "id": "B",
@@ -4131,22 +5339,22 @@
       },
       {
         "id": "D",
-        "text": "No, lockers come in different sizes.",
-        "label": "vague"
+        "text": "Yes, keeping phones away from pupils during lessons may reduce opportunities to check messages or apps.",
+        "label": "directly-relevant"
       }
     ],
-    "correct_answer": "A",
-    "explanation": "The aim is reducing lesson distraction. A directly links phone storage to fewer opportunities for phone use during lessons. The other arguments are off-aim, overclaimed or vague.",
+    "correct_answer": "D",
+    "explanation": "The aim is reducing lesson distraction. D directly links phone storage to fewer opportunities for phone use during lessons. The other arguments are off-aim, overclaimed or vague.",
     "skill_tag": "identify-aim",
     "common_trap": "true-but-irrelevant",
     "optional_working_steps": null,
     "review": {
       "exactAim": "reduce distraction during lessons",
-      "whyCorrect": "A directly targets phone distraction.",
-      "whyAIsWrong": "A is the correct answer.",
+      "whyCorrect": "D directly targets phone distraction.",
+      "whyAIsWrong": "A is vague and does not address distraction.",
       "whyBIsWrong": "B is about cost, not distraction.",
       "whyCIsWrong": "C overclaims with unsupported absolute wording.",
-      "whyDIsWrong": "D is vague and does not address distraction.",
+      "whyDIsWrong": "D is the correct answer.",
       "ambiguityRisk": "low",
       "whySafeToInclude": "Self-contained and clear."
     },
@@ -4208,13 +5416,13 @@
     "options": [
       {
         "id": "A",
-        "text": "Yes, clearer labels may make it easier for people to put recyclable waste in the correct bin.",
-        "label": "directly-relevant"
+        "text": "Yes, bins can be made in many colours.",
+        "label": "vague"
       },
       {
         "id": "B",
-        "text": "Yes, bins can be made in many colours.",
-        "label": "vague"
+        "text": "Yes, clearer labels may make it easier for people to put recyclable waste in the correct bin.",
+        "label": "directly-relevant"
       },
       {
         "id": "C",
@@ -4227,16 +5435,16 @@
         "label": "true-but-irrelevant"
       }
     ],
-    "correct_answer": "A",
-    "explanation": "The aim is increasing recycling rates in town centres. A directly links clearer labelling to correct recycling behaviour. The other options do not address that mechanism.",
+    "correct_answer": "B",
+    "explanation": "The aim is increasing recycling rates in town centres. B directly links clearer labelling to correct recycling behaviour. The other options do not address that mechanism.",
     "skill_tag": "exact-aim",
     "common_trap": "nearby-but-different-context",
     "optional_working_steps": null,
     "review": {
       "exactAim": "increase recycling rates in town centres",
-      "whyCorrect": "A links labels to correct bin use.",
-      "whyAIsWrong": "A is the correct answer.",
-      "whyBIsWrong": "B is vague and does not explain recycling behaviour.",
+      "whyCorrect": "B links labels to correct bin use.",
+      "whyAIsWrong": "A is vague and does not explain recycling behaviour.",
+      "whyBIsWrong": "B is the correct answer.",
       "whyCIsWrong": "C changes context to home recycling.",
       "whyDIsWrong": "D is unrelated to recycling rates.",
       "ambiguityRisk": "low",
@@ -4254,8 +5462,8 @@
     "options": [
       {
         "id": "A",
-        "text": "Yes, cameras may discourage speeding on roads where serious accidents are more likely.",
-        "label": "directly-relevant"
+        "text": "No, not all accidents are caused by speeding.",
+        "label": "partially-relevant"
       },
       {
         "id": "B",
@@ -4264,8 +5472,8 @@
       },
       {
         "id": "C",
-        "text": "No, not all accidents are caused by speeding.",
-        "label": "partially-relevant"
+        "text": "Yes, cameras may discourage speeding on roads where serious accidents are more likely.",
+        "label": "directly-relevant"
       },
       {
         "id": "D",
@@ -4273,17 +5481,17 @@
         "label": "overclaim"
       }
     ],
-    "correct_answer": "A",
-    "explanation": "The aim is reducing serious accidents on high-risk roads. A directly links cameras to discouraging speeding in those locations. C is a common trap: an intervention can help even if it does not address every cause of accidents.",
+    "correct_answer": "C",
+    "explanation": "The aim is reducing serious accidents on high-risk roads. C directly links cameras to discouraging speeding in those locations. A is a common trap: an intervention can help even if it does not address every cause of accidents.",
     "skill_tag": "partial-objection",
     "common_trap": "not-the-only-cause",
     "optional_working_steps": null,
     "review": {
       "exactAim": "reduce serious road accidents",
-      "whyCorrect": "A links cameras to less speeding on high-risk roads.",
-      "whyAIsWrong": "A is the correct answer.",
+      "whyCorrect": "C links cameras to less speeding on high-risk roads.",
+      "whyAIsWrong": "A is a partial objection; cameras need not address every accident cause.",
       "whyBIsWrong": "B describes camera function without linking to accident reduction.",
-      "whyCIsWrong": "C is a partial objection; cameras need not address every accident cause.",
+      "whyCIsWrong": "C is the correct answer.",
       "whyDIsWrong": "D overclaims with unsupported absolute wording.",
       "ambiguityRisk": "low",
       "whySafeToInclude": "Good trap calibration."
@@ -4300,8 +5508,8 @@
     "options": [
       {
         "id": "A",
-        "text": "Yes, fewer office days may reduce space needs, flexibility may help retain staff, and scheduled in-office days can preserve team communication.",
-        "label": "directly-relevant"
+        "text": "No, offices have desks and chairs.",
+        "label": "vague"
       },
       {
         "id": "B",
@@ -4315,22 +5523,22 @@
       },
       {
         "id": "D",
-        "text": "No, offices have desks and chairs.",
-        "label": "vague"
+        "text": "Yes, fewer office days may reduce space needs, flexibility may help retain staff, and scheduled in-office days can preserve team communication.",
+        "label": "directly-relevant"
       }
     ],
-    "correct_answer": "A",
-    "explanation": "The stem gives three criteria: office costs, staff retention and communication. A addresses all three. B mainly addresses retention, C addresses communication only, and D is vague.",
+    "correct_answer": "D",
+    "explanation": "The stem gives three criteria: office costs, staff retention and communication. D addresses all three. B mainly addresses retention, C addresses communication only, and A is vague.",
     "skill_tag": "multi-criteria",
     "common_trap": "partial-criterion-answer",
     "optional_working_steps": null,
     "review": {
       "exactAim": "costs, retention and communication",
-      "whyCorrect": "A covers all three.",
-      "whyAIsWrong": "A is the correct answer.",
+      "whyCorrect": "D covers all three.",
+      "whyAIsWrong": "A is vague and irrelevant to the criteria.",
       "whyBIsWrong": "B addresses retention only.",
       "whyCIsWrong": "C addresses communication only.",
-      "whyDIsWrong": "D is vague and irrelevant to the criteria.",
+      "whyDIsWrong": "D is the correct answer.",
       "ambiguityRisk": "low",
       "whySafeToInclude": "Modern but logically self-contained."
     },
@@ -4392,13 +5600,13 @@
     "options": [
       {
         "id": "A",
-        "text": "Yes, suitable routine checks could be handled by trained nurses, freeing doctor appointments for more complex cases.",
-        "label": "directly-relevant"
+        "text": "Yes, nurses wear uniforms.",
+        "label": "does-not-answer-aim"
       },
       {
         "id": "B",
-        "text": "Yes, nurses wear uniforms.",
-        "label": "does-not-answer-aim"
+        "text": "Yes, suitable routine checks could be handled by trained nurses, freeing doctor appointments for more complex cases.",
+        "label": "directly-relevant"
       },
       {
         "id": "C",
@@ -4411,16 +5619,16 @@
         "label": "partially-relevant"
       }
     ],
-    "correct_answer": "A",
-    "explanation": "The aim is reducing waiting times for routine checks. A explains how nurse-led appointments could increase capacity for suitable routine work. B is irrelevant, C overclaims, and D is a partial preference issue.",
+    "correct_answer": "B",
+    "explanation": "The aim is reducing waiting times for routine checks. B explains how nurse-led appointments could increase capacity for suitable routine work. A is irrelevant, C overclaims, and D is a partial preference issue.",
     "skill_tag": "mechanism-quality",
     "common_trap": "unsupported-absolute",
     "optional_working_steps": null,
     "review": {
       "exactAim": "reduce waiting times for routine checks",
-      "whyCorrect": "A increases appropriate appointment capacity.",
-      "whyAIsWrong": "A is the correct answer.",
-      "whyBIsWrong": "B is irrelevant to waiting times.",
+      "whyCorrect": "B increases appropriate appointment capacity.",
+      "whyAIsWrong": "A is irrelevant to waiting times.",
+      "whyBIsWrong": "B is the correct answer.",
       "whyCIsWrong": "C overclaims that every routine check needs a consultant.",
       "whyDIsWrong": "D is a partial preference issue, not the strongest waiting-time argument.",
       "ambiguityRisk": "low",
@@ -4438,8 +5646,8 @@
     "options": [
       {
         "id": "A",
-        "text": "Yes, trees can provide shade, which may help keep streets cooler in hot weather.",
-        "label": "directly-relevant"
+        "text": "No, leaves can fall on pavements in autumn.",
+        "label": "partially-relevant"
       },
       {
         "id": "B",
@@ -4448,8 +5656,8 @@
       },
       {
         "id": "C",
-        "text": "No, leaves can fall on pavements in autumn.",
-        "label": "partially-relevant"
+        "text": "Yes, trees can provide shade, which may help keep streets cooler in hot weather.",
+        "label": "directly-relevant"
       },
       {
         "id": "D",
@@ -4457,17 +5665,17 @@
         "label": "overclaim"
       }
     ],
-    "correct_answer": "A",
-    "explanation": "The aim is reducing overheating in summer. A gives a direct mechanism through shade. B is irrelevant, C is a maintenance issue in a different season, and D is an unsupported absolute.",
+    "correct_answer": "C",
+    "explanation": "The aim is reducing overheating in summer. C gives a direct mechanism through shade. B is irrelevant, A is a maintenance issue in a different season, and D is an unsupported absolute.",
     "skill_tag": "scope",
     "common_trap": "off-aim-practical-issue",
     "optional_working_steps": null,
     "review": {
       "exactAim": "reduce overheating in residential streets during summer",
-      "whyCorrect": "A links shade to cooler streets.",
-      "whyAIsWrong": "A is the correct answer.",
+      "whyCorrect": "C links shade to cooler streets.",
+      "whyAIsWrong": "A is off-season and only partially relevant.",
       "whyBIsWrong": "B is irrelevant to overheating.",
-      "whyCIsWrong": "C is off-season and only partially relevant.",
+      "whyCIsWrong": "C is the correct answer.",
       "whyDIsWrong": "D overclaims by saying trees completely eliminate hot weather.",
       "ambiguityRisk": "low",
       "whySafeToInclude": "Self-contained mechanism."
@@ -4484,8 +5692,8 @@
     "options": [
       {
         "id": "A",
-        "text": "Yes, a resit may give ill students a chance to be assessed when their performance is less affected by illness.",
-        "label": "directly-relevant"
+        "text": "No, some students dislike exams.",
+        "label": "does-not-answer-aim"
       },
       {
         "id": "B",
@@ -4499,22 +5707,22 @@
       },
       {
         "id": "D",
-        "text": "No, some students dislike exams.",
-        "label": "does-not-answer-aim"
+        "text": "Yes, a resit may give ill students a chance to be assessed when their performance is less affected by illness.",
+        "label": "directly-relevant"
       }
     ],
-    "correct_answer": "A",
-    "explanation": "The aim is fairness for students who were ill on exam day. A directly addresses that group and the effect of illness on performance. The other options do not address the aim or make unsupported absolute claims.",
+    "correct_answer": "D",
+    "explanation": "The aim is fairness for students who were ill on exam day. D directly addresses that group and the effect of illness on performance. The other options do not address the aim or make unsupported absolute claims.",
     "skill_tag": "target-group",
     "common_trap": "ignores-target-group",
     "optional_working_steps": null,
     "review": {
       "exactAim": "fairer assessment for students ill on exam day",
-      "whyCorrect": "A addresses illness-related performance.",
-      "whyAIsWrong": "A is the correct answer.",
+      "whyCorrect": "D addresses illness-related performance.",
+      "whyAIsWrong": "A does not address illness-related assessment fairness.",
       "whyBIsWrong": "B is vague and irrelevant.",
       "whyCIsWrong": "C overclaims that every student will pretend illness.",
-      "whyDIsWrong": "D does not address illness-related assessment fairness.",
+      "whyDIsWrong": "D is the correct answer.",
       "ambiguityRisk": "low",
       "whySafeToInclude": "Clear scope and target group."
     },
@@ -4576,13 +5784,13 @@
     "options": [
       {
         "id": "A",
-        "text": "Yes, opening before lessons may give pupils who cannot stay after school another chance to borrow books.",
-        "label": "directly-relevant"
+        "text": "Yes, libraries often contain shelves.",
+        "label": "vague"
       },
       {
         "id": "B",
-        "text": "Yes, libraries often contain shelves.",
-        "label": "vague"
+        "text": "Yes, opening before lessons may give pupils who cannot stay after school another chance to borrow books.",
+        "label": "directly-relevant"
       },
       {
         "id": "C",
@@ -4595,16 +5803,16 @@
         "label": "overclaim"
       }
     ],
-    "correct_answer": "A",
-    "explanation": "The aim is improving access to reading materials. A gives a direct access mechanism for pupils who may not be able to use the library later. The other options are vague, narrow or unsupported.",
+    "correct_answer": "B",
+    "explanation": "The aim is improving access to reading materials. B gives a direct access mechanism for pupils who may not be able to use the library later. The other options are vague, narrow or unsupported.",
     "skill_tag": "identify-aim",
     "common_trap": "vague-observation",
     "optional_working_steps": null,
     "review": {
       "exactAim": "improve pupils' access to reading materials",
-      "whyCorrect": "A gives an extra opportunity to borrow books.",
-      "whyAIsWrong": "A is the correct answer.",
-      "whyBIsWrong": "B is vague and does not address access.",
+      "whyCorrect": "B gives an extra opportunity to borrow books.",
+      "whyAIsWrong": "A is vague and does not address access.",
+      "whyBIsWrong": "B is the correct answer.",
       "whyCIsWrong": "C is too narrow and changes the issue to preference.",
       "whyDIsWrong": "D is an unsupported absolute.",
       "ambiguityRisk": "low",
@@ -4622,8 +5830,8 @@
     "options": [
       {
         "id": "A",
-        "text": "Yes, regular village visits may reduce travel barriers for patients who need routine checks.",
-        "label": "directly-relevant"
+        "text": "No, some patients will still need hospital appointments.",
+        "label": "partially-relevant"
       },
       {
         "id": "B",
@@ -4632,8 +5840,8 @@
       },
       {
         "id": "C",
-        "text": "No, some patients will still need hospital appointments.",
-        "label": "partially-relevant"
+        "text": "Yes, regular village visits may reduce travel barriers for patients who need routine checks.",
+        "label": "directly-relevant"
       },
       {
         "id": "D",
@@ -4641,17 +5849,17 @@
         "label": "overclaim"
       }
     ],
-    "correct_answer": "A",
-    "explanation": "The aim is improving rural access to routine healthcare. A directly addresses travel barriers and routine checks. C is only partial because mobile clinics can improve routine access without replacing all hospital care.",
+    "correct_answer": "C",
+    "explanation": "The aim is improving rural access to routine healthcare. C directly addresses travel barriers and routine checks. A is only partial because mobile clinics can improve routine access without replacing all hospital care.",
     "skill_tag": "partial-objection",
     "common_trap": "demands-perfect-solution",
     "optional_working_steps": null,
     "review": {
       "exactAim": "improve routine healthcare access for rural patients",
-      "whyCorrect": "A reduces travel barriers for routine checks.",
-      "whyAIsWrong": "A is the correct answer.",
+      "whyCorrect": "C reduces travel barriers for routine checks.",
+      "whyAIsWrong": "A is only a partial objection.",
       "whyBIsWrong": "B is vague and does not discuss access.",
-      "whyCIsWrong": "C is only a partial objection.",
+      "whyCIsWrong": "C is the correct answer.",
       "whyDIsWrong": "D overclaims about rural access.",
       "ambiguityRisk": "low",
       "whySafeToInclude": "Medically themed but non-specialist and self-contained."
@@ -4668,8 +5876,8 @@
     "options": [
       {
         "id": "A",
-        "text": "Yes, reminders may prompt patients before the appointment and a rescheduling link may make it easier to release slots they cannot attend.",
-        "label": "directly-relevant"
+        "text": "No, every patient will ignore every reminder.",
+        "label": "overclaim"
       },
       {
         "id": "B",
@@ -4683,22 +5891,22 @@
       },
       {
         "id": "D",
-        "text": "No, every patient will ignore every reminder.",
-        "label": "overclaim"
+        "text": "Yes, reminders may prompt patients before the appointment and a rescheduling link may make it easier to release slots they cannot attend.",
+        "label": "directly-relevant"
       }
     ],
-    "correct_answer": "A",
-    "explanation": "The stem has two aims: reducing missed appointments and making booking easier. A addresses both by prompting attendance and enabling easier rescheduling. The other options are irrelevant, partial or overclaimed.",
+    "correct_answer": "D",
+    "explanation": "The stem has two aims: reducing missed appointments and making booking easier. D addresses both by prompting attendance and enabling easier rescheduling. The other options are irrelevant, partial or overclaimed.",
     "skill_tag": "multi-criteria",
     "common_trap": "only-addresses-one-criterion",
     "optional_working_steps": null,
     "review": {
       "exactAim": "reduce missed appointments and make booking easier",
-      "whyCorrect": "A addresses both reminders and rescheduling.",
-      "whyAIsWrong": "A is the correct answer.",
+      "whyCorrect": "D addresses both reminders and rescheduling.",
+      "whyAIsWrong": "A overclaims with absolute wording.",
       "whyBIsWrong": "B is true but irrelevant.",
       "whyCIsWrong": "C is a partial access objection only.",
-      "whyDIsWrong": "D overclaims with absolute wording.",
+      "whyDIsWrong": "D is the correct answer.",
       "ambiguityRisk": "low",
       "whySafeToInclude": "Clear multi-aim argument question."
     },
