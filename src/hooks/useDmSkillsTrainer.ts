@@ -2,6 +2,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "./useAuth";
 import { fetchDmTrainerDrill } from "../lib/dmTrainerApi";
 import { persistDmTrainerSession } from "../lib/dmTrainerSessionStorage";
+import {
+  clearSeenQuestionIds,
+  loadSeenQuestionIds,
+  markQuestionsSeen,
+} from "../lib/dmTrainerSeenQuestions";
 import type { DmTrainerAttemptInput } from "../lib/dmTrainerSessionStorage";
 import type {
   DmTrainerOptionId,
@@ -17,13 +22,33 @@ export type DmTrainerPhase = "intro" | "drill" | "results";
 // whole thing in fixed legacy_id order (which let students memorise positions).
 const DRILL_SIZE = 10;
 
-function sampleDrillQuestions(pool: DmTrainerQuestion[]): DmTrainerQuestion[] {
-  const shuffled = [...pool];
-  for (let i = shuffled.length - 1; i > 0; i--) {
+function shuffled<T>(items: T[]): T[] {
+  const out = [...items];
+  for (let i = out.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    [out[i], out[j]] = [out[j], out[i]];
   }
-  return shuffled.slice(0, DRILL_SIZE);
+  return out;
+}
+
+/**
+ * Draw a drill from the questions the student has not seen yet, topping up from
+ * the rest only once the bank runs dry. `exhausted` reports that top-up, so the
+ * caller can start a fresh cycle.
+ */
+function sampleDrillQuestions(
+  pool: DmTrainerQuestion[],
+  seenIds: Set<string>,
+): { drill: DmTrainerQuestion[]; exhausted: boolean } {
+  const unseen = shuffled(pool.filter((q) => !seenIds.has(q.id)));
+  if (unseen.length >= DRILL_SIZE) {
+    return { drill: unseen.slice(0, DRILL_SIZE), exhausted: false };
+  }
+  const seen = shuffled(pool.filter((q) => seenIds.has(q.id)));
+  return {
+    drill: [...unseen, ...seen].slice(0, DRILL_SIZE),
+    exhausted: true,
+  };
 }
 
 export function useDmSkillsTrainer(trainerType: DmTrainerType) {
@@ -136,7 +161,15 @@ export function useDmSkillsTrainer(trainerType: DmTrainerType) {
 
   const startDrill = useCallback(() => {
     if (questions.length === 0) return;
-    const drill = sampleDrillQuestions(questions);
+    const userId = user?.id ?? null;
+    const { drill, exhausted } = sampleDrillQuestions(
+      questions,
+      loadSeenQuestionIds(trainerType, userId),
+    );
+    // A drill that had to reuse questions has closed the loop on the bank: start
+    // the next cycle from a clean slate, minus what this drill just served.
+    if (exhausted) clearSeenQuestionIds(trainerType, userId);
+    markQuestionsSeen(trainerType, userId, drill.map((q) => q.id));
     setDrillQuestions(drill);
     setPhase("drill");
     setCurrentIndex(0);
@@ -150,7 +183,7 @@ export function useDmSkillsTrainer(trainerType: DmTrainerType) {
     attemptInputsRef.current = drill.map(() => null);
     questionShownAtRef.current = Date.now();
     sessionSavedRef.current = false;
-  }, [questions]);
+  }, [questions, trainerType, user?.id]);
 
   const submitAnswer = useCallback(
     (optionId: DmTrainerOptionId) => {
