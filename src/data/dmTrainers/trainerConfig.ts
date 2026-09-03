@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import { Circle, BarChart3, Scale } from "lucide-react";
 import type { DmTrainerQuestion, DmTrainerType } from "../../types/dmTrainers";
 import { getLocalDmTrainerQuestions } from "./localQuestions";
+import { UCAT_GUIDES, type UcatGuide } from "../ucatGuides";
 
 export type DmTrainerConfig = {
   type: DmTrainerType;
@@ -15,6 +16,8 @@ export type DmTrainerConfig = {
   introBullets: string[];
   questions: DmTrainerQuestion[];
   analyticsType: string;
+  /** The matching free guide on the main site, shown as a prominent link above the drill. */
+  guide?: UcatGuide;
 };
 
 export const DM_TRAINER_CONFIGS: Record<DmTrainerType, DmTrainerConfig> = {
@@ -37,6 +40,7 @@ export const DM_TRAINER_CONFIGS: Record<DmTrainerType, DmTrainerConfig> = {
     ],
     questions: getLocalDmTrainerQuestions("venn-logic"),
     analyticsType: "dm_venn_logic",
+    guide: UCAT_GUIDES.dmVennDiagrams,
   },
   "data-logic": {
     type: "data-logic",
@@ -57,6 +61,7 @@ export const DM_TRAINER_CONFIGS: Record<DmTrainerType, DmTrainerConfig> = {
     ],
     questions: getLocalDmTrainerQuestions("data-logic"),
     analyticsType: "dm_data_logic",
+    guide: UCAT_GUIDES.dmProbability,
   },
   "argument-judge": {
     type: "argument-judge",
@@ -77,6 +82,7 @@ export const DM_TRAINER_CONFIGS: Record<DmTrainerType, DmTrainerConfig> = {
     ],
     questions: getLocalDmTrainerQuestions("argument-judge"),
     analyticsType: "dm_argument_judge",
+    guide: UCAT_GUIDES.dmStrongestArgument,
   },
 };
 

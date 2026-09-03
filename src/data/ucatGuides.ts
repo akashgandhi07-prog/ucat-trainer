@@ -95,6 +95,21 @@ export const UCAT_GUIDES = {
     "Strongest argument questions",
     "/ucat-guides/ucat-decision-making-strongest-argument-questions",
   ),
+  dmProbability: guide(
+    "dm-probability",
+    "Probability questions (probabilistic reasoning)",
+    "/ucat-guides/ucat-decision-making-probabilistic-reasoning",
+  ),
+  dmVennDiagrams: guide(
+    "dm-venn-diagrams",
+    "Venn diagrams: 2-set and 3-set worked examples",
+    "/ucat-guides/ucat-decision-making-venn-diagrams",
+  ),
+  dmInterpretingInformation: guide(
+    "dm-interpreting-information",
+    "Interpreting information questions",
+    "/ucat-guides/ucat-decision-making-interpreting-information",
+  ),
   qrComplete: guide(
     "qr-complete",
     "Quantitative Reasoning: complete guide",
@@ -252,12 +267,15 @@ export const UCAT_GUIDE_CATALOG: UcatGuideCatalogSection[] = [
   {
     id: "decision",
     title: "Decision Making",
-    summary: "DM section, syllogisms, puzzles and arguments",
+    summary: "DM section, syllogisms, puzzles, probability, Venn and arguments",
     guides: [
       UCAT_GUIDES.dmComplete,
       UCAT_GUIDES.dmSyllogisms,
       UCAT_GUIDES.dmLogicalPuzzles,
       UCAT_GUIDES.dmLogicalPuzzlesTasks,
+      UCAT_GUIDES.dmProbability,
+      UCAT_GUIDES.dmVennDiagrams,
+      UCAT_GUIDES.dmInterpretingInformation,
       UCAT_GUIDES.dmStrongestArgument,
     ],
   },

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
+import { ArrowLeft, BookOpen, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { cn } from "../../lib/cn";
 import { useDmSkillsTrainer } from "../../hooks/useDmSkillsTrainer";
 import type { DmTrainerOptionId, DmTrainerQuestion, DmTrainerType } from "../../types/dmTrainers";
@@ -338,11 +338,36 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
               )}
               {!questionsLoading && !questionsError && (
                 <div className="lg:grid lg:grid-cols-[1fr_minmax(11rem,14rem)] lg:gap-8 lg:items-start">
-                  <ul className="list-disc pl-5 space-y-2 text-sm text-foreground">
-                    {config.introBullets.map((bullet) => (
-                      <li key={bullet}>{bullet}</li>
-                    ))}
-                  </ul>
+                  <div className="min-w-0">
+                    <ul className="list-disc pl-5 space-y-2 text-sm text-foreground">
+                      {config.introBullets.map((bullet) => (
+                        <li key={bullet}>{bullet}</li>
+                      ))}
+                    </ul>
+                    {config.guide && (
+                      <a
+                        href={config.guide.href}
+                        target="_blank"
+                        rel="noopener"
+                        onClick={() =>
+                          trackEvent("guide_link_click", {
+                            trainer: config.type,
+                            guide: config.guide?.id,
+                          })
+                        }
+                        className="mt-4 flex items-start gap-3 rounded-lg border border-border bg-secondary px-3 py-2.5 text-sm text-foreground hover:border-primary/40 hover:bg-primary/5"
+                      >
+                        <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
+                        <span className="min-w-0">
+                          <span className="font-semibold">Read the free guide first: </span>
+                          {config.guide.title}
+                          <span className="block text-xs text-muted-foreground">
+                            Every rule with worked examples, on TheUKCATPeople. Opens in a new tab.
+                          </span>
+                        </span>
+                      </a>
+                    )}
+                  </div>
                   <button
                     type="button"
                     onClick={startDrill}
