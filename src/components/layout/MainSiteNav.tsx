@@ -52,6 +52,11 @@ const MAIN_NAV: NavItem[] = [
             description: "Personalised sessions with an expert tutor",
           },
           {
+            label: "UCAT 1 Day Course",
+            href: `${BASE}/ucat-courses`,
+            description: "Live online, doctor-led, all four sections",
+          },
+          {
             label: "UCAT Schools Course",
             href: `${BASE}/ucat-course-schools`,
             description: "We come to your school",
@@ -128,6 +133,13 @@ const MAIN_NAV: NavItem[] = [
             label: "Application Guide",
             href: `${BASE}/application-guide`,
             description: "Step-by-step admissions walkthrough",
+            badge: "Free",
+            badgeColor: "blue",
+          },
+          {
+            label: "Free UCAT Guides",
+            href: `${BASE}/ucat-guides`,
+            description: "Every section, timings, scoring and test day",
             badge: "Free",
             badgeColor: "blue",
           },

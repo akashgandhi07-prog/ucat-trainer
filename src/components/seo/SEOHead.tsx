@@ -22,7 +22,6 @@ interface SEOHeadProps {
   /** Breadcrumbs for BreadcrumbList JSON-LD (improves snippet display). Use absolute URLs. */
   breadcrumbs?: BreadcrumbItem[];
   /** Optional: real aggregate rating data. Omit or pass real values only (Google policy). */
-  aggregateRating?: { ratingValue: string; reviewCount: string };
   /** Optional: social profile URLs for the Organization schema. */
   organizationSameAs?: string[];
   /** Optional: Twitter/X handle for the site account (e.g. @TheUKCATPeople). */
@@ -193,8 +192,7 @@ function buildApplicationSchema(
     canonicalUrl?: string;
     imageUrl?: string;
     siteBaseUrl?: string;
-    aggregateRating?: { ratingValue: string; reviewCount: string };
-  }
+    }
 ) {
   const {
     title,
@@ -202,7 +200,6 @@ function buildApplicationSchema(
     canonicalUrl,
     imageUrl,
     siteBaseUrl,
-    aggregateRating,
   } = options;
 
   const creatorId =
@@ -247,13 +244,6 @@ function buildApplicationSchema(
   if (imageUrl) app.image = imageUrl;
   if (siteBaseUrl)
     app.publisher = { "@id": `${siteBaseUrl}/#organization` };
-  if (aggregateRating)
-    app.aggregateRating = {
-      "@type": "AggregateRating",
-      ratingValue: aggregateRating.ratingValue,
-      reviewCount: aggregateRating.reviewCount,
-    };
-
   return app;
 }
 
@@ -281,7 +271,6 @@ export default function SEOHead({
   imageUrl,
   imageAlt,
   breadcrumbs,
-  aggregateRating,
   organizationSameAs,
   twitterSite,
   twitterCreator,
@@ -313,7 +302,6 @@ export default function SEOHead({
         canonicalUrl,
         imageUrl,
         siteBaseUrl,
-        aggregateRating,
       })
     );
     if (breadcrumbs && breadcrumbs.length > 0) {

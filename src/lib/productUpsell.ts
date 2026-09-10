@@ -7,6 +7,17 @@ import type { Stream } from "./profileApi";
 export const UCAT_TUTORING_URL = "https://www.theukcatpeople.co.uk/ucat-tutoring";
 export const STRATEGY_CALL_URL = "https://www.theukcatpeople.co.uk/free-strategy-consultation";
 export const TRUSTPILOT_URL = "https://www.trustpilot.com/review/www.theukcatpeople.co.uk";
+export const UCAT_COURSES_URL = "https://www.theukcatpeople.co.uk/ucat-courses";
+
+/**
+ * Trustpilot review count, written ONCE here and consumed by every piece of
+ * copy (and by TRUSTPILOT_STATS in ./trustpilotSocialProof). It must match
+ * lib/site.ts REVIEW_COUNT on the main site, and it is capped by the five-star
+ * count rather than the total, because it appears in both "{n} reviews" and
+ * "{n} five-star reviews" copy. Live 2026-09-10: 657 total = 649 five-star.
+ * Understate, never overstate.
+ */
+export const REVIEW_COUNT_LABEL = "640+";
 
 export type UpsellOffer = "course" | "tutoring" | "package";
 
@@ -85,8 +96,8 @@ export const TUTORING_COPY = {
   linkText: "1-1 UCAT Tutoring",
   linkTextShort: "Learn more",
   footerCta: "Get 1-1 UCAT tutoring",
-  ratedTrustpilot: "Rated 5.0 on Trustpilot (550+ reviews)",
-  trustLine: "14+ years experience · UCAT experts · 550+ five-star Trustpilot reviews",
+  ratedTrustpilot: `Rated 5.0 on Trustpilot (${REVIEW_COUNT_LABEL} reviews)`,
+  trustLine: `14+ years experience · UCAT experts · ${REVIEW_COUNT_LABEL} five-star Trustpilot reviews`,
   expertLine: "UCAT Experts -",
   boostScore: "Want to boost your score? Our 1-1 UCAT tutoring is rated 5★",
   wantExpertTips: "Want expert tips?",
@@ -94,7 +105,7 @@ export const TUTORING_COPY = {
 
 export const COURSE_COPY = {
   eyebrow: "THEUKCATPEOPLE · LIVE UCAT COURSE",
-  trustLine: "14+ years teaching · Dr Akash Gandhi · 550+ five-star Trustpilot reviews",
+  trustLine: `14+ years teaching · Dr Akash Gandhi · ${REVIEW_COUNT_LABEL} five-star Trustpilot reviews`,
   badge: "LIVE COURSE",
   cta: "Buy tickets",
   hubStrip: "Master all 4 UCAT sections in one live day (£179)",

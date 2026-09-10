@@ -3,12 +3,12 @@
  * Stats: https://www.trustpilot.com/review/www.theukcatpeople.co.uk
  */
 
+import { REVIEW_COUNT_LABEL } from "./productUpsell";
 import type { UpsellOffer } from "./productUpsell";
 
 export const TRUSTPILOT_STATS = {
   score: "5.0",
-  reviewCount: 550,
-  label: "550+ reviews",
+  label: `${REVIEW_COUNT_LABEL} reviews`,
   ratedLabel: "Rated 5.0 on Trustpilot",
   shortRated: "Rated 5★ on Trustpilot",
 } as const;

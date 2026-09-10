@@ -6,7 +6,6 @@ import Footer from "../components/layout/Footer";
 import SEOHead from "../components/seo/SEOHead";
 import { lazyWithRetry } from "../lib/lazyWithRetry";
 import { getSiteBaseUrl } from "../lib/siteUrl";
-import { TRUSTPILOT_STATS } from "../lib/trustpilotSocialProof";
 import {
   LandingHero,
   LandingSectionHub,
@@ -43,10 +42,6 @@ export default function HomePage() {
         imageUrl={ogImageUrl}
         imageAlt={ogImageAlt}
         breadcrumbs={breadcrumbs}
-        aggregateRating={{
-          ratingValue: TRUSTPILOT_STATS.score,
-          reviewCount: String(TRUSTPILOT_STATS.reviewCount),
-        }}
       />
       {!inAppShell ? <Header /> : null}
       <main className="flex-1 flex flex-col">
