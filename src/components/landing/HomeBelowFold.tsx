@@ -319,6 +319,9 @@ function LandingCourseCard({ course }: { course: UcatOneDayCourse }) {
       <p className="mt-1 text-sm text-muted-foreground">
         {course.instructor} · {course.timeLabel}
       </p>
+      {course.entryNote ? (
+        <p className="mt-1 text-xs text-muted-foreground">{course.entryNote}</p>
+      ) : null}
       <p className="mt-3 text-sm text-foreground/80 leading-relaxed">
         Live online day covering all four UCAT sections with Dr Akash Gandhi and the team.
       </p>

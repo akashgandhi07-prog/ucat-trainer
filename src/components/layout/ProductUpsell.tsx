@@ -294,6 +294,9 @@ function CourseHeroBlock({
             <p className="mt-1.5 text-sm text-teal-100/90 leading-relaxed">
               £{course.priceGbp} · {course.instructor} · All 4 sections · {course.timeLabel}
             </p>
+            {course.entryNote ? (
+              <p className="mt-1 text-xs text-teal-200/80">{course.entryNote}</p>
+            ) : null}
             {datesHint && getActiveCourses().length > 1 ? (
               <p className="mt-1 text-xs text-teal-200/80">{datesHint}</p>
             ) : null}
@@ -376,6 +379,9 @@ function CourseAsideBlock({
           <p className="mt-1.5 text-xs text-teal-200/75 leading-relaxed">
             {course.instructor} · {course.timeLabel}
           </p>
+          {course.entryNote ? (
+            <p className="mt-1 text-[11px] text-teal-200/70">{course.entryNote}</p>
+          ) : null}
           {datesHint && getActiveCourses().length > 1 ? (
             <p className="mt-1 text-[11px] text-teal-200/70">{datesHint}</p>
           ) : null}
@@ -559,6 +565,9 @@ function OfferCard({
           <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
             {course.instructor} · {course.timeLabel}
           </p>
+          {course.entryNote ? (
+            <p className="mt-1 text-[11px] text-muted-foreground">{course.entryNote}</p>
+          ) : null}
           {!compact && formatCourseDatesHint() && getActiveCourses().length > 1 ? (
             <p className="mt-1 text-[11px] text-muted-foreground">{formatCourseDatesHint()}</p>
           ) : null}

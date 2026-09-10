@@ -42,28 +42,36 @@ export type UcatOneDayCourse = {
   priceGbp: number;
   instructor: string;
   soldOut?: boolean;
+  /**
+   * Which application cycle the course serves, e.g. "For 2028 entry (sitting
+   * the UCAT in 2027)". Shown wherever the date is promoted so a student
+   * sitting the UCAT sooner is not misled into booking the wrong cycle.
+   * Mirrors entryNote in lib/ucat/commercial.ts on the main site.
+   */
+  entryNote?: string;
 };
 
+/**
+ * Upcoming one-day courses. Must stay in step with UCAT_COURSE_EVENTS in
+ * lib/ucat/commercial.ts on the main site: same dates, same prices, same hrefs.
+ * The 2027-entry season ended sold out on 12 Jul 2026; December 2026 opens the
+ * 2028-entry season and is the first course sold natively through /events and
+ * Stripe rather than a Wix /event-details link.
+ *
+ * A past date simply falls out of getActiveCourses(), which hides every course
+ * upsell in the app, so add the next date here as soon as it is scheduled.
+ */
 export const UCAT_ONE_DAY_COURSES: readonly UcatOneDayCourse[] = [
   {
-    id: "june-2026",
+    id: "december-2026",
     label: "Ultimate UCAT 1 Day Course",
-    date: "2026-06-28",
-    displayDate: "Sat 28 Jun 2026",
+    date: "2026-12-12",
+    displayDate: "Sat 12 Dec 2026",
     timeLabel: "09:00 to 16:00 UK · Online",
-    href: "https://www.theukcatpeople.co.uk/event-details/ultimate-ucat-1-day-course-june-2026-online",
+    href: "https://www.theukcatpeople.co.uk/events/ultimate-ucat-1-day-course-december-2026-online",
     priceGbp: 179,
     instructor: "Dr Akash Gandhi",
-  },
-  {
-    id: "july-2026",
-    label: "Ultimate UCAT 1 Day Course",
-    date: "2026-07-12",
-    displayDate: "Sun 12 Jul 2026",
-    timeLabel: "09:00 to 16:00 UK · Online",
-    href: "https://www.theukcatpeople.co.uk/event-details/ultimate-ucat-1-day-course-july-2026-online",
-    priceGbp: 179,
-    instructor: "Dr Akash Gandhi",
+    entryNote: "For 2028 entry (sitting the UCAT in 2027)",
   },
 ] as const;
 
