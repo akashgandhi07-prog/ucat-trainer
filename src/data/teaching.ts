@@ -66,4 +66,12 @@ export const SKILL_TEACHING: Record<TrainingType, SkillTeaching> = {
       "Use the explanation to check the shortcut, sense check and exact trap.",
     ],
   },
+  not_except: {
+    why: "UCAT Verbal Reasoning includes questions asking which statement is NOT supported by the passage. They take longer because every option needs checking, so a reliable method saves minutes.",
+    howToUse: [
+      "Read the passage once for structure.",
+      "For each question, check every option against the text.",
+      "Pick the one statement the passage does not support.",
+    ],
+  },
 };

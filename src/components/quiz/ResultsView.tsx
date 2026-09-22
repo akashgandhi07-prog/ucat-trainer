@@ -283,7 +283,7 @@ export default function ResultsView({
                             </div>
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            The highlighted word was paraphrased but the meaning is the same — the statement is true.
+                            The highlighted word was paraphrased but the meaning is the same, so the statement is true.
                           </p>
                         </>
                       ) : (

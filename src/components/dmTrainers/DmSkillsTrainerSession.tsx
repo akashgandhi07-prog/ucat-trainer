@@ -577,7 +577,7 @@ export default function DmSkillsTrainerSession({ trainerType }: Props) {
                   <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
                     {avgThinkingSeconds <= EXAM_SECONDS_PER_QUESTION
                       ? "You're at or ahead of exam pace. Keep accuracy up at this speed."
-                      : "Above exam pace — in the real test you have about a minute per question. Average answering time, not counting time spent reading explanations."}
+                      : "Above exam pace: in the real test you have about a minute per question. Average answering time, not counting time spent reading explanations."}
                   </p>
                 </div>
               )}

@@ -215,7 +215,7 @@ export default function SJTRatingQuiz({ question, onComplete, onProgress }: Prop
                   </button>
                 ))}
                 <p className="text-[11px] text-muted-foreground pt-0.5">
-                  Tip: press <kbd className="font-semibold">1</kbd>–<kbd className="font-semibold">{scale.length}</kbd> to rate, <kbd className="font-semibold">Enter</kbd> to confirm.
+                  Tip: press <kbd className="font-semibold">1</kbd> to <kbd className="font-semibold">{scale.length}</kbd> to rate, <kbd className="font-semibold">Enter</kbd> to confirm.
                 </p>
               </div>
             )}

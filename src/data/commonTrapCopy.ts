@@ -27,8 +27,8 @@ export const COMMON_TRAP_COPY: Record<string, string> = {
   "wrong-denominator": "Using the wrong denominator for a rate, such as treating a per 100 value as a per 1 value.",
 
   // ── Mental Maths ─────────────────────────────────────────────────────────
-  "single-digit-times-table-slip": "Misremembering a times-table fact under time pressure — double-check the awkward ones (7s, 8s).",
-  "fraction-percentage-pair-confusion": "Mixing up the common fraction–percentage pairs, e.g. reading 1/4 as 40% instead of 25%.",
+  "single-digit-times-table-slip": "Misremembering a times-table fact under time pressure, so double-check the awkward ones (7s, 8s).",
+  "fraction-percentage-pair-confusion": "Mixing up the common fraction and percentage pairs, e.g. reading 1/4 as 40% instead of 25%.",
   "percent-not-divided-by-100": "Forgetting that a percentage is out of 100 when turning it into a decimal.",
   "percent-not-converted-to-decimal": "Multiplying by the whole percentage instead of dividing by 100 first.",
   "square-times-two-instead-of-times-itself": "Doubling a number instead of multiplying it by itself when squaring.",
@@ -49,7 +49,7 @@ export const COMMON_TRAP_COPY: Record<string, string> = {
 
   // ── Decision Making: Data & probability ──────────────────────────────────
   "raw-number-treated-as-percentage": "Reading a raw count as if it were already a percentage instead of converting it first.",
-  "complement-error": "Forgetting that two exhaustive outcomes sum to 100% — the answer is 100% minus the given value.",
+  "complement-error": "Forgetting that two exhaustive outcomes sum to 100%, so the answer is 100% minus the given value.",
   "adds-probabilities-incorrectly": "Adding probabilities for 'at least one' instead of using 1 − P(none), which over-counts.",
   "same-probability-each-turn": "Assuming equal turns mean equal chances, ignoring that the first player gets the first attempt.",
   "applies-second-percent-to-total": "Applying a second percentage to the original total instead of to the new (already-changed) value.",
@@ -60,7 +60,7 @@ export const COMMON_TRAP_COPY: Record<string, string> = {
   "misreads-ratio-condition": "Mishandling a 'twice as likely' or ratio condition when solving for an unknown probability.",
 
   // ── Decision Making: Venn / set logic ────────────────────────────────────
-  "includes-all-three-incorrectly": "Letting the all-three overlap leak into an 'exactly two' count — it must be excluded.",
+  "includes-all-three-incorrectly": "Letting the all-three overlap leak into an 'exactly two' count, when it must be excluded.",
   "confuses-exactly-and-at-least": "Mixing up 'exactly two' (the pairwise regions only) with 'at least two' (which includes all three).",
   "assumes-no-overlap": "Assuming sets do not overlap when the wording leaves the overlap unknown.",
   "double-counts-pair-overlap": "Counting people in a shared overlap region twice when totalling the sets.",

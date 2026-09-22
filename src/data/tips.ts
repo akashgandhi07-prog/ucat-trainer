@@ -40,6 +40,11 @@ export const TIPS: Record<TrainingType, string[]> = {
     "For km to m, multiply by 1000; for ml to litres, divide by 1000.",
     "For per-100 questions, multiply by the actual amount divided by 100.",
   ],
+  not_except: [
+    "Circle the NOT or EXCEPT in your head before reading the options.",
+    "Tick off each option you can verify in the passage; the one left over is your answer.",
+    "Can't Tell counts as not supported, so an option the passage never mentions can be the answer.",
+  ],
 };
 
 function pickTip(tips: string[], seed?: number): string {

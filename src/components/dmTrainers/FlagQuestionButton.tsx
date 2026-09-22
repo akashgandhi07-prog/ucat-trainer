@@ -46,7 +46,7 @@ export default function FlagQuestionButton({ dbId, questionLabel }: Props) {
     return (
       <div className="flex items-center gap-1.5 text-xs text-green-700">
         <Check className="w-3.5 h-3.5" />
-        Report submitted — thank you
+        Report submitted, thank you
       </div>
     );
   }

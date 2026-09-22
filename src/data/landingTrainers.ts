@@ -69,6 +69,22 @@ export const LANDING_TRAINERS: readonly LandingTrainer[] = [
     href: "/ucat-inference-trainer",
   },
   {
+    id: "not-except",
+    section: "vr",
+    title: "NOT/EXCEPT trainer",
+    tag: "Check every option",
+    description: "Find the one statement the passage does not support, four questions per passage.",
+    href: "/ucat-vr-not-except-trainer",
+  },
+  {
+    id: "syllogism-foundations",
+    section: "dm",
+    title: "Syllogism foundations",
+    tag: "Start here",
+    description: "Learn the core all, some and none patterns before moving on to timed drills.",
+    href: "/ucat-syllogism-foundations-trainer",
+  },
+  {
     id: "syllogism-micro",
     section: "dm",
     title: "Syllogism micro drill",

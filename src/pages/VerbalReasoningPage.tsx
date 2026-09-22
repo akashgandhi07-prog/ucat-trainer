@@ -25,7 +25,7 @@ import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../lib/supabase";
 import { supabaseLog } from "../lib/logger";
 import { getWpmComparisonCopy, getWpmTier, getWpmTierLabel } from "../lib/wpmBenchmark";
-import { Zap, Brain, Search, Eye, ChevronRight, Target, BookOpen } from "lucide-react";
+import { Zap, Brain, Search, Eye, ChevronRight, Target, BookOpen, ListX } from "lucide-react";
 import {
   GUIDED_CHUNK_DEFAULT,
   GUIDED_CHUNK_MAX,
@@ -64,6 +64,7 @@ const STRATEGIC_OBJECTIVES: Record<TrainingType, string> = {
   inference_trainer: "Identify the precise evidence. Look for the sentence that directly supports the inference asked.",
   mental_maths: "Build automaticity with times tables and percentages; then practise estimation under time pressure.",
   unit_conversions: "Set the target unit first, then convert before calculating so unit traps do not steal easy QR marks.",
+  not_except: "Treat each option as its own True, False or Can't Tell check. The answer is the one that does not hold.",
 };
 
 function getWpmStatusLabel(wpm: number): string {
@@ -184,6 +185,12 @@ const SKILLS: {
     summary: "Identify the exact evidence that supports an inference by selecting text from the passage.",
     benefit: "Evidence-based answers",
   },
+  {
+    type: "not_except",
+    icon: ListX,
+    summary: "Practise the NOT and EXCEPT questions that force you to check every option against the passage.",
+    benefit: "Beat the slowest questions",
+  },
 ];
 
 function getStoredWpm(): number {
@@ -201,7 +208,7 @@ function wordCount(p: Passage): number {
 }
 
 function isValidTrainingType(s: string | null): s is TrainingType {
-  return s === "speed_reading" || s === "rapid_recall" || s === "keyword_scanning" || s === "inference_trainer";
+  return s === "speed_reading" || s === "rapid_recall" || s === "keyword_scanning" || s === "inference_trainer" || s === "not_except";
 }
 
 function pickPassageForTrainer(
@@ -213,17 +220,17 @@ function pickPassageForTrainer(
 }
 
 /**
- * The three trainers that draw from the local passage bank and appear as modes on this
- * hub (inference has DB-backed rotation; NOT/EXCEPT shares the bank but is its own page).
+ * The trainers that draw from the local passage bank (inference has DB-backed rotation).
  */
 type VrBankTrainer = Extract<VrTrainerType, TrainingType>;
-const VR_BANK_TRAINERS: VrBankTrainer[] = ["speed_reading", "rapid_recall", "keyword_scanning"];
+const VR_BANK_TRAINERS: VrBankTrainer[] = ["speed_reading", "rapid_recall", "keyword_scanning", "not_except"];
 
 function computeBankProgress(): Record<VrBankTrainer, { seen: number; total: number }> {
   return {
     speed_reading: getBankProgress("speed_reading", PASSAGES.length),
     rapid_recall: getBankProgress("rapid_recall", PASSAGES.length),
     keyword_scanning: getBankProgress("keyword_scanning", PASSAGES.length),
+    not_except: getBankProgress("not_except", PASSAGES.length),
   };
 }
 
@@ -547,6 +554,34 @@ export default function VerbalReasoningPage() {
     });
   };
 
+  const handleStartNotExcept = () => {
+    trackEvent("trainer_started", {
+      training_type: "not_except",
+      difficulty,
+      pathname: "/ucat-vr-not-except-trainer",
+    });
+    const chosenPassage = pickPassageForTrainer("not_except", difficulty, category);
+    navigate("/ucat-vr-not-except-trainer", {
+      state: {
+        trainingType: "not_except" as const,
+        passage: chosenPassage,
+        difficulty,
+      },
+    });
+  };
+
+  const startHandlers: Record<TrainingType, (() => void) | undefined> = {
+    speed_reading: handleStartSpeedReading,
+    rapid_recall: handleStartRapidRecall,
+    keyword_scanning: handleStartKeywordScanning,
+    inference_trainer: handleStartInferenceTrainer,
+    not_except: handleStartNotExcept,
+    calculator: undefined,
+    mental_maths: undefined,
+    unit_conversions: undefined,
+  };
+  const handleStart = startHandlers[mode] ?? handleStartSpeedReading;
+
   const skipLinkClass =
     "absolute left-4 top-4 z-[100] px-4 py-2 bg-card text-foreground font-medium rounded-lg ring-2 ring-primary opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
 
@@ -611,7 +646,7 @@ export default function VerbalReasoningPage() {
         >
           <div className="space-y-8 sm:space-y-10">
           <SkillsSectionBlock title={HUB_SKILLS_TRAINERS_TITLE}>
-            <HubTrainerGrid trainerCount={4}>
+            <HubTrainerGrid trainerCount={SKILLS.length}>
             {SKILLS.map(({ type, icon, summary, benefit }) => (
               <HubTrainerCard
                 key={type}
@@ -897,6 +932,12 @@ export default function VerbalReasoningPage() {
                     </p>
                   )}
 
+                  {mode === "not_except" && (
+                    <p className="text-sm text-muted-foreground">
+                      Read one passage, then answer four questions asking which statement is not supported. Check every option before you commit.
+                    </p>
+                  )}
+
                   <div className="rounded-lg bg-card border border-border p-3">
                     <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                       Tip
@@ -909,15 +950,7 @@ export default function VerbalReasoningPage() {
                   <div className="hidden sm:block pt-2">
                     <button
                       type="button"
-                      onClick={
-                        mode === "speed_reading"
-                          ? handleStartSpeedReading
-                          : mode === "rapid_recall"
-                            ? handleStartRapidRecall
-                            : mode === "keyword_scanning"
-                              ? handleStartKeywordScanning
-                              : handleStartInferenceTrainer
-                      }
+                      onClick={handleStart}
                       className="w-full flex items-center justify-center gap-2 min-h-[48px] px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 transition-colors"
                     >
                       Start training
@@ -1073,15 +1106,7 @@ export default function VerbalReasoningPage() {
       <div className="sm:hidden fixed bottom-0 inset-x-0 z-50 border-t border-border bg-card/95 backdrop-blur-sm px-4 py-3 shadow-lg">
         <button
           type="button"
-          onClick={
-            mode === "speed_reading"
-              ? handleStartSpeedReading
-              : mode === "rapid_recall"
-                ? handleStartRapidRecall
-                : mode === "keyword_scanning"
-                  ? handleStartKeywordScanning
-                  : handleStartInferenceTrainer
-          }
+          onClick={handleStart}
           className="w-full flex items-center justify-center gap-2 min-h-[48px] px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 transition-colors"
         >
           Start training

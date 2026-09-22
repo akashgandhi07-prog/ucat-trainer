@@ -13,7 +13,6 @@ import {
 import { generateExceptSet } from "../utils/distortionEngine";
 import type { ExceptQuestion } from "../utils/distortionEngine";
 import { appendGuestSession } from "../lib/guestSessions";
-import type { GuestSessionPayload } from "../lib/guestSessions";
 import { newClientSessionId, upsertTrainerSession } from "../lib/trainerSessionLog";
 import type { TrainerSessionUpsert } from "../lib/trainerSessionLog";
 import { supabaseLog } from "../lib/logger";
@@ -27,15 +26,7 @@ import { PostDrillUpsell } from "../components/layout/ProductUpsell";
 
 const QUESTIONS_PER_PASSAGE = 4;
 
-// TODO(orchestrator): cloud session logging for this trainer needs 'not_except'
-// added to the sessions_training_type_check DB constraint (handled via a DB
-// migration by the orchestrator), plus the training_type unions in
-// src/types/session.ts and the guest-session validator in src/lib/guestSessions.ts.
-// The save below is already structured through upsertTrainerSession with
-// training_type 'not_except' and gated behind CLOUD_LOGGING_ENABLED, so it works
-// as soon as the constraint value exists.
-const CLOUD_LOGGING_ENABLED = true;
-const TRAINING_TYPE = "not_except";
+const TRAINING_TYPE = "not_except" as const;
 
 type Phase = "reading" | "quiz" | "results";
 
@@ -114,10 +105,9 @@ export default function NotExceptTrainerPage() {
   const handleSaveProgress = useCallback(async () => {
     const timeSeconds = Math.max(1, Math.round((Date.now() - startTime) / 1000));
     if (!user) {
-      // Guest results stay local. The cast is needed until 'not_except' is added
-      // to the training_type unions (see TODO above).
+      // Guest results stay local until sign-in merges them.
       appendGuestSession({
-        training_type: TRAINING_TYPE as GuestSessionPayload["training_type"],
+        training_type: TRAINING_TYPE,
         wpm: null,
         correct: correctCount,
         total: questions.length,
@@ -127,7 +117,6 @@ export default function NotExceptTrainerPage() {
       });
       return;
     }
-    if (!CLOUD_LOGGING_ENABLED) return;
     setSaveError(null);
     setSaving(true);
     const payload: TrainerSessionUpsert = {

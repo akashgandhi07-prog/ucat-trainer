@@ -47,10 +47,13 @@ import { trackEvent } from "../lib/analytics";
 import { upsertProfile } from "../lib/profileApi";
 import type { SessionRow } from "../types/session";
 import type { SyllogismSession } from "../types/syllogisms";
+import type { DmTrainerSessionRow } from "../types/dmTrainers";
 import type { SJTSessionsRow } from "../types/sjt";
 import { SJT_QUESTION_TYPE_LABELS } from "../types/sjt";
 import { formatSJTSessionScore, getGuestSJTSessions } from "../lib/sjtSessionStorage";
 import SyllogismAnalytics from "../components/dashboard/SyllogismAnalytics";
+import DmSkillsAnalytics from "../components/dashboard/DmSkillsAnalytics";
+import { DM_SKILLS_TRAINER_LABELS } from "../data/dmTrainers/dmSkillsTrainerMeta";
 import SJTAnalytics from "../components/dashboard/SJTAnalytics";
 import UnifiedProductHub from "../components/dashboard/UnifiedProductHub";
 import DashboardHeroCard from "../components/dashboard/DashboardHeroCard";
@@ -110,7 +113,7 @@ type GuestDashboardSummary = {
 
 function getTrainingType(s: SessionRow): TrainingType {
   const t = s.training_type;
-  if (t === "speed_reading" || t === "rapid_recall" || t === "keyword_scanning" || t === "calculator" || t === "inference_trainer" || t === "mental_maths" || t === "unit_conversions")
+  if (t === "speed_reading" || t === "rapid_recall" || t === "keyword_scanning" || t === "calculator" || t === "inference_trainer" || t === "mental_maths" || t === "unit_conversions" || t === "not_except")
     return t;
   return "speed_reading";
 }
@@ -204,6 +207,7 @@ export default function Dashboard() {
   const [guestSummary, setGuestSummary] = useState<GuestDashboardSummary | null>(null);
   const [syllogismSessions, setSyllogismSessions] = useState<SyllogismSession[]>([]);
   const [sjtSessions, setSjtSessions] = useState<SJTSessionsRow[]>([]);
+  const [dmSkillsSessions, setDmSkillsSessions] = useState<DmTrainerSessionRow[]>([]);
 
   // UCAT exam date: official sitting dates only (13 Jul to 24 Sep 2026).
   const [ucatYear, setUcatYear] = useState<number>(UCAT_EXAM_YEAR);
@@ -443,6 +447,38 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!userId) {
+      setDmSkillsSessions([]);
+      return;
+    }
+    let cancelled = false;
+    withTimeout(
+      supabase
+        .from("dm_trainer_sessions")
+        .select("id, trainer_type, score, total_questions, elapsed_seconds, retry_mode, answers, created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: true }),
+    )
+      .then(({ data, error: err }) => {
+        if (cancelled) return;
+        if (err) {
+          dashboardLog.warn("DM skills sessions fetch failed", { message: err.message, code: err.code });
+          setDmSkillsSessions([]);
+          return;
+        }
+        setDmSkillsSessions((data as DmTrainerSessionRow[]) ?? []);
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        dashboardLog.warn("DM skills sessions fetch timed out", { message: String(e) });
+        setDmSkillsSessions([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  useEffect(() => {
+    if (!userId) {
       setSjtSessions([]);
       return;
     }
@@ -548,6 +584,7 @@ export default function Dashboard() {
       inference_trainer: [],
       mental_maths: [],
       unit_conversions: [],
+      not_except: [],
     };
     for (const s of sessions) {
       m[getTrainingType(s)].push(s);
@@ -606,12 +643,15 @@ export default function Dashboard() {
       const stored = localStorage.getItem(DASHBOARD_TAB_KEY);
       if (isValidTab(stored)) { hasSetSmartDefault.current = true; return; }
     } catch { /* ignore */ }
-    const vrSessions = [...byType.speed_reading, ...byType.rapid_recall, ...byType.keyword_scanning, ...byType.inference_trainer];
+    const vrSessions = [...byType.speed_reading, ...byType.rapid_recall, ...byType.keyword_scanning, ...byType.inference_trainer, ...byType.not_except];
     const qrSessions = [...byType.calculator, ...byType.mental_maths, ...byType.unit_conversions];
     const candidates: { tab: DashboardTab; date: string }[] = [];
     if (vrSessions.length > 0) candidates.push({ tab: "vr", date: vrSessions[vrSessions.length - 1].created_at });
     if (qrSessions.length > 0) candidates.push({ tab: "qr", date: qrSessions[qrSessions.length - 1].created_at });
-    if (syllogismSessions.length > 0) candidates.push({ tab: "dm", date: syllogismSessions[syllogismSessions.length - 1].created_at });
+    const dmDates = [syllogismSessions[syllogismSessions.length - 1]?.created_at, dmSkillsSessions[dmSkillsSessions.length - 1]?.created_at]
+      .filter((d): d is string => d != null)
+      .sort();
+    if (dmDates.length > 0) candidates.push({ tab: "dm", date: dmDates[dmDates.length - 1] });
     if (sjtSessions.length > 0) candidates.push({ tab: "sjt", date: sjtSessions[sjtSessions.length - 1].created_at });
     if (candidates.length > 0) {
       const best = candidates.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
@@ -619,12 +659,12 @@ export default function Dashboard() {
     }
     hasSetSmartDefault.current = true;
   // eslint-disable-next-line react-hooks/exhaustive-deps -- isValidTab is a pure inline predicate; adding it would cause infinite re-runs
-  }, [loading, byType, syllogismSessions, sjtSessions, DASHBOARD_TAB_KEY]);
+  }, [loading, byType, syllogismSessions, dmSkillsSessions, sjtSessions, DASHBOARD_TAB_KEY]);
 
   // Per-category VR insight, built from the rows already fetched (or guest
   // localStorage sessions) - no extra network call.
   const vrCategoryStats = useMemo(() => {
-    const vrTypes = new Set<string>(["speed_reading", "rapid_recall", "keyword_scanning", "inference_trainer"]);
+    const vrTypes = new Set<string>(["speed_reading", "rapid_recall", "keyword_scanning", "inference_trainer", "not_except"]);
     const rows = userId
       ? sessions.filter((s) => vrTypes.has(s.training_type))
       : getGuestSessions().filter((s) => vrTypes.has(s.training_type));
@@ -954,7 +994,7 @@ export default function Dashboard() {
     const fromSessions: RecentActivityItem[] = sessions.map((s) => {
       const type = getTrainingType(s);
       const pct = s.total > 0 ? Math.round((s.correct / s.total) * 100) : null;
-      const hasPercentScore = ["rapid_recall", "keyword_scanning", "inference_trainer", "mental_maths", "calculator", "unit_conversions"].includes(type);
+      const hasPercentScore = ["rapid_recall", "keyword_scanning", "inference_trainer", "mental_maths", "calculator", "unit_conversions", "not_except"].includes(type);
       return {
         id: s.id,
         created_at: s.created_at,
@@ -995,8 +1035,20 @@ export default function Dashboard() {
       };
     });
 
+    const fromDmSkills: RecentActivityItem[] = dmSkillsSessions.map((s) => {
+      const pct = s.total_questions > 0 ? Math.round((s.score / s.total_questions) * 100) : null;
+      return {
+        id: `dm-skills-${s.id}`,
+        created_at: s.created_at,
+        label: DM_SKILLS_TRAINER_LABELS[s.trainer_type] ?? "Decision Making",
+        timeDisplay: s.elapsed_seconds > 0 ? `${s.elapsed_seconds}s` : "-",
+        scoreDisplay: pct != null ? `${pct}%` : "-",
+        scorePercent: pct,
+      };
+    });
+
     // Sort most-recent first
-    const merged = [...fromSessions, ...fromSyllogism, ...fromSjt].sort(
+    const merged = [...fromSessions, ...fromSyllogism, ...fromDmSkills, ...fromSjt].sort(
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
 
@@ -1032,7 +1084,7 @@ export default function Dashboard() {
     });
 
     return aggregated.slice(0, 30);
-  }, [sessions, syllogismSessions, sjtSessions]);
+  }, [sessions, syllogismSessions, dmSkillsSessions, sjtSessions]);
 
   // Shared difficulty breakdown renderer
   const renderDifficultyBreakdown = (breakdown: Record<TrainingDifficulty, DifficultyStats>) => {
@@ -1106,6 +1158,7 @@ export default function Dashboard() {
     const allDates = [
       ...sessions.map((s) => s.created_at),
       ...syllogismSessions.map((s) => s.created_at),
+      ...dmSkillsSessions.map((s) => s.created_at),
       ...sjtSessions.map((s) => s.created_at),
     ];
     for (const createdAt of allDates) {
@@ -1118,11 +1171,12 @@ export default function Dashboard() {
     }
     return set.size;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- sevenDaysAgo derived from stable today
-  }, [sessions, syllogismSessions, sjtSessions]);
+  }, [sessions, syllogismSessions, dmSkillsSessions, sjtSessions]);
   const streak = useMemo(() => {
     const allSessions = [
       ...sessions,
       ...syllogismSessions.map((s) => ({ created_at: s.created_at })),
+      ...dmSkillsSessions.map((s) => ({ created_at: s.created_at })),
       ...sjtSessions.map((s) => ({ created_at: s.created_at })),
     ];
     if (allSessions.length === 0) return 0;
@@ -1140,7 +1194,7 @@ export default function Dashboard() {
       check -= 24 * 60 * 60 * 1000;
     }
     return count;
-  }, [sessions, syllogismSessions, sjtSessions, today]);
+  }, [sessions, syllogismSessions, dmSkillsSessions, sjtSessions, today]);
 
   const skipLinkClass =
     "absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-foreground font-medium rounded-lg ring-2 ring-primary opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
@@ -1328,10 +1382,10 @@ export default function Dashboard() {
     }
 
     const hasAnySessions =
-      sessions.length > 0 || syllogismSessions.length > 0 || sjtSessions.length > 0;
+      sessions.length > 0 || syllogismSessions.length > 0 || dmSkillsSessions.length > 0 || sjtSessions.length > 0;
 
-    const vrCount = byType.speed_reading.length + byType.rapid_recall.length + byType.keyword_scanning.length + byType.inference_trainer.length;
-    const dmCount = syllogismSessions.length;
+    const vrCount = byType.speed_reading.length + byType.rapid_recall.length + byType.keyword_scanning.length + byType.inference_trainer.length + byType.not_except.length;
+    const dmCount = syllogismSessions.length + dmSkillsSessions.length;
     const qrCount = byType.calculator.length + byType.mental_maths.length + byType.unit_conversions.length;
     const sjtCount = sjtSessions.length;
 
@@ -1352,7 +1406,7 @@ export default function Dashboard() {
             streak={streak}
             lastPracticedDaysAgo={lastPracticedDaysAgo}
             examDateISO={profile?.ucat_exam_date ?? null}
-            totalSessions={sessions.length + syllogismSessions.length + sjtSessions.length}
+            totalSessions={sessions.length + syllogismSessions.length + dmSkillsSessions.length + sjtSessions.length}
             uniqueDaysInLast7={uniqueDaysInLast7}
             onSetExamDate={openExamDateEditor}
             onEditExamDate={openExamDateEditor}
@@ -1486,6 +1540,7 @@ export default function Dashboard() {
           <WeekSummaryCard
             sessions={sessions}
             syllogismSessions={syllogismSessions}
+            dmSkillsSessions={dmSkillsSessions}
             sjtSessions={sjtSessions}
           />
 
@@ -2069,7 +2124,7 @@ export default function Dashboard() {
                 </div>
               )}
 
-              {/* DM: Syllogisms */}
+              {/* DM: skills trainers · Syllogisms */}
               {activeTab === "dm" && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -2081,6 +2136,7 @@ export default function Dashboard() {
                       Practice now →
                     </Link>
                   </div>
+                  <DmSkillsAnalytics sessions={dmSkillsSessions} />
                   <SyllogismAnalytics sessions={syllogismSessions} />
                 </div>
               )}

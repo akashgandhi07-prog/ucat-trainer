@@ -79,3 +79,15 @@ export function isArgumentJudgeReview(
 ): review is ArgumentJudgeReview {
   return "exactAim" in review;
 }
+
+/** A row of public.dm_trainer_sessions as read by the Dashboard. */
+export interface DmTrainerSessionRow {
+  id: string;
+  trainer_type: DmTrainerType;
+  score: number;
+  total_questions: number;
+  elapsed_seconds: number;
+  retry_mode: boolean;
+  answers: DmTrainerSessionAnswer[] | null;
+  created_at: string;
+}

@@ -2,12 +2,14 @@ import { useState } from "react";
 import type { SessionRow } from "../../types/session";
 import type { SyllogismSession } from "../../types/syllogisms";
 import type { SJTSessionsRow } from "../../types/sjt";
+import type { DmTrainerSessionRow } from "../../types/dmTrainers";
 import { TRAINING_TYPE_LABELS } from "../../types/training";
 import type { TrainingType } from "../../types/training";
 
 interface WeekSummaryCardProps {
   sessions: SessionRow[];
   syllogismSessions: SyllogismSession[];
+  dmSkillsSessions: DmTrainerSessionRow[];
   sjtSessions: SJTSessionsRow[];
 }
 
@@ -19,7 +21,9 @@ function getTrainingType(s: SessionRow): TrainingType {
     t === "keyword_scanning" ||
     t === "calculator" ||
     t === "inference_trainer" ||
-    t === "mental_maths"
+    t === "mental_maths" ||
+    t === "unit_conversions" ||
+    t === "not_except"
   )
     return t;
   return "speed_reading";
@@ -33,9 +37,15 @@ function startOfDayMs(date: Date): number {
 
 export default function WeekSummaryCard({
   sessions,
-  syllogismSessions,
+  syllogismSessions: rawSyllogismSessions,
+  dmSkillsSessions,
   sjtSessions,
 }: WeekSummaryCardProps) {
+  // DM skills drills count as Decision Making alongside syllogisms; both carry score and total_questions.
+  const syllogismSessions: { created_at: string; score: number; total_questions: number }[] = [
+    ...rawSyllogismSessions,
+    ...dmSkillsSessions,
+  ];
   const [now] = useState(() => Date.now());
   const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
   const weekStart = now - sevenDaysMs;

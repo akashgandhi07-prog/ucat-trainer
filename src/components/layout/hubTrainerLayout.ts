@@ -3,6 +3,9 @@ export const HUB_SKILLS_TRAINERS_TITLE = "Skills trainers";
 
 export function hubTrainerGridClass(trainerCount: number): string {
   const base = "grid w-full gap-4";
+  if (trainerCount === 5) {
+    return `${base} grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5`;
+  }
   if (trainerCount >= 4) {
     return `${base} grid-cols-1 sm:grid-cols-2 xl:grid-cols-4`;
   }

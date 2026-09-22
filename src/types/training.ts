@@ -1,4 +1,4 @@
-export type TrainingType = "speed_reading" | "rapid_recall" | "keyword_scanning" | "calculator" | "inference_trainer" | "mental_maths" | "unit_conversions";
+export type TrainingType = "speed_reading" | "rapid_recall" | "keyword_scanning" | "calculator" | "inference_trainer" | "mental_maths" | "unit_conversions" | "not_except";
 
 export type TrainingDifficulty = "easy" | "medium" | "hard";
 
@@ -10,6 +10,7 @@ export const TRAINING_TYPE_LABELS: Record<TrainingType, string> = {
   inference_trainer: "Inference Trainer",
   mental_maths: "Mental Maths Trainer",
   unit_conversions: "Conversions Trainer",
+  not_except: "NOT/EXCEPT Trainer",
 };
 
 export const TRAINING_DIFFICULTY_LABELS: Record<TrainingDifficulty, string> = {
