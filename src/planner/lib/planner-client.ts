@@ -10,6 +10,7 @@ import {
   normaliseExamDateIso,
 } from '../../lib/ucatExamWindow'
 import { supabase } from '../../lib/supabase'
+import { writeOwnProfile } from '../../lib/profileApi'
 import { requireStudentOrTutorPlan } from './planner-guard'
 import { regenerateFutureWeeks, updateDayAvailability } from './planner-db-ops'
 
@@ -426,17 +427,15 @@ export async function updateExamDateTime(input: {
     .eq('id', input.planId)
   if (planErr) throw new Error(planErr.message)
 
-  const { error: profileErr } = await supabase
-    .from('profiles')
-    .upsert(
-      {
-        id: gate.studentId,
-        ucat_exam_date: examIso,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'id' },
-    )
-  if (profileErr) throw new Error(profileErr.message)
+  // RLS only lets a user write their own profile, so a tutor editing a student's plan
+  // updates the plan alone; the plan's exam_date is what the planner reads.
+  if (gate.studentId === userId) {
+    const { error: profileErr } = await writeOwnProfile(userId, {
+      ucat_exam_date: examIso,
+      updated_at: new Date().toISOString(),
+    })
+    if (profileErr) throw new Error(profileErr)
+  }
 
   if (input.regenerate ?? true) {
     scheduleRegenerateFromDate(input.planId, toISODate(new Date()), 1)

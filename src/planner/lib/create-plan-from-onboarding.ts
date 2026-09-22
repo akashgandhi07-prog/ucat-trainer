@@ -3,6 +3,7 @@ import { generateFullPlan, planToDBRows, type PlanInputs } from '../embedded/lib
 import { PLAN_TIMETABLE_TABLE } from '../embedded/lib/planner-db-tables'
 import { generateSlug, parseDate, toISODate } from '../embedded/lib/utils'
 import { supabase } from '../../lib/supabase'
+import { writeOwnProfile } from '../../lib/profileApi'
 import { fetchActivePlan, invalidateActivePlanCache } from './load-planner-data'
 
 export type CreatePlanFromOnboardingInput = {
@@ -105,16 +106,10 @@ export async function createPlanFromOnboarding({
   const { error: sessErr } = await supabase.from(PLAN_TIMETABLE_TABLE).insert(sessions)
   if (sessErr) throw new Error(sessErr.message)
 
-  await supabase
-    .from('profiles')
-    .upsert(
-      {
-        id: user.id,
-        ucat_exam_date: toISODate(examDate),
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'id' },
-    )
+  await writeOwnProfile(user.id, {
+    ucat_exam_date: toISODate(examDate),
+    updated_at: new Date().toISOString(),
+  })
 
   // Archive again, now excluding the row we just inserted. The pre-insert archive
   // above cannot stop two concurrent runs: both archive nothing, both insert, and

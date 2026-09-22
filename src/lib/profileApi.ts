@@ -59,6 +59,29 @@ function cap(s: string | null | undefined, max: number): string | null {
 }
 
 /**
+ * Write fields to the signed-in user's own profile row.
+ *
+ * Deliberately not an upsert: signed-in users may only UPDATE the columns listed in
+ * migration 036, which excludes id, and PostgREST's upsert sets every payload column,
+ * id included, so it fails with "permission denied for table profiles". The auth trigger
+ * creates the row at sign-up; the insert is only a fallback if it is somehow missing.
+ */
+export async function writeOwnProfile(
+  userId: string,
+  fields: Record<string, unknown>,
+): Promise<{ error: string | null }> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .update(fields)
+    .eq("id", userId)
+    .select("id");
+  if (error) return { error: error.message };
+  if (data && data.length > 0) return { error: null };
+  const { error: insertError } = await supabase.from("profiles").insert({ id: userId, ...fields });
+  return { error: insertError ? insertError.message : null };
+}
+
+/**
  * Upsert profile (full_name, stream) for the given user. Creates a minimal row if neither name nor stream
  * are provided (e.g. login-only flow). No-op if profiles table doesn't exist or RLS fails.
  * Name and entry_year are capped to match DB constraints.
@@ -86,7 +109,6 @@ export async function upsertProfile(
       : null;
   try {
     const payload: Record<string, unknown> = {
-      id: userId,
       updated_at: new Date().toISOString(),
     };
     if (name) payload.full_name = name;
@@ -122,17 +144,11 @@ export async function upsertProfile(
         payload.ucat_exam_date = trimmed;
       }
     }
-    const { error } = await supabase.from("profiles").upsert(
-      payload as { id: string; full_name?: string; stream?: string; updated_at: string; ucat_exam_date?: string | null },
-      { onConflict: "id" }
-    );
+    const { error } = await writeOwnProfile(userId, payload);
 
     if (error) {
-      supabaseLog.warn("upsertProfile failed (table may not exist)", {
-        userId,
-        error: error.message,
-      });
-      return { ok: false, error: error.message };
+      supabaseLog.warn("upsertProfile failed", { userId, error });
+      return { ok: false, error };
     }
     authLog.info("Profile upserted", { userId, full_name: name, stream: validStream });
     return { ok: true };
