@@ -636,7 +636,7 @@ export const VENN_LOGIC_QUESTIONS: DmTrainerQuestion[] = [
     ],
     correctAnswer: "C",
     explanation:
-      "Total mentions = 20 + 18 + 15 = 53. All-three mentions = 9 × 3 = 27. Exactly-two mentions = 6 × 2 = 12. Exactly-one people = 53 − 27 − 12 = 14. At-least-one = 14 + 6 + 9 = 29.",
+      "Add the three film totals: 20 + 18 + 15 = 53 mentions. Each person who saw all three films is counted in all three totals, so those 9 people make up 9 × 3 = 27 mentions. Each person who saw exactly two films is counted in two totals, so those 6 people make up 6 × 2 = 12 mentions. The remaining mentions belong to people who saw exactly one film: 53 − 27 − 12 = 14. At least one film = 14 + 6 + 9 = 29.",
     generalRule:
       "At-least-one = exactly-one + exactly-two + all-three. Use the mentions method to find exactly-one people first. Note: the question asks for at-least-one, not the total people asked (which would include those who saw no films).",
     wrongOptionReasons: {
@@ -651,8 +651,8 @@ export const VENN_LOGIC_QUESTIONS: DmTrainerQuestion[] = [
     commonTrap: "confuses-exactly-and-at-least",
     optionalWorkingSteps: [
       "Total mentions = 20 + 18 + 15 = 53.",
-      "All-three mentions = 9 × 3 = 27.",
-      "Exactly-two mentions = 6 × 2 = 12.",
+      "All-three mentions = 9 × 3 = 27 (each of those 9 people appears in all three film totals).",
+      "Exactly-two mentions = 6 × 2 = 12 (each of those 6 people appears in two film totals).",
       "Exactly-one people = 53 − 27 − 12 = 14.",
       "At-least-one = 14 + 6 + 9 = 29.",
     ],

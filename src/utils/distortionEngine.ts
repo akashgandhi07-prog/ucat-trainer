@@ -749,6 +749,8 @@ function distortCausal(s: string): DistortionResult {
     // claim instead of exaggerating it, so it would be keyed False when the
     // honest answer is True. Same reasoning as the hedge strategies.
     if (isUnderNegation(s, m.index)) continue;
+    // "one of the largest" → "the only largest": "only" cannot take a superlative.
+    if (rep === "the only" && /^\s*(most|least|best|worst|\w+est)\b/i.test(s.slice(m.index + m.fragment.length))) continue;
     return {
       text: replaceAt(s, m.index, m.fragment.length, matchCase(m.fragment, rep)), applied: true,
       label: `causal relationship exaggerated: ${label}`,
@@ -811,20 +813,20 @@ function distortCertainty(s: string): DistortionResult {
   // "some X argue" → "all X agree" entries are gated like the scope flips:
   // without contrast evidence, universalising "some" is Can't Tell, not False.
   const uncertainPhrases: [RegExp, string, string, boolean][] = [
-    [/\bit is (now )?widely believed\b/gi, "It is universally proven", '"widely believed" → "universally proven"', false],
-    [/\bscientists argue\b/gi, "Scientists have proven", '"scientists argue" → "scientists have proven"', false],
-    [/\bresearch suggests\b/gi, "Research has conclusively proven", '"research suggests" → "research has conclusively proven"', false],
-    [/\bhistorians (have long )?debated\b/gi, "Historians unanimously agree", '"historians debated" → "historians unanimously agree"', false],
-    [/\bsome ethicists argue\b/gi, "All ethicists agree", '"some ethicists argue" → "all ethicists agree"', true],
-    [/\bcritics (of .+? )?argue\b/gi, "Everyone agrees", '"critics argue" → "everyone agrees"', false],
+    [/\bit is (now )?widely believed\b/gi, "it is universally proven", '"widely believed" → "universally proven"', false],
+    [/\bscientists argue\b/gi, "scientists have proven", '"scientists argue" → "scientists have proven"', false],
+    [/\bresearch suggests\b/gi, "research has conclusively proven", '"research suggests" → "research has conclusively proven"', false],
+    [/\bhistorians (have long )?debated\b/gi, "historians unanimously agree", '"historians debated" → "historians unanimously agree"', false],
+    [/\bsome ethicists argue\b/gi, "all ethicists agree", '"some ethicists argue" → "all ethicists agree"', true],
+    [/\bcritics (of .+? )?argue\b/gi, "everyone agrees", '"critics argue" → "everyone agrees"', false],
     [/\bis thought to\b/gi, "is proven to", '"is thought to" → "is proven to"', false],
     [/\bare thought to\b/gi, "are proven to", '"are thought to" → "are proven to"', false],
     [/\bappears to be\b/gi, "is definitely", '"appears to be" → "is definitely"', false],
     [/\bsuggests that\b/gi, "proves that", '"suggests that" → "proves that"', false],
     // no "may have → certainly had" entry: it shifts tense as well as certainty
     [/\bmight be\b/gi, "is definitely", '"might be" → "is definitely"', false],
-    [/\bsome scholars\b/gi, "All scholars agree", '"some scholars" → "all scholars agree"', true],
-    [/\bsome argue\b/gi, "It is universally agreed", '"some argue" → "it is universally agreed"', true],
+    [/\bsome scholars\b/gi, "all scholars agree", '"some scholars" → "all scholars agree"', true],
+    [/\bsome argue\b/gi, "it is universally agreed", '"some argue" → "it is universally agreed"', true],
     [/\bhas been suggested\b/gi, "has been conclusively proven", '"has been suggested" → "has been conclusively proven"', false],
   ];
   const allowGated = allowsExistentialFlip(s);
@@ -834,11 +836,16 @@ function distortCertainty(s: string): DistortionResult {
     if (!m) continue;
     if (isUnderNegation(s, m.index)) continue;
     if (isScopeRestricted(s, m.index)) continue;
+    // These rewrites replace the whole subject, so a word already qualifying it would be
+    // left behind: "Some critics argue" → "Some everyone agrees".
+    const replacesSubject = /^(it is|scientists|research|historians|all |everyone)/.test(rep);
+    if (replacesSubject && /\b(some|many|most|several|few|the|these|those|other|certain|its|their|his|her|our)\s+$/i.test(s.slice(0, m.index))) continue;
+    const cased = matchCase(m.fragment, rep);
     return {
-      text: replaceAt(s, m.index, m.fragment.length, rep), applied: true,
+      text: replaceAt(s, m.index, m.fragment.length, cased), applied: true,
       label: `hedging language made absolute: ${label}`,
       originalFragment: m.fragment,
-      replacedFragment: rep,
+      replacedFragment: cased,
     };
   }
   return { text: s, applied: false };
@@ -1070,8 +1077,9 @@ export function generateExceptSet(
   ];
   if (ordered.length < 3) return null;
 
+  // Word swaps can break a/an agreement ("a entirely"), as buildQuestions also corrects.
   const supportedOptions: ExceptOption[] = ordered.slice(0, 3).map(({ s, p }) => ({
-    text: p.text,
+    text: fixIndefiniteArticles(p.text),
     supported: true,
     sourceSentence: s,
     explanation:
@@ -1083,7 +1091,7 @@ export function generateExceptSet(
   }));
 
   const unsupportedOption: ExceptOption = {
-    text: distorted.result.text,
+    text: fixIndefiniteArticles(distorted.result.text),
     supported: false,
     sourceSentence: distorted.source,
     explanation: `Not supported. This statement was changed (${distorted.result.label ?? "the wording was altered"}). The passage actually says: "${distorted.source}"`,

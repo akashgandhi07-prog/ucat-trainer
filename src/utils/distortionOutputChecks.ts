@@ -30,8 +30,19 @@ const RULES: [string, RegExp][] = [
     "verb where a noun belongs",
     /\b(the|a|an|its|their|his|her|our|your|my)\s+((central|core|main|primary|key|basic|general|overall|underlying|initial|final|broad|common|strong|principal|particular|further|additional)\s+)?(argue|argues|maintain|maintains|contend|contends|assert|asserts|endorse|endorses|uphold|upholds|oppose|opposes|give|gives)\b/i,
   ],
-  // Two quantifiers in a row: "all most", "some all".
-  ["stacked quantifiers", /\b(all|most|some|every|always)\s+(all|most|always)\b/i],
+  // Two quantifiers in a row: "all most", "some all", "Some Everyone agrees".
+  ["stacked quantifiers", /\b(all|most|some|many|several|few|every|always)\s+(all|most|always|every|everyone|everybody)\b/i],
+  // A certainty rewrite that replaces a whole subject, left mid-sentence with its capital:
+  // "the Everyone agrees", "that It is universally proven". Case-sensitive on purpose.
+  [
+    "clause rewrite dropped mid-sentence",
+    /[a-z,;:]\s+(Everyone agrees|It is universally|Scientists have proven|Research has conclusively|Historians unanimously|All ethicists agree|All scholars agree)\b/,
+  ],
+  // "one of the most" -> "the only most": "only" cannot take a superlative.
+  [
+    "only before a superlative",
+    /\bthe only\s+(most|least|best|worst|greatest|largest|biggest|smallest|highest|lowest|strongest|weakest|oldest|earliest|latest|first|leading)\b/i,
+  ],
   // Negation left dangling by a removed word: "not all at all" style stranding.
   ["doubled negation particle", /\bnot\s+not\b|\bnever\s+never\b/i],
   // Leftover punctuation or spacing damage.

@@ -1231,7 +1231,9 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
     const q1 = spanFor(text, "However the use of embryonic stem cells is ethically controversial because obtaining them involves the destruction of a human embryo.");
     if (q1) { questions.push({ id: "inf_40_q1", passageId: "pass_40", questionText: "Identify the part of the text from which we can infer why embryonic stem cell research is contested.", correctSpans: [q1], explanation: "Obtaining them involves destruction of a human embryo.", difficulty: "medium", }); }
     const q2 = spanFor(text, "Recent advances in induced pluripotent stem cells offer a potential solution.");
-    if (q2) { questions.push({ id: "inf_40_q2", passageId: "pass_40", questionText: "Identify the part of the text from which we can infer that an alternative may avoid the ethical problem.", correctSpans: [q2], explanation: "iPSCs offer a potential solution-alternative to embryonic.", difficulty: "medium", }); }
+    // Student report (Sep 2026): this sentence says "without the ethical dilemmas" outright, so it is accepted too.
+    const q2Alt = spanFor(text, "This technology could allow for the benefits of pluripotency without the ethical dilemmas.");
+    if (q2) { questions.push({ id: "inf_40_q2", passageId: "pass_40", questionText: "Identify the part of the text from which we can infer that an alternative may avoid the ethical problem.", correctSpans: [q2], alternateSpans: q2Alt ? [q2Alt] : undefined, explanation: "Induced pluripotent stem cells offer a potential solution: they could give the benefits of pluripotency without the ethical dilemmas.", difficulty: "medium", }); }
     const q3 = spanFor(text, "These are adult cells that have been genetically reprogrammed to an embryonic stem cell like state.");
     if (q3) { questions.push({ id: "inf_40_q3", passageId: "pass_40", questionText: "Identify the part of the text from which we can infer how iPSCs are produced.", correctSpans: [q3], explanation: "Adult cells genetically reprogrammed to embryonic-like state.", difficulty: "medium", }); }
   }
@@ -1310,7 +1312,9 @@ function buildQuestionsForPassage(passageId: string, text: string): InferenceQue
   }
   if (passageId === "pass_50") {
     const q1 = spanFor(text, "However the use of AI raises significant ethical and liability issues such as the black box problem where the algorithm's reasoning is opaque.");
-    if (q1) { questions.push({ id: "inf_50_q1", passageId: "pass_50", questionText: "Identify the part of the text from which we can infer why doctors may distrust AI diagnosis.", correctSpans: [q1], explanation: "Black box problem-algorithm's reasoning is opaque.", difficulty: "medium", }); }
+    // Student report (Sep 2026): the next sentence states the distrust outright, so it is accepted too.
+    const q1Alt = spanFor(text, "If a doctor cannot understand why an AI made a diagnosis it is difficult to trust the result.");
+    if (q1) { questions.push({ id: "inf_50_q1", passageId: "pass_50", questionText: "Identify the part of the text from which we can infer why doctors may distrust AI diagnosis.", correctSpans: [q1], alternateSpans: q1Alt ? [q1Alt] : undefined, explanation: "Black box problem: the algorithm's reasoning is opaque, and a doctor who cannot understand why an AI made a diagnosis finds it difficult to trust the result.", difficulty: "medium", }); }
     const q2 = spanFor(text, "There is also the risk of algorithmic bias if the AI is trained on data that is not representative of the diverse patient population.");
     if (q2) { questions.push({ id: "inf_50_q2", passageId: "pass_50", questionText: "Identify the part of the text from which we can infer that AI can perpetuate inequality.", correctSpans: [q2], explanation: "Algorithmic bias if data is not representative.", difficulty: "medium", }); }
     const q3 = spanFor(text, "The goal is to support clinicians rather than replace their vital judgment.");

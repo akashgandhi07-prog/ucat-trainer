@@ -137,7 +137,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         rationale:
           "A modest token of genuine gratitude from a patient after care has concluded is broadly acceptable under GMP, provided it is declared and handled in line with local policy. Informing her supervisor demonstrates transparency and professional integrity. The gift is small, the clinical relationship is complete, and Lena is not in a position to make clinical decisions that could be influenced by it.",
         whyNotAdjacent:
-          "This is a sound, proportionate response. 'Very Appropriate' is slightly strong here; declining (app-003-b) is overcautious but not unreasonable for a student unsure of policy.",
+          "This is a sound, proportionate response. 'Very Appropriate' is slightly strong here; declining the gift is overcautious but not unreasonable for a student unsure of policy.",
         gmpRef: {
           label: "GMP · Trust and professionalism (gifts)",
           url: `${GMP_MAIN_URL}/trust-and-professionalism`,
@@ -732,11 +732,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
       {
         id: "app-008-d",
         text: "Tell Dr Novak she is uncomfortable with the request, but agree to avoid specific details in her account.",
-        correctRating: "inappropriate",
+        correctRating: "very_inappropriate",
         rationale:
-          "Voicing discomfort while still complying with the inappropriate request is not sufficient. Elena may feel she has acknowledged the problem, but the result is the same: an inaccurate account that undermines the investigation. GMP requires honesty, acknowledging that a request is uncomfortable does not excuse complying with it.",
+          "Voicing discomfort while still complying with the request is not sufficient. Elena may feel she has acknowledged the problem, but the result is the same as giving a deliberately vague account: an incomplete statement that undermines a formal investigation. GMP requires honesty, and acknowledging that a request is uncomfortable does not excuse complying with it.",
         whyNotAdjacent:
-          "This is 'Inappropriate' rather than 'Very Inappropriate' because the discomfort shows some awareness of the ethical problem, but the action ultimately fails the patient and the process.",
+          "This is 'Very Inappropriate' rather than 'Inappropriate' because she still agrees to withhold what she witnessed from a formal complaint investigation. Her discomfort does not change what the complaints team receives.",
       },
     ],
   },
@@ -1068,11 +1068,11 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
       {
         id: "app-014-d",
         text: "Refuse to make the call and explain to Dr Rees that he is not comfortable with the instruction.",
-        correctRating: "inappropriate",
+        correctRating: "appropriate",
         rationale:
-          "Refusing without attempting to resolve the situation is unhelpful. Dr Rees may not have looked closely enough at the result, and a simple conversation could resolve the issue. Blanket refusal is a less proportionate response than engaging with Dr Rees first.",
+          "Conor avoids giving Mrs Patel false reassurance, which GMP's duty of honesty requires, and he is open with Dr Rees about why he will not follow the instruction. However, saying he is uncomfortable does not name the concern about the calcium result or offer a way forward, so Mrs Patel may still not get accurate information or follow-up promptly.",
         whyNotAdjacent:
-          "This is 'Inappropriate'. Refusing without dialogue is not the ideal first step when conversation could resolve the concern.",
+          "It is not 'Very Appropriate' because it does not raise the specific clinical concern or suggest an alternative, such as making the call together. It is not 'Inappropriate' because he refuses to mislead the patient and explains himself to his supervisor rather than refusing silently.",
       },
     ],
   },
@@ -1287,7 +1287,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         rationale:
           "This is appropriate. If direct supervision is unavailable, Harriet should not perform the procedure herself. Asking for someone appropriately trained to perform it is a practical way to protect patient safety while recognising the pressures in the department.",
         whyNotAdjacent:
-          "This is not 'Very Appropriate' because disclosing limits and seeking supervision (app-018-a) is the stronger first response. It is better than refusing without explanation.",
+          "This is not 'Very Appropriate' because disclosing her limits and asking for supervision is the stronger first response. It is better than refusing without explanation.",
       },
       {
         id: "app-018-d",
@@ -1433,7 +1433,7 @@ export const SJT_QUESTIONS: SJTQuestion[] = [
         rationale:
           "This is appropriate. Ethan explores the patient's reasons and checks whether her decision is informed. It respects autonomy while ensuring she understands the possible consequences of delaying treatment.",
         whyNotAdjacent:
-          "This is not 'Very Appropriate' because respecting a capacitous patient's wish to delay, once risks are understood (app-021-c), is the stronger response when she has already understood the recommendation.",
+          "This is not 'Very Appropriate' because respecting her decision to delay, once she understands the risks, is the stronger response when she has already understood the recommendation.",
       },
       {
         id: "app-021-b",

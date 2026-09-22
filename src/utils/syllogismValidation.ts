@@ -20,6 +20,8 @@ export type SyllogismRow = {
   conclusion_text: string;
   is_correct: boolean;
   trick_type: string | null;
+  /** Groups the five conclusions of one macro stimulus. Optional so older callers still type-check. */
+  macro_block_id?: string | null;
 };
 
 export type SyllogismIssue = {
@@ -220,11 +222,35 @@ function validateSharedRules(row: SyllogismRow, issues: SyllogismIssue[]): void 
   }
 }
 
+/**
+ * MacroDrill shows the first row's stimulus for the whole block, so every row in a block
+ * must share one stimulus. When they drift ("...are night owls" vs "...are vegetarians"),
+ * the rows keyed against the other wording stop matching what the student reads.
+ */
+function validateMacroBlocks(rows: SyllogismRow[], issues: SyllogismIssue[]): void {
+  const byBlock = new Map<string, SyllogismRow[]>();
+  for (const row of rows) {
+    if (row.question_mode !== "macro" || !row.macro_block_id) continue;
+    const block = byBlock.get(row.macro_block_id) ?? [];
+    block.push(row);
+    byBlock.set(row.macro_block_id, block);
+  }
+  for (const [blockId, block] of byBlock) {
+    const stimuli = new Set(block.map((row) => row.stimulus_text.trim()));
+    if (stimuli.size > 1) {
+      for (const row of block) {
+        issues.push({ questionId: row.id, message: `macro block ${blockId} has ${stimuli.size} different stimuli; every row must share one` });
+      }
+    }
+  }
+}
+
 export function validateSyllogismQuestions(rows: SyllogismRow[]): SyllogismIssue[] {
   const issues: SyllogismIssue[] = [];
   for (const row of rows) {
     validateSharedRules(row, issues);
     if (row.question_mode === "macro") validateMacroRow(row, issues);
   }
+  validateMacroBlocks(rows, issues);
   return issues;
 }

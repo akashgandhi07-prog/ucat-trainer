@@ -8,7 +8,7 @@
  */
 
 import { PASSAGES } from "../src/data/passages";
-import { buildQuestions } from "../src/utils/distortionEngine";
+import { buildQuestions, generateExceptSet } from "../src/utils/distortionEngine";
 import { checkStatement, type OutputProblem } from "../src/utils/distortionOutputChecks";
 
 const RUNS_PER_PASSAGE = Number(process.argv[2]) || 40;
@@ -29,6 +29,13 @@ function main() {
           ? [question.displayedSentence]
           : question.options.map((option) => option.text)
       );
+      // The NOT/EXCEPT trainer builds four questions per passage from the same engine.
+      const used = new Set<string>();
+      for (let i = 0; i < 4; i++) {
+        const except = generateExceptSet(passage, { exclude: used });
+        if (!except) break;
+        statements.push(except.prompt, ...except.options.map((option) => option.text));
+      }
       statementCount += statements.length;
       for (const statement of statements) {
         for (const problem of checkStatement(statement)) {

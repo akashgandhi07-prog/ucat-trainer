@@ -27,7 +27,7 @@ async function main() {
   for (let from = 0; ; from += PAGE_SIZE) {
     const { data, error } = await supabase
       .from("syllogism_questions")
-      .select("id, question_mode, stimulus_text, conclusion_text, is_correct, trick_type")
+      .select("id, question_mode, stimulus_text, conclusion_text, is_correct, trick_type, macro_block_id")
       .order("id")
       .range(from, from + PAGE_SIZE - 1);
     if (error) {
