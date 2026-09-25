@@ -138,16 +138,4 @@
     <priority>0.85</priority>
     <lastmod>2026-05-16</lastmod>
   </url>
-  <url>
-    <loc>https://ucat.theukcatpeople.co.uk/study-plan</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <lastmod>2026-07-07</lastmod>
-  </url>
-  <url>
-    <loc>https://ucat.theukcatpeople.co.uk/mock-scores</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <lastmod>2026-07-07</lastmod>
-  </url>
 </urlset>

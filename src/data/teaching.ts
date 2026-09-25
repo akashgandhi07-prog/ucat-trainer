@@ -74,4 +74,36 @@ export const SKILL_TEACHING: Record<TrainingType, SkillTeaching> = {
       "Pick the one statement the passage does not support.",
     ],
   },
+  qr_setup: {
+    why: "Many UCAT Quantitative Reasoning marks are lost by solving the wrong problem accurately. This trainer practises the setup decisions before any calculation.",
+    howToUse: [
+      "Choose the information that matters and ignore the rest.",
+      "Pick the operation, the answer unit and the exact calculator entry.",
+      "Read the explanation for any decision you missed.",
+    ],
+  },
+  qr_data_extraction: {
+    why: "Table reading slips often look like maths errors. This trainer isolates finding the right cells, value and unit.",
+    howToUse: [
+      "Locate the cells the question needs.",
+      "Work out the value those cells give.",
+      "Confirm the unit from the headers before moving on.",
+    ],
+  },
+  qr_estimation: {
+    why: "Knowing when an estimate is enough saves time in UCAT Quantitative Reasoning without sacrificing accuracy.",
+    howToUse: [
+      "Choose the range the answer must fall in.",
+      "Pick the fastest shortcut that is still reliable.",
+      "Compare with the exact answer shown afterwards.",
+    ],
+  },
+  dm_constraints: {
+    why: "UCAT Decision Making arrangement puzzles reward managing several rules at once. Building the arrangement yourself trains that directly.",
+    howToUse: [
+      "Select an item, then choose a slot.",
+      "Watch the rule checker as you place items.",
+      "Check the arrangement once every slot is filled.",
+    ],
+  },
 };

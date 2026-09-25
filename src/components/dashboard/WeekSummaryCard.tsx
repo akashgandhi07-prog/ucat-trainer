@@ -3,7 +3,7 @@ import type { SessionRow } from "../../types/session";
 import type { SyllogismSession } from "../../types/syllogisms";
 import type { SJTSessionsRow } from "../../types/sjt";
 import type { DmTrainerSessionRow } from "../../types/dmTrainers";
-import { TRAINING_TYPE_LABELS } from "../../types/training";
+import { TRAINING_TYPE_LABELS, isSessionTrainingType } from "../../types/training";
 import type { TrainingType } from "../../types/training";
 
 interface WeekSummaryCardProps {
@@ -14,19 +14,7 @@ interface WeekSummaryCardProps {
 }
 
 function getTrainingType(s: SessionRow): TrainingType {
-  const t = s.training_type;
-  if (
-    t === "speed_reading" ||
-    t === "rapid_recall" ||
-    t === "keyword_scanning" ||
-    t === "calculator" ||
-    t === "inference_trainer" ||
-    t === "mental_maths" ||
-    t === "unit_conversions" ||
-    t === "not_except"
-  )
-    return t;
-  return "speed_reading";
+  return isSessionTrainingType(s.training_type) ? s.training_type : "speed_reading";
 }
 
 function startOfDayMs(date: Date): number {

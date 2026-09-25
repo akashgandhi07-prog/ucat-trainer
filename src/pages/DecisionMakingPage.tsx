@@ -1,5 +1,4 @@
-import { useNavigate } from "react-router-dom";
-import { Scale, Zap, LayoutList, Circle, BarChart3, GraduationCap } from "lucide-react";
+import { Scale, Zap, LayoutList, Circle, BarChart3, GraduationCap, Blocks } from "lucide-react";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import SkillsSectionLayout, {
@@ -16,7 +15,6 @@ import UcatGuidesPanel from "../components/layout/UcatGuidesPanel";
 import { DM_TRAINER_CONFIGS } from "../data/dmTrainers/trainerConfig";
 
 export default function DecisionMakingPage() {
-  const navigate = useNavigate();
   const base = getSiteBaseUrl();
   const canonicalUrl = base ? `${base}/ucat-decision-making-practice` : undefined;
   const ogImageUrl = base ? `${base}/og-trainer.png` : undefined;
@@ -42,6 +40,7 @@ export default function DecisionMakingPage() {
         imageUrl={ogImageUrl}
         imageAlt={ogImageAlt}
         breadcrumbs={breadcrumbs}
+        schemaType="CollectionPage"
       />
       <Header />
       <SkillsSectionLayout
@@ -56,48 +55,56 @@ export default function DecisionMakingPage() {
           title={HUB_SKILLS_TRAINERS_TITLE}
           description="Syllogism drills plus targeted practice for Venn logic, data reasoning and argument judgement. Each trainer isolates one repeatable UCAT pattern."
         >
-          <HubTrainerGrid trainerCount={6}>
+          <HubTrainerGrid trainerCount={7}>
+            <HubTrainerCard
+              title="Constraint Builder"
+              description="Construct valid orders and schedules while a live checker shows which rules are satisfied."
+              icon={Blocks}
+              accent="amber"
+              eyebrow="Learn logical puzzles"
+              to="/ucat-dm-constraint-builder"
+            />
             <HubTrainerCard
               title="Syllogisms · Foundations"
               description="Quick Yes/No drills on premise and conclusion pairs before timed practice."
               icon={GraduationCap}
               accent="amber"
-              onClick={() => navigate("/ucat-syllogism-foundations-trainer")}
+              to="/ucat-syllogism-foundations-trainer"
             />
             <HubTrainerCard
               title="Syllogisms · Micro"
               description="One premise, one conclusion. Build instant pattern recognition with keyboard shortcuts."
               icon={Zap}
               accent="amber"
-              onClick={() => navigate("/ucat-syllogism-practice-micro-drills")}
+              to="/ucat-syllogism-practice-micro-drills"
             />
             <HubTrainerCard
               title="Syllogisms · Macro"
               description="Full stimulus with five conclusions. UCAT-style layout with sticky passage and Yes/No for each."
               icon={LayoutList}
               accent="amber"
-              onClick={() => navigate("/ucat-syllogism-practice-macro-drills")}
+              to="/ucat-syllogism-practice-macro-drills"
             />
             <HubTrainerCard
               title={venn.title}
               description={venn.hubDescription}
               icon={Circle}
               accent="amber"
-              onClick={() => navigate(venn.canonicalPath)}
+              to={venn.canonicalPath}
             />
             <HubTrainerCard
               title={data.title}
               description={data.hubDescription}
               icon={BarChart3}
               accent="amber"
-              onClick={() => navigate(data.canonicalPath)}
+              to={data.canonicalPath}
             />
             <HubTrainerCard
               title={argument.title}
               description={argument.hubDescription}
               icon={Scale}
               accent="amber"
-              onClick={() => navigate(argument.canonicalPath)}
+              to={argument.canonicalPath}
             />
           </HubTrainerGrid>
         </SkillsSectionBlock>

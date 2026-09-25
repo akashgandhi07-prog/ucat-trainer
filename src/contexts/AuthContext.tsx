@@ -15,6 +15,9 @@ import {
 } from "../lib/dmTrainerSessionStorage";
 import { useToast } from "../contexts/ToastContext";
 import { syncSignupToMailchimp } from "../lib/mailchimpSync";
+import { migrateGuestSkillAttempts, syncSkillAttempts } from "../lib/skillTrainerProgress";
+import { isCheckViolation, queuePendingTrainerSessions, replayPendingTrainerSessions } from "../lib/trainerSessionLog";
+import { isSkillTrainerSessionType } from "../types/training";
 import type { AuthState } from "../types/session";
 import type { AuthChangeEvent, Session, User } from "@supabase/supabase-js";
 
@@ -296,6 +299,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
+        // Full page loads with an existing session never see SIGNED_IN, so replay the
+        // skill-trainer outbox and pull cloud history here too (once per user per load).
+        void syncSkillAttempts(u.id).catch((skillErr: unknown) => {
+          authLog.error("Skill trainer sync failed", skillErr);
+        });
+        void replayPendingTrainerSessions(u.id).catch((pendingErr: unknown) => {
+          authLog.warn("Pending trainer sessions replay failed", pendingErr);
+        });
+
         void (async () => {
           const bootstrapped = await bootstrapProfile(u.id);
           if (!mountedRef.current) return;
@@ -352,9 +364,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             time_seconds: g.time_seconds ?? null,
             client_session_id: g.client_session_id ?? null,
           }));
-          const { error } = await supabase
+          let { error } = await supabase
             .from("sessions")
             .upsert(rows, { onConflict: "user_id,client_session_id", ignoreDuplicates: true });
+          if (error && isCheckViolation(error)) {
+            // A training_type the database does not allow yet (new trainer shipped before
+            // its migration) would fail the whole batch. Upload the rest, and keep the
+            // rejected runs on this device for this user until the constraint allows them.
+            const held = rows.filter((r) => isSkillTrainerSessionType(r.training_type));
+            const rest = rows.filter((r) => !isSkillTrainerSessionType(r.training_type));
+            ({ error } = rest.length
+              ? await supabase
+                .from("sessions")
+                .upsert(rest, { onConflict: "user_id,client_session_id", ignoreDuplicates: true })
+              : { error: null });
+            if (!error) {
+              queuePendingTrainerSessions(
+                session.user.id,
+                held.flatMap((r) => (
+                  r.client_session_id
+                    ? [{
+                      training_type: r.training_type,
+                      difficulty: r.difficulty,
+                      wpm: r.wpm,
+                      kps: r.kps,
+                      avg_ms: r.avg_ms,
+                      correct: r.correct,
+                      total: r.total,
+                      passage_id: r.passage_id,
+                      wpm_rating: r.wpm_rating,
+                      time_seconds: r.time_seconds,
+                      client_session_id: r.client_session_id,
+                    }]
+                    : []
+                )),
+              );
+            }
+          }
           if (!error) {
             clearGuestSessions();
             showToast("History successfully synced!", { variant: "success" });
@@ -387,6 +433,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (dmErr) {
           authLog.error("Guest DM trainer merge failed", dmErr);
         }
+
+        // Not awaited: batched upload + hydration must not delay the planner merge below.
+        // Guest attempts are moved into the user's outbox first, so nothing is lost on failure;
+        // a missing table is handled silently inside the module.
+        void replayPendingTrainerSessions(session.user.id).catch((pendingErr: unknown) => {
+          authLog.warn("Pending trainer sessions replay failed", pendingErr);
+        });
+
+        void migrateGuestSkillAttempts(session.user.id).catch((skillErr: unknown) => {
+          authLog.error("Guest skill trainer merge failed", skillErr);
+          if (!wasAlreadySignedIn && authListenerActive) {
+            showToast("Couldn't sync newer skill-trainer history. It remains on this device.", { variant: "error" });
+          }
+        });
 
         try {
           const { migrateGuestPlannerToCloud } = await import(

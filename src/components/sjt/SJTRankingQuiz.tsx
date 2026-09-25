@@ -1,17 +1,23 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CheckCircle2, XCircle, ExternalLink, ChevronRight } from "lucide-react";
 import type { SJTRankingQuestion, RankingAnswer } from "../../types/sjt";
 import { cn } from "../../lib/cn";
 import type { SJTQuizProgress } from "../../types/sjt";
 import QuestionFeedbackModal from "../feedback/QuestionFeedbackModal";
 import QuestionMediaBlock from "../media/QuestionMediaBlock";
+import { clearSJTAnswerDraft, loadRankingDraft, saveSJTAnswerDraft } from "../../lib/sjtDraftRecovery";
+import { trackEvent } from "../../lib/analytics";
 
 type Phase = "answering" | "results";
 
 type Props = {
   question: SJTRankingQuestion;
   onComplete: (score: number, total: number) => void;
+  /** Called once when the ranking is submitted and marked, so the attempt is recorded even if the student leaves before the summary. */
+  onSubmitted?: (score: number, total: number) => void;
   onProgress?: (progress: SJTQuizProgress) => void;
+  /** Draft recovery scope; null (default) disables drafts. */
+  draftScope?: string | null;
 };
 
 function getRankLabel(rank: 1 | 2 | 3): string {
@@ -20,9 +26,10 @@ function getRankLabel(rank: 1 | 2 | 3): string {
   return "Middle option";
 }
 
-export default function SJTRankingQuiz({ question, onComplete, onProgress }: Props) {
+export default function SJTRankingQuiz({ question, onComplete, onSubmitted, onProgress, draftScope = null }: Props) {
+  const [draft] = useState(() => loadRankingDraft(draftScope, question.type, question.id));
   const [phase, setPhase] = useState<Phase>("answering");
-  const [answer, setAnswer] = useState<RankingAnswer>({ most: null, least: null });
+  const [answer, setAnswer] = useState<RankingAnswer>(draft?.answer ?? { most: null, least: null });
   const [reportingItemId, setReportingItemId] = useState<string | null>(null);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
 
@@ -36,15 +43,18 @@ export default function SJTRankingQuiz({ question, onComplete, onProgress }: Pro
 
   function handleSubmit() {
     onProgress?.({
-      itemsAttempted: 1,
-      itemsTotal: 1,
+      itemsAttempted: 2,
+      itemsTotal: 2,
       partialScore: score,
     });
+    clearSJTAnswerDraft(draftScope, question.type, question.id);
     setPhase("results");
-    onComplete(score, 2);
+    onSubmitted?.(score, 2);
+    void trackEvent("sjt_explanation_opened", { question_id: question.id, question_type: question.type });
   }
 
   function selectMost(id: string) {
+    if (answer.most && answer.most !== id) void trackEvent("sjt_answer_changed", { question_id: question.id, question_type: question.type });
     setAnswer((prev) => ({
       most: prev.most === id ? null : id,
       least: prev.least === id ? null : prev.least,
@@ -52,14 +62,21 @@ export default function SJTRankingQuiz({ question, onComplete, onProgress }: Pro
   }
 
   function selectLeast(id: string) {
+    if (answer.least && answer.least !== id) void trackEvent("sjt_answer_changed", { question_id: question.id, question_type: question.type });
     setAnswer((prev) => ({
       least: prev.least === id ? null : id,
       most: prev.most === id ? null : prev.most,
     }));
   }
 
+  // Only the unsubmitted answer is saved; once marked, the draft is cleared in handleSubmit.
+  useEffect(() => {
+    if (phase === "answering") saveSJTAnswerDraft(draftScope, question.type, question.id, { phase: "answering", answer });
+  }, [draftScope, question.type, question.id, phase, answer]);
+
   return (
     <div className="lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start space-y-4 lg:space-y-0">
+      <p className="sr-only" aria-live="polite">{phase === "results" ? `Feedback shown. Score ${score} out of 2.` : "Select the most and least appropriate responses."}</p>
 
       {/* Left col: Scenario - stays fixed on desktop */}
       <div className="lg:sticky lg:top-4">
@@ -167,7 +184,7 @@ export default function SJTRankingQuiz({ question, onComplete, onProgress }: Pro
                         <button
                           type="button"
                           onClick={() => { setReportingItemId(item.id); setFeedbackOpen(true); }}
-                          className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/80"
+                          className="inline-flex min-h-[44px] items-center gap-1 rounded-full border border-border bg-secondary px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                         >
                           <span aria-hidden>🚩</span>
                           Report this question
@@ -179,6 +196,7 @@ export default function SJTRankingQuiz({ question, onComplete, onProgress }: Pro
               })}
             </div>
 
+            <button type="button" onClick={() => onComplete(score, 2)} className="w-full min-h-[44px] rounded-xl bg-primary text-primary-foreground font-semibold">Continue to summary</button>
             {/* Pivot insight on mobile (below items) */}
             {question.pivotInsight && (
               <div className="lg:hidden border-t border-border pt-4">
@@ -233,7 +251,7 @@ export default function SJTRankingQuiz({ question, onComplete, onProgress }: Pro
                           onClick={() => selectMost(item.id)}
                           disabled={disabledMost}
                           className={cn(
-                            "flex-1 min-h-[36px] rounded-lg text-xs font-semibold border transition-all focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary",
+                            "flex-1 min-h-[44px] rounded-lg text-xs font-semibold border transition-all focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary",
                             isSelectedMost
                               ? "bg-primary border-primary text-primary-foreground"
                               : "bg-card border-border text-foreground hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed"
@@ -246,7 +264,7 @@ export default function SJTRankingQuiz({ question, onComplete, onProgress }: Pro
                           onClick={() => selectLeast(item.id)}
                           disabled={disabledLeast}
                           className={cn(
-                            "flex-1 min-h-[36px] rounded-lg text-xs font-semibold border transition-all focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary",
+                            "flex-1 min-h-[44px] rounded-lg text-xs font-semibold border transition-all focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary",
                             isSelectedLeast
                               ? "bg-secondary border-primary text-foreground font-bold"
                               : "bg-card border-border text-foreground hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed"

@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAppShell } from "../contexts/AppShellContext";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
@@ -22,7 +21,6 @@ const HomeBelowFold = lazyWithRetry(
 );
 
 export default function HomePage() {
-  const navigate = useNavigate();
   const inAppShell = useAppShell();
   const base = getSiteBaseUrl();
   const canonicalUrl = base ? `${base}/` : undefined;
@@ -42,16 +40,12 @@ export default function HomePage() {
         imageUrl={ogImageUrl}
         imageAlt={ogImageAlt}
         breadcrumbs={breadcrumbs}
+        schemaType="CollectionPage"
       />
       {!inAppShell ? <Header /> : null}
       <main className="flex-1 flex flex-col">
         <LandingHero />
-        <LandingSectionHub
-          onVerbal={() => navigate("/ucat-verbal-reasoning-practice")}
-          onDecision={() => navigate("/ucat-decision-making-practice")}
-          onQuant={() => navigate("/ucat-quantitative-reasoning-practice")}
-          onSjt={() => navigate("/ucat-sjt-practice")}
-        />
+        <LandingSectionHub />
         <Suspense fallback={<div className="min-h-[60vh]" aria-hidden />}>
           <HomeBelowFold />
         </Suspense>

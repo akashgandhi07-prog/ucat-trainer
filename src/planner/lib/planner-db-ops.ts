@@ -47,6 +47,44 @@ async function computeAdherenceRatio(planId: string, studentId: string): Promise
   return Math.max(0, Math.min(1.5, doneMin / plannedMin))
 }
 
+/** Convert repeated weak component results in the skill trainers into the same focused
+ * tags used by the plan engine. We require at least three observations and <70%
+ * accuracy so one early mistake cannot rewrite a student's plan. */
+async function getTrainerWeaknessTags(studentId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('skill_trainer_attempts')
+    .select('trainer_type, components')
+    .eq('user_id', studentId)
+    .order('created_at', { ascending: false })
+    // Enough recent rows to represent several complete sessions in all four trainers.
+    .limit(240)
+  if (error || !data?.length) return []
+
+  const totals = new Map<string, { correct: number; total: number }>()
+  for (const row of data) {
+    const components = row.components as Record<string, boolean> | null
+    for (const [component, correct] of Object.entries(components ?? {})) {
+      const key = `${row.trainer_type}:${component}`
+      const current = totals.get(key) ?? { correct: 0, total: 0 }
+      current.total++
+      if (correct) current.correct++
+      totals.set(key, current)
+    }
+  }
+
+  const weak = (trainer: string, components: string[]) => components.some((component) => {
+    const result = totals.get(`${trainer}:${component}`)
+    return result != null && result.total >= 3 && result.correct / result.total < 0.7
+  })
+
+  const tags: string[] = []
+  if (weak('qr_setup', ['information', 'operation', 'calculator_entry'])) tags.push('qr_setup')
+  if (weak('qr_setup', ['unit']) || weak('qr_extraction', ['value', 'unit'])) tags.push('qr_accuracy')
+  if (weak('qr_estimation', ['range', 'strategy'])) tags.push('qr_speed')
+  if (weak('dm_constraints', ['constraints'])) tags.push('dm_logic')
+  return tags
+}
+
 export async function updateDayAvailability(
   planId: string,
   dayDate: string,
@@ -141,7 +179,10 @@ export async function regenerateFutureWeeks(planId: string, fromWeekNumber: numb
   const { data: weeks } = weeksRes
 
   // Adherence needs the student id, so it runs after the plan row resolves.
-  const adherenceRatio = await computeAdherenceRatio(planId, plan.student_id)
+  const [adherenceRatio, trainerWeaknessTags] = await Promise.all([
+    computeAdherenceRatio(planId, plan.student_id),
+    getTrainerWeaknessTags(plan.student_id),
+  ])
 
   const ratings = (reflections ?? [])
     .filter((r) => r.week_number < fromWeekNumber)
@@ -190,7 +231,10 @@ export async function regenerateFutureWeeks(planId: string, fromWeekNumber: numb
         }
       : null,
     latestSjtBand: (latestMock as { score_sjt?: number | null })?.score_sjt ?? null,
-    weaknessTags: (latestMock as { weakness_tags?: string[] })?.weakness_tags ?? [],
+    weaknessTags: [...new Set([
+      ...((latestMock as { weakness_tags?: string[] })?.weakness_tags ?? []),
+      ...trainerWeaknessTags,
+    ])],
     mockCount: mockCountRes.count ?? 0,
     mockTargetTotal: plan.mock_target_total ?? null,
     mockTargetSjtBand: plan.mock_target_sjt_band ?? null,

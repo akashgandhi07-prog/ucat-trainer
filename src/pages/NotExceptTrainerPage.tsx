@@ -23,6 +23,8 @@ import SEOHead from "../components/seo/SEOHead";
 import BreadcrumbNav from "../components/layout/BreadcrumbNav";
 import { trackEvent, setActiveTrainer, clearActiveTrainer } from "../lib/analytics";
 import { PostDrillUpsell } from "../components/layout/ProductUpsell";
+import TrainerFaqSection from "../components/seo/TrainerFaqSection";
+import { trainerFaqs } from "../data/trainerFaqs";
 
 const QUESTIONS_PER_PASSAGE = 4;
 
@@ -212,6 +214,16 @@ export default function NotExceptTrainerPage() {
   const skipLinkClass =
     "absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-foreground font-medium rounded-lg ring-2 ring-primary opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
 
+  const faqSection = (
+    <TrainerFaqSection
+      id="not-except-faq"
+      title="UCAT NOT/EXCEPT trainer FAQs"
+      intro="How the drill works, the method it trains and how your progress is saved."
+      faqs={trainerFaqs.notExcept}
+      collapseIntoSingleAccordion
+    />
+  );
+
   const seoHead = (
     <SEOHead
       title="UCAT NOT/EXCEPT Trainer"
@@ -288,6 +300,7 @@ export default function NotExceptTrainerPage() {
             </div>
           </div>
         </main>
+        {faqSection}
         <Footer />
       </div>
     );
@@ -461,6 +474,7 @@ export default function NotExceptTrainerPage() {
           )}
         </div>
       </main>
+      {faqSection}
       <Footer />
     </div>
   );

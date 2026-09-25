@@ -97,6 +97,29 @@ function scheduleRegenerateFromNextWeek(
   )
 }
 
+/** Reassess future weeks after a meaningful batch of skill-trainer evidence. */
+export async function refreshPlanFromSkillTrainerEvidence(studentId: string): Promise<void> {
+  const { data: plan, error: planError } = await supabase
+    .from('plans')
+    .select('id')
+    .eq('student_id', studentId)
+    .eq('status', 'active')
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+  if (planError) throw new Error(planError.message)
+  if (!plan) return
+
+  const { data: weeks, error: weeksError } = await supabase
+    .from('plan_weeks')
+    .select('week_number, week_start')
+    .eq('plan_id', plan.id)
+    .order('week_number')
+  if (weeksError) throw new Error(weeksError.message)
+  scheduleRegenerateFromNextWeek(plan.id, weeks)
+}
+
 export async function completeSession(input: {
   sessionId: string
   completed: boolean

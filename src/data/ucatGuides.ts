@@ -358,12 +358,18 @@ export function getCatalogSectionIdForTrainingType(type: TrainingType): string {
     case "calculator":
     case "mental_maths":
     case "unit_conversions":
+    case "qr_setup":
+    case "qr_data_extraction":
+    case "qr_estimation":
       return "quant";
     case "speed_reading":
     case "rapid_recall":
     case "keyword_scanning":
     case "inference_trainer":
+    case "not_except":
       return "verbal";
+    case "dm_constraints":
+      return "decision";
     default:
       return "essentials";
   }
@@ -377,6 +383,10 @@ const GUIDES_BY_TRAINING_TYPE: Partial<Record<TrainingType, UcatGuide[]>> = {
   calculator: [UCAT_GUIDES.qrCalculator],
   mental_maths: [UCAT_GUIDES.qrPercentages, UCAT_GUIDES.qrRatios],
   unit_conversions: [UCAT_GUIDES.qrRatios, UCAT_GUIDES.qrTaxFinancial, UCAT_GUIDES.qrComplete],
+  qr_setup: [UCAT_GUIDES.qrComplete, UCAT_GUIDES.qrCalculator],
+  qr_data_extraction: [UCAT_GUIDES.qrComplete, UCAT_GUIDES.qrPercentages],
+  qr_estimation: [UCAT_GUIDES.qrPercentages, UCAT_GUIDES.qrRatios],
+  dm_constraints: [UCAT_GUIDES.dmLogicalPuzzles, UCAT_GUIDES.dmLogicalPuzzlesTasks],
 };
 
 const CONTEXT_GUIDES: Record<UcatGuideContext, UcatGuide[]> = {

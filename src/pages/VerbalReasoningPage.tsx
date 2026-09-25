@@ -1,3 +1,4 @@
+import { getGuestSessions } from "../lib/guestSessions";
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import Header from "../components/layout/Header";
@@ -24,7 +25,7 @@ import { PASSAGE_IDS_WITH_INFERENCE } from "../data/inferenceQuestions";
 import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../lib/supabase";
 import { supabaseLog } from "../lib/logger";
-import { getWpmComparisonCopy, getWpmTier, getWpmTierLabel } from "../lib/wpmBenchmark";
+import { getWpmComparisonCopy } from "../lib/wpmBenchmark";
 import { Zap, Brain, Search, Eye, ChevronRight, Target, BookOpen, ListX } from "lucide-react";
 import {
   GUIDED_CHUNK_DEFAULT,
@@ -65,94 +66,22 @@ const STRATEGIC_OBJECTIVES: Record<TrainingType, string> = {
   mental_maths: "Build automaticity with times tables and percentages; then practise estimation under time pressure.",
   unit_conversions: "Set the target unit first, then convert before calculating so unit traps do not steal easy QR marks.",
   not_except: "Treat each option as its own True, False or Can't Tell check. The answer is the one that does not hold.",
+  qr_setup: "Decide the information, operation, answer unit and calculator entry before calculating anything.",
+  qr_data_extraction: "Find the right cells and confirm the unit before doing any arithmetic.",
+  qr_estimation: "Estimate the range first, then choose the fastest shortcut that is still reliable.",
+  dm_constraints: "Place the most restricted items first and check every rule as you build.",
 };
 
 function getWpmStatusLabel(wpm: number): string {
   if (wpm <= 300) return "Reading for Detail";
-  if (wpm <= 450) return "UCAT Competitive Range";
-  return "Extreme Scanning";
+  if (wpm <= 450) return "Selected reading pace";
+  return "Selected fast pace";
 }
 
 function getWpmStatusColor(wpm: number): string {
   if (wpm <= 300) return "text-muted-foreground";
   if (wpm <= 450) return "text-training-success";
   return "text-primary";
-}
-
-/** Estimated score impact copy: difficulty-aware (speed_reading only has scale points). */
-function getEstimatedScoreImpactCopy(
-  mode: TrainingType,
-  difficulty: TrainingDifficulty,
-  wpm: number,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- kept for API consistency
-  _lastSession: { correct: number; total: number; wpm: number | null } | null,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- kept for API consistency
-  _sessionCount: number
-): string {
-  if (mode !== "speed_reading") {
-    return "Complete sessions to estimate";
-  }
-  const wpmTier = wpm > 400 ? "high" : wpm >= 301 ? "mid" : "low";
-  if (difficulty === "easy") {
-    if (wpmTier === "high") return "+10 Scale points (Easier · building speed)";
-    if (wpmTier === "mid") return "+8 Scale points (Easier · practice)";
-    return "+5 Scale points (Easier · building)";
-  }
-  if (difficulty === "hard") {
-    if (wpmTier === "high") return "+20 Scale points (Challenging)";
-    if (wpmTier === "mid") return "+15 Scale points (Challenging)";
-    return "+8 Scale points (Challenging · building)";
-  }
-  if (wpmTier === "high") return "+20 Scale points (Standard)";
-  if (wpmTier === "mid") return "+15 Scale points (Standard)";
-  return "+5 Scale points (Standard · building)";
-}
-
-/** Calibration label: difficulty-aware; references history when we have it. */
-function getCalibrationLabel(
-  mode: TrainingType,
-  difficulty: TrainingDifficulty,
-  wpm: number,
-  sessionCount: number
-): string {
-  if (mode !== "speed_reading") {
-    if (sessionCount > 0) return `${sessionCount} session${sessionCount !== 1 ? "s" : ""} at this difficulty`;
-    return "-";
-  }
-  if (wpm >= 301 && wpm <= 450) {
-    const suffix = sessionCount > 0 ? ` · ${sessionCount} run${sessionCount !== 1 ? "s" : ""} at ${TRAINING_DIFFICULTY_LABELS[difficulty]}` : "";
-    return `Exam Ready${suffix}`;
-  }
-  if (wpm > 450) {
-    const suffix = sessionCount > 0 ? ` · ${sessionCount} at ${TRAINING_DIFFICULTY_LABELS[difficulty]}` : "";
-    return `Peak Speed${suffix}`;
-  }
-  const pct = Math.min(99, Math.round(((wpm - 200) / 101) * 100));
-  return `${pct}%`;
-}
-
-const WPM_GOAL = 400;
-
-/** Progress narrative for Live Session Stats: "X% of the way to 400 WPM" or milestone for other modes. */
-function getProgressNarrativeCopy(
-  mode: TrainingType,
-  wpm: number,
-  sessionCountAtDifficulty: number
-): string | null {
-  if (mode === "speed_reading") {
-    const tier = getWpmTier(wpm);
-    const tierLabel = getWpmTierLabel(tier);
-    if (wpm >= WPM_GOAL) {
-      return `${tierLabel}. You're at ${WPM_GOAL}+ WPM.`;
-    }
-    const pct = Math.min(99, Math.max(0, Math.round(((wpm - 200) / (WPM_GOAL - 200)) * 100)));
-    return `${tierLabel}. ${pct}% of the way to ${WPM_GOAL} WPM.`;
-  }
-  if (sessionCountAtDifficulty < 3) {
-    const remaining = 3 - sessionCountAtDifficulty;
-    return `${remaining} more session${remaining !== 1 ? "s" : ""} at this difficulty to build confidence.`;
-  }
-  return null;
 }
 
 const SKILLS: {
@@ -256,7 +185,7 @@ export default function VerbalReasoningPage() {
   const [averageWpm, setAverageWpm] = useState<number | null>(null);
   const [guidedChunkingEnabled, setGuidedChunkingEnabled] = useState(false);
   const [guidedChunkSize, setGuidedChunkSize] = useState(GUIDED_CHUNK_DEFAULT);
-  /** Session history for current mode + difficulty (for Live Session Stats). */
+  /** Session history for current mode + difficulty (for Your measured progress). */
   const [lastSessionAtDifficulty, setLastSessionAtDifficulty] = useState<{
     wpm: number | null;
     correct: number;
@@ -400,70 +329,27 @@ export default function VerbalReasoningPage() {
   }, [user]);
 
   useEffect(() => {
-    if (!user) {
-      /* eslint-disable-next-line react-hooks/set-state-in-effect -- clear when logged out */
+    const controller = new AbortController();
+    const fetchStats = async () => {
       setLastSessionAtDifficulty(null);
       setSessionCountAtDifficulty(0);
       setAvgAccuracyAtDifficulty(null);
-      return;
-    }
-    const fetchSessionStatsAtDifficulty = async () => {
-      const { data: lastRow, error: lastError } = await supabase
-        .from("sessions")
+      const response = user ? await supabase.from("sessions")
         .select("wpm, correct, total, time_seconds")
-        .eq("user_id", user.id)
-        .eq("training_type", mode)
-        .eq("difficulty", difficulty)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (lastError) {
-        supabaseLog.warn("Last session at difficulty fetch failed", {
-          message: lastError.message,
-          code: lastError.code,
-        });
-        setLastSessionAtDifficulty(null);
-      } else if (lastRow) {
-        setLastSessionAtDifficulty({
-          wpm: lastRow.wpm ?? null,
-          correct: lastRow.correct ?? 0,
-          total: lastRow.total ?? 0,
-          time_seconds: lastRow.time_seconds ?? null,
-        });
-      } else {
-        setLastSessionAtDifficulty(null);
-      }
-
-      const { data: rows, error: listError } = await supabase
-        .from("sessions")
-        .select("correct, total")
-        .eq("user_id", user.id)
-        .eq("training_type", mode)
-        .eq("difficulty", difficulty);
-      if (listError) {
-        setSessionCountAtDifficulty(0);
-        setAvgAccuracyAtDifficulty(null);
-        return;
-      }
-      if (rows?.length) {
-        setSessionCountAtDifficulty(rows.length);
-        const totalCorrect = rows.reduce((s, r) => s + (r.correct ?? 0), 0);
-        const totalQuestions = rows.reduce((s, r) => s + (r.total ?? 0), 0);
-        setAvgAccuracyAtDifficulty(
-          totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : null
-        );
-      } else {
-        setSessionCountAtDifficulty(0);
-        setAvgAccuracyAtDifficulty(null);
-      }
+        .eq("user_id", user.id).eq("training_type", mode).eq("difficulty", difficulty)
+        .order("created_at", { ascending: false }).limit(200).abortSignal(controller.signal)
+        : { data: getGuestSessions().filter(r => r.training_type === mode && r.difficulty === difficulty).reverse(), error: null };
+      if (controller.signal.aborted || response.error) return;
+      const rows = (response.data ?? []).filter(r => r.total > 0 && r.correct >= 0 && r.correct <= r.total);
+      const latest = rows[0];
+      setLastSessionAtDifficulty(latest ? { wpm: latest.wpm ?? null, correct: latest.correct, total: latest.total, time_seconds: latest.time_seconds ?? null } : null);
+      setSessionCountAtDifficulty(rows.length);
+      const total = rows.reduce((sum, r) => sum + r.total, 0);
+      setAvgAccuracyAtDifficulty(total ? Math.round(rows.reduce((sum, r) => sum + r.correct, 0) / total * 100) : null);
     };
-    fetchSessionStatsAtDifficulty();
+    void fetchStats();
+    return () => controller.abort();
   }, [user, mode, difficulty]);
-
-  const progressNarrative = useMemo(
-    () => getProgressNarrativeCopy(mode, wpm, sessionCountAtDifficulty),
-    [mode, wpm, sessionCountAtDifficulty]
-  );
 
   const setMode = (m: TrainingType) => {
     setSearchParams({ mode: m });
@@ -579,6 +465,10 @@ export default function VerbalReasoningPage() {
     calculator: undefined,
     mental_maths: undefined,
     unit_conversions: undefined,
+    qr_setup: undefined,
+    qr_data_extraction: undefined,
+    qr_estimation: undefined,
+    dm_constraints: undefined,
   };
   const handleStart = startHandlers[mode] ?? handleStartSpeedReading;
 
@@ -626,6 +516,7 @@ export default function VerbalReasoningPage() {
         title="UCAT Verbal Reasoning skills (UK)"
         description="Free Verbal Reasoning skills practice for the UCAT in the UK: speed reading, rapid recall, keyword scanning and inference. Built by TheUKCATPeople."
         canonicalUrl={canonicalUrl}
+        schemaType="CollectionPage"
         imageUrl={ogImageUrl}
         imageAlt={ogImageAlt}
         breadcrumbs={breadcrumbs}
@@ -959,53 +850,22 @@ export default function VerbalReasoningPage() {
                   </div>
                 </div>
 
-                {/* Live Session Stats */}
+                {/* Your measured progress */}
                 <div className="lg:col-span-2">
                   <div className="rounded-xl border border-border bg-training-surface p-5 space-y-5 lg:sticky lg:top-4">
                     <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-[0.14em]">
-                      Live Session Stats
+                      Your measured progress
                     </h3>
                     <p className="text-[11px] text-muted-foreground">
                       {TRAINING_DIFFICULTY_LABELS[difficulty]} difficulty
                     </p>
                     <div>
-                      <p className="text-xs font-medium text-muted-foreground mb-1">
-                        Estimated Score Impact
-                      </p>
+                      <p className="text-xs font-medium text-muted-foreground mb-1">Recorded accuracy</p>
                       <p className="text-lg font-bold text-foreground">
-                        {getEstimatedScoreImpactCopy(
-                          mode,
-                          difficulty,
-                          wpm,
-                          lastSessionAtDifficulty,
-                          sessionCountAtDifficulty
-                        )}
+                        {avgAccuracyAtDifficulty == null ? "Complete a drill to build your record" : `${avgAccuracyAtDifficulty}% correct`}
                       </p>
+                      <p className="text-xs text-muted-foreground mt-2">Based on up to 200 recent saved runs for this drill and difficulty. Practice results do not predict a UCAT score. The speed selector changes your next drill, not your recorded progress.</p>
                     </div>
-                    <div>
-                      <div className="flex justify-between text-xs font-medium mb-2">
-                        <span className="text-muted-foreground">Calibration</span>
-                        <span className="text-foreground">
-                          {getCalibrationLabel(mode, difficulty, wpm, sessionCountAtDifficulty)}
-                        </span>
-                      </div>
-                      <div className="h-2 rounded-full bg-border overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-gradient-to-r from-training-success to-primary transition-all duration-500 ease-out"
-                          style={{
-                            width:
-                              mode === "speed_reading"
-                                ? `${Math.min(100, Math.max(0, wpm >= 301 ? 100 : ((wpm - 200) / 101) * 100))}%`
-                                : sessionCountAtDifficulty > 0 && avgAccuracyAtDifficulty != null
-                                  ? `${avgAccuracyAtDifficulty}%`
-                                  : "0%",
-                          }}
-                        />
-                      </div>
-                    </div>
-                    {progressNarrative != null && (
-                      <p className="text-sm text-foreground leading-snug">{progressNarrative}</p>
-                    )}
                     {(lastSessionAtDifficulty != null || sessionCountAtDifficulty > 0) && (
                       <div className="rounded-lg border border-border bg-card px-3 py-2.5">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground mb-1.5">
@@ -1025,7 +885,7 @@ export default function VerbalReasoningPage() {
                         )}
                         {sessionCountAtDifficulty > 0 && avgAccuracyAtDifficulty != null && (
                           <p className="text-xs text-muted-foreground mt-0.5">
-                            {sessionCountAtDifficulty} session{sessionCountAtDifficulty !== 1 ? "s" : ""} · {avgAccuracyAtDifficulty}% avg accuracy
+                            {sessionCountAtDifficulty} session{sessionCountAtDifficulty !== 1 ? "s" : ""} · {avgAccuracyAtDifficulty}% of answers correct
                           </p>
                         )}
                       </div>
@@ -1036,7 +896,7 @@ export default function VerbalReasoningPage() {
                           Tip
                         </p>
                         <p className="text-sm text-foreground leading-relaxed">
-                          Try reading at {wpm + 50} WPM for one session, then drop back. Your &quot;comfortable&quot; speed often rises.
+                          Keep accuracy steady before increasing speed. Compare runs at the same difficulty and check the WPM recorded for each run.
                         </p>
                       </div>
                     )}

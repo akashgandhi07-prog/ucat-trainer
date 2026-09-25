@@ -45,6 +45,26 @@ export const TIPS: Record<TrainingType, string[]> = {
     "Tick off each option you can verify in the passage; the one left over is your answer.",
     "Can't Tell counts as not supported, so an option the passage never mentions can be the answer.",
   ],
+  qr_setup: [
+    "Decide the answer unit before choosing the operation.",
+    "Cross out numbers the question does not need; QR stems often include extra data.",
+    "Write the full calculator entry before pressing a key, so you only type it once.",
+  ],
+  qr_data_extraction: [
+    "Read the column header and any footnote before taking a value from a table.",
+    "Check whether figures are in thousands, millions or percentages.",
+    "Find the row first, then move across; do not scan the whole table for a number.",
+  ],
+  qr_estimation: [
+    "Round to one or two significant figures and check how far apart the options are.",
+    "If only one option falls in your estimated range, choose it and move on.",
+    "Calculate exactly only when the options are too close for an estimate to separate them.",
+  ],
+  dm_constraints: [
+    "Place the most restricted item first, such as anything fixed to a position.",
+    "Link paired rules, like A next to B, before placing single items.",
+    "After each placement, check which rules are still possible to satisfy.",
+  ],
 };
 
 function pickTip(tips: string[], seed?: number): string {

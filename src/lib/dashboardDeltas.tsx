@@ -9,10 +9,9 @@ export function computeRollingDelta(
   windowSize = 5,
 ): { delta: number | null; direction: DeltaDirection } {
   const valid = rows.filter((s) => valueGetter(s) != null);
-  if (valid.length < windowSize + 1) return { delta: null, direction: null };
+  if (valid.length < windowSize * 2) return { delta: null, direction: null };
   const recent = valid.slice(-windowSize);
   const before = valid.slice(-windowSize * 2, -windowSize);
-  if (before.length === 0) return { delta: null, direction: null };
   const avg = (arr: SessionRow[]) => {
     const vals = arr.map(valueGetter).filter((v): v is number => v != null);
     return vals.reduce((a, b) => a + b, 0) / vals.length;

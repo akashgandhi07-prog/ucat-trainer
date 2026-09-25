@@ -26,6 +26,7 @@ export default function StudyGuidesPage() {
         imageUrl={ogImageUrl}
         imageAlt="UCAT study guides library"
         breadcrumbs={breadcrumbs}
+        schemaType="CollectionPage"
       />
       <Header />
       <SkillsSectionLayout

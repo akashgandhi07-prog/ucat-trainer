@@ -1,5 +1,4 @@
-import { useNavigate } from "react-router-dom";
-import { Calculator, Brain, Ruler } from "lucide-react";
+import { Calculator, Brain, Ruler, ListChecks, Table2, Gauge } from "lucide-react";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import SkillsSectionLayout, {
@@ -15,7 +14,6 @@ import { getSiteBaseUrl } from "../lib/siteUrl";
 import UcatGuidesPanel from "../components/layout/UcatGuidesPanel";
 
 export default function QuantitativeReasoningPage() {
-  const navigate = useNavigate();
   const base = getSiteBaseUrl();
   const canonicalUrl = base ? `${base}/ucat-quantitative-reasoning-practice` : undefined;
   const ogImageUrl = base ? `${base}/og-trainer.png` : undefined;
@@ -37,6 +35,7 @@ export default function QuantitativeReasoningPage() {
         imageUrl={ogImageUrl}
         imageAlt={ogImageAlt}
         breadcrumbs={breadcrumbs}
+        schemaType="CollectionPage"
       />
       <Header />
       <SkillsSectionLayout
@@ -48,27 +47,51 @@ export default function QuantitativeReasoningPage() {
       >
         <div className="space-y-8 sm:space-y-10">
         <SkillsSectionBlock title={HUB_SKILLS_TRAINERS_TITLE}>
-          <HubTrainerGrid trainerCount={3}>
+          <HubTrainerGrid trainerCount={6}>
+            <HubTrainerCard
+              title="QR Setup Trainer"
+              description="Translate a situation into the right data, operation, unit and calculator entry."
+              icon={ListChecks}
+              accent="emerald"
+              eyebrow="Build the method"
+              to="/ucat-qr-setup-trainer"
+            />
+            <HubTrainerCard
+              title="Data Extraction Trainer"
+              description="Find the correct rows, columns and units in tables before calculating."
+              icon={Table2}
+              accent="emerald"
+              eyebrow="Read data accurately"
+              to="/ucat-qr-data-extraction-trainer"
+            />
+            <HubTrainerCard
+              title="Estimation & Elimination"
+              description="Choose a reliable range and the fastest shortcut before calculating exactly."
+              icon={Gauge}
+              accent="emerald"
+              eyebrow="Reject bad answers"
+              to="/ucat-qr-estimation-trainer"
+            />
             <HubTrainerCard
               title="Calculator Trainer"
               description="Master the on-screen calculator and keypad under time pressure."
               icon={Calculator}
               accent="emerald"
-              onClick={() => navigate("/ucat-calculator-trainer")}
+              to="/ucat-calculator-trainer"
             />
             <HubTrainerCard
               title="Mental Maths Trainer"
               description="Build speed and estimation without the calculator."
               icon={Brain}
               accent="emerald"
-              onClick={() => navigate("/ucat-mental-maths-trainer")}
+              to="/ucat-mental-maths-trainer"
             />
             <HubTrainerCard
               title="Conversions Trainer"
               description="Practise metric units, time conversions, rates and per-100 setups."
               icon={Ruler}
               accent="emerald"
-              onClick={() => navigate("/ucat-unit-conversions-trainer")}
+              to="/ucat-unit-conversions-trainer"
             />
           </HubTrainerGrid>
         </SkillsSectionBlock>

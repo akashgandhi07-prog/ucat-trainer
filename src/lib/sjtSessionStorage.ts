@@ -46,6 +46,32 @@ export function getGuestSJTSessions(): GuestSJTSessionPayload[] {
   }
 }
 
+/** Fired after an SJT attempt is saved, so recommendation widgets can refresh. */
+export const SJT_SESSIONS_UPDATED_EVENT = "sjt-sessions-updated";
+const RECOMMENDATION_ROW_LIMIT = 500;
+
+export type SJTRecommendationSourceRow = Pick<SJTSessionsRow, "question_type" | "domain" | "score" | "max_score" | "completed" | "created_at">;
+
+/**
+ * Completed SJT attempts for a signed-in user, oldest first (the order the
+ * recommendation engine expects). Only the newest RECOMMENDATION_ROW_LIMIT rows
+ * and the columns the recommendation needs are fetched, to keep this cheap.
+ */
+export async function fetchSJTRecommendationRows(userId: string): Promise<SJTRecommendationSourceRow[] | null> {
+  const { data, error } = await supabase
+    .from("sjt_sessions")
+    .select("question_type, domain, score, max_score, completed, created_at")
+    .eq("user_id", userId)
+    .eq("completed", true)
+    .order("created_at", { ascending: false })
+    .limit(RECOMMENDATION_ROW_LIMIT);
+  if (error) {
+    supabaseLog.warn("sjt_recommendation_rows_failed", { message: error.message });
+    return null;
+  }
+  return ((data ?? []) as SJTRecommendationSourceRow[]).reverse();
+}
+
 export function appendGuestSJTSession(payload: GuestSJTSessionPayload): void {
   if (!storageAvailable()) return;
   const sessions = getGuestSJTSessions();
@@ -55,6 +81,7 @@ export function appendGuestSJTSession(payload: GuestSJTSessionPayload): void {
       ? sessions.slice(sessions.length - MAX_GUEST_SJT_SESSIONS)
       : sessions;
   localStorage.setItem(GUEST_SJT_SESSIONS_KEY, JSON.stringify(capped));
+  window.dispatchEvent(new Event(SJT_SESSIONS_UPDATED_EVENT));
 }
 
 export function clearGuestSJTSessions(): void {
@@ -78,6 +105,7 @@ export async function saveSJTSession(
       const { error } = await supabase.from("sjt_sessions").insert(row);
       if (error) throw error;
     });
+    if (typeof window !== "undefined") window.dispatchEvent(new Event(SJT_SESSIONS_UPDATED_EVENT));
     trackEvent("trainer_completed", {
       training_type: `sjt_${payload.question_type}`,
       completed: payload.completed,

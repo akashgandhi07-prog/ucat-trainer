@@ -1,3 +1,6 @@
+import SJTNextDrill from "../components/sjt/SJTNextDrill";
+import SkillNextDrill from "../components/dashboard/SkillNextDrill";
+import SkillTrainerRunsSummary from "../components/dashboard/SkillTrainerRunsSummary";
 import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -22,7 +25,7 @@ import {
   getWpmTierLabel,
   WPM_BENCHMARK,
 } from "../lib/wpmBenchmark";
-import { TRAINING_TYPE_LABELS, TRAINING_DIFFICULTY_LABELS } from "../types/training";
+import { TRAINING_TYPE_LABELS, TRAINING_DIFFICULTY_LABELS, SKILL_TRAINER_SESSION_TYPES, isSessionTrainingType, isSkillTrainerSessionType } from "../types/training";
 import type { TrainingType, TrainingDifficulty } from "../types/training";
 import { PASSAGES } from "../data/passages";
 import SEOHead from "../components/seo/SEOHead";
@@ -39,7 +42,7 @@ import {
   clampToUcatExamWindow,
   ucatExamDayRangeInMonth,
 } from "../lib/ucatExamWindow";
-import { getGuestSessions } from "../lib/guestSessions";
+import { getGuestSessions, type GuestSessionPayload } from "../lib/guestSessions";
 import { buildVrCategoryStats, deriveVrInsight } from "../lib/vrCategoryInsights";
 import { getConversionTrainerDetailSessions } from "../lib/conversionTrainerStorage";
 import { getSiteBaseUrl } from "../lib/siteUrl";
@@ -57,11 +60,13 @@ import { DM_SKILLS_TRAINER_LABELS } from "../data/dmTrainers/dmSkillsTrainerMeta
 import SJTAnalytics from "../components/dashboard/SJTAnalytics";
 import UnifiedProductHub from "../components/dashboard/UnifiedProductHub";
 import DashboardHeroCard from "../components/dashboard/DashboardHeroCard";
+import MeasuredProgressSummary from "../components/dashboard/MeasuredProgressSummary";
 import LatestMockCard from "../components/dashboard/LatestMockCard";
 import TodayPlanStrip from "../components/dashboard/TodayPlanStrip";
 import WeekSummaryCard from "../components/dashboard/WeekSummaryCard";
 import LockedDashboardPreview from "../components/dashboard/LockedDashboardPreview";
 import { computeRollingDelta, StatDelta } from "../lib/dashboardDeltas";
+import { compareSpeedWithAccuracy } from "../lib/progressComparisons";
 import { isPlannerIntegrated } from "../lib/plannerUrl";
 import { useAppShell } from "../contexts/AppShellContext";
 import { APP_CONTENT_X, appContentWidthClass } from "../lib/appContentLayout";
@@ -104,6 +109,8 @@ type GuestDashboardSummary = {
   calculatorCount: number;
   mentalMathsCount: number;
   unitConversionsCount: number;
+  /** Run summaries from the QR Setup, Data Extraction, Estimation and DM Constraint trainers. */
+  skillTrainerRuns: GuestSessionPayload[];
   averageWpm: number | null;
   rapidRecallAvgAccuracy: number | null;
   keywordScanningAvgAccuracy: number | null;
@@ -112,10 +119,7 @@ type GuestDashboardSummary = {
 };
 
 function getTrainingType(s: SessionRow): TrainingType {
-  const t = s.training_type;
-  if (t === "speed_reading" || t === "rapid_recall" || t === "keyword_scanning" || t === "calculator" || t === "inference_trainer" || t === "mental_maths" || t === "unit_conversions" || t === "not_except")
-    return t;
-  return "speed_reading";
+  return isSessionTrainingType(s.training_type) ? s.training_type : "speed_reading";
 }
 
 /**
@@ -559,6 +563,7 @@ export default function Dashboard() {
       calculatorCount: calculator.length,
       mentalMathsCount: mentalMaths.length,
       unitConversionsCount: unitConversions.length,
+      skillTrainerRuns: guestSessions.filter((s) => isSkillTrainerSessionType(s.training_type)),
       averageWpm,
       rapidRecallAvgAccuracy,
       keywordScanningAvgAccuracy,
@@ -585,6 +590,10 @@ export default function Dashboard() {
       mental_maths: [],
       unit_conversions: [],
       not_except: [],
+      qr_setup: [],
+      qr_data_extraction: [],
+      qr_estimation: [],
+      dm_constraints: [],
     };
     for (const s of sessions) {
       m[getTrainingType(s)].push(s);
@@ -592,8 +601,8 @@ export default function Dashboard() {
     return m;
   }, [sessions]);
 
-  const wpmDelta = useMemo(
-    () => computeRollingDelta(byType.speed_reading, (s) => s.wpm),
+  const speedProgress = useMemo(
+    () => compareSpeedWithAccuracy(byType.speed_reading),
     [byType.speed_reading],
   );
   const rapidAccDelta = useMemo(
@@ -644,11 +653,24 @@ export default function Dashboard() {
       if (isValidTab(stored)) { hasSetSmartDefault.current = true; return; }
     } catch { /* ignore */ }
     const vrSessions = [...byType.speed_reading, ...byType.rapid_recall, ...byType.keyword_scanning, ...byType.inference_trainer, ...byType.not_except];
-    const qrSessions = [...byType.calculator, ...byType.mental_maths, ...byType.unit_conversions];
+    const oldestFirst = (rows: SessionRow[]) =>
+      [...rows].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    const qrSessions = oldestFirst([
+      ...byType.calculator,
+      ...byType.mental_maths,
+      ...byType.unit_conversions,
+      ...byType.qr_setup,
+      ...byType.qr_data_extraction,
+      ...byType.qr_estimation,
+    ]);
     const candidates: { tab: DashboardTab; date: string }[] = [];
     if (vrSessions.length > 0) candidates.push({ tab: "vr", date: vrSessions[vrSessions.length - 1].created_at });
     if (qrSessions.length > 0) candidates.push({ tab: "qr", date: qrSessions[qrSessions.length - 1].created_at });
-    const dmDates = [syllogismSessions[syllogismSessions.length - 1]?.created_at, dmSkillsSessions[dmSkillsSessions.length - 1]?.created_at]
+    const dmDates = [
+      syllogismSessions[syllogismSessions.length - 1]?.created_at,
+      dmSkillsSessions[dmSkillsSessions.length - 1]?.created_at,
+      byType.dm_constraints[byType.dm_constraints.length - 1]?.created_at,
+    ]
       .filter((d): d is string => d != null)
       .sort();
     if (dmDates.length > 0) candidates.push({ tab: "dm", date: dmDates[dmDates.length - 1] });
@@ -994,7 +1016,7 @@ export default function Dashboard() {
     const fromSessions: RecentActivityItem[] = sessions.map((s) => {
       const type = getTrainingType(s);
       const pct = s.total > 0 ? Math.round((s.correct / s.total) * 100) : null;
-      const hasPercentScore = ["rapid_recall", "keyword_scanning", "inference_trainer", "mental_maths", "calculator", "unit_conversions", "not_except"].includes(type);
+      const hasPercentScore = type !== "speed_reading";
       return {
         id: s.id,
         created_at: s.created_at,
@@ -1225,6 +1247,7 @@ export default function Dashboard() {
     if (!guestSummary) {
       return (
         <div className="mb-10 space-y-6">
+          <SkillNextDrill />
           <section className="bg-card border border-border rounded-xl p-6 text-center">
             <p className="text-foreground font-medium mb-2">
               Sign in to see your full dashboard.
@@ -1259,6 +1282,7 @@ export default function Dashboard() {
 
     return (
       <>
+        <div className="mb-6"><SkillNextDrill /></div>
         {isPlannerIntegrated() ? <UnifiedProductHub /> : null}
         <section className="mb-8">
           <div className="bg-card border border-border rounded-xl p-6">
@@ -1335,6 +1359,15 @@ export default function Dashboard() {
             </div>
           </div>
         </section>
+        {guestSummary.skillTrainerRuns.length > 0 && (
+          <div className="mb-10">
+            <SkillTrainerRunsSummary
+              title="Skill trainers"
+              sessions={guestSummary.skillTrainerRuns}
+              types={SKILL_TRAINER_SESSION_TYPES}
+            />
+          </div>
+        )}
         {guestSummary.averageWpm != null && (
           <section className="mb-10">
             <div className="bg-card rounded-xl border border-border p-5">
@@ -1385,8 +1418,14 @@ export default function Dashboard() {
       sessions.length > 0 || syllogismSessions.length > 0 || dmSkillsSessions.length > 0 || sjtSessions.length > 0;
 
     const vrCount = byType.speed_reading.length + byType.rapid_recall.length + byType.keyword_scanning.length + byType.inference_trainer.length + byType.not_except.length;
-    const dmCount = syllogismSessions.length + dmSkillsSessions.length;
-    const qrCount = byType.calculator.length + byType.mental_maths.length + byType.unit_conversions.length;
+    const dmCount = syllogismSessions.length + dmSkillsSessions.length + byType.dm_constraints.length;
+    const qrCount =
+      byType.calculator.length +
+      byType.mental_maths.length +
+      byType.unit_conversions.length +
+      byType.qr_setup.length +
+      byType.qr_data_extraction.length +
+      byType.qr_estimation.length;
     const sjtCount = sjtSessions.length;
 
     const TABS: { id: DashboardTab; label: string; shortLabel: string; count: number; path: string }[] = [
@@ -1400,6 +1439,8 @@ export default function Dashboard() {
       <div className="flex flex-col lg:flex-row lg:items-start gap-8 lg:gap-10">
         <div className="min-w-0 flex-1 space-y-4">
 
+          <SkillNextDrill />
+          <SJTNextDrill sessions={sjtSessions} />
           {/* ── Hero ── */}
           <DashboardHeroCard
             name={greetingName}
@@ -1411,6 +1452,7 @@ export default function Dashboard() {
             onSetExamDate={openExamDateEditor}
             onEditExamDate={openExamDateEditor}
           />
+          {user && <MeasuredProgressSummary sessions={sessions} userId={user.id} />}
 
           {/* ── Inline exam date editor ── */}
           {user && (showExamDateEditor || !profile?.ucat_exam_date) && (
@@ -1739,7 +1781,13 @@ export default function Dashboard() {
                         <p className="text-sm font-medium text-muted-foreground">Your typical WPM</p>
                         <p className="text-muted-foreground text-xs mb-1">Average from your history</p>
                         <p className="text-3xl font-bold text-foreground">{averageWpm}</p>
-                        <StatDelta delta={wpmDelta.delta} direction={wpmDelta.direction} unit=" WPM" />
+                        {speedProgress?.accuracyStable && (
+                          <StatDelta
+                            delta={speedProgress.wpmDelta}
+                            direction={speedProgress.wpmDelta > 1 ? "up" : speedProgress.wpmDelta < -1 ? "down" : "same"}
+                            unit=" WPM"
+                          />
+                        )}
                       </div>
                       <div className="bg-card rounded-xl border border-border p-5">
                         <p className="text-sm font-medium text-muted-foreground">Best WPM</p>
@@ -2136,6 +2184,11 @@ export default function Dashboard() {
                       Practice now →
                     </Link>
                   </div>
+                  <SkillTrainerRunsSummary
+                    title="Constraint Builder"
+                    sessions={byType.dm_constraints}
+                    types={["dm_constraints"]}
+                  />
                   <DmSkillsAnalytics sessions={dmSkillsSessions} />
                   <SyllogismAnalytics sessions={syllogismSessions} />
                 </div>
@@ -2144,6 +2197,11 @@ export default function Dashboard() {
               {/* QR: Calculator · Mental Maths */}
               {activeTab === "qr" && (
                 <div className="space-y-8">
+                  <SkillTrainerRunsSummary
+                    title="QR skill trainers"
+                    sessions={[...byType.qr_setup, ...byType.qr_data_extraction, ...byType.qr_estimation]}
+                    types={["qr_setup", "qr_data_extraction", "qr_estimation"]}
+                  />
                   <section>
                     <div className="flex items-center justify-between mb-4">
                       <h2 className="text-lg font-semibold text-foreground">

@@ -1,5 +1,5 @@
+import SJTNextDrill from "../components/sjt/SJTNextDrill";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Scale, Star, ArrowUpDown, ExternalLink, Users } from "lucide-react";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
@@ -38,7 +38,7 @@ const TRAINERS = [
     icon: Star,
     path: "/ucat-sjt-importance-trainer",
     benefit: "Partial credit scoring",
-    tip: "Patient safety and professional duty tend to sit at Very Important. Personal feelings rarely do.",
+    tip: "Judge each factor against the decision in the scenario. Several factors can be very important.",
   },
   {
     id: "ranking",
@@ -61,7 +61,6 @@ const domainColors: Record<string, string> = {
 };
 
 export default function SJTHubPage() {
-  const navigate = useNavigate();
   const [perfKey, setPerfKey] = useState(0);
   const base = getSiteBaseUrl();
   const canonical = base ? `${base}/ucat-sjt-practice` : undefined;
@@ -80,6 +79,7 @@ export default function SJTHubPage() {
         description="Free Situational Judgement Test trainers for the UCAT. Practise appropriateness rating, importance rating and ranking questions, all grounded in GMC Good Medical Practice."
         canonicalUrl={canonical}
         breadcrumbs={breadcrumbs}
+        schemaType="CollectionPage"
       />
       <Header />
       <div className="pb-24 sm:pb-0">
@@ -93,6 +93,7 @@ export default function SJTHubPage() {
         >
           <div className="space-y-8 sm:space-y-10">
 
+            <SJTNextDrill />
             <SkillsSectionBlock title={HUB_SKILLS_TRAINERS_TITLE}>
               <HubTrainerGrid trainerCount={3}>
                 {TRAINERS.map(({ id, title, description, icon, path, benefit, tip }) => (
@@ -105,7 +106,7 @@ export default function SJTHubPage() {
                     tip={tip}
                     ctaLabel="Start trainer"
                     accent="violet"
-                    onClick={() => navigate(path)}
+                    to={path}
                   />
                 ))}
               </HubTrainerGrid>
@@ -159,7 +160,7 @@ export default function SJTHubPage() {
               </p>
             </SkillsSectionBlock>
 
-            <SkillsSectionBlock title="How SJT scoring works">
+            <SkillsSectionBlock title="How scoring works in this trainer">
               <div className="rounded-xl border border-border bg-card p-5 space-y-3">
                 {[
                   { label: "Full marks", color: "text-emerald-700", desc: "your rating or selection exactly matches the correct answer." },

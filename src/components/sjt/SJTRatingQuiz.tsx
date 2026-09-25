@@ -10,13 +10,19 @@ import {
 } from "../../types/sjt";
 import { cn } from "../../lib/cn";
 import QuestionMediaBlock from "../media/QuestionMediaBlock";
+import { clearSJTAnswerDraft, loadRatingDraft, saveSJTAnswerDraft } from "../../lib/sjtDraftRecovery";
+import { trackEvent } from "../../lib/analytics";
 
 type ItemPhase = "rating" | "feedback";
 
 type Props = {
   question: SJTRatingQuestion;
   onComplete: (score: number, total: number) => void;
+  /** Called once when the last item is marked, so the attempt is recorded even if the student leaves before the summary. */
+  onSubmitted?: (score: number, total: number) => void;
   onProgress?: (progress: SJTQuizProgress) => void;
+  /** Draft recovery scope; null (default) disables drafts. */
+  draftScope?: string | null;
 };
 
 function getRatingScale(type: "appropriateness" | "importance"): SJTRating[] {
@@ -40,11 +46,12 @@ function scoreItem(
   return distance === 1 ? 0.5 : 0;
 }
 
-export default function SJTRatingQuiz({ question, onComplete, onProgress }: Props) {
-  const [itemIndex, setItemIndex] = useState(0);
+export default function SJTRatingQuiz({ question, onComplete, onSubmitted, onProgress, draftScope = null }: Props) {
+  const [draft] = useState(() => loadRatingDraft(draftScope, question.type, question.id, question.items.length));
+  const [itemIndex, setItemIndex] = useState(draft?.itemIndex ?? 0);
   const [itemPhase, setItemPhase] = useState<ItemPhase>("rating");
-  const [selected, setSelected] = useState<SJTRating | null>(null);
-  const [scores, setScores] = useState<(0 | 0.5 | 1)[]>([]);
+  const [selected, setSelected] = useState<SJTRating | null>(draft?.selected ?? null);
+  const [scores, setScores] = useState<(0 | 0.5 | 1)[]>(draft?.scores ?? []);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const scale = getRatingScale(question.type);
@@ -54,6 +61,7 @@ export default function SJTRatingQuiz({ question, onComplete, onProgress }: Prop
 
   function handleSelect(rating: SJTRating) {
     if (itemPhase === "feedback") return;
+    if (selected && selected !== rating) void trackEvent("sjt_answer_changed", { question_id: question.id, question_type: question.type });
     setSelected(rating);
   }
 
@@ -68,6 +76,11 @@ export default function SJTRatingQuiz({ question, onComplete, onProgress }: Prop
       partialScore: nextScores.reduce<number>((a, b) => a + b, 0),
     });
     setItemPhase("feedback");
+    if (isLastItem) {
+      clearSJTAnswerDraft(draftScope, question.type, question.id);
+      onSubmitted?.(nextScores.reduce<number>((a, b) => a + b, 0), question.items.length);
+    }
+    void trackEvent("sjt_explanation_opened", { question_id: question.id, question_type: question.type, item_id: item.id });
   }
 
   function handleNext() {
@@ -81,6 +94,28 @@ export default function SJTRatingQuiz({ question, onComplete, onProgress }: Prop
       setSelected(null);
     }
   }
+
+  // Re-report restored progress so leaving a recovered scenario still records it.
+  useEffect(() => {
+    if (draft && draft.scores.length > 0) {
+      onProgress?.({
+        itemsAttempted: draft.scores.length,
+        itemsTotal: question.items.length,
+        partialScore: draft.scores.reduce<number>((a, b) => a + b, 0),
+      });
+    }
+  }, [draft, onProgress, question.items.length]);
+
+  // Drafts only hold unmarked answers: while an item's feedback is showing, the
+  // draft points at the next unanswered item, and it is cleared once the last
+  // item is marked (handleConfirm).
+  useEffect(() => {
+    if (itemPhase === "rating") {
+      saveSJTAnswerDraft(draftScope, question.type, question.id, { itemIndex, itemPhase: "rating", selected, scores });
+    } else if (itemIndex < question.items.length - 1) {
+      saveSJTAnswerDraft(draftScope, question.type, question.id, { itemIndex: itemIndex + 1, itemPhase: "rating", selected: null, scores });
+    }
+  }, [draftScope, question.type, question.id, question.items.length, itemIndex, itemPhase, selected, scores]);
 
   // Keyboard support: 1–4 picks a rating, Enter confirms then advances. Mirrors the
   // QR trainers and lets candidates work without reaching for the mouse each item.
@@ -120,6 +155,7 @@ export default function SJTRatingQuiz({ question, onComplete, onProgress }: Prop
 
   return (
     <div className="space-y-4">
+      <p className="sr-only" aria-live="polite">{itemPhase === "feedback" ? `Feedback shown. ${currentScore === 1 ? "Full marks" : currentScore === 0.5 ? "Half mark" : "Incorrect"}.` : `Item ${itemIndex + 1} of ${question.items.length}.`}</p>
 
       {/* Progress - full width above both columns so cards align */}
       <div>
@@ -279,7 +315,7 @@ export default function SJTRatingQuiz({ question, onComplete, onProgress }: Prop
                     <button
                       type="button"
                       onClick={() => setFeedbackOpen(true)}
-                      className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/80"
+                      className="inline-flex min-h-[44px] items-center gap-1 rounded-full border border-border bg-secondary px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     >
                       <span aria-hidden>🚩</span>
                       Report this question

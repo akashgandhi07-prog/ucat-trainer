@@ -15,7 +15,12 @@ export type TrainerFaqKey =
   | "mentalMaths"
   | "decisionHub"
   | "syllogismMacro"
-  | "sjtHub";
+  | "sjtHub"
+  | "notExcept"
+  | "qrSetup"
+  | "qrDataExtraction"
+  | "qrEstimation"
+  | "dmConstraintBuilder";
 
 export type TrainerFaqMap = Record<TrainerFaqKey, TrainerFaqItem[]>;
 
@@ -687,19 +692,19 @@ export const trainerFaqs: TrainerFaqMap = {
       id: "what-is-sjt",
       question: "What is the UCAT Situational Judgement Test?",
       answer:
-        "The Situational Judgement Test (SJT) is the fifth section of the UCAT. It presents clinical and professional scenarios and asks you to judge how appropriate or important various responses are. Rather than testing medical knowledge, it assesses whether you can recognise the values and behaviours expected of a medical professional, as defined in the GMC's Good Medical Practice guidance.",
+        "The Situational Judgement Test (SJT) is the fourth and final section of the UCAT. It presents clinical and professional scenarios and asks you to judge how appropriate or important various responses are. Rather than testing medical knowledge, it assesses whether you can recognise the values and behaviours expected of a medical professional, as defined in the GMC's Good Medical Practice guidance.",
     },
     {
       id: "sjt-question-types",
-      question: "What are the two question types in the UCAT SJT?",
+      question: "Which SJT question formats can I practise here?",
       answer:
-        "There are two types. Rating questions ask you to rate individual responses on a four-point scale, either for appropriateness (Very Appropriate to Very Inappropriate) or for importance (Very Important to Not Important at All). Ranking questions present three possible responses and ask you to identify the most appropriate and the least appropriate from the set.",
+        "This trainer offers appropriateness ratings, importance ratings and most/least appropriate selections. Rating drills use a four-point scale. Most/least drills present three responses. Use the official UCAT question tutorials and practice materials to familiarise yourself with the full range of live-test formats.",
     },
     {
       id: "sjt-scoring",
       question: "How is the SJT scored and what do the bands mean?",
       answer:
-        "The SJT is reported in four bands rather than a scaled score. Band 1 is the highest and indicates performance closely aligned with the professional approach of doctors. Band 4 is the lowest. In this trainer, exact answers are worth one mark, the next best rating answer is worth half a mark, and the remaining rating options receive no credit. Ranking scenarios are worth one mark total, split into half a mark for the most appropriate response and half a mark for the least appropriate response.",
+        "The SJT is reported in four bands rather than a scaled score. Band 1 is the highest and indicates performance closely aligned with the professional approach of doctors. Band 4 is the lowest. In this trainer, exact answers are worth one mark, a rating one step away on either side is worth half a mark, and the remaining rating options receive no credit. In this trainer, ranking scenarios are worth two marks: one for the most appropriate response and one for the least appropriate response. These practice marks do not predict an official SJT band.",
     },
     {
       id: "sjt-gmc-gmp",
@@ -711,25 +716,185 @@ export const trainerFaqs: TrainerFaqMap = {
       id: "sjt-appropriateness-tips",
       question: "How should I approach Appropriateness Rating questions?",
       answer:
-        "Ask yourself two questions: Does this action directly address the core professional duty in the scenario? And does it risk any harm - to the patient, a colleague, or the profession? Very Appropriate actions tackle the key duty proactively without creating new problems. Very Inappropriate actions either do nothing or actively make things worse. Most nuance sits in the Appropriate versus Inappropriate boundary, which is where the GMC domain reference helps most.",
+        "Ask yourself two questions: Does this action directly address the core professional duty in the scenario? And does it risk any harm - to the patient, a colleague, or the profession? Rate each response independently. A very appropriate action may address one aspect well without solving everything, and several responses can share a rating. Judge negative responses by their actual seriousness; inaction is not automatically very inappropriate. Most nuance sits in the Appropriate versus Inappropriate boundary, which is where the GMC domain reference helps most.",
     },
     {
       id: "sjt-importance-tips",
       question: "How should I approach Importance Rating questions?",
       answer:
-        "Identify whether each consideration directly relates to patient safety, a core professional duty, or a legal or ethical obligation. These almost always sit at Very Important. Considerations that serve personal convenience, reputation, or institutional politics generally sit at Minor Importance or Not Important at All. The hardest items involve professional development or team dynamics - these typically land at Important rather than Very Important unless there is an immediate risk at stake.",
+        "Start with the specific decision in the scenario and assess each consideration independently. Ask whether ignoring it would change the decision, whether it helps carry out the response, or whether it should have no influence. Several considerations can be very important. Learning needs, wellbeing and teamwork can be central even when no patient is in immediate danger. Do not assign ratings from topic labels alone.",
     },
     {
       id: "sjt-ranking-tips",
       question: "How should I approach Ranking questions?",
       answer:
-        "In a ranking question you are only scored on your Most and Least choices; the middle item is implicit. Identify the option that most directly addresses the central professional obligation in the scenario without overstepping or causing harm: that is your Most. Then look for the option that either ignores the problem entirely or would actively make things worse: that is your Least. Each correct extreme is worth half a mark.",
+        "In a ranking question you are only scored on your Most and Least choices; the middle item is implicit. Identify the option that most directly addresses the central professional obligation in the scenario without overstepping or causing harm: that is your Most. Then look for the option that either ignores the problem entirely or would actively make things worse: that is your Least. Each correct extreme is worth one practice mark in this trainer.",
     },
     {
       id: "sjt-partial-credit",
       question: "What is partial credit and how do I use it strategically?",
       answer:
-        "Partial credit means the next best rating answer earns half a mark. This makes the SJT more forgiving than all-or-nothing scoring, but it still rewards precise professional judgement. Strategically, if you are unsure between two adjacent options, pick the one that better reflects active professional responsibility. Guessing at random across a four-point scale will, on average, cost you marks, so anchoring your answers to the GMC principles reduces that risk.",
+        "In this trainer, a rating one step away on either side of the key earns half a mark. This makes the SJT more forgiving than all-or-nothing scoring, but it still rewards precise professional judgement. Strategically, if you are unsure between two adjacent options, pick the one that better reflects active professional responsibility. There is no negative marking in the UCAT. Use the stated facts and professional principles to choose the most defensible rating rather than guessing a pattern.",
+    },
+  ],
+  notExcept: [
+    {
+      id: "what-is-not-except-trainer",
+      question: "What does the UCAT NOT/EXCEPT trainer practise?",
+      answer:
+        "It practises the Verbal Reasoning questions that ask which statement is NOT supported by the passage, or which is true EXCEPT one. You read a passage, then answer four questions where three options are supported by the text and one is not. Your job is to find the odd one out.",
+    },
+    {
+      id: "how-not-except-works",
+      question: "How does a NOT/EXCEPT drill work?",
+      answer:
+        "Each drill starts with a reading phase so you can take in the passage and its structure. When you press Start questions, the passage is hidden and you answer four questions in turn. After each answer you see which option was correct and why, and at the end you get a score out of four with the time taken.",
+    },
+    {
+      id: "not-except-method",
+      question: "What is the best method for NOT and EXCEPT questions?",
+      answer:
+        "Treat every option as its own True, False or Can't Tell check against the passage. Tick off each statement the passage clearly supports, and the one left over is your answer. Remember that a statement the passage never mentions is not supported, so Can't Tell options can be the correct choice.",
+    },
+    {
+      id: "why-not-except-hard",
+      question: "Why do NOT/EXCEPT questions take so long in the UCAT?",
+      answer:
+        "Unlike a single True, False or Can't Tell statement, a NOT question makes you verify several options before you can be sure of the answer. Without a fixed routine it is easy to reread the passage for every option. Practising the check in a set order builds the habit of verifying quickly and moving on.",
+    },
+    {
+      id: "not-except-progress",
+      question: "Is my NOT/EXCEPT progress saved?",
+      answer:
+        "Yes. Each finished drill is saved as a session. If you are signed in it appears on your Dashboard and counts towards your streak and weekly summary. As a guest it is stored on this device and moves into your account when you sign in. The trainer also avoids passages you have already seen where it can.",
+    },
+  ],
+  qrSetup: [
+    {
+      id: "what-is-qr-setup-trainer",
+      question: "What does the UCAT QR Setup Trainer practise?",
+      answer:
+        "It practises the step before calculating in UCAT Quantitative Reasoning: turning a worded situation into the right calculation. For each question you choose which information matters, which operation or process is needed, what unit the answer should use and exactly what to type into the calculator.",
+    },
+    {
+      id: "why-no-final-answer",
+      question: "Why does the QR Setup Trainer not ask for the final answer?",
+      answer:
+        "Many QR marks are lost by solving the wrong problem accurately. Withholding the final number keeps your attention on the setup decisions, which are the part most students never practise on their own. Once the setup is right, the calculation itself is usually the easy part.",
+    },
+    {
+      id: "qr-setup-scoring",
+      question: "How is the QR Setup Trainer scored?",
+      answer:
+        "Each drill has eight questions and each question has four decisions worth one point, so a full drill is out of 32. After you check a setup you see which decisions were correct with an explanation. The results screen also shows your accuracy for each decision type across all your attempts, so you can see whether units or calculator entry is costing you most.",
+    },
+    {
+      id: "qr-setup-review-mistakes",
+      question: "How does Review mistakes work?",
+      answer:
+        "Any question you do not get fully right is scheduled for review a day later. Review mistakes shows the questions that are due first. A fully correct answer in review mode clears the question, while in normal drills it needs two correct answers spaced a few days apart. When you get something wrong you can also record why, such as misreading or a unit error, which helps target later recommendations.",
+    },
+    {
+      id: "qr-setup-progress",
+      question: "Is my QR Setup progress saved?",
+      answer:
+        "Yes. Every checked question is saved, and each drill is saved as a session with its score and time, even if you stop part way through. Signed in, your runs appear on your Dashboard under Quantitative Reasoning and feed your study plan. As a guest they stay on this device until you sign in.",
+    },
+  ],
+  qrDataExtraction: [
+    {
+      id: "what-is-data-extraction-trainer",
+      question: "What does the UCAT QR Data Extraction Trainer practise?",
+      answer:
+        "It practises reading tables accurately before doing any arithmetic. For each table you pick which cells contain the data the question needs, what value follows from those cells and what the correct unit is. It isolates the table reading errors that often look like maths errors in UCAT Quantitative Reasoning.",
+    },
+    {
+      id: "data-extraction-scoring",
+      question: "How is the Data Extraction Trainer scored?",
+      answer:
+        "Each drill has eight tables and each table has three decisions worth one point: the source cells, the value and the unit. A full drill is out of 24. After you check each table you see how many of the three decisions were right and an explanation of where the data comes from.",
+    },
+    {
+      id: "why-units-matter",
+      question: "Why does the trainer ask about units separately?",
+      answer:
+        "UCAT tables often mix units such as thousands, percentages and per unit prices, and answer options are built around those slips. Choosing the unit as a separate decision makes you check column headers and footnotes every time, which is the habit that stops you picking a correct number in the wrong unit.",
+    },
+    {
+      id: "data-extraction-mistakes",
+      question: "What happens when I get a table wrong?",
+      answer:
+        "You can record the main cause, such as misreading the table or a unit error. Tables you do not get fully right come back for review after a day, and questions you have not seen yet are chosen before repeats in normal drills.",
+    },
+    {
+      id: "data-extraction-progress",
+      question: "Is my Data Extraction progress saved?",
+      answer:
+        "Yes. Each checked table is saved, and each drill is saved as a session with its score and time, even if you stop part way through. Signed in, it appears on your Dashboard under Quantitative Reasoning. As a guest it stays on this device until you sign in.",
+    },
+  ],
+  qrEstimation: [
+    {
+      id: "what-is-estimation-trainer",
+      question: "What does the UCAT QR Estimation Trainer practise?",
+      answer:
+        "It practises controlled estimation. For each calculation you choose the range the answer must fall in and the fastest shortcut that is still reliable, before seeing the exact value. The aim is to know when an approximation is enough to rule out answer options, not to guess.",
+    },
+    {
+      id: "estimation-scoring",
+      question: "How is the Estimation Trainer scored?",
+      answer:
+        "Each drill has eight calculations and each has two decisions worth one point: the range and the shortcut. A full drill is out of 16. After you check each one you see the exact answer and an explanation of why the shortcut works.",
+    },
+    {
+      id: "when-to-estimate",
+      question: "When should I estimate instead of calculating exactly in the UCAT?",
+      answer:
+        "Estimate when the answer options are far enough apart that a rounded calculation can only match one of them, or when you need to eliminate options quickly. Calculate exactly when options are close together. Practising the range decision helps you judge how precise you need to be before you pick up the calculator.",
+    },
+    {
+      id: "estimation-mistakes",
+      question: "What happens when I get an estimate wrong?",
+      answer:
+        "You can record the main cause, such as rushing or choosing the wrong method. Calculations you do not get fully right come back for review after a day, and new calculations are chosen before repeats in normal drills.",
+    },
+    {
+      id: "estimation-progress",
+      question: "Is my Estimation Trainer progress saved?",
+      answer:
+        "Yes. Each checked calculation is saved, and each drill is saved as a session with its score and time, even if you stop part way through. Signed in, it appears on your Dashboard under Quantitative Reasoning. As a guest it stays on this device until you sign in.",
+    },
+  ],
+  dmConstraintBuilder: [
+    {
+      id: "what-is-constraint-builder",
+      question: "What does the UCAT DM Constraint Builder practise?",
+      answer:
+        "It practises the ordering and arrangement puzzles in UCAT Decision Making. Instead of choosing from prepared answers, you build an arrangement yourself by placing each item in a slot, which trains you to manage several rules at once.",
+    },
+    {
+      id: "how-constraint-builder-works",
+      question: "How does the Constraint Builder work?",
+      answer:
+        "Select an item, then choose a slot to place it. A rule checker shows each rule as met, broken or not yet decided as you build. When every slot is filled, check your arrangement. Any arrangement that satisfies every rule is accepted, so there is often more than one correct solution.",
+    },
+    {
+      id: "constraint-builder-scoring",
+      question: "How is the Constraint Builder scored?",
+      answer:
+        "Each drill has six puzzles and each puzzle is worth one point. You earn the point when your first checked arrangement satisfies every rule. If it breaks a rule, the trainer shows one valid arrangement and you can reset and try again for practice, but no point is awarded for that puzzle.",
+    },
+    {
+      id: "constraint-strategy",
+      question: "What is the best strategy for UCAT arrangement puzzles?",
+      answer:
+        "Place the most restrictive items first, such as anything fixed to a position or tied to another item. Then use rules that rule positions out to narrow the rest. Watching which rules the checker marks as broken shows you which rule you tend to overlook.",
+    },
+    {
+      id: "constraint-builder-progress",
+      question: "Is my Constraint Builder progress saved?",
+      answer:
+        "Yes. Each checked puzzle is saved, and each drill is saved as a session with its score and time, even if you stop part way through. Signed in, it appears on your Dashboard under Decision Making. As a guest it stays on this device until you sign in. Puzzles you do not solve come back for review after a day.",
     },
   ],
 };

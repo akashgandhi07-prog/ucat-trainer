@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef, type ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { RotateCcw, ChevronRight, type LucideIcon } from "lucide-react";
 import Header from "../layout/Header";
 import Footer from "../layout/Footer";
@@ -14,15 +14,35 @@ import { useAuth } from "../../hooks/useAuth";
 import { trainerFaqs } from "../../data/trainerFaqs";
 import { recordSJTAttempt } from "../../lib/sjtAnalytics";
 import { persistSJTSession } from "../../lib/sjtSessionStorage";
+import { recordSJTPartialAttempt, resolveSJTResume, settleAbandonedSJTScenario } from "../../lib/sjtActiveScenario";
 import { getSiteBaseUrl } from "../../lib/siteUrl";
 import { cn } from "../../lib/cn";
 import type { SJTQuestion, SJTQuestionType, SJTQuizProgress } from "../../types/sjt";
 
+import { GMC_DOMAINS_LIST } from "../../data/gmcDomains";
+import { loadSJTReviews, saveSJTReview, removeSJTReview } from "../../lib/sjtReview";
+import { UCAT_TUTORING_URL } from "../../lib/productUpsell";
+import { trackEvent } from "../../lib/analytics";
+import SJTNextDrill from "./SJTNextDrill";
+import { syncSJTReviewOutcome, syncSJTReviewRemoval } from "../../lib/sjtReviewCloud";
+import {
+  clearSJTAnswerDraft,
+  claimActiveSJTScenario,
+  saveActiveSJTScenario,
+  sjtDraftScope,
+  type ActiveSJTScenario,
+} from "../../lib/sjtDraftRecovery";
+
 type Phase = "intro" | "quiz" | "between";
 
 export type SJTQuizHandlers = {
+  /** Leave the scenario for the summary screen. Records the attempt if onSubmitted has not. */
   onComplete: (score: number, max: number) => void;
+  /** The answer is final and marked: record the completed attempt now. Idempotent. */
+  onSubmitted: (score: number, max: number) => void;
   onProgress: (progress: SJTQuizProgress) => void;
+  /** Draft recovery scope (user id or "guest"); null disables drafts, e.g. in delayed-review mode. */
+  draftScope: string | null;
 };
 
 type Props = {
@@ -41,7 +61,13 @@ type Props = {
   renderQuiz: (question: SJTQuestion, handlers: SJTQuizHandlers) => ReactNode;
 };
 
-export default function SJTTrainerSessionPage({
+export default function SJTTrainerSessionPage(props: Props) {
+  const [params] = useSearchParams();
+  const { user } = useAuth();
+  return <SJTTrainerSession key={`${props.type}:${params.get("review") ?? "practice"}:${user?.id ?? "guest"}`} {...props} />;
+}
+
+function SJTTrainerSession({
   type,
   icon: Icon,
   title,
@@ -56,16 +82,34 @@ export default function SJTTrainerSessionPage({
   renderQuiz,
 }: Props) {
   const { user, loading: authLoading } = useAuth();
+  const [params, setParams] = useSearchParams();
+  const topic = GMC_DOMAINS_LIST.some(d => d.id === params.get("topic")) ? params.get("topic")! : "";
+  const difficulty = ["easy", "medium", "hard"].includes(params.get("difficulty") ?? "") ? params.get("difficulty")! : "";
+  const reviewId = params.get("review") ?? "";
+  const [review] = useState(() => loadSJTReviews(user?.id).find(r => r.type === type && r.id === reviewId && r.due <= Date.now()));
+  const [reviewSaved, setReviewSaved] = useState(true);
   const [phase, setPhase] = useState<Phase>("intro");
+  // Delayed retries must be answered from memory, so they never save or restore drafts.
+  const draftScope = reviewId ? null : sjtDraftScope(user?.id);
+  // Half-finished scenario to reopen after a reload: undefined until auth has settled.
+  const [resume, setResume] = useState<ActiveSJTScenario | null | undefined>(undefined);
+  useEffect(() => {
+    if (authLoading || resume !== undefined) return;
+    // Settling a stale pointer (expired, other filters) records its partial attempt once.
+    setResume(resolveSJTResume(draftScope, type, { domain: topic, difficulty }));
+  }, [authLoading, resume, draftScope, type, topic, difficulty]);
   const {
     question,
     loading,
     error,
-    prefetchNext,
+    resumeStatus,
     advanceToNext,
     resetSession,
     retry,
-  } = useSJTQuestionSession(type, !authLoading);
+  } = useSJTQuestionSession(type, !authLoading && resume !== undefined && (!reviewId || !!review), {
+    domain: reviewId ? undefined : topic, difficulty: reviewId ? undefined : difficulty,
+    questionId: reviewId || undefined,
+  }, resume?.questionId ?? null);
 
   const [sessionScore, setSessionScore] = useState(0);
   const [sessionMax, setSessionMax] = useState(0);
@@ -79,10 +123,16 @@ export default function SJTTrainerSessionPage({
   const phaseRef = useRef(phase);
   const questionRef = useRef(question);
   const userIdRef = useRef(user?.id ?? null);
+  const draftScopeRef = useRef(draftScope);
+  const filtersRef = useRef({ domain: topic, difficulty });
+  /** Question id whose active-scenario pointer this tab has written (it can then be resumed). */
+  const pointerQuestionIdRef = useRef<string | null>(null);
 
   phaseRef.current = phase;
   questionRef.current = question;
   userIdRef.current = user?.id ?? null;
+  draftScopeRef.current = draftScope;
+  filtersRef.current = { domain: topic, difficulty };
 
   const base = getSiteBaseUrl();
   const canonical = base ? `${base}${canonicalPath}` : undefined;
@@ -105,43 +155,77 @@ export default function SJTTrainerSessionPage({
     progressRef.current = null;
   }, [question?.id]);
 
+  /** Keep the active-scenario pointer current so a reload can reopen this scenario. */
+  const writeActivePointer = useCallback(() => {
+    const q = questionRef.current;
+    const scope = draftScopeRef.current;
+    if (!scope || !q || phaseRef.current !== "quiz" || savedQuestionIdRef.current === q.id) return;
+    const saved = saveActiveSJTScenario(scope, {
+      type: q.type, questionId: q.id, domain: q.domain, filters: filtersRef.current, progress: progressRef.current,
+    });
+    pointerQuestionIdRef.current = saved ? q.id : null;
+  }, []);
+
+  useEffect(() => {
+    if (phase !== "quiz" || !question) return;
+    writeActivePointer();
+  }, [phase, question, writeActivePointer]);
+
+  // The resumed scenario could not be loaded (removed, or the targeted RPC is missing):
+  // it is discarded, recording its partial attempt, and a new scenario is served instead.
+  useEffect(() => {
+    if (resumeStatus === "failed" && resume) settleAbandonedSJTScenario(draftScope, type, resume.questionId);
+  }, [resumeStatus, resume, draftScope, type]);
+
+  // Reopen a resumed scenario straight into the quiz, at the first unmarked item.
+  const resumedQuestionId = resumeStatus === "resumed" ? resume?.questionId ?? null : null;
+  const autoStartedRef = useRef(false);
+  useEffect(() => {
+    if (autoStartedRef.current || !resumedQuestionId || question?.id !== resumedQuestionId) return;
+    autoStartedRef.current = true;
+    setPhase("quiz");
+  }, [resumedQuestionId, question?.id]);
+
   useEffect(() => {
     if (phase === "between") {
-      void prefetchNext();
       document.getElementById("app-main-scroll")?.scrollTo({ top: 0, behavior: "instant" });
     } else if (phase === "quiz") {
       document.getElementById("app-main-scroll")?.scrollTo({ top: 0, behavior: "instant" });
     }
-  }, [phase, prefetchNext]);
+  }, [phase]);
 
-  const flushPartialIfNeeded = useCallback(() => {
+  /**
+   * Record a partial attempt when a scenario is left before it was submitted.
+   * "leave" is an in-app exit (navigation, reset, starting another scenario):
+   * the draft and pointer are discarded and the partial is recorded now.
+   * "pagehide" may be a reload: while a resumable draft and pointer exist,
+   * nothing is recorded; the partial is recorded later, once, if the scenario
+   * is discarded instead of resumed (see resolveSJTResume). Without drafts
+   * (delayed-review mode, or storage unavailable) it is recorded immediately.
+   */
+  const flushPartialIfNeeded = useCallback((reason: "leave" | "pagehide" = "leave") => {
     const q = questionRef.current;
     if (phaseRef.current !== "quiz" || !q) return;
+    // Already submitted and recorded as complete (or already recorded as partial).
     if (savedQuestionIdRef.current === q.id) return;
 
-    const progress = progressRef.current;
+    const scope = draftScopeRef.current;
+    const pointerWritten = !!scope && pointerQuestionIdRef.current === q.id;
+    if (reason === "pagehide" && pointerWritten) return;
+
+    // Claim the pointer first: if another tab or an earlier settle already took it, do not record twice.
+    const claimed = scope ? claimActiveSJTScenario(scope, q.type, q.id) : null;
+    clearSJTAnswerDraft(scope, q.type, q.id);
+    pointerQuestionIdRef.current = null;
+    if (pointerWritten && !claimed) {
+      savedQuestionIdRef.current = q.id;
+      return;
+    }
+
+    const progress = progressRef.current ?? claimed?.progress ?? null;
     if (!progress || progress.itemsAttempted <= 0) return;
-
     savedQuestionIdRef.current = q.id;
-    const maxScore = progress.itemsTotal;
-
-    recordSJTAttempt({
-      questionId: q.id,
-      domain: q.domain,
-      type: q.type,
-      score: progress.partialScore,
-      maxScore,
-    });
-    void persistSJTSession(userIdRef.current, {
-      question_id: q.id,
-      question_type: q.type,
-      domain: q.domain,
-      score: progress.partialScore,
-      max_score: maxScore,
-      items_attempted: progress.itemsAttempted,
-      items_total: maxScore,
-      completed: false,
-    });
+    recordSJTPartialAttempt(userIdRef.current, { questionId: q.id, type: q.type, domain: q.domain }, progress);
   }, []);
 
   useEffect(() => {
@@ -151,45 +235,60 @@ export default function SJTTrainerSessionPage({
   }, [flushPartialIfNeeded]);
 
   useEffect(() => {
-    const onPageHide = () => flushPartialIfNeeded();
+    const onPageHide = () => flushPartialIfNeeded("pagehide");
     window.addEventListener("pagehide", onPageHide);
     return () => window.removeEventListener("pagehide", onPageHide);
   }, [flushPartialIfNeeded]);
 
   const handleProgress = useCallback((progress: SJTQuizProgress) => {
     progressRef.current = progress;
-  }, []);
+    writeActivePointer();
+  }, [writeActivePointer]);
 
-  const handleComplete = useCallback(
+  const handleSubmitted = useCallback(
     (score: number, max: number) => {
-      if (question) {
-        savedQuestionIdRef.current = question.id;
-        recordSJTAttempt({
-          questionId: question.id,
-          domain: question.domain,
-          type: question.type,
-          score,
-          maxScore: max,
-        });
-        void persistSJTSession(user?.id ?? null, {
-          question_id: question.id,
-          question_type: question.type,
-          domain: question.domain,
-          score,
-          max_score: max,
-          items_attempted: max,
-          items_total: max,
-          completed: true,
-        });
-      }
+      if (!question || savedQuestionIdRef.current === question.id) return;
+      clearSJTAnswerDraft(draftScope, question.type, question.id);
+      // Clear the pointer before recording, so the scenario can never also be recorded as partial.
+      claimActiveSJTScenario(draftScope, question.type, question.id);
+      pointerQuestionIdRef.current = null;
+      const hadReviewEntry = Boolean(review) || loadSJTReviews(user?.id).some((entry) => entry.id === question.id && entry.type === question.type);
+      const savedLocally = saveSJTReview(user?.id ?? null, question, score, max);
+      setReviewSaved(savedLocally);
+      if (user?.id && savedLocally) void syncSJTReviewOutcome(user.id, question, hadReviewEntry);
+      savedQuestionIdRef.current = question.id;
+      recordSJTAttempt({
+        questionId: question.id,
+        domain: question.domain,
+        type: question.type,
+        score,
+        maxScore: max,
+      });
+      void persistSJTSession(user?.id ?? null, {
+        question_id: question.id,
+        question_type: question.type,
+        domain: question.domain,
+        score,
+        max_score: max,
+        items_attempted: max,
+        items_total: max,
+        completed: true,
+      });
       setSessionScore((s) => s + score);
       setSessionMax((m) => m + max);
       setQuestionsAttempted((n) => n + 1);
       setLastScore({ score, max });
       setPerformanceRefreshKey((key) => key + 1);
+    },
+    [question, user?.id, review, draftScope],
+  );
+
+  const handleComplete = useCallback(
+    (score: number, max: number) => {
+      handleSubmitted(score, max);
       setPhase("between");
     },
-    [question, user?.id],
+    [handleSubmitted],
   );
 
   const handleNext = useCallback(async () => {
@@ -204,6 +303,19 @@ export default function SJTTrainerSessionPage({
     }
   }, [advanceToNext]);
 
+  /** Discard a resumed scenario (recording its partial attempt) and serve a new one. */
+  const handleStartNew = useCallback(async () => {
+    flushPartialIfNeeded();
+    setAdvancing(true);
+    try {
+      await advanceToNext();
+      savedQuestionIdRef.current = null;
+      progressRef.current = null;
+    } finally {
+      setAdvancing(false);
+    }
+  }, [advanceToNext, flushPartialIfNeeded]);
+
   const handleReset = useCallback(() => {
     flushPartialIfNeeded();
     setSessionScore(0);
@@ -216,12 +328,14 @@ export default function SJTTrainerSessionPage({
     resetSession();
   }, [resetSession, flushPartialIfNeeded]);
 
-  const showIntroSkeleton = phase === "intro" && (authLoading || loading) && !question;
+  const showIntroSkeleton = phase === "intro" && (authLoading || loading) && !question && (!reviewId || !!review);
   const noQuestions = !authLoading && !loading && !question && !error;
 
   const quizHandlers: SJTQuizHandlers = {
     onComplete: handleComplete,
+    onSubmitted: handleSubmitted,
     onProgress: handleProgress,
+    draftScope,
   };
 
   return (
@@ -276,9 +390,26 @@ export default function SJTTrainerSessionPage({
           {phase === "intro" && (
             <div className="space-y-5">
               {introContent}
+              {reviewId ? <div className="rounded-xl border border-border p-4 text-sm">
+                {review ? "Delayed retry: answer from memory before checking the explanations." : "This review is not due or is no longer in your queue."}
+                <Link to="/ucat-sjt-practice" className="block text-primary underline mt-2">View my review queue</Link>
+              </div> : <fieldset className="grid sm:grid-cols-2 gap-4 rounded-xl border border-border p-4">
+                <legend className="px-2 font-semibold text-sm">Target your practice</legend>
+                <label className="text-sm font-medium">Topic (GMC domain)
+                  <select value={topic} onChange={e => { const next = new URLSearchParams(params); next.set("topic", e.target.value); setParams(next, { replace: true }); }} className="block w-full mt-2 min-h-[44px] rounded-lg border border-border bg-card px-3">
+                    <option value="">All topics</option>
+                    {GMC_DOMAINS_LIST.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                  </select>
+                </label>
+                <label className="text-sm font-medium">Difficulty
+                  <select value={difficulty} onChange={e => { const next = new URLSearchParams(params); next.set("difficulty", e.target.value); setParams(next, { replace: true }); }} className="block w-full mt-2 min-h-[44px] rounded-lg border border-border bg-card px-3">
+                    <option value="">All difficulties</option><option value="easy">Foundation</option><option value="medium">Standard</option><option value="hard">Challenging</option>
+                  </select>
+                </label>
+              </fieldset>}
               {showIntroSkeleton && <SJTQuestionSkeleton />}
               {noQuestions && !error && (
-                <p className="text-sm text-muted-foreground text-center">{emptyMessage}</p>
+                <p className="text-sm text-muted-foreground text-center">{reviewId ? "This scenario is no longer available for review." : topic || difficulty ? "No published scenarios match these filters. Try another topic or difficulty." : emptyMessage}</p>
               )}
               {question && !showIntroSkeleton && (
                 <button
@@ -299,7 +430,23 @@ export default function SJTTrainerSessionPage({
             </div>
           )}
 
-          {phase === "quiz" && question && renderQuiz(question, quizHandlers)}
+          {noQuestions && reviewId && <button type="button" className="min-h-[44px] text-sm text-primary underline" onClick={() => {
+            if (removeSJTReview(user?.id ?? null, reviewId, type)) {
+              if (user?.id) void syncSJTReviewRemoval(user.id, reviewId, type, review?.domain);
+              setParams({});
+            } else setReviewSaved(false);
+          }}>Remove unavailable scenario from my review queue</button>}
+          {phase === "quiz" && noQuestions && <p role="status" className="text-sm text-muted-foreground">No scenarios are available with these filters. <button type="button" onClick={handleReset} className="underline text-primary min-h-[44px]">Change practice settings</button></p>}
+          {phase === "quiz" && !loading && question && question.id === resumedQuestionId && (
+            <div role="status" className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm text-foreground">
+              <span>Picked up where you left off.</span>
+              <button type="button" onClick={() => void handleStartNew()} disabled={advancing} className="min-h-[44px] text-sm text-primary underline disabled:opacity-50">
+                Start a new scenario instead
+              </button>
+            </div>
+          )}
+          {phase === "quiz" && loading && <SJTQuestionSkeleton />}
+          {phase === "quiz" && !loading && question && renderQuiz(question, quizHandlers)}
 
           {phase === "between" && (
             <div className="space-y-5 max-w-xl mx-auto">
@@ -330,15 +477,31 @@ export default function SJTTrainerSessionPage({
                 Completed scenarios sync to your dashboard when you are signed in. If you leave
                 mid-scenario, partial progress is saved too.
               </p>
+              {!reviewSaved && <p role="status" className="text-sm text-destructive">Your browser could not save this mistake review. Check that browser storage is available.</p>}
+              {reviewSaved && lastScore && lastScore.score < lastScore.max && <p role="status" className="text-sm text-muted-foreground">Added to your mistake reviews. Your next retry is in 24 hours.</p>}
+              <SJTNextDrill onStart={handleReset} />
+              {lastScore && lastScore.score < lastScore.max && <aside className="rounded-xl border border-border p-4 space-y-2">
+                <h2 className="font-semibold text-sm">Want help with your SJT reasoning?</h2>
+                <p className="text-sm text-muted-foreground">If the distinction between these answers is still unclear after the explanations, a tutor can work through your reasoning with you.</p>
+                <a
+                  href={UCAT_TUTORING_URL + "?utm_source=trainer&utm_medium=feedback&utm_campaign=sjt"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => void trackEvent("upsell_click", { offer: "tutoring", placement: "post_drill", skill: `sjt_${type}` })}
+                  className="inline-flex items-center min-h-[44px] text-sm text-primary underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-md"
+                >
+                  Explore SJT tutoring (opens in a new tab)
+                </a>
+              </aside>}
               {advancing && <SJTQuestionSkeleton />}
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   type="button"
-                  onClick={() => void handleNext()}
+                  onClick={() => { if (reviewId) setParams({}); else void handleNext(); }}
                   disabled={advancing}
-                  className="flex-1 min-h-[44px] rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors inline-flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="flex-1 min-h-[44px] rounded-xl border border-border bg-card text-foreground font-semibold text-sm hover:bg-secondary transition-colors inline-flex items-center justify-center gap-2 disabled:opacity-50"
                 >
-                  Next scenario
+                  {reviewId ? "Return to practice" : "Next scenario"}
                   <ChevronRight className="w-4 h-4" aria-hidden />
                 </button>
                 <button

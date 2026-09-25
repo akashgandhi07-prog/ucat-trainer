@@ -86,10 +86,16 @@ function mapSjt(raw: Record<string, unknown>, meta: TrainerMeta): ImportDraftPay
   }
 
   const sanitizedItems = sanitizeSjtItems(items) ?? items;
+  // Keep the scenario citation. Previously only item-level references survived
+  // an import, causing sourced questions to fall back to a generic domain link.
+  const gmpRef = asRecord(raw.gmpRef) ?? asRecord(raw.gmp_ref) ?? asRecord(asRecord(raw.content)?.gmpRef);
   const content: Record<string, unknown> = sanitizeQuestionContent(
     {
       domain,
       items: sanitizedItems,
+      ...(gmpRef && str(gmpRef.label) && str(gmpRef.url)
+        ? { gmpRef: { label: str(gmpRef.label), url: str(gmpRef.url) } }
+        : {}),
       pivotInsight:
         str(raw.pivotInsight) ||
         str(raw.pivot_insight) ||

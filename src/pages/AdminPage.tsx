@@ -13,6 +13,8 @@ import AdminAnalyticsSection from "../components/admin/AdminAnalyticsSection";
 import AdminPerUserActivitySection from "../components/admin/AdminPerUserActivitySection";
 import AdminRegistrationsSection from "../components/admin/AdminRegistrationsSection";
 import AdminNewUsersSection from "../components/admin/AdminNewUsersSection";
+import AdminSJTQualitySection, { type SJTQualityRow, type SJTQualityStatus } from "../components/admin/AdminSJTQualitySection";
+import { isMissingRpcError } from "../lib/sjtApi";
 import { resolveFlaggedQuestion, type ResolvedQuestion } from "../lib/resolveFlaggedQuestion";
 import {
   loadQuestionOverrides,
@@ -220,6 +222,8 @@ export default function AdminPage() {
   const [dateRange, setDateRange] = useState<AdminDateRange>("30");
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
+  const [sjtQuality, setSjtQuality] = useState<SJTQualityRow[]>([]);
+  const [sjtQualityStatus, setSjtQualityStatus] = useState<SJTQualityStatus>("ok");
   const [usageSummary, setUsageSummary] = useState<UsageSummaryResponse | null>(null);
   const [feedback, setFeedback] = useState<FeedbackRow[]>([]);
   const [feedbackFilter, setFeedbackFilter] = useState<FeedbackFilter>("all");
@@ -254,7 +258,6 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (!user || !isAdmin) {
-      /* eslint-disable-next-line react-hooks/set-state-in-effect -- stop loading when auth resolved */
       setLoading(false);
       return;
     }
@@ -264,12 +267,13 @@ export default function AdminPage() {
     const rpcParams = { since_ts, until_ts };
 
     (async () => {
-      const [statsRes, analyticsRes, usageRes, newUsersRes, registrationsRes] = await Promise.all([
+      const [statsRes, analyticsRes, usageRes, newUsersRes, registrationsRes, sjtQualityRes] = await Promise.all([
         supabase.rpc("get_admin_stats", rpcParams),
         supabase.rpc("get_analytics_summary", rpcParams),
         supabase.rpc("get_admin_usage_summary", rpcParams),
         supabase.rpc("get_admin_new_users", { ...rpcParams, limit_rows: 300 }),
         supabase.rpc("get_admin_registrations_overview", { limit_rows: 5000 }),
+        supabase.rpc("get_admin_sjt_quality_signals", { since_ts }),
       ]);
       if (!mounted) return;
       if (statsRes.error) {
@@ -279,6 +283,14 @@ export default function AdminPage() {
         return;
       }
       setStats(statsRes.data as AdminStats);
+      if (sjtQualityRes.error) {
+        dashboardLog.warn("Admin SJT quality signals failed", { message: sjtQualityRes.error.message, code: sjtQualityRes.error.code });
+        setSjtQuality([]);
+        setSjtQualityStatus(isMissingRpcError(sjtQualityRes.error) ? "missing" : "error");
+      } else {
+        setSjtQuality((sjtQualityRes.data as SJTQualityRow[]) ?? []);
+        setSjtQualityStatus("ok");
+      }
       if (analyticsRes.error) {
         dashboardLog.warn("Admin analytics failed", { message: analyticsRes.error.message });
         setAnalytics(null);
@@ -1116,6 +1128,7 @@ export default function AdminPage() {
         )}
 
         {analytics && <AdminAnalyticsSection analytics={analytics} />}
+        <AdminSJTQualitySection rows={sjtQuality} status={sjtQualityStatus} />
         <AdminQuestionFeedbackSection
           questionFeedback={questionFeedback}
           qfTrainerFilter={qfTrainerFilter}

@@ -66,7 +66,16 @@ export default function ResetPasswordPage() {
     if (error) {
       authLog.error("Password update failed", { message: error.message });
       setStatus("error");
-      setMessage(error.message?.includes("length") ? "Password does not meet requirements. " + getPasswordRequirementHint() : "Could not update password. Please try again.");
+      const reason = error.message ?? "";
+      // Supabase rejects a "new" password that matches the current one. Without saying so,
+      // the user concludes the reset failed and keeps requesting links.
+      setMessage(
+        reason.includes("different from the old")
+          ? "That is already the password on this account, so nothing needs changing. Sign in with it, or choose a different password."
+          : reason.includes("length")
+            ? "Password does not meet requirements. " + getPasswordRequirementHint()
+            : "Could not update password. Please try again.",
+      );
       return;
     }
 

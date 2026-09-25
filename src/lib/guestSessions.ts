@@ -1,4 +1,5 @@
 import type { SessionInsertPayload } from "../types/session";
+import { isSessionTrainingType } from "../types/training";
 
 export const GUEST_SESSIONS_KEY = "guest_sessions";
 
@@ -18,7 +19,7 @@ export function getGuestSessions(): GuestSessionPayload[] {
         typeof item.training_type === "string" &&
         typeof item.correct === "number" &&
         typeof item.total === "number" &&
-        ["speed_reading", "rapid_recall", "keyword_scanning", "inference_trainer", "mental_maths", "calculator", "unit_conversions", "not_except"].includes(item.training_type)
+        isSessionTrainingType(item.training_type)
     );
   } catch {
     return [];

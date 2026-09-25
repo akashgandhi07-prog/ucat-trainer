@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import { ChevronRight } from "lucide-react";
 import { cn } from "../../lib/cn";
+import { Link } from "react-router-dom";
 
 export type HubTrainerCardAccent = "primary" | "blue" | "amber" | "emerald" | "violet";
 
@@ -44,7 +45,9 @@ type HubTrainerCardProps = {
   title: string;
   description: string;
   icon: LucideIcon;
-  onClick: () => void;
+  onClick?: () => void;
+  /** Internal destination. Prefer this over onClick so crawlers and keyboard users get a real link. */
+  to?: string;
   accent?: HubTrainerCardAccent;
   /** Small uppercase label above the title (e.g. benefit line on VR / SJT). */
   eyebrow?: string;
@@ -62,6 +65,7 @@ export default function HubTrainerCard({
   description,
   icon: Icon,
   onClick,
+  to,
   accent = "primary",
   eyebrow,
   tip,
@@ -71,11 +75,7 @@ export default function HubTrainerCard({
 }: HubTrainerCardProps) {
   const styles = accentStyles[accent];
 
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
+  const className = cn(
         "group relative flex h-full flex-col items-stretch text-left rounded-xl border bg-card",
         "p-5 sm:p-6 transition-all duration-200",
         selected
@@ -84,8 +84,8 @@ export default function HubTrainerCard({
               "border-border shadow-card hover:-translate-y-0.5 hover:shadow-card-hover",
               styles.hoverBorder,
             ),
-      )}
-    >
+      );
+  const content = <>
       <div className="mb-3 flex items-start justify-between gap-2">
         <span
           className={cn(
@@ -151,6 +151,7 @@ export default function HubTrainerCard({
       {selected && !ctaLabel ? (
         <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" aria-hidden />
       ) : null}
-    </button>
-  );
+    </>;
+  if (to) return <Link to={to} className={className}>{content}</Link>;
+  return <button type="button" onClick={onClick} className={className}>{content}</button>;
 }

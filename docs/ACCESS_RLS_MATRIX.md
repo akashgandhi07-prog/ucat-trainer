@@ -24,6 +24,7 @@ This matrix is the checklist from the unify plan: who can reach which routes, wh
 | --- | :---: | :---: | :---: | :---: |
 | `profiles` | No direct writes | Own row read/update per policy | Limited read for students on linked plans | Provisioning, webhooks |
 | Trainer `sessions` (drills) | Per existing trainer policy | Own rows | Usually no | Jobs |
+| `skill_trainer_attempts` | No | Select/insert/update/delete own rows only | No | Maintenance |
 | `plans`, `plan_weeks`, `plan_days`, `plan_sessions` | Select only where share slug + policy allows | Full CRUD on own plan | Read/update per tutor policy | Regenerate RPC if any |
 | `session_completions` | No | Own student_id row | Insert/update/delete when linked tutor on same plan (see migration **031**) | Maintenance |
 | `plan_members` | No | Own membership rows | Tutor/student roles per invite | Invites |

@@ -1,0 +1,18 @@
+[
+  "001_profiles.sql",
+  "002_sessions.sql",
+  "003_bug_reports.sql",
+  "009_create_syllogism_tables.sql",
+  "010_create_analytics_events.sql",
+  "018_mailchimp_signup_webhook.sql",
+  "021_question_feedback.sql",
+  "024_planner_unified_plan_sessions.sql",
+  "034_sjt_questions.sql",
+  "037_sjt_sessions.sql",
+  "042_dm_trainer_questions_and_sessions.sql",
+  "20260519170000_user_question_history.sql",
+  "20260519190000_inference_history.sql",
+  "20260520100000_question_lab_tables.sql",
+  "20260617120000_weekly_summary_emails.sql",
+  "20260625120000_question_overrides.sql"
+]

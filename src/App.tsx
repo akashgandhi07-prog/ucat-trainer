@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { lazyWithRetry } from "./lib/lazyWithRetry";
@@ -38,6 +38,10 @@ const SyllogismMacroPage = lazyWithRetry(() => import("./pages/SyllogismMacroPag
 const VennLogicTrainerPage = lazyWithRetry(() => import("./pages/VennLogicTrainerPage"), "VennLogicTrainerPage");
 const DataLogicTrainerPage = lazyWithRetry(() => import("./pages/DataLogicTrainerPage"), "DataLogicTrainerPage");
 const ArgumentJudgeTrainerPage = lazyWithRetry(() => import("./pages/ArgumentJudgeTrainerPage"), "ArgumentJudgeTrainerPage");
+const QrSetupTrainerPage = lazyWithRetry(() => import("./pages/QrSetupTrainerPage"), "QrSetupTrainerPage");
+const QrDataExtractionTrainerPage = lazyWithRetry(() => import("./pages/QrDataExtractionTrainerPage"), "QrDataExtractionTrainerPage");
+const QrEstimationTrainerPage = lazyWithRetry(() => import("./pages/QrEstimationTrainerPage"), "QrEstimationTrainerPage");
+const DmConstraintBuilderPage = lazyWithRetry(() => import("./pages/DmConstraintBuilderPage"), "DmConstraintBuilderPage");
 const SJTHubPage = lazyWithRetry(() => import("./pages/SJTHubPage"), "SJTHubPage");
 const SJTAppropriatenessPage = lazyWithRetry(() => import("./pages/SJTAppropriatenessPage"), "SJTAppropriatenessPage");
 const SJTImportancePage = lazyWithRetry(() => import("./pages/SJTImportancePage"), "SJTImportancePage");
@@ -67,6 +71,22 @@ function ConfigureRedirect() {
   return <Navigate to={{ pathname: "/", search }} replace />;
 }
 
+const PRIVATE_INDEX_PATHS = ["/dashboard", "/study-plan", "/mock-scores", "/admin", "/tutor", "/join/", "/reset-password"];
+function RouteIndexingPolicy() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    document.head.querySelectorAll("meta[data-route-indexing]").forEach((element) => element.remove());
+    if (!PRIVATE_INDEX_PATHS.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`) || (prefix.endsWith("/") && pathname.startsWith(prefix)))) return;
+    const meta = document.createElement("meta");
+    meta.name = "robots";
+    meta.content = "noindex, nofollow";
+    meta.setAttribute("data-route-indexing", "private");
+    document.head.appendChild(meta);
+    return () => meta.remove();
+  }, [pathname]);
+  return null;
+}
+
 function App() {
   return (
     <BrowserRouter>
@@ -77,6 +97,7 @@ function App() {
             <AuthModalProvider>
               <BugReportProvider>
                 <PageViewTracker />
+                <RouteIndexingPolicy />
                 <WindowScrollToTop />
                 <Suspense fallback={<RouteFallback />}>
                 <Routes>
@@ -92,6 +113,7 @@ function App() {
                     <Route path="/ucat-decision-making-practice" element={<DecisionMakingPage />} />
                     <Route path="/ucat-venn-logic-practice-questions" element={<VennLogicTrainerPage />} />
                     <Route path="/ucat-data-logic-practice-questions" element={<DataLogicTrainerPage />} />
+                    <Route path="/ucat-dm-constraint-builder" element={<DmConstraintBuilderPage />} />
                     <Route
                       path="/ucat-argument-judge-practice-questions"
                       element={<ArgumentJudgeTrainerPage />}
@@ -99,6 +121,9 @@ function App() {
                     <Route path="/study-guides" element={<StudyGuidesPage />} />
                     <Route path="/ucat-mental-maths-trainer" element={<MentalMathsPage />} />
                     <Route path="/ucat-unit-conversions-trainer" element={<ConversionsTrainerPage />} />
+                    <Route path="/ucat-qr-setup-trainer" element={<QrSetupTrainerPage />} />
+                    <Route path="/ucat-qr-data-extraction-trainer" element={<QrDataExtractionTrainerPage />} />
+                    <Route path="/ucat-qr-estimation-trainer" element={<QrEstimationTrainerPage />} />
                     <Route path="/ucat-syllogism-foundations-trainer" element={<SyllogismFoundationPage />} />
                     <Route path="/ucat-syllogism-practice-macro-drills" element={<SyllogismMacroPage />} />
                     <Route path="/ucat-sjt-practice" element={<SJTHubPage />} />

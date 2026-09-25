@@ -1,0 +1,170 @@
+[
+  {
+    "id": "app-031",
+    "type": "appropriateness",
+    "domain": "patients_partnership_communication",
+    "difficulty": "foundation",
+    "stem": "Amelie is a medical student attending an outpatient clinic. Before the consultation, the doctor explains that Amelie would observe for teaching purposes and asks the patient's permission. The patient understands this but clearly declines, saying they would prefer to speak to the doctor alone. Amelie can wait outside without delaying the consultation. Rate each response independently.",
+    "pivotInsight": "Consent to receive care does not mean consent to student observation. More than one response can be very appropriate.",
+    "gmpRef": {
+      "label": "GMC confidentiality guidance: disclosing for education and training purposes",
+      "url": "https://www.gmc-uk.org/professional-standards/the-professional-standards/confidentiality---disclosing-for-education-and-training-purposes/disclosing-for-education-and-training-purposes"
+    },
+    "items": [
+      {
+        "id": "app-031-a",
+        "text": "Ask the patient to reconsider because Amelie has had few learning opportunities this week.",
+        "correctRating": "inappropriate",
+        "rationale": "This puts Amelie's educational needs ahead of a clearly expressed preference. The patient has already understood the request, so asking again for Amelie's benefit adds unnecessary pressure.",
+        "whyNotAdjacent": "The response is unhelpful rather than appropriate. It does not itself force Amelie to remain or falsely claim that observation is compulsory, so very inappropriate would overstate what this particular action says."
+      },
+      {
+        "id": "app-031-b",
+        "text": "Thank the patient for explaining their preference and leave the room before the consultation starts.",
+        "correctRating": "very_appropriate",
+        "rationale": "Amelie respects the decision promptly and allows the private consultation to proceed. There is no need to obtain a justification for the refusal.",
+        "whyNotAdjacent": "There is no stated drawback that would lower this to appropriate but not ideal. It directly respects the patient's choice."
+      },
+      {
+        "id": "app-031-c",
+        "text": "Tell the patient that the consultation can only go ahead if they agree to a student observing.",
+        "correctRating": "very_inappropriate",
+        "rationale": "This invents a condition on access to care and pressures the patient into accepting an unwanted observer. Nothing in the scenario makes Amelie's presence necessary.",
+        "whyNotAdjacent": "This is more serious than an insensitive request: it is a misleading threat to withhold the consultation."
+      },
+      {
+        "id": "app-031-d",
+        "text": "Reassure the patient that declining student observation will not affect their care, then wait outside.",
+        "correctRating": "very_appropriate",
+        "rationale": "This both respects the refusal and addresses any concern about consequences for care. It avoids bargaining or making the patient feel obliged to help.",
+        "whyNotAdjacent": "The reassurance is consistent with the facts and Amelie leaves immediately. The existence of another very appropriate response does not reduce this rating."
+      }
+    ]
+  },
+  {
+    "id": "app-032",
+    "type": "appropriateness",
+    "domain": "trust_professionalism",
+    "difficulty": "standard",
+    "stem": "Darius is preparing a reflection about listening to an anxious patient. The draft is saved in the university's approved secure portfolio and has not been submitted. He has removed the patient's name but included their exact age, unusual occupation, village and appointment date. Those details are unnecessary to explain what he learnt and, together, could identify the patient. Rate each response independently.",
+    "pivotInsight": "Removing a name is only one part of anonymisation. Retain the learning, not unnecessary identifying detail.",
+    "gmpRef": {
+      "label": "GMC: Anonymising reflective notes",
+      "url": "https://www.gmc-uk.org/education/standards-guidance-and-curricula/guidance/reflective-practice/the-reflective-practitioner---supplementary-guidance-for-medical-students/anonymising-reflective-notes"
+    },
+    "items": [
+      {
+        "id": "app-032-a",
+        "text": "Remove or generalise the identifying details and focus the reflection on what he learnt about listening.",
+        "correctRating": "very_appropriate",
+        "rationale": "This preserves the purpose of the reflection while addressing the actual identification risk. None of the listed details is needed to explain the learning.",
+        "whyNotAdjacent": "This is a suitable response to the stated problem, not merely an acceptable compromise. No educationally necessary information is lost."
+      },
+      {
+        "id": "app-032-b",
+        "text": "Post the unchanged reflection in a large student social-media group to ask whether it is anonymous enough.",
+        "correctRating": "very_inappropriate",
+        "rationale": "Darius already knows the combined details could identify the patient. Sharing them with a wider, unauthorised audience creates the very disclosure risk he should be preventing.",
+        "whyNotAdjacent": "This is more than a minor error in judgement because it actively spreads potentially identifiable patient information outside the approved portfolio."
+      },
+      {
+        "id": "app-032-c",
+        "text": "Keep the details because a reflection without the patient's name must be anonymous.",
+        "correctRating": "inappropriate",
+        "rationale": "The conclusion is wrong: the remaining details can identify the patient together. Darius should revise them before submitting the reflection.",
+        "whyNotAdjacent": "It is not appropriate because it ignores an explicit identification risk. Unlike publishing the draft to an unauthorised audience, this action retains it in the approved secure portfolio, which limits the severity of the stated action."
+      },
+      {
+        "id": "app-032-d",
+        "text": "Before submitting, discuss how to anonymise the reflection with his tutor without sharing the identifying details.",
+        "correctRating": "very_appropriate",
+        "rationale": "Seeking focused advice while withholding the unnecessary details is a responsible way to resolve uncertainty. The question does not require Darius to solve the entire issue without help.",
+        "whyNotAdjacent": "A safe request for relevant guidance should not be downgraded simply because another response edits the draft directly. This action addresses the problem without a stated disadvantage."
+      }
+    ]
+  },
+  {
+    "id": "app-033",
+    "type": "appropriateness",
+    "domain": "trust_professionalism",
+    "difficulty": "standard",
+    "stem": "Safiya is helping with a supervised audit of whether discharge information was documented. Three records cannot be accessed before tomorrow's meeting. The audit lead has asked her to identify missing data explicitly. Another student suggests marking the three unavailable records as complete because most of the other records were complete. Rate each response independently.",
+    "pivotInsight": "A plausible estimate is not an observation. Missing evidence should remain visible.",
+    "gmpRef": {
+      "label": "GMP domain 4, paragraphs 81, 88 and 89",
+      "url": "https://www.gmc-uk.org/professional-standards/the-professional-standards/good-medical-practice/domain-4-trust-and-professionalism"
+    },
+    "items": [
+      {
+        "id": "app-033-a",
+        "text": "Explain to the other student that the unavailable records cannot be assumed complete and ask them to help make that limitation clear in the presentation.",
+        "correctRating": "very_appropriate",
+        "rationale": "This rejects the proposed guess and involves the colleague in reporting the limitation honestly. Safiya does not accuse the colleague of having already falsified anything.",
+        "whyNotAdjacent": "It addresses the suggested misconduct constructively without a stated drawback. It need not be the only possible very appropriate action."
+      },
+      {
+        "id": "app-033-b",
+        "text": "Record the three results as unavailable and explain the limitation to the audit lead.",
+        "correctRating": "very_appropriate",
+        "rationale": "This reports exactly what is known and what is missing. The audit lead can decide how to present or follow up the incomplete dataset.",
+        "whyNotAdjacent": "It is not merely appropriate but not ideal: accurate reporting of unavailable evidence is the correct response to the stated limitation."
+      },
+      {
+        "id": "app-033-c",
+        "text": "Mark all three records as complete and report that she checked them.",
+        "correctRating": "very_inappropriate",
+        "rationale": "Safiya would be inventing findings and falsely claiming to have reviewed the records. The apparent consistency with other records cannot justify this.",
+        "whyNotAdjacent": "This crosses beyond an incomplete explanation into deliberate fabrication, which makes the lower-severity inappropriate category insufficient."
+      },
+      {
+        "id": "app-033-d",
+        "text": "Ask the audit lead whether the missing records can be checked later, while reporting them as unavailable in tomorrow's presentation.",
+        "correctRating": "very_appropriate",
+        "rationale": "This combines transparent reporting now with a practical plan for completing the work. It does not misrepresent the existing evidence or promise access she cannot guarantee.",
+        "whyNotAdjacent": "A later follow-up does not make the present report inadequate when the missing results are honestly identified. There is no stated reason to downgrade it."
+      }
+    ]
+  },
+  {
+    "id": "app-034",
+    "type": "appropriateness",
+    "domain": "colleagues_culture_safety",
+    "difficulty": "standard",
+    "stem": "After an unsuccessful formative assessment, medical student Ben tells his classmate Imani that he feels embarrassed and discouraged. He asks to talk privately and says he is safe and has support at home. There is no patient-care task or immediate safety concern. Rate each response independently.",
+    "pivotInsight": "Support should acknowledge the person's concern. Ordinary disappointment does not automatically justify sharing private information widely.",
+    "gmpRef": {
+      "label": "GMP domain 3, paragraphs 48 to 67 and 69 to 75",
+      "url": "https://www.gmc-uk.org/professional-standards/the-professional-standards/good-medical-practice/domain-3-colleagues-culture-and-safety"
+    },
+    "items": [
+      {
+        "id": "app-034-a",
+        "text": "Say, 'One difficult assessment does not define you,' then change the subject without giving Ben a chance to talk.",
+        "correctRating": "inappropriate",
+        "rationale": "The words are kind, but changing the subject straight away shuts down Ben's explicit request to talk privately. Using reassurance to close the conversation leaves him without the support he asked a colleague for.",
+        "whyNotAdjacent": "It is not appropriate because a kind phrase does not make up for refusing the conversation Ben asked for. It is not very inappropriate because it is not hostile, does not disclose his information and there is no stated safety risk."
+      },
+      {
+        "id": "app-034-b",
+        "text": "Tell Ben that he should stop making a fuss because everyone has problems.",
+        "correctRating": "inappropriate",
+        "rationale": "This dismisses Ben's experience and discourages him from seeking support. A private, respectful response is possible without agreeing that the assessment defines his abilities.",
+        "whyNotAdjacent": "The statement is unkind rather than helpful. It does not disclose his information, threaten him or describe a more serious pattern of bullying, so very inappropriate would overstate this isolated response."
+      },
+      {
+        "id": "app-034-c",
+        "text": "Listen privately, ask what support would help and offer to help him arrange a discussion with his tutor if he wants one.",
+        "correctRating": "very_appropriate",
+        "rationale": "This responds to the request and lets Ben participate in choosing support. There is no stated emergency requiring Imani to override his preferences.",
+        "whyNotAdjacent": "It meets the immediate need without a stated drawback, so appropriate but not ideal would underrate it."
+      },
+      {
+        "id": "app-034-d",
+        "text": "Post Ben's name and what he said in the year-group chat without asking him, so other students can comment.",
+        "correctRating": "very_inappropriate",
+        "rationale": "Ben requested privacy. Publicising a personal disclosure without permission exposes him to unwanted attention and breaks his trust, with no stated safety reason to do so.",
+        "whyNotAdjacent": "This is a deliberate, wide disclosure of a private conversation, not simply a clumsy attempt at reassurance."
+      }
+    ]
+  }
+]

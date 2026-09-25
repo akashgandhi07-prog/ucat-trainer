@@ -1,184 +1,76 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { fetchRandomSJTQuestion, isAbortError } from "../lib/sjtApi";
+import { fetchRandomSJTQuestion, isAbortError, type SJTPracticeFilters } from "../lib/sjtApi";
 import type { SJTQuestion, SJTQuestionType } from "../types/sjt";
 
-export function useSJTQuestionSession(type: SJTQuestionType, enabled = true) {
+export type SJTResumeStatus = "none" | "resumed" | "failed";
+
+/**
+ * @param resumeQuestionId When set, the first load reopens this scenario (a
+ *   half-finished one after a reload) instead of a random one. If it cannot be
+ *   loaded, resumeStatus becomes "failed" and a normal scenario loads instead.
+ */
+export function useSJTQuestionSession(
+  type: SJTQuestionType,
+  enabled = true,
+  filters: SJTPracticeFilters = {},
+  resumeQuestionId: string | null = null,
+) {
   const [question, setQuestion] = useState<SJTQuestion | null>(null);
-  const [prefetched, setPrefetched] = useState<SJTQuestion | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const seenIdsRef = useRef<string[]>([]);
-  const prefetchingRef = useRef(false);
-  const loadAbortRef = useRef<AbortController | null>(null);
-  const prefetchAbortRef = useRef<AbortController | null>(null);
-
-  const fetchOne = useCallback(
-    async (excludeIds: string[], signal?: AbortSignal) => {
-      return fetchRandomSJTQuestion(type, excludeIds, signal);
-    },
-    [type],
-  );
-
-  // Fetch a question, recycling the pool when every question has been seen: rather
-  // than dead-ending on a null (blank quiz screen), clear the seen list and serve a
-  // question again so a long session keeps going.
-  const fetchFresh = useCallback(
-    async (signal?: AbortSignal) => {
-      const q = await fetchOne(seenIdsRef.current, signal);
-      if (q || seenIdsRef.current.length === 0) return q;
-      if (signal?.aborted) return q;
-      seenIdsRef.current = [];
-      return fetchOne([], signal);
-    },
-    [fetchOne],
-  );
-
-  const loadInitial = useCallback(async () => {
+  const [resumeStatus, setResumeStatus] = useState<SJTResumeStatus>("none");
+  const seen = useRef<string[]>([]);
+  const pending = useRef<AbortController | null>(null);
+  // Only the first completed load may resume; later loads are always new scenarios.
+  const resumeDone = useRef(false);
+  const { domain, difficulty, questionId } = filters;
+  const load = useCallback(async () => {
     if (!enabled) return;
-    loadAbortRef.current?.abort();
+    pending.current?.abort();
     const controller = new AbortController();
-    loadAbortRef.current = controller;
-
-    setLoading(true);
-    setError(null);
+    pending.current = controller;
+    setLoading(true); setError(null); setQuestion(null);
     try {
-      const q = await fetchFresh(controller.signal);
+      const resumeId = !questionId && !resumeDone.current ? resumeQuestionId : null;
+      if (resumeId) {
+        let resumed: SJTQuestion | null = null;
+        try {
+          resumed = await fetchRandomSJTQuestion(type, [], controller.signal, 0, { questionId: resumeId });
+        } catch (e) {
+          if (isAbortError(e) || controller.signal.aborted) return;
+        }
+        if (controller.signal.aborted) return;
+        resumeDone.current = true;
+        if (resumed && resumed.id === resumeId && resumed.type === type) {
+          setQuestion(resumed);
+          seen.current = [...seen.current, resumed.id].slice(-1000);
+          setResumeStatus("resumed");
+          return;
+        }
+        setResumeStatus("failed");
+      } else if (!controller.signal.aborted) {
+        resumeDone.current = true;
+      }
+      const selection = { domain, difficulty, questionId };
+      let q = await fetchRandomSJTQuestion(type, questionId ? [] : seen.current, controller.signal, 0, selection);
+      if (!q && !questionId && seen.current.length && !controller.signal.aborted) {
+        seen.current = [];
+        q = await fetchRandomSJTQuestion(type, [], controller.signal, 0, selection);
+      }
       if (controller.signal.aborted) return;
       setQuestion(q);
-      if (q) {
-        seenIdsRef.current = [...seenIdsRef.current, q.id];
-      }
+      if (q && !questionId) seen.current = [...seen.current, q.id].slice(-1000);
     } catch (e) {
-      // Only silently discard if WE deliberately aborted (navigation away, reset, etc.)
-      if (controller.signal.aborted) return;
-      // Everything else - network errors, timeouts, unexpected abort-shaped errors - surface as errors
-      setError(
-        !isAbortError(e) && e instanceof Error
-          ? e.message
-          : "Failed to load question. Please check your connection and try again.",
-      );
-      setQuestion(null);
+      if (!controller.signal.aborted) setError(e instanceof Error ? e.message : "Unable to load a scenario. Please try again.");
     } finally {
-      if (!controller.signal.aborted) {
-        setLoading(false);
-      }
+      if (!controller.signal.aborted) setLoading(false);
     }
-  }, [enabled, fetchFresh]);
-
-  const prefetchNext = useCallback(async () => {
-    if (!enabled) return;
-    if (prefetchingRef.current || prefetched) return;
-
-    prefetchAbortRef.current?.abort();
-    const controller = new AbortController();
-    prefetchAbortRef.current = controller;
-    prefetchingRef.current = true;
-
-    try {
-      const q = await fetchFresh(controller.signal);
-      if (controller.signal.aborted) return;
-      setPrefetched(q);
-    } catch {
-      if (!controller.signal.aborted) {
-        setPrefetched(null);
-      }
-    } finally {
-      prefetchingRef.current = false;
-    }
-  }, [enabled, fetchFresh, prefetched]);
-
+  }, [type, enabled, domain, difficulty, questionId, resumeQuestionId]);
   useEffect(() => {
-    if (!enabled) return;
-    seenIdsRef.current = [];
-    setPrefetched(null);
-    void loadInitial();
-
-    return () => {
-      loadAbortRef.current?.abort();
-      prefetchAbortRef.current?.abort();
-    };
-  }, [type, enabled, loadInitial]);
-
-  // Recover from BFCache restoration (browser back/forward) or tab re-focus while stuck loading
-  useEffect(() => {
-    const retry = () => {
-      if (loadAbortRef.current?.signal.aborted === false && !question) {
-        // Still loading but question never arrived - re-trigger
-        void loadInitial();
-      }
-    };
-
-    const onPageShow = (e: PageTransitionEvent) => {
-      if (e.persisted) void loadInitial(); // page restored from BFCache
-    };
-
-    const onVisibilityChange = () => {
-      if (document.visibilityState === "visible") retry();
-    };
-
-    window.addEventListener("pageshow", onPageShow);
-    document.addEventListener("visibilitychange", onVisibilityChange);
-    return () => {
-      window.removeEventListener("pageshow", onPageShow);
-      document.removeEventListener("visibilitychange", onVisibilityChange);
-    };
-  }, [loadInitial, question]);
-
-  const advanceToNext = useCallback(async () => {
-    if (!enabled) return;
-    if (prefetched) {
-      setQuestion(prefetched);
-      seenIdsRef.current = [...seenIdsRef.current, prefetched.id];
-      setPrefetched(null);
-      void prefetchNext();
-      return;
-    }
-
-    loadAbortRef.current?.abort();
-    const controller = new AbortController();
-    loadAbortRef.current = controller;
-
-    setLoading(true);
-    setError(null);
-    try {
-      const q = await fetchFresh(controller.signal);
-      if (controller.signal.aborted) return;
-      setQuestion(q);
-      if (q) {
-        seenIdsRef.current = [...seenIdsRef.current, q.id];
-      }
-    } catch (e) {
-      if (controller.signal.aborted) return;
-      setError(
-        !isAbortError(e) && e instanceof Error
-          ? e.message
-          : "Failed to load question. Please check your connection and try again.",
-      );
-    } finally {
-      if (!controller.signal.aborted) {
-        setLoading(false);
-      }
-    }
-  }, [enabled, prefetched, fetchFresh, prefetchNext]);
-
-  const resetSession = useCallback(() => {
-    loadAbortRef.current?.abort();
-    prefetchAbortRef.current?.abort();
-    seenIdsRef.current = [];
-    setPrefetched(null);
-    setQuestion(null);
-    setError(null);
-    if (enabled) void loadInitial();
-  }, [enabled, loadInitial]);
-
-  return {
-    question,
-    loading,
-    error,
-    loadInitial,
-    prefetchNext,
-    advanceToNext,
-    resetSession,
-    retry: loadInitial,
-  };
+    seen.current = [];
+    void load();
+    return () => pending.current?.abort();
+  }, [load]);
+  const resetSession = useCallback(() => { seen.current = []; void load(); }, [load]);
+  return { question, loading, error, resumeStatus, advanceToNext: load, resetSession, retry: load };
 }

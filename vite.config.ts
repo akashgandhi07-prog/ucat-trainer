@@ -174,6 +174,21 @@ export default defineConfig(({ mode }) => {
     optimizeDeps: {
       include: ['react', 'react-dom', 'clsx', 'tailwind-merge', 'date-fns'],
     },
+    build: {
+      manifest: true,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (!id.includes('node_modules')) return undefined
+            if (/[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/.test(id)) return 'react-vendor'
+            if (id.includes('/node_modules/@supabase/') || id.includes('/node_modules/ws/')) return 'supabase-vendor'
+            if (id.includes('/node_modules/lucide-react/') || id.includes('/node_modules/@radix-ui/') || id.includes('/node_modules/sonner/')) return 'ui-vendor'
+            if (id.includes('/node_modules/date-fns/')) return 'date-vendor'
+            return undefined
+          },
+        },
+      },
+    },
     resolve: {
       alias: {
         '@/lib/app-navigation': path.resolve(plannerShim, 'app-navigation.tsx'),

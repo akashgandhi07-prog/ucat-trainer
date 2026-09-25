@@ -1,0 +1,170 @@
+[
+  {
+    "id": "imp-030",
+    "type": "importance",
+    "domain": "patients_partnership_communication",
+    "difficulty": "foundation",
+    "stem": "A doctor asks medical student Leila to help a patient access an approved information leaflet about a planned treatment. The patient says they cannot read the small print and would like a large-print version. There is time to arrange this before any decision is made. Rate the importance of each consideration when Leila decides how to help.",
+    "pivotInsight": "An information leaflet only helps if the patient can use it. Ask about support rather than assuming what a disability means.",
+    "gmpRef": {
+      "label": "GMP domain 2, paragraphs 24, 25 and 28 to 35",
+      "url": "https://www.gmc-uk.org/professional-standards/the-professional-standards/good-medical-practice/domain-2-patients-partnership-and-communication"
+    },
+    "items": [
+      {
+        "id": "imp-030-a",
+        "text": "Whether the patient can access and understand the information needed for their decision.",
+        "correctRating": "very_important",
+        "rationale": "This is central to the purpose of providing the leaflet. Simply delivering unreadable material would not meet that purpose.",
+        "whyNotAdjacent": "Important would understate a factor that determines whether the patient can use the information at all."
+      },
+      {
+        "id": "imp-030-b",
+        "text": "Leila's personal preference for the appearance of the small-print leaflet.",
+        "correctRating": "not_important",
+        "rationale": "Her aesthetic preference should not influence whether the patient receives accessible information.",
+        "whyNotAdjacent": "It has no relevant bearing on the patient's information needs, so even minor importance would give it undue weight."
+      },
+      {
+        "id": "imp-030-c",
+        "text": "Which colleague can help Leila obtain the approved large-print version.",
+        "correctRating": "important",
+        "rationale": "This helps Leila put the response into practice and avoid giving an unapproved or inaccurate substitute.",
+        "whyNotAdjacent": "It is more than a minor detail because assistance may be needed. It is not the fundamental reason to act: the need for accessible information remains whichever colleague supplies it."
+      },
+      {
+        "id": "imp-030-d",
+        "text": "The patient's expressed preference for large print.",
+        "correctRating": "very_important",
+        "rationale": "The patient has identified a specific barrier and a preferred form of support. That information should drive the response rather than an assumption about what they need.",
+        "whyNotAdjacent": "Important would understate the explicit information that makes the proposed adjustment appropriate to this individual."
+      }
+    ]
+  },
+  {
+    "id": "imp-031",
+    "type": "importance",
+    "domain": "colleagues_culture_safety",
+    "difficulty": "standard",
+    "stem": "Hugo must give written feedback on a fellow medical student's contribution to a joint teaching project. The instructions ask for specific observations and constructive suggestions. Hugo has worked with the student for three weeks. A friend who was not part of the project has also told Hugo that the student is lazy. Rate the importance of each consideration when Hugo writes the feedback.",
+    "pivotInsight": "Fair feedback separates observed behaviour from labels and hearsay, while remaining useful to the recipient.",
+    "gmpRef": {
+      "label": "GMP domain 3, paragraphs 48 to 67 and 69 to 75",
+      "url": "https://www.gmc-uk.org/professional-standards/the-professional-standards/good-medical-practice/domain-3-colleagues-culture-and-safety"
+    },
+    "items": [
+      {
+        "id": "imp-031-a",
+        "text": "How to word accurate criticism respectfully so the student can use it.",
+        "correctRating": "important",
+        "rationale": "Constructive wording improves the usefulness of feedback. Honesty does not require hostile or humiliating language.",
+        "whyNotAdjacent": "This is more than a minor presentational preference. However, respectful wording cannot compensate for inaccurate content, so the evidence supporting the assessment is the more fundamental consideration."
+      },
+      {
+        "id": "imp-031-b",
+        "text": "Whether Hugo can support his comments with things he personally observed during the project.",
+        "correctRating": "very_important",
+        "rationale": "The task requires a fair account of this student's contribution. Direct observations give the feedback a sound basis and allow specific examples.",
+        "whyNotAdjacent": "Important would understate the need for a defensible basis for the assessment itself."
+      },
+      {
+        "id": "imp-031-c",
+        "text": "Whether agreeing with his friend's opinion would make Hugo more popular with that friend.",
+        "correctRating": "not_important",
+        "rationale": "Personal popularity should not shape another student's assessment.",
+        "whyNotAdjacent": "There is no legitimate contribution to the feedback decision, so minor importance would still give this motive undue influence."
+      },
+      {
+        "id": "imp-031-d",
+        "text": "Whether the finished feedback uses bullets or short paragraphs, when both meet the instructions and are equally clear.",
+        "correctRating": "minor_importance",
+        "rationale": "Presentation can be chosen when preparing the feedback, but these two equally clear, permitted formats do not change the assessment or its usefulness.",
+        "whyNotAdjacent": "It is a small practical choice rather than an important determinant of the content. Not important at all would be too strong for a legitimate but low-impact presentation choice."
+      }
+    ]
+  },
+  {
+    "id": "imp-032",
+    "type": "importance",
+    "domain": "knowledge_skills_development",
+    "difficulty": "standard",
+    "stem": "Medical student Amina is preparing for a supervised clinical skills session next week. Her tutor has identified a specific gap in her technique and arranged a practice session using a model, with feedback. Amina is deciding how to prepare. Rate the importance of each consideration.",
+    "pivotInsight": "Use feedback to choose what to practise, then check improvement rather than equating confidence with competence.",
+    "gmpRef": {
+      "label": "Achieving good medical practice: guidance for medical students",
+      "url": "https://www.gmc-uk.org/-/media/documents/agmp-2024-for-medical-students-english_pdf-108649541.pdf"
+    },
+    "items": [
+      {
+        "id": "imp-032-a",
+        "text": "Whether her classmates would think she looked naturally talented if she did not need to practise.",
+        "correctRating": "not_important",
+        "rationale": "The appearance of effortless ability is not a sound reason to avoid addressing a known learning need.",
+        "whyNotAdjacent": "This consideration should not influence the learning decision, rather than simply carrying a small amount of weight."
+      },
+      {
+        "id": "imp-032-b",
+        "text": "Which part of the technique the tutor observed she needs to improve.",
+        "correctRating": "very_important",
+        "rationale": "This identifies the actual learning need and determines the focus of useful preparation.",
+        "whyNotAdjacent": "It is central to choosing the practice, not just helpful background information."
+      },
+      {
+        "id": "imp-032-c",
+        "text": "How to schedule preparation around her other required teaching sessions.",
+        "correctRating": "important",
+        "rationale": "A realistic plan helps Amina attend to the learning need without neglecting other commitments.",
+        "whyNotAdjacent": "It has a practical effect on whether preparation happens, so minor importance is too low. It does not establish what needs correcting, so it is not the central educational issue."
+      },
+      {
+        "id": "imp-032-d",
+        "text": "Whether she will receive feedback on her technique after practising.",
+        "correctRating": "very_important",
+        "rationale": "Without checking the result, Amina could repeat the original mistake while becoming more confident. Feedback helps establish whether the specific gap has been addressed.",
+        "whyNotAdjacent": "This is fundamental to evaluating improvement, rather than an optional convenience that merits only important."
+      }
+    ]
+  },
+  {
+    "id": "imp-033",
+    "type": "importance",
+    "domain": "patients_partnership_communication",
+    "difficulty": "standard",
+    "stem": "Medical student Ravi is helping a supervised research team arrange an optional interview study. A patient says they no longer want to attend their interview next week and asks whether this will affect their usual care. The approved participant information says participation is voluntary and declining the interview will not affect care. Ravi is deciding how to respond. Rate each consideration independently.",
+    "pivotInsight": "Respect the decision about future participation and explain its effect accurately. Do not assume this question also settles what happens to previously collected data.",
+    "gmpRef": {
+      "label": "GMC Good practice in research, paragraphs 38 to 41",
+      "url": "https://www.gmc-uk.org/professional-standards/the-professional-standards/good-practice-in-research/good-practice-in-research"
+    },
+    "items": [
+      {
+        "id": "imp-033-a",
+        "text": "Whether Ravi would miss his personal recruitment target if the patient declines.",
+        "correctRating": "not_important",
+        "rationale": "A personal target must not be used to pressure the patient or influence whether their choice is respected.",
+        "whyNotAdjacent": "Minor importance would still suggest that Ravi's target may legitimately weigh against the patient's voluntary decision."
+      },
+      {
+        "id": "imp-033-b",
+        "text": "The patient's clear wish not to attend the optional interview.",
+        "correctRating": "very_important",
+        "rationale": "The patient has made a decision about future participation. Respecting that decision is central to the response.",
+        "whyNotAdjacent": "It is not merely one useful consideration among others; it determines that the interview should not be imposed."
+      },
+      {
+        "id": "imp-033-c",
+        "text": "How the research team should be told, through its approved process, to stop sending interview reminders.",
+        "correctRating": "important",
+        "rationale": "This helps make the patient's decision effective and avoids unwanted follow-up messages.",
+        "whyNotAdjacent": "It is more than a minor administrative preference because it prevents further invitations. The logistics support, rather than determine, the underlying voluntary choice."
+      },
+      {
+        "id": "imp-033-d",
+        "text": "Whether the patient understands that declining this interview will not affect their usual care.",
+        "correctRating": "very_important",
+        "rationale": "The patient has specifically asked about a consequence that might make them feel obliged to participate. Accurate reassurance is essential here and is supported by the stated participant information.",
+        "whyNotAdjacent": "Important would understate the need to remove the particular pressure or misunderstanding identified in the scenario."
+      }
+    ]
+  }
+]

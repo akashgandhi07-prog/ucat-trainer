@@ -30,6 +30,8 @@ interface SEOHeadProps {
   twitterCreator?: string;
   /** When true, ask search engines not to index this page (e.g. reset password, account pages). */
   noindex?: boolean;
+  /** Schema must match the visible page: hubs/lists are CollectionPage; drills are LearningResource. */
+  schemaType?: "LearningResource" | "CollectionPage";
 }
 
 const SITE_NAME = "TheUKCATPeople";
@@ -62,7 +64,7 @@ function captureDefaults() {
 
 function removeManagedTags() {
   document.head
-    .querySelectorAll(`[${MANAGED_ATTR}]`)
+    .querySelectorAll(`[${MANAGED_ATTR}], [data-seo-static]`)
     .forEach((el) => el.remove());
 }
 
@@ -192,6 +194,7 @@ function buildApplicationSchema(
     canonicalUrl?: string;
     imageUrl?: string;
     siteBaseUrl?: string;
+    schemaType: "LearningResource" | "CollectionPage";
     }
 ) {
   const {
@@ -200,6 +203,7 @@ function buildApplicationSchema(
     canonicalUrl,
     imageUrl,
     siteBaseUrl,
+    schemaType,
   } = options;
 
   const creatorId =
@@ -207,7 +211,13 @@ function buildApplicationSchema(
       ? creatorPersonId(siteBaseUrl)
       : undefined;
 
-  const app: Record<string, unknown> = {
+  const app: Record<string, unknown> = schemaType === "CollectionPage" ? {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: title,
+    description,
+    inLanguage: "en-GB",
+  } : {
     "@context": "https://schema.org",
     "@type": ["SoftwareApplication", "LearningResource"],
     name: title,
@@ -235,7 +245,7 @@ function buildApplicationSchema(
     educationalUse: SEO_EDUCATIONAL_USE,
   };
 
-  if (creatorId) {
+  if (creatorId && schemaType === "LearningResource") {
     app.author = { "@id": creatorId };
     app.creator = { "@id": creatorId };
   }
@@ -275,6 +285,7 @@ export default function SEOHead({
   twitterSite,
   twitterCreator,
   noindex,
+  schemaType = "LearningResource",
 }: SEOHeadProps) {
   const fullTitle = `${title} | ${SITE_NAME}`;
   const siteBaseUrl = canonicalUrl
@@ -302,6 +313,7 @@ export default function SEOHead({
         canonicalUrl,
         imageUrl,
         siteBaseUrl,
+        schemaType,
       })
     );
     if (breadcrumbs && breadcrumbs.length > 0) {

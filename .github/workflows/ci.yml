@@ -16,4 +16,11 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
+      - run: npm run verify:sjt
+      - run: npm run verify:sjt-review
+      - run: npm run verify:progress
+      - run: npm run verify:sjt-recommendation
+      - run: npm run verify:sjt-recovery
       - run: npm run build
+      - run: npm run check:bundle
+      - run: npm run verify:seo

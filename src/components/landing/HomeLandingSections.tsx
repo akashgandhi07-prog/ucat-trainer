@@ -209,17 +209,10 @@ export function LandingTrustStrip({ className }: { className?: string }) {
   );
 }
 
-type SectionHubProps = {
-  onVerbal: () => void;
-  onDecision: () => void;
-  onQuant: () => void;
-  onSjt: () => void;
-};
-
-export function LandingSectionHub({ onVerbal, onDecision, onQuant, onSjt }: SectionHubProps) {
+export function LandingSectionHub() {
   const cards = [
     {
-      onClick: onVerbal,
+      to: "/ucat-verbal-reasoning-practice",
       icon: BookOpen,
       accent: "bg-subject-vr/20 text-subject-vr group-hover:bg-subject-vr/30",
       title: "Verbal Reasoning",
@@ -227,7 +220,7 @@ export function LandingSectionHub({ onVerbal, onDecision, onQuant, onSjt }: Sect
       label: "4 trainers",
     },
     {
-      onClick: onDecision,
+      to: "/ucat-decision-making-practice",
       icon: Scale,
       accent: "bg-subject-dm/20 text-subject-dm group-hover:bg-subject-dm/30",
       title: "Decision Making",
@@ -235,7 +228,7 @@ export function LandingSectionHub({ onVerbal, onDecision, onQuant, onSjt }: Sect
       label: "5 trainers",
     },
     {
-      onClick: onQuant,
+      to: "/ucat-quantitative-reasoning-practice",
       icon: Calculator,
       accent: "bg-subject-qr/20 text-subject-qr group-hover:bg-subject-qr/30",
       title: "Quantitative Reasoning",
@@ -243,7 +236,7 @@ export function LandingSectionHub({ onVerbal, onDecision, onQuant, onSjt }: Sect
       label: "3 trainers",
     },
     {
-      onClick: onSjt,
+      to: "/ucat-sjt-practice",
       icon: Users,
       accent: "bg-subject-sjt/20 text-subject-sjt group-hover:bg-subject-sjt/30",
       title: "Situational Judgement",
@@ -264,11 +257,10 @@ export function LandingSectionHub({ onVerbal, onDecision, onQuant, onSjt }: Sect
           </p>
         </div>
         <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-          {cards.map(({ onClick, icon: Icon, accent, title, desc, label }) => (
-            <button
+          {cards.map(({ to, icon: Icon, accent, title, desc, label }) => (
+            <Link
               key={title}
-              type="button"
-              onClick={onClick}
+              to={to}
               className="group relative flex items-start gap-4 rounded-xl border border-white/10 bg-white/5 p-4 text-left transition-all hover:border-white/25 hover:bg-white/10 md:flex-col md:items-center md:rounded-2xl md:p-6 md:text-center"
             >
               <div
@@ -294,7 +286,7 @@ export function LandingSectionHub({ onVerbal, onDecision, onQuant, onSjt }: Sect
                   <ArrowRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden />
                 </span>
               </div>
-            </button>
+            </Link>
           ))}
         </div>
       </LandingContainer>

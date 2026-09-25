@@ -2,7 +2,7 @@
 
 ## Explanation formatting (required)
 
-Use **line breaks between points** in rationales where needed. **No em dash or en dash** (`—` `–`) in any student-facing text. See `_shared-explanation-formatting.md`.
+Use **line breaks between points** in rationales where needed. **No em dash or en dash** (`:` ` to `) in any student-facing text. See `_shared-explanation-formatting.md`.
 
 ---
 
@@ -10,12 +10,14 @@ Use **line breaks between points** in rationales where needed. **No em dash or e
 
 Students learn to rate how important each consideration is when deciding how to respond to a professional scenario. The rating scale is:
 
-- **Very important** — must be considered; directly affects the correct response
-- **Important** — worth considering but not the primary concern
-- **Of minor importance** — relevant but would not significantly change what you do
-- **Not important at all** — irrelevant to the professional decision
+- **Very important** : must be considered; directly affects the correct response
+- **Important** : worth considering but not the primary concern
+- **Of minor importance** : relevant but would not significantly change what you do
+- **Not important at all** : irrelevant to the professional decision
 
-The core skill is prioritising correctly across competing professional concerns — not just knowing what matters in general, but knowing what matters *in this specific situation*.
+The core skill is prioritising correctly across competing professional concerns : not just knowing what matters in general, but knowing what matters *in this specific situation*.
+
+Assess each consideration independently against the precise decision in the stem. More than one may be very important, and not every category has to appear. Do not downgrade a consideration merely because another factor is also essential. Explain both neighbouring category boundaries for middle ratings. GMC guidance establishes professional principles, not the exact rating of a newly written UCAT-style item.
 
 ## Domains To Cover
 
@@ -26,7 +28,7 @@ The core skill is prioritising correctly across competing professional concerns 
 - When personal preference conflicts with professional duty
 - When information is uncertain or incomplete
 
-Aim for scenarios where the difficulty comes from distinguishing "very important" from "important" — the easy traps are things students think sound important but are irrelevant to this specific scenario.
+Aim for scenarios where the difficulty comes from distinguishing "very important" from "important" : the easy traps are things students think sound important but are irrelevant to this specific scenario.
 Difficulty split: 25% easy, 50% medium, 25% hard.
 
 ## Our Explanation Style
@@ -37,17 +39,17 @@ Good explanation structure:
 1. Summarise what decision is being made in the scenario
 2. For the "Very important" item: explain what would go wrong if this were ignored
 3. For the "Not important" item: explain why it sounds relevant but is not actually a factor here
-4. For middle items: explain the gradient — what makes one factor more pressing than another in this context
+4. For middle items: explain the gradient : what makes one factor more pressing than another in this context
 5. Name the most common prioritisation mistake for this scenario type
 
 The tone is teaching priority-setting as a professional skill. The student should understand the reasoning, not just memorise the answers.
 
 ## Key Prioritisation Rules
 
-- Safety-critical information is always very important
-- Procedural compliance matters but usually ranks below direct harm prevention
-- Personal feelings and preferences are rarely "very important" in professional decisions
-- "Important" does not mean irrelevant — it means worth considering but not the main driver
+- Consider the actual significance of safety information to the specified decision
+- Distinguish essential safeguards from incidental administrative preferences
+- Do not dismiss wellbeing, distress or communication needs as mere personal feelings
+- "Important" does not mean irrelevant : it means worth considering but not the main driver
 - Context changes rankings: the same factor can be very important in one scenario and minor in another
 
 

@@ -8928,3 +8928,650 @@ create policy "Admins can delete question feedback"
 
 notify pgrst, 'reload schema';
 
+
+-- ##########################################################################
+-- Sections below (20260629120000 onwards) were appended in September 2026.
+-- Each one is written to be idempotent (if not exists, create or replace,
+-- drop policy if exists), so re-running them is safe.
+-- 20260629120000 to 20260922072557 are expected to be applied in production
+-- already; confirm with supabase_migrations.schema_migrations before re-running.
+-- Still pending as of 2026-09-25 (apply via supabase/PENDING_SEPT_2026_MIGRATIONS.sql):
+--   20260922120000_sjt_targeted_practice.sql
+--   20260924120000_sjt_review_sync.sql
+--   20260924121000_admin_sjt_quality_signals.sql
+--   20260925120000_skill_trainer_attempts.sql
+--   20260925143000_exam_attempts.sql
+--   20260925160000_skill_trainer_session_types.sql
+-- ##########################################################################
+
+-- ========== 20260629120000_plan_weeks_intensity.sql ==========
+-- Per-week study intensity.
+--
+-- Students told us a fixed plan feels either too easy or too brutal depending on the
+-- week. This adds a per-week effort dial the student sets at the start of each week:
+--   lighter  → ease off a tough week
+--   standard → the plan as generated (default)
+--   harder   → push this week's load up
+--
+-- The engine reads this back during regeneration (see regenerateFutureWeeks) and
+-- multiplies the week's daily minutes by a factor mapped from the label, so a single
+-- week can be dialled up or down without changing the student's overall stated hours.
+
+alter table public.plan_weeks
+  add column if not exists intensity text not null default 'standard'
+    check (intensity in ('lighter', 'standard', 'harder'));
+
+comment on column public.plan_weeks.intensity is
+  'Student-chosen effort level for the week: lighter | standard | harder. Drives a per-week minutes multiplier in the plan engine.';
+
+-- The atomic regeneration RPC inserts plan_weeks with an explicit column list, so it
+-- must carry intensity through too — otherwise every regenerate would reset weeks to
+-- the column default and silently drop the student's choices. Re-create it verbatim
+-- with intensity added to the plan_weeks insert.
+create or replace function public.apply_plan_regeneration(
+  p_plan_id uuid,
+  p_dates_to_clear date[],
+  p_week_ids_to_delete uuid[],
+  p_new_weeks jsonb default '[]'::jsonb,
+  p_new_days jsonb default '[]'::jsonb,
+  p_new_sessions jsonb default '[]'::jsonb
+) returns void
+language plpgsql
+security invoker
+set search_path = public
+as $$
+begin
+  if p_dates_to_clear is not null and array_length(p_dates_to_clear, 1) > 0 then
+    delete from plan_sessions where plan_id = p_plan_id and day_date = any(p_dates_to_clear);
+    delete from plan_days     where plan_id = p_plan_id and day_date = any(p_dates_to_clear);
+  end if;
+
+  if p_week_ids_to_delete is not null and array_length(p_week_ids_to_delete, 1) > 0 then
+    delete from plan_weeks where plan_id = p_plan_id and id = any(p_week_ids_to_delete);
+  end if;
+
+  insert into plan_weeks
+    (id, plan_id, week_number, week_start, week_type, default_hours, difficulty_rating, intensity, is_locked, tutor_note)
+  select
+    (r->>'id')::uuid,
+    p_plan_id,
+    (r->>'week_number')::int,
+    (r->>'week_start')::date,
+    coalesce(r->>'week_type', 'school'),
+    coalesce((r->>'default_hours')::numeric, 2.0),
+    (r->>'difficulty_rating')::smallint,
+    coalesce(r->>'intensity', 'standard'),
+    coalesce((r->>'is_locked')::boolean, false),
+    r->>'tutor_note'
+  from jsonb_array_elements(coalesce(p_new_weeks, '[]'::jsonb)) r;
+
+  insert into plan_days
+    (id, plan_id, plan_week_id, day_date, availability, custom_hours, is_rest)
+  select
+    (r->>'id')::uuid,
+    p_plan_id,
+    (r->>'plan_week_id')::uuid,
+    (r->>'day_date')::date,
+    coalesce(r->>'availability', 'available'),
+    (r->>'custom_hours')::numeric,
+    coalesce((r->>'is_rest')::boolean, false)
+  from jsonb_array_elements(coalesce(p_new_days, '[]'::jsonb)) r;
+
+  insert into plan_sessions
+    (id, plan_id, plan_day_id, day_date, session_type, duration_minutes, position, is_timed, notes, planner_rationale)
+  select
+    (r->>'id')::uuid,
+    p_plan_id,
+    (r->>'plan_day_id')::uuid,
+    (r->>'day_date')::date,
+    r->>'session_type',
+    coalesce((r->>'duration_minutes')::int, 60),
+    coalesce((r->>'position')::int, 0),
+    coalesce((r->>'is_timed')::boolean, false),
+    r->>'notes',
+    r->>'planner_rationale'
+  from jsonb_array_elements(coalesce(p_new_sessions, '[]'::jsonb)) r;
+end;
+$$;
+
+revoke all on function public.apply_plan_regeneration(uuid, date[], uuid[], jsonb, jsonb, jsonb) from public, anon;
+grant execute on function public.apply_plan_regeneration(uuid, date[], uuid[], jsonb, jsonb, jsonb) to authenticated, service_role;
+
+
+-- ========== 20260707180000_syllogism_questions_admin_delete.sql ==========
+-- Allow admins to DELETE syllogism questions from the admin dashboard.
+--
+-- public.syllogism_questions has RLS enabled but (deliberately) no SELECT /
+-- INSERT / UPDATE policies: drills are served through SECURITY DEFINER RPCs,
+-- so ordinary API reads and writes are denied. That left the admin
+-- "delete syllogism question" button failing silently, because there was no
+-- DELETE policy either. Add an admin-only DELETE policy so the button works.
+--
+-- We intentionally do NOT add SELECT/INSERT/UPDATE policies: reads must keep
+-- going through the RPCs.
+
+drop policy if exists "Admins can delete syllogism questions" on public.syllogism_questions;
+create policy "Admins can delete syllogism questions"
+  on public.syllogism_questions for delete
+  to authenticated
+  using (
+    exists (
+      select 1 from public.profiles
+      where id = auth.uid() and role = 'admin'
+    )
+  );
+
+notify pgrst, 'reload schema';
+
+
+-- ========== 20260717120000_admin_read_question_banks.sql ==========
+-- The admin flagged-question panel resolves reported syllogism and SJT
+-- questions by id, but both tables are RPC-only (no SELECT policy), so the
+-- panel always fell back to "could not read from the database". Grant SELECT
+-- to admins only; student reads keep going through the SECURITY DEFINER RPCs.
+
+drop policy if exists "Admins can read syllogism questions" on public.syllogism_questions;
+create policy "Admins can read syllogism questions"
+  on public.syllogism_questions for select
+  to authenticated
+  using (
+    exists (
+      select 1 from public.profiles
+      where id = (select auth.uid()) and role = 'admin'
+    )
+  );
+
+drop policy if exists "Admins can read sjt questions" on public.sjt_questions;
+create policy "Admins can read sjt questions"
+  on public.sjt_questions for select
+  to authenticated
+  using (
+    exists (
+      select 1 from public.profiles
+      where id = (select auth.uid()) and role = 'admin'
+    )
+  );
+
+notify pgrst, 'reload schema';
+
+
+-- ========== 20260822074612_admin_new_users_event_counts_retention_flag.sql ==========
+-- get_admin_new_users: document the 7-day raw-retention limit on per-user event_counts.
+--
+-- Context: analytics_events raw retention was cut from 90 to 7 days (pg_cron job
+-- analytics-events-rollup now runs rollup_analytics_events(7)). The rollup table
+-- analytics_events_daily has grain (day, event_name, is_guest, training_type) and
+-- carries NO user_id, so per-user event counts can only ever come from the raw rows.
+--
+-- The admin UI (AdminPage, default range = last 30 days) shows every sign-up in the
+-- range with "Page views: N; Drill started: N" taken from event_counts. For a user who
+-- signed up more than 7 days ago those counts now silently cover only the last 7 days
+-- (usually empty), while the drill/session columns (from public.sessions and
+-- public.syllogism_sessions, which are not pruned) stay complete.
+--
+-- This version keeps the signature and the top-level JSON shape (a jsonb ARRAY of
+-- rows) unchanged and adds two OPTIONAL per-row fields that the UI uses to label
+-- the counts honestly:
+--   event_counts_since   timestamptz  earliest raw analytics row still retained
+--                                     (null when the raw table is empty)
+--   event_counts_partial boolean      true when the profile was created before
+--                                     event_counts_since, i.e. the counts do not
+--                                     cover the user's full lifetime
+--
+-- Apply with: supabase db push / SQL editor on project qhhmcsdteqcuhvdqhkfo.
+-- APPLIED 2026-08-22 via Supabase MCP (admin_new_users_event_counts_retention_flag). Safe to re-run.
+
+create or replace function public.get_admin_new_users(
+  since_ts timestamp with time zone default null::timestamp with time zone,
+  until_ts timestamp with time zone default null::timestamp with time zone,
+  limit_rows integer default 300
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path to 'public'
+as $function$
+declare
+  is_admin boolean;
+  result jsonb;
+  retained_from timestamp with time zone;
+begin
+  select (role = 'admin') into is_admin
+  from public.profiles
+  where id = auth.uid();
+
+  if is_admin is not true then
+    raise exception 'Forbidden: admin only';
+  end if;
+
+  -- Earliest raw row still present. Cheap: analytics_events_name_created /
+  -- analytics_events_user_created are btree indexes that include created_at, and
+  -- the planner uses an index-ordered scan for min().
+  select min(created_at) into retained_from from public.analytics_events;
+
+  with new_profiles as (
+    select id, full_name, first_name, last_name, created_at, email
+    from public.profiles
+    where (since_ts is null or created_at >= since_ts)
+      and (until_ts is null or created_at <= until_ts)
+    order by created_at desc
+    limit limit_rows
+  ),
+  user_sess as (
+    select
+      s.user_id,
+      count(*) filter (where s.training_type = 'speed_reading') as speed_reading,
+      count(*) filter (where s.training_type = 'rapid_recall') as rapid_recall,
+      count(*) filter (where s.training_type = 'keyword_scanning') as keyword_scanning,
+      count(*) filter (where s.training_type = 'calculator') as calculator,
+      count(*) filter (where s.training_type = 'inference_trainer') as inference_trainer,
+      count(*) filter (where s.training_type = 'mental_maths') as mental_maths,
+      coalesce(sum(s.total), 0) as session_questions,
+      coalesce(sum(s.correct), 0) as session_correct
+    from public.sessions s
+    where s.user_id in (select id from new_profiles)
+    group by s.user_id
+  ),
+  user_syll as (
+    select
+      user_id,
+      count(*) filter (where mode = 'micro') as syllogism_micro,
+      count(*) filter (where mode = 'macro') as syllogism_macro,
+      coalesce(sum(total_questions), 0) as syllogism_questions
+    from public.syllogism_sessions
+    where user_id in (select id from new_profiles)
+    group by user_id
+  ),
+  user_events as (
+    select
+      user_id,
+      coalesce(jsonb_object_agg(event_name, cnt), '{}'::jsonb) as event_counts
+    from (
+      select user_id, event_name, count(*)::int as cnt
+      from public.analytics_events
+      where user_id is not null
+        and user_id in (select id from new_profiles)
+      group by user_id, event_name
+    ) t
+    group by user_id
+  )
+  select coalesce(jsonb_agg(
+    jsonb_build_object(
+      'user_id', p.id,
+      'full_name', coalesce(
+        nullif(trim(p.full_name), ''),
+        nullif(trim(coalesce(p.first_name, '') || ' ' || coalesce(p.last_name, '')), ' ')
+      , ''),
+      'created_at', p.created_at,
+      'email', coalesce(trim(p.email), ''),
+      'speed_reading', coalesce(us.speed_reading, 0),
+      'rapid_recall', coalesce(us.rapid_recall, 0),
+      'keyword_scanning', coalesce(us.keyword_scanning, 0),
+      'calculator', coalesce(us.calculator, 0),
+      'inference_trainer', coalesce(us.inference_trainer, 0),
+      'mental_maths', coalesce(us.mental_maths, 0),
+      'syllogism_micro', coalesce(sy.syllogism_micro, 0),
+      'syllogism_macro', coalesce(sy.syllogism_macro, 0),
+      'total_questions', (coalesce(us.session_questions, 0) + coalesce(sy.syllogism_questions, 0)),
+      'session_correct', coalesce(us.session_correct, 0),
+      'event_counts', coalesce(ue.event_counts, '{}'::jsonb),
+      -- Raw analytics retention is 7 days; the rollup has no user grain.
+      'event_counts_since', retained_from,
+      'event_counts_partial', (retained_from is not null and p.created_at < retained_from)
+    ) order by p.created_at desc
+  ), '[]'::jsonb) into result
+  from new_profiles p
+  left join user_sess us on us.user_id = p.id
+  left join user_syll sy on sy.user_id = p.id
+  left join user_events ue on ue.user_id = p.id;
+
+  return result;
+end;
+$function$;
+
+comment on function public.get_admin_new_users(timestamptz, timestamptz, int) is
+  'Admin-only. New profiles in [since_ts, until_ts] (limit_rows) with drill/session totals and per-user analytics event_counts. event_counts come from RAW analytics_events only (7-day retention; the daily rollup has no user_id), so event_counts_since / event_counts_partial flag rows whose counts do not cover the full lifetime.';
+
+
+-- ========== 20260828103600_one_active_plan_per_student.sql ==========
+-- One active plan per student.
+--
+-- Context: on 2026-08-28, 19 students were found with two active plan rows each,
+-- created in the same second. Onboarding archives a student's active plans and
+-- then inserts the new one, which is safe sequentially but not when two submits
+-- run concurrently: both archive (finding nothing), then both insert. The app
+-- picks a plan with `order by created_at desc limit 1`, so with identical
+-- timestamps Postgres was free to return either row on any given load. Students
+-- logged work against one plan, had rebuilds applied to the other, and reported
+-- that their timetable would not change.
+--
+-- Those duplicates have been cleaned up: the plan holding the student's
+-- completions and mocks stays active, the empty one was set to 'archived'
+-- (nothing was deleted; see 0003_undo_duplicate_plan_archive.sql to reverse it).
+-- This index stops the class recurring.
+--
+-- Client-side changes that ship with this (already in the app):
+--   * onboarding-client.tsx guards against a double submit with a ref
+--   * create-plan-from-onboarding.ts archives again after inserting, and treats
+--     a lost insert race as success by returning the plan the other run created
+--   * ensureActivePlanForMocks already re-fetches when its insert fails
+--
+-- Safe to run: verified 0 students currently have more than one active plan.
+-- Should this ever fail with a uniqueness error, find the offenders first:
+--
+--   select student_id, count(*)
+--   from public.plans
+--   where status = 'active'
+--   group by student_id
+--   having count(*) > 1;
+
+create unique index if not exists plans_one_active_per_student
+  on public.plans (student_id)
+  where status = 'active';
+
+comment on index public.plans_one_active_per_student is
+  'A student may hold at most one active plan. Added 2026-08-28 after concurrent onboarding submits produced duplicate active plans that the app alternated between.';
+
+
+-- ========== 20260922072557_sessions_update_own.sql ==========
+-- Trainer drills save through upsertTrainerSession (src/lib/trainerSessionLog.ts), which
+-- upserts on (user_id, client_session_id) so repeated snapshots of one drill converge on
+-- one row. sessions has never had an UPDATE policy, so the second write of a drill hits
+-- ON CONFLICT DO UPDATE and fails with "new row violates row-level security policy
+-- (USING expression) for table sessions": the row keeps its first snapshot and the student
+-- sees a save error. Own-row updates match docs/ACCESS_RLS_MATRIX.md ("Own rows").
+
+drop policy if exists "Users can update own sessions" on public.sessions;
+create policy "Users can update own sessions" on public.sessions
+  for update to authenticated
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
+
+
+-- ========== 20260922120000_sjt_targeted_practice.sql ==========
+-- Deploy before the targeted-practice frontend. Existing unfiltered RPC is unchanged.
+-- Idempotent: safe to re-run (create or replace + re-issued grants).
+--
+-- Filtered practice (topic / difficulty) for signed-in users shares the same
+-- cross-session history as get_random_sjt_question: unseen questions in the
+-- current cycle are preferred, and the served question is recorded in
+-- user_question_history (trainer_type 'sjt_<type>', question_id md5(legacy_id)).
+-- The cycle is not advanced here; once every matching question has been seen,
+-- seen ones are served again in random order until the unfiltered RPC rolls the
+-- cycle. Delayed reviews (p_question_id) are neither filtered by nor recorded in
+-- history, because the student is deliberately retrying a known scenario.
+create or replace function public.get_sjt_practice_question(
+  p_type text, p_domain text default null, p_difficulty text default null,
+  p_question_id text default null, p_exclude_ids text[] default '{}'
+) returns jsonb language plpgsql security definer set search_path = public as $$
+declare
+  q public.trainer_questions%rowtype;
+  v_uid uuid := auth.uid();
+  v_trainer text := 'sjt_' || p_type;
+  v_cycle smallint;
+begin
+  if p_type is null or p_type not in ('appropriateness','importance','ranking') then
+    raise exception 'Invalid SJT type';
+  end if;
+  if p_domain is not null and p_domain not in ('knowledge_skills_development','patients_partnership_communication','colleagues_culture_safety','trust_professionalism') then
+    raise exception 'Invalid domain';
+  end if;
+  if p_difficulty is not null and p_difficulty not in ('easy','medium','hard') then
+    raise exception 'Invalid difficulty';
+  end if;
+  if cardinality(p_exclude_ids) > 1000
+    or length(p_question_id) > 200
+    or exists (select 1 from unnest(coalesce(p_exclude_ids, '{}')) id where length(id) > 200)
+  then
+    raise exception 'Invalid request size';
+  end if;
+
+  if v_uid is not null and p_question_id is null then
+    select s.current_cycle into v_cycle
+    from public.user_trainer_state s
+    where s.user_id = v_uid and s.trainer_type = v_trainer;
+  end if;
+
+  select t.* into q from public.trainer_questions t
+  where t.status = 'active' and t.trainer_type = 'sjt-' || p_type
+    and (p_domain is null or t.content->>'domain' = p_domain)
+    and (p_difficulty is null or t.difficulty = p_difficulty)
+    and (p_question_id is null or t.legacy_id = p_question_id)
+    and not (t.legacy_id = any(coalesce(p_exclude_ids, '{}')))
+  order by
+    (v_cycle is not null and exists (
+      select 1 from public.user_question_history h
+      where h.user_id = v_uid
+        and h.question_id = md5(t.legacy_id)::uuid
+        and h.trainer_type = v_trainer
+        and h.cycle = v_cycle
+    )),
+    random()
+  limit 1;
+  if not found then return null; end if;
+
+  if v_uid is not null and p_question_id is null then
+    if v_cycle is null then
+      insert into public.user_trainer_state (user_id, trainer_type)
+      values (v_uid, v_trainer)
+      on conflict (user_id, trainer_type) do update set last_activity_at = now();
+      select s.current_cycle into v_cycle
+      from public.user_trainer_state s
+      where s.user_id = v_uid and s.trainer_type = v_trainer;
+    else
+      update public.user_trainer_state set last_activity_at = now()
+      where user_id = v_uid and trainer_type = v_trainer;
+    end if;
+    insert into public.user_question_history (user_id, question_id, trainer_type, cycle)
+    values (v_uid, md5(q.legacy_id)::uuid, v_trainer, v_cycle)
+    on conflict (user_id, question_id, trainer_type, cycle) do nothing;
+  end if;
+
+  return jsonb_build_object('id',q.legacy_id,'type',p_type,'domain',q.content->>'domain',
+    'difficulty',q.difficulty,'stem',q.stem,'pivotInsight',q.content->>'pivotInsight',
+    'gmpRef',q.content->'gmpRef','items',q.content->'items','media',q.media);
+end;
+$$;
+revoke all on function public.get_sjt_practice_question(text,text,text,text,text[]) from public;
+grant execute on function public.get_sjt_practice_question(text,text,text,text,text[]) to anon, authenticated;
+comment on function public.get_sjt_practice_question(text,text,text,text,text[]) is
+  'One active SJT scenario for filtered practice or delayed review. No draft access. Signed-in filtered practice prefers unseen questions and records history; anon deduplicates via p_exclude_ids.';
+
+
+-- ========== 20260924120000_sjt_review_sync.sql ==========
+-- Idempotent: safe to re-run (if not exists / drop policy if exists).
+create table if not exists public.sjt_review_items (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  question_id text not null check (length(question_id) between 1 and 200),
+  question_type text not null check (question_type in ('appropriateness','importance','ranking')),
+  domain text not null check (domain in ('knowledge_skills_development','patients_partnership_communication','colleagues_culture_safety','trust_professionalism')),
+  due_at timestamptz,
+  successes smallint not null default 0 check (successes between 0 and 1),
+  cleared_at timestamptz,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, question_id, question_type),
+  check ((cleared_at is null and due_at is not null) or (cleared_at is not null and due_at is null))
+);
+
+alter table public.sjt_review_items enable row level security;
+drop policy if exists "Users can view own SJT reviews" on public.sjt_review_items;
+create policy "Users can view own SJT reviews" on public.sjt_review_items for select to authenticated using ((select auth.uid()) = user_id);
+drop policy if exists "Users can insert own SJT reviews" on public.sjt_review_items;
+create policy "Users can insert own SJT reviews" on public.sjt_review_items for insert to authenticated with check ((select auth.uid()) = user_id);
+drop policy if exists "Users can update own SJT reviews" on public.sjt_review_items;
+create policy "Users can update own SJT reviews" on public.sjt_review_items for update to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+drop policy if exists "Users can delete own SJT reviews" on public.sjt_review_items;
+create policy "Users can delete own SJT reviews" on public.sjt_review_items for delete to authenticated using ((select auth.uid()) = user_id);
+revoke all on public.sjt_review_items from anon;
+grant select, insert, update, delete on public.sjt_review_items to authenticated;
+grant select, insert, update, delete on public.sjt_review_items to service_role;
+create index if not exists sjt_review_items_user_due_idx on public.sjt_review_items(user_id, due_at) where cleared_at is null;
+create index if not exists sjt_review_items_user_updated_idx on public.sjt_review_items(user_id, updated_at desc);
+
+comment on table public.sjt_review_items is 'Account-synchronised SJT delayed reviews. Question text and answers are never stored.';
+
+
+-- ========== 20260924121000_admin_sjt_quality_signals.sql ==========
+-- Idempotent: create or replace; grants re-issued.
+create or replace function public.get_admin_sjt_quality_signals(since_ts timestamptz default now() - interval '30 days')
+returns table(question_id text, question_type text, answer_changes bigint, explanation_opens bigint, abandons bigint, reports bigint, signal_total bigint)
+language plpgsql security definer set search_path = public as $$
+begin
+  if not exists (select 1 from public.profiles where id = auth.uid() and role = 'admin') then
+    raise exception 'Admin access required';
+  end if;
+  return query
+  with events as (
+    select ae.event_properties->>'question_id' as qid,
+      max(ae.event_properties->>'question_type') as qtype,
+      count(*) filter (where ae.event_name = 'sjt_answer_changed') as changes,
+      count(*) filter (where ae.event_name = 'sjt_explanation_opened') as explanations,
+      count(*) filter (where ae.event_name = 'sjt_scenario_abandoned') as abandoned
+    from public.analytics_events ae
+    where ae.created_at >= since_ts
+      and ae.event_name in ('sjt_answer_changed','sjt_explanation_opened','sjt_scenario_abandoned')
+      and ae.event_properties->>'question_id' is not null
+    group by ae.event_properties->>'question_id'
+  ), reports_by_question as (
+    -- Reports are stored as 'sjt:<question id>' or 'sjt:<question id>:<item id>';
+    -- events use the bare question id. Normalise so both join on the question.
+    select case
+        when qf.question_identifier like 'sjt:%' then split_part(qf.question_identifier, ':', 2)
+        else qf.question_identifier
+      end as qid,
+      max(nullif(replace(qf.trainer_type, 'sjt_', ''), qf.trainer_type)) as qtype,
+      count(*) as report_count
+    from public.question_feedback qf
+    where qf.created_at >= since_ts and qf.trainer_type like 'sjt%'
+      and qf.question_identifier is not null
+    group by 1
+  )
+  select coalesce(e.qid, r.qid), coalesce(e.qtype, r.qtype, 'unknown'),
+    coalesce(e.changes,0), coalesce(e.explanations,0), coalesce(e.abandoned,0), coalesce(r.report_count,0),
+    coalesce(e.changes,0) + coalesce(e.abandoned,0) * 2 + coalesce(r.report_count,0) * 3
+  from events e full join reports_by_question r on r.qid = e.qid
+  order by 7 desc, 1
+  limit 100;
+end;
+$$;
+revoke all on function public.get_admin_sjt_quality_signals(timestamptz) from public;
+grant execute on function public.get_admin_sjt_quality_signals(timestamptz) to authenticated;
+comment on function public.get_admin_sjt_quality_signals(timestamptz) is 'Admin-only SJT quality triage using behavioural signals and direct reports.';
+
+
+-- ========== 20260925120000_skill_trainer_attempts.sql ==========
+create table if not exists public.skill_trainer_attempts (
+  id uuid primary key default gen_random_uuid(), user_id uuid not null references auth.users(id) on delete cascade,
+  client_attempt_id uuid not null, client_session_id uuid not null,
+  trainer_type text not null check (trainer_type in ('qr_setup','qr_extraction','qr_estimation','dm_constraints')),
+  question_id text not null, score smallint not null check (score >= 0),
+  max_score smallint not null check (max_score > 0 and score <= max_score),
+  time_seconds integer not null default 0 check (time_seconds >= 0),
+  components jsonb not null default '{}'::jsonb check (jsonb_typeof(components)='object'),
+  difficulty text, skill_tags text[] not null default '{}',
+  mistake_cause text check (mistake_cause is null or mistake_cause in ('misread','method','calculation','unit','rushed','guessed','changed_answer')),
+  created_at timestamptz not null default now(),
+  unique(user_id,client_attempt_id)
+);
+create index if not exists skill_attempts_user_type_created_idx on public.skill_trainer_attempts(user_id,trainer_type,created_at desc);
+create index if not exists skill_attempts_user_question_idx on public.skill_trainer_attempts(user_id,trainer_type,question_id);
+alter table public.skill_trainer_attempts enable row level security;
+drop policy if exists "skill attempts select own" on public.skill_trainer_attempts;
+drop policy if exists "skill attempts insert own" on public.skill_trainer_attempts;
+drop policy if exists "skill attempts update own" on public.skill_trainer_attempts;
+drop policy if exists "skill attempts delete own" on public.skill_trainer_attempts;
+create policy "skill attempts select own" on public.skill_trainer_attempts for select using ((select auth.uid())=user_id);
+create policy "skill attempts insert own" on public.skill_trainer_attempts for insert with check ((select auth.uid())=user_id);
+create policy "skill attempts update own" on public.skill_trainer_attempts for update using ((select auth.uid())=user_id) with check ((select auth.uid())=user_id);
+create policy "skill attempts delete own" on public.skill_trainer_attempts for delete using ((select auth.uid())=user_id);
+grant select,insert,update,delete on public.skill_trainer_attempts to authenticated;
+grant select,insert,update,delete on public.skill_trainer_attempts to service_role;
+revoke all on public.skill_trainer_attempts from anon;
+
+
+-- ========== 20260925143000_exam_attempts.sql ==========
+create table if not exists public.exam_attempts (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  client_attempt_id uuid not null,
+  bank_title text not null,
+  status text not null default 'in_progress' check (status in ('in_progress','completed','abandoned')),
+  current_section text,
+  current_question integer not null default 0 check (current_question >= 0),
+  timed boolean not null default true,
+  time_multiplier numeric(4,2) not null default 1 check (time_multiplier > 0),
+  started_at timestamptz not null,
+  completed_at timestamptz,
+  answered_count integer not null default 0 check (answered_count >= 0),
+  total_questions integer not null default 0 check (total_questions >= 0),
+  correct_count integer not null default 0 check (correct_count >= 0),
+  scorable_count integer not null default 0 check (scorable_count >= 0),
+  section_results jsonb not null default '{}'::jsonb check (jsonb_typeof(section_results) = 'object'),
+  state jsonb not null check (jsonb_typeof(state) = 'object'),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (user_id, client_attempt_id)
+);
+
+create index if not exists exam_attempts_user_updated_idx
+  on public.exam_attempts (user_id, updated_at desc);
+create index if not exists exam_attempts_user_status_idx
+  on public.exam_attempts (user_id, status, updated_at desc);
+
+alter table public.exam_attempts enable row level security;
+drop policy if exists "exam attempts select own" on public.exam_attempts;
+drop policy if exists "exam attempts insert own" on public.exam_attempts;
+drop policy if exists "exam attempts update own" on public.exam_attempts;
+drop policy if exists "exam attempts delete own" on public.exam_attempts;
+create policy "exam attempts select own" on public.exam_attempts for select using ((select auth.uid()) = user_id);
+create policy "exam attempts insert own" on public.exam_attempts for insert with check ((select auth.uid()) = user_id);
+create policy "exam attempts update own" on public.exam_attempts for update using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+create policy "exam attempts delete own" on public.exam_attempts for delete using ((select auth.uid()) = user_id);
+grant select, insert, update, delete on public.exam_attempts to authenticated;
+grant all on public.exam_attempts to service_role;
+revoke all on public.exam_attempts from anon;
+
+comment on table public.exam_attempts is 'Resumable full UCAT simulator attempts and per-section progress for signed-in users.';
+
+-- ========== 20260925160000_skill_trainer_session_types.sql ==========
+-- Register the four SkillTrainerShell trainers in `sessions`.
+--
+-- QR Setup, QR Data Extraction, QR Estimation and the DM Constraint Builder now log a
+-- run-level row to public.sessions (src/hooks/useSkillTrainerRunLog.ts via
+-- src/lib/trainerSessionLog.ts), alongside their per-item rows in
+-- skill_trainer_attempts. That puts them on the Dashboard, the sidebar streak, the
+-- weekly summary email and admin totals, like every established trainer.
+--
+-- sessions_training_type_check must allow the new values or every signed-in save
+-- fails (see 20260612120000_allow_unit_conversions_sessions.sql). Until this runs the
+-- client keeps the rejected runs on the device and uploads them afterwards.
+--
+-- Allowed list = the latest definition (20260612140000_vr_passage_sets_and_not_except.sql:
+-- 8 values) plus the 4 new ones. Idempotent: safe to run more than once.
+--
+-- Consumers checked: weekly_summary_data (20260617120000) sums correct/total
+-- and time_seconds over ALL sessions rows without filtering training_type, so it needs
+-- no change. Admin RPCs count total_sessions over all rows; their per-type columns only
+-- cover the six original trainers (unit_conversions and not_except are not broken out
+-- either), so they are left unchanged here. No table is created, so no grants change.
+
+alter table public.sessions
+  drop constraint if exists sessions_training_type_check;
+
+alter table public.sessions
+  add constraint sessions_training_type_check
+  check (training_type = any (array[
+    'speed_reading'::text,
+    'rapid_recall'::text,
+    'keyword_scanning'::text,
+    'calculator'::text,
+    'inference_trainer'::text,
+    'mental_maths'::text,
+    'unit_conversions'::text,
+    'not_except'::text,
+    'qr_setup'::text,
+    'qr_data_extraction'::text,
+    'qr_estimation'::text,
+    'dm_constraints'::text
+  ]));
+

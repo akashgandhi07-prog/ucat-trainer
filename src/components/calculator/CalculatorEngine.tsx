@@ -123,10 +123,7 @@ export const CalculatorEngine = ({ lagEnabled, onInput, onStateChange, active }:
                         {display}
                     </div>
                 </div>
-                <div className="brand-text">
-                    <span className="tex-inst">TEXAS INSTRUMENTS</span>
-                    <span className="model-num">TI-108</span>
-                </div>
+                <div className="brand-text" aria-hidden="true" />
 
                 <div className="ucat-keypad">
                     {/* Row 1: +/-  sqrt  %  / */}
