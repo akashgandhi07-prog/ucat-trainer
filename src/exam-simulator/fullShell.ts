@@ -26,7 +26,7 @@ function placeholder(
 }
 
 export const fullShell: Bank = bankSchema.parse({
-  title: "Full-length UCAT Shell",
+  title: "TheUKCATPeople Full-length Mock",
   sections: sample.sections.map((source) => {
     const size = sectionSizes[source.id];
     const examples = source.questions.map((question, index) => ({

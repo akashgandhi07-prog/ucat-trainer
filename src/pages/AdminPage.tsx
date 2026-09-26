@@ -10,9 +10,18 @@ import Footer from "../components/layout/Footer";
 import AdminBugFeedbackSection from "../components/admin/AdminBugFeedbackSection";
 import AdminQuestionFeedbackSection from "../components/admin/AdminQuestionFeedbackSection";
 import AdminAnalyticsSection from "../components/admin/AdminAnalyticsSection";
-import AdminPerUserActivitySection from "../components/admin/AdminPerUserActivitySection";
-import AdminRegistrationsSection from "../components/admin/AdminRegistrationsSection";
-import AdminNewUsersSection from "../components/admin/AdminNewUsersSection";
+import AdminPerUserActivitySection, { type AdminUserRow } from "../components/admin/AdminPerUserActivitySection";
+import AdminRegistrationsSection, { type RegistrationRow } from "../components/admin/AdminRegistrationsSection";
+import AdminNewUsersSection, { type NewUserRow } from "../components/admin/AdminNewUsersSection";
+import {
+  adminTrainerLabel,
+  orderedTrainerKeys,
+  sessionCountsFrom,
+  trainerSessionCounts,
+  withSessionCounts,
+  type AdminTrainerKey,
+} from "../components/admin/adminTrainerTypes";
+import { SESSION_TRAINING_TYPES, TRAINING_TYPE_LABELS } from "../types/training";
 import AdminSJTQualitySection, { type SJTQualityRow, type SJTQualityStatus } from "../components/admin/AdminSJTQualitySection";
 import { isMissingRpcError } from "../lib/sjtApi";
 import { resolveFlaggedQuestion, type ResolvedQuestion } from "../lib/resolveFlaggedQuestion";
@@ -33,6 +42,8 @@ type AdminStats = {
   sessions_calculator: number;
   sessions_inference_trainer: number;
   sessions_mental_maths?: number;
+  /** Every training_type (migration 20260926120000); absent on an unmigrated database. */
+  sessions_by_type?: Partial<Record<string, number>>;
   syllogism_sessions_count: number;
   bug_reports_count: number;
   suggestions_count: number;
@@ -49,77 +60,18 @@ export type UsageSummaryPayload = {
 
 export type TrainerUsagePayload = Record<string, number>;
 
-export type AdminUserRow = {
-  user_id: string;
-  email: string;
-  display_name?: string;
-  speed_reading: number;
-  rapid_recall: number;
-  keyword_scanning: number;
-  calculator: number;
-  inference_trainer: number;
-  mental_maths: number;
-  syllogism_micro: number;
-  syllogism_macro: number;
-  total_questions: number;
-  session_correct?: number;
-  session_questions?: number;
-  total_time_seconds?: number;
-  days_active?: number;
-  last_wpm?: number | null;
-  avg_wpm?: number | null;
-  last_active_at: string | null;
-};
-
-type RegistrationRow = {
-  user_id: string;
-  email: string;
-  display_name?: string;
-  stream?: string | null;
-  entry_year?: string | null;
-  created_at: string | null;
-  speed_reading: number;
-  rapid_recall: number;
-  keyword_scanning: number;
-  calculator: number;
-  inference_trainer: number;
-  mental_maths: number;
-  syllogism_micro: number;
-  syllogism_macro: number;
-  total_questions: number;
-  session_correct?: number;
-  session_questions?: number;
-  total_time_seconds?: number;
-  trainer_questions?: Record<string, number>;
-  trainer_time_seconds?: Record<string, number>;
-  days_active?: number;
-  last_wpm?: number | null;
-  avg_wpm?: number | null;
-  last_active_at: string | null;
-};
-
-const REGISTRATION_TRAINER_USAGE: {
-  key: string;
-  label: string;
-  sessionsKey: keyof RegistrationRow;
-}[] = [
-  { key: "speed_reading", label: "Speed reading", sessionsKey: "speed_reading" },
-  { key: "rapid_recall", label: "Rapid recall", sessionsKey: "rapid_recall" },
-  { key: "keyword_scanning", label: "Keyword scanning", sessionsKey: "keyword_scanning" },
-  { key: "calculator", label: "Calculator", sessionsKey: "calculator" },
-  { key: "inference_trainer", label: "Inference", sessionsKey: "inference_trainer" },
-  { key: "mental_maths", label: "Mental maths", sessionsKey: "mental_maths" },
-  { key: "syllogism_micro", label: "Syllogism micro", sessionsKey: "syllogism_micro" },
-  { key: "syllogism_macro", label: "Syllogism macro", sessionsKey: "syllogism_macro" },
-];
+export type { AdminUserRow };
 
 function getRegistrationTrainerUsage(row: RegistrationRow) {
-  return REGISTRATION_TRAINER_USAGE.map(({ key, label, sessionsKey }) => {
-    const sessions = Number(row[sessionsKey] ?? 0);
-    const questions = Number(row.trainer_questions?.[key] ?? 0);
-    const timeSeconds = Number(row.trainer_time_seconds?.[key] ?? 0);
-    return { key, label, sessions, questions, timeSeconds };
-  }).filter((t) => t.sessions > 0 || t.questions > 0 || t.timeSeconds > 0);
+  const sessionsByTrainer = trainerSessionCounts(row);
+  return orderedTrainerKeys(row.trainer_questions, row.trainer_time_seconds)
+    .map((key) => {
+      const sessions = Number(sessionsByTrainer[key as AdminTrainerKey] ?? row.sessions_by_type?.[key] ?? 0);
+      const questions = Number(row.trainer_questions?.[key] ?? 0);
+      const timeSeconds = Number(row.trainer_time_seconds?.[key] ?? 0);
+      return { key, label: adminTrainerLabel(key), sessions, questions, timeSeconds };
+    })
+    .filter((t) => t.sessions > 0 || t.questions > 0 || t.timeSeconds > 0);
 }
 
 type UsageSummaryResponse = {
@@ -129,24 +81,6 @@ type UsageSummaryResponse = {
   trainer_time_seconds?: Record<string, number>;
   guest_activity: Record<string, number>;
   users: AdminUserRow[];
-};
-
-type NewUserRow = {
-  user_id: string;
-  full_name: string | null;
-  created_at: string;
-  email: string;
-  speed_reading: number;
-  rapid_recall: number;
-  keyword_scanning: number;
-  calculator: number;
-  inference_trainer: number;
-  mental_maths: number;
-  syllogism_micro: number;
-  syllogism_macro: number;
-  total_questions: number;
-  session_correct: number;
-  event_counts: Record<string, number>;
 };
 
 type FeedbackRow = {
@@ -243,7 +177,7 @@ export default function AdminPage() {
   const [qfTrainerFilter, setQfTrainerFilter] = useState<string>("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  type UserSortKey = keyof AdminUserRow | "accuracy";
+  type UserSortKey = Exclude<keyof AdminUserRow, "sessions_by_type"> | "accuracy";
   const [userSortKey, setUserSortKey] = useState<UserSortKey>("total_questions");
   const [userSortDir, setUserSortDir] = useState<"asc" | "desc">("desc");
   const [userFilterMinQuestions, setUserFilterMinQuestions] = useState<number>(0);
@@ -301,20 +235,21 @@ export default function AdminPage() {
         dashboardLog.warn("Admin usage summary failed", { message: usageRes.error.message });
         setUsageSummary(null);
       } else {
-        setUsageSummary(usageRes.data as UsageSummaryResponse);
+        const usage = usageRes.data as UsageSummaryResponse;
+        setUsageSummary({ ...usage, users: (usage.users ?? []).map(withSessionCounts) });
       }
       if (newUsersRes.error) {
         dashboardLog.warn("Admin new users failed", { message: newUsersRes.error.message });
         setNewUsers([]);
       } else {
-        setNewUsers((newUsersRes.data as NewUserRow[]) ?? []);
+        setNewUsers(((newUsersRes.data as NewUserRow[]) ?? []).map(withSessionCounts));
       }
 
       if (registrationsRes.error) {
         dashboardLog.warn("Admin registrations failed", { message: registrationsRes.error.message });
         setRegistrations([]);
       } else {
-        setRegistrations((registrationsRes.data as RegistrationRow[]) ?? []);
+        setRegistrations(((registrationsRes.data as RegistrationRow[]) ?? []).map(withSessionCounts));
       }
 
       const { data: feedbackData, error: feedbackErr } = await supabase
@@ -362,6 +297,19 @@ export default function AdminPage() {
       mounted = false;
     };
   }, [user, isAdmin, dateRange]);
+
+  const statsSessionCounts = stats ? sessionCountsFrom(stats, "sessions_") : null;
+  const trainerUsageRows = usageSummary
+    ? orderedTrainerKeys(usageSummary.trainer_usage, usageSummary.trainer_questions, usageSummary.trainer_time_seconds)
+        .map((key) => ({
+          key,
+          label: adminTrainerLabel(key),
+          sessions: Number(usageSummary.trainer_usage?.[key] ?? 0),
+          questions: usageSummary.trainer_questions?.[key] != null ? Number(usageSummary.trainer_questions[key]) : null,
+          timeSeconds: usageSummary.trainer_time_seconds?.[key],
+        }))
+        .sort((a, b) => b.sessions - a.sessions)
+    : [];
 
   const skipLinkClass =
     "absolute left-4 top-4 z-[100] px-4 py-2 bg-white text-foreground font-medium rounded-lg ring-2 ring-primary opacity-0 focus:opacity-100 focus:outline-none pointer-events-none focus:pointer-events-auto";
@@ -975,30 +923,12 @@ export default function AdminPage() {
               <p className="text-sm font-medium text-muted-foreground">Suggestions</p>
               <p className="text-3xl font-bold text-foreground">{stats?.suggestions_count ?? 0}</p>
             </div>
-            <div className="bg-card rounded-xl border border-border p-5">
-              <p className="text-sm font-medium text-muted-foreground">Speed reading sessions</p>
-              <p className="text-2xl font-bold text-foreground">{stats?.sessions_speed_reading ?? 0}</p>
-            </div>
-            <div className="bg-card rounded-xl border border-border p-5">
-              <p className="text-sm font-medium text-muted-foreground">Rapid recall sessions</p>
-              <p className="text-2xl font-bold text-foreground">{stats?.sessions_rapid_recall ?? 0}</p>
-            </div>
-            <div className="bg-card rounded-xl border border-border p-5">
-              <p className="text-sm font-medium text-muted-foreground">Keyword scanning sessions</p>
-              <p className="text-2xl font-bold text-foreground">{stats?.sessions_keyword_scanning ?? 0}</p>
-            </div>
-            <div className="bg-card rounded-xl border border-border p-5">
-              <p className="text-sm font-medium text-muted-foreground">Calculator sessions</p>
-              <p className="text-2xl font-bold text-foreground">{stats?.sessions_calculator ?? 0}</p>
-            </div>
-            <div className="bg-card rounded-xl border border-border p-5">
-              <p className="text-sm font-medium text-muted-foreground">Inference trainer sessions</p>
-              <p className="text-2xl font-bold text-foreground">{stats?.sessions_inference_trainer ?? 0}</p>
-            </div>
-            <div className="bg-card rounded-xl border border-border p-5">
-              <p className="text-sm font-medium text-muted-foreground">Mental maths sessions</p>
-              <p className="text-2xl font-bold text-foreground">{stats?.sessions_mental_maths ?? 0}</p>
-            </div>
+            {SESSION_TRAINING_TYPES.map((t) => (
+              <div key={t} className="bg-card rounded-xl border border-border p-5">
+                <p className="text-sm font-medium text-muted-foreground">{TRAINING_TYPE_LABELS[t]} sessions</p>
+                <p className="text-2xl font-bold text-foreground">{statsSessionCounts?.[t] ?? 0}</p>
+              </div>
+            ))}
             <div className="bg-card rounded-xl border border-border p-5">
               <p className="text-sm font-medium text-muted-foreground">Syllogism sessions</p>
               <p className="text-2xl font-bold text-foreground">{stats?.syllogism_sessions_count ?? 0}</p>
@@ -1052,13 +982,13 @@ export default function AdminPage() {
 
             <section className="mb-10">
               <h2 className="text-lg font-semibold text-foreground mb-4">Trainer usage (sessions, questions, time in range)</h2>
-              {Object.keys(usageSummary.trainer_usage).length > 0 && (
+              {trainerUsageRows.some((r) => r.sessions > 0) && (
                 <p className="text-sm text-foreground mb-3">
                   Most used this period:{" "}
-                  {Object.entries(usageSummary.trainer_usage)
-                    .sort(([, a], [, b]) => (b as number) - (a as number))
+                  {trainerUsageRows
+                    .filter((r) => r.sessions > 0)
                     .slice(0, 3)
-                    .map(([key, count]) => `${key.replace(/_/g, " ")} (${count} sessions)`)
+                    .map((r) => `${r.label} (${r.sessions} sessions)`)
                     .join(", ")}
                   .
                 </p>
@@ -1074,22 +1004,18 @@ export default function AdminPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {Object.entries(usageSummary.trainer_usage)
-                      .sort(([, a], [, b]) => (b as number) - (a as number))
-                      .map(([key, count]) => (
-                        <tr key={key} className="border-b border-border">
-                          <td className="px-4 py-2 text-foreground">{key.replace(/_/g, " ")}</td>
-                          <td className="px-4 py-2 text-right font-medium text-foreground">{String(count)}</td>
-                          <td className="px-4 py-2 text-right text-foreground">
-                            {usageSummary.trainer_questions?.[key] != null
-                              ? Number(usageSummary.trainer_questions[key]).toLocaleString()
-                              : "-"}
-                          </td>
-                          <td className="px-4 py-2 text-right text-muted-foreground">
-                            {formatTimeSeconds(usageSummary.trainer_time_seconds?.[key])}
-                          </td>
-                        </tr>
-                      ))}
+                    {trainerUsageRows.map((r) => (
+                      <tr key={r.key} className="border-b border-border">
+                        <td className="px-4 py-2 text-foreground">{r.label}</td>
+                        <td className="px-4 py-2 text-right font-medium text-foreground">{r.sessions}</td>
+                        <td className="px-4 py-2 text-right text-foreground">
+                          {r.questions != null ? r.questions.toLocaleString() : "-"}
+                        </td>
+                        <td className="px-4 py-2 text-right text-muted-foreground">
+                          {formatTimeSeconds(r.timeSeconds)}
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>

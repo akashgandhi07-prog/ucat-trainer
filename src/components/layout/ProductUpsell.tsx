@@ -677,7 +677,7 @@ const EXTRAS_ASIDE_INTRO: Partial<Record<UpsellPlacement, string>> = {
   planner_onboarding_aside:
     "Paid support from TheUKCATPeople. Your free study plan never requires these.",
   mock_scores:
-    "Optional paid support - the free mock tracker never requires these.",
+    "Optional paid support: the free mock tracker never requires these.",
 };
 
 /** Right-hand panel: course → tutoring → package (onboarding, mock scores, etc.). */
@@ -828,7 +828,7 @@ function FooterTutoring() {
         <a href={TRUSTPILOT_URL} className="text-slate-600 hover:text-primary transition-colors" {...EXTERNAL}>
           {TUTORING_COPY.ratedTrustpilot}
         </a>
-        {" - "}
+        {" · "}
         <a
           href={UCAT_TUTORING_URL}
           className="text-slate-600 hover:text-primary font-medium"

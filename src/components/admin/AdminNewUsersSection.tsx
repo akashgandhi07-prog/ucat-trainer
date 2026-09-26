@@ -1,14 +1,12 @@
-export type NewUserRow = {
+import { ADMIN_TRAINER_KEYS, adminTrainerLabel, trainerSessionCounts, type SessionCounts } from "./adminTrainerTypes";
+
+/** Rows are normalised with withSessionCounts, so every training type has a numeric field. */
+export type NewUserRow = SessionCounts & {
   user_id: string;
   full_name: string | null;
   created_at: string;
   email: string;
-  speed_reading: number;
-  rapid_recall: number;
-  keyword_scanning: number;
-  calculator: number;
-  inference_trainer: number;
-  mental_maths: number;
+  sessions_by_type?: Partial<Record<string, number>>;
   syllogism_micro: number;
   syllogism_macro: number;
   total_questions: number;
@@ -41,6 +39,12 @@ const EVENT_LABELS: Record<string, string> = {
   shortcuts_opened: "Calculator shortcuts opened",
   bug_report_opened: "Bug report / feedback opened",
 };
+
+/** "3 Speed Reading; 1 QR Setup Trainer" style summary of the sessions a user has logged. */
+function sessionSummary(row: NewUserRow): string[] {
+  const counts = trainerSessionCounts(row);
+  return ADMIN_TRAINER_KEYS.filter((key) => counts[key] > 0).map((key) => `${counts[key]} ${adminTrainerLabel(key)}`);
+}
 
 function downloadText(filename: string, text: string, mimeType: string): void {
   const blob = new Blob([text], { type: mimeType });
@@ -75,15 +79,7 @@ export default function AdminNewUsersSection({ newUsers }: AdminNewUsersSectionP
               const eventParts = Object.entries(row.event_counts ?? {})
                 .filter(([, n]) => n > 0)
                 .map(([name, n]) => `${EVENT_LABELS[name] ?? name.replace(/_/g, " ")}: ${n}`);
-              const sessions: string[] = [];
-              if (row.speed_reading) sessions.push(`${row.speed_reading} speed reading`);
-              if (row.rapid_recall) sessions.push(`${row.rapid_recall} rapid recall`);
-              if (row.keyword_scanning) sessions.push(`${row.keyword_scanning} keyword scanning`);
-              if (row.calculator) sessions.push(`${row.calculator} calculator`);
-              if (row.inference_trainer) sessions.push(`${row.inference_trainer} inference`);
-              if (row.mental_maths) sessions.push(`${row.mental_maths} mental maths`);
-              if (row.syllogism_micro) sessions.push(`${row.syllogism_micro} syllogism micro`);
-              if (row.syllogism_macro) sessions.push(`${row.syllogism_macro} syllogism macro`);
+              const sessions = sessionSummary(row);
               const activityParts = [
                 eventParts.length ? eventParts.join("; ") : "",
                 sessions.length ? `Sessions: ${sessions.join("; ")}` : null,
@@ -129,15 +125,7 @@ export default function AdminNewUsersSection({ newUsers }: AdminNewUsersSectionP
               const eventParts = Object.entries(row.event_counts ?? {})
                 .filter(([, n]) => n > 0)
                 .map(([name, n]) => `${EVENT_LABELS[name] ?? name.replace(/_/g, " ")}: ${n}`);
-              const sessions: string[] = [];
-              if (row.speed_reading) sessions.push(`${row.speed_reading} speed reading`);
-              if (row.rapid_recall) sessions.push(`${row.rapid_recall} rapid recall`);
-              if (row.keyword_scanning) sessions.push(`${row.keyword_scanning} keyword scanning`);
-              if (row.calculator) sessions.push(`${row.calculator} calculator`);
-              if (row.inference_trainer) sessions.push(`${row.inference_trainer} inference`);
-              if (row.mental_maths) sessions.push(`${row.mental_maths} mental maths`);
-              if (row.syllogism_micro) sessions.push(`${row.syllogism_micro} syllogism micro`);
-              if (row.syllogism_macro) sessions.push(`${row.syllogism_macro} syllogism macro`);
+              const sessions = sessionSummary(row);
               const eventsLabel = row.event_counts_partial && row.event_counts_since
                 ? `Events since ${new Date(row.event_counts_since).toLocaleDateString(undefined, { dateStyle: "medium" })}: `
                 : "";

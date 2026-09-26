@@ -9,6 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { adminTrainerLabel } from "./adminTrainerTypes";
 
 type AnalyticsSummary = {
   event_counts: Record<string, number>;
@@ -169,7 +170,7 @@ export default function AdminAnalyticsSection({ analytics }: AdminAnalyticsSecti
                 .sort(([, a], [, b]) => (b as number) - (a as number))
                 .map(([type, count]) => (
                   <li key={type} className="px-4 py-2 flex justify-between text-sm">
-                    <span className="text-foreground">{type.replace(/_/g, " ")}</span>
+                    <span className="text-foreground">{adminTrainerLabel(type)}</span>
                     <span className="font-medium text-foreground">{String(count)}</span>
                   </li>
                 ))
@@ -251,7 +252,7 @@ export default function AdminAnalyticsSection({ analytics }: AdminAnalyticsSecti
                     const completed = counts.trainer_completed ?? 0;
                     return (
                       <tr key={type} className="border-b border-border">
-                        <td className="px-4 py-2 text-foreground">{type.replace(/_/g, " ")}</td>
+                        <td className="px-4 py-2 text-foreground">{adminTrainerLabel(type)}</td>
                         <td className="px-4 py-2 text-right font-medium">{opened}</td>
                         <td className="px-4 py-2 text-right font-medium">{started}</td>
                         <td className={`px-4 py-2 text-right font-semibold ${rateColorClass(started, opened)}`}>

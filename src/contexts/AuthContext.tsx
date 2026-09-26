@@ -9,6 +9,7 @@ import { trackEvent } from "../lib/analytics";
 import { getProfile, upsertProfile } from "../lib/profileApi";
 import { clearGuestSessions, ensureGuestSessionIds } from "../lib/guestSessions";
 import { mergeGuestSJTOnSignIn, migrateLocalSJTAttemptsToCloud } from "../lib/sjtSessionStorage";
+import { migrateGuestSJTScenarios } from "../lib/sjtActiveScenario";
 import {
   mergeGuestDmTrainerOnSignIn,
   migrateLegacyDmTrainerSessions,
@@ -415,6 +416,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         try {
+          // Half-finished guest SJT scenario: moved to the account (or its partial recorded there), never both.
+          migrateGuestSJTScenarios(session.user.id);
           const sjtMerged = await mergeGuestSJTOnSignIn(session.user.id);
           await migrateLocalSJTAttemptsToCloud(session.user.id);
           if (!sjtMerged && authListenerActive) {

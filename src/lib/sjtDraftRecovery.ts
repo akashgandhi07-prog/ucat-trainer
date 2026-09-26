@@ -81,18 +81,30 @@ export function hasSJTAnswerDraft(scope: string | null, type: string, id: string
   return readStored(scope, type, id, now) !== null;
 }
 
+
 /**
  * Active scenario pointer: which scenario a user (or guest) was part way through
  * for each trainer type, so an accidental reload reopens the same scenario
  * instead of a new random one. It also carries the progress needed to record a
  * partial attempt if the scenario is later discarded without being resumed.
  *
- * Record-once rule: whoever records a partial first *claims* (reads and removes)
- * the pointer; submitting a scenario clears the pointer before the completed
- * attempt is recorded, so a resumed-then-completed scenario never also records
- * a partial.
+ * Record-once rule: every scenario attempt has an attemptId, and a row is only
+ * ever recorded by whoever *claims* (reads and removes) the pointer carrying
+ * that attemptId. Submitting claims before recording the completed attempt, so
+ * a resumed-then-completed scenario never also records a partial.
+ *
+ * Several tabs: the pointer names the tab that owns it (`owner`) and when that
+ * tab last showed it (`aliveAt`, refreshed by a heartbeat and set to 0 on
+ * pagehide). A tab that resumes a scenario takes ownership; the previous owner
+ * sees the change (storage event, or on its next write) and stops treating the
+ * attempt as its own: it never records on pagehide or leave, and on submit it
+ * records only if it can still claim the pointer, i.e. the owner has not
+ * recorded it yet. A pointer shown by a live tab is never settled by another.
  */
 const ACTIVE_PREFIX = "ucat_sjt_active_v1";
+/** A pointer counts as open in some tab while its heartbeat is this recent (background tabs tick about once a minute). */
+export const SJT_ACTIVE_LIVE_MS = 3 * 60_000;
+export const SJT_ACTIVE_HEARTBEAT_MS = 30_000;
 
 export type SJTScenarioProgress = { itemsAttempted: number; itemsTotal: number; partialScore: number };
 export type SJTScenarioFilters = { domain: string; difficulty: string };
@@ -103,9 +115,31 @@ export type ActiveSJTScenario = {
   filters: SJTScenarioFilters;
   progress: SJTScenarioProgress | null;
   savedAt: number;
+  /** Identifies this attempt at the scenario; a row is recorded once per attemptId. */
+  attemptId: string;
+  /** Tab id of the tab showing it ("" when none has claimed it yet). */
+  owner: string;
+  /** Last heartbeat from the owner tab; 0 once released (page hidden or unloaded). */
+  aliveAt: number;
 };
+export type ActiveSJTScenarioInput = Omit<ActiveSJTScenario, "savedAt" | "attemptId" | "owner" | "aliveAt"> &
+  Partial<Pick<ActiveSJTScenario, "attemptId" | "owner" | "aliveAt">>;
+
+function randomId(): string {
+  try {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  } catch { /* fall through */ }
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+}
+
+const TAB_ID = randomId();
+/** Stable for the lifetime of this page load; a reload gets a new one. */
+export const sjtTabId = () => TAB_ID;
+export const newSJTAttemptId = () => randomId();
 
 const activeKey = (scope: string, type: string) => `${ACTIVE_PREFIX}:${scope}:${type}`;
+/** True when a storage key is an active-scenario pointer (for storage event filtering). */
+export const isActiveSJTScenarioKey = (key: string | null) => key === null || key.startsWith(`${ACTIVE_PREFIX}:`);
 
 function isProgress(value: unknown): value is SJTScenarioProgress {
   if (!value || typeof value !== "object") return false;
@@ -139,6 +173,10 @@ export function readActiveSJTScenario(scope: string | null, type: string): Activ
         filters: { domain: filters.domain, difficulty: filters.difficulty },
         progress: (v.progress as SJTScenarioProgress | null) ?? null,
         savedAt: v.savedAt,
+        // Pointers written before tab ownership existed: one legacy attempt, owned by nobody.
+        attemptId: typeof v.attemptId === "string" && v.attemptId ? v.attemptId : `legacy-${v.savedAt}`,
+        owner: typeof v.owner === "string" ? v.owner : "",
+        aliveAt: typeof v.aliveAt === "number" && Number.isFinite(v.aliveAt) ? v.aliveAt : 0,
       };
     }
   } catch { /* fall through */ }
@@ -146,13 +184,23 @@ export function readActiveSJTScenario(scope: string | null, type: string): Activ
   return null;
 }
 
-/** Saves the pointer; returns false when storage is unavailable (nothing can then be resumed). */
-export function saveActiveSJTScenario(scope: string | null, value: Omit<ActiveSJTScenario, "savedAt">, now = Date.now()): boolean {
-  if (!scope) return false;
+function writeActivePointer(scope: string, pointer: ActiveSJTScenario): boolean {
   try {
-    localStorage.setItem(activeKey(scope, value.type), JSON.stringify({ ...value, savedAt: now }));
+    localStorage.setItem(activeKey(scope, pointer.type), JSON.stringify(pointer));
     return true;
   } catch { return false; }
+}
+
+/** Saves the pointer; returns false when storage is unavailable (nothing can then be resumed). */
+export function saveActiveSJTScenario(scope: string | null, value: ActiveSJTScenarioInput, now = Date.now()): boolean {
+  if (!scope) return false;
+  return writeActivePointer(scope, {
+    ...value,
+    attemptId: value.attemptId ?? randomId(),
+    owner: value.owner ?? "",
+    aliveAt: value.aliveAt ?? 0,
+    savedAt: now,
+  });
 }
 
 export function clearActiveSJTScenario(scope: string | null, type: string): void {
@@ -160,17 +208,42 @@ export function clearActiveSJTScenario(scope: string | null, type: string): void
   try { localStorage.removeItem(activeKey(scope, type)); } catch { /* ignore */ }
 }
 
+/** Trainer types with a stored pointer in this scope (a scan of the pointer key prefix only). */
+export function listActiveSJTScenarioTypes(scope: string | null): string[] {
+  if (!scope) return [];
+  const prefix = `${ACTIVE_PREFIX}:${scope}:`;
+  const types: string[] = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(prefix) && k.length > prefix.length) types.push(k.slice(prefix.length));
+    }
+  } catch { /* storage unavailable */ }
+  return types;
+}
+
 /**
- * Atomically (within a tab) takes ownership of the pointer: returns it and
- * removes it together with its answer draft. When questionId is given, a
- * pointer for a different scenario is left alone and null is returned.
+ * Takes the pointer (and its answer draft) out of storage and returns it.
+ * When questionId or attemptId is given, a pointer for a different scenario or
+ * attempt is left alone and null is returned. Whoever gets the pointer back is
+ * the only one allowed to record that attempt.
  */
-export function claimActiveSJTScenario(scope: string | null, type: string, questionId?: string): ActiveSJTScenario | null {
+export function claimActiveSJTScenario(scope: string | null, type: string, questionId?: string, attemptId?: string): ActiveSJTScenario | null {
   const pointer = readActiveSJTScenario(scope, type);
-  if (!pointer || (questionId !== undefined && pointer.questionId !== questionId)) return null;
+  if (!pointer) return null;
+  if (questionId !== undefined && pointer.questionId !== questionId) return null;
+  if (attemptId !== undefined && pointer.attemptId !== attemptId) return null;
   clearActiveSJTScenario(scope, type);
   clearSJTAnswerDraft(scope, type, pointer.questionId);
   return pointer;
+}
+
+const isExpiredPointer = (pointer: ActiveSJTScenario, now: number) =>
+  pointer.savedAt > now + 60_000 || now - pointer.savedAt > DRAFT_TTL_MS;
+
+/** True while some tab (possibly this one) has shown the pointer recently and not released it. */
+export function isActiveSJTScenarioLive(pointer: ActiveSJTScenario, now = Date.now()): boolean {
+  return pointer.aliveAt > 0 && pointer.aliveAt <= now + 60_000 && now - pointer.aliveAt < SJT_ACTIVE_LIVE_MS;
 }
 
 /** A pointer is resumable while fresh, for the same practice filters, and with its unmarked draft still present. */
@@ -179,10 +252,44 @@ export function isActiveSJTScenarioResumable(
   opts: { filters: SJTScenarioFilters; hasDraft: boolean; now?: number },
 ): boolean {
   const now = opts.now ?? Date.now();
-  if (pointer.savedAt > now + 60_000 || now - pointer.savedAt > DRAFT_TTL_MS) return false;
+  if (isExpiredPointer(pointer, now)) return false;
   if (pointer.filters.domain !== opts.filters.domain || pointer.filters.difficulty !== opts.filters.difficulty) return false;
   if (pointer.progress && pointer.progress.itemsAttempted >= pointer.progress.itemsTotal) return false;
   return opts.hasDraft;
+}
+
+export type SJTPointerOwnership = "owner" | "other" | "gone";
+
+/** Whether tabId still owns this attempt ("other": another tab took it over; "gone": it was claimed and recorded). */
+export function activeSJTScenarioOwnership(scope: string | null, type: string, attemptId: string, tabId: string): SJTPointerOwnership {
+  const pointer = readActiveSJTScenario(scope, type);
+  if (!pointer || pointer.attemptId !== attemptId) return "gone";
+  return pointer.owner === tabId ? "owner" : "other";
+}
+
+/** Makes tabId the owner of this attempt (used when a tab resumes it). Returns the updated pointer or null. */
+export function takeOwnershipOfSJTScenario(scope: string | null, type: string, attemptId: string, tabId: string, now = Date.now()): ActiveSJTScenario | null {
+  if (!scope) return null;
+  const pointer = readActiveSJTScenario(scope, type);
+  if (!pointer || pointer.attemptId !== attemptId) return null;
+  const next = { ...pointer, owner: tabId, aliveAt: now };
+  return writeActivePointer(scope, next) ? next : null;
+}
+
+/** Owner heartbeat: refreshes aliveAt. Returns the ownership seen, so a caller learns it has lost the pointer. */
+export function heartbeatSJTScenario(scope: string | null, type: string, attemptId: string, tabId: string, now = Date.now()): SJTPointerOwnership {
+  const pointer = readActiveSJTScenario(scope, type);
+  if (!scope || !pointer || pointer.attemptId !== attemptId) return "gone";
+  if (pointer.owner !== tabId) return "other";
+  writeActivePointer(scope, { ...pointer, aliveAt: now });
+  return "owner";
+}
+
+/** Owner leaves the page without discarding the scenario (a reload may resume it): it is no longer live. */
+export function releaseSJTScenario(scope: string | null, type: string, attemptId: string, tabId: string): void {
+  const pointer = readActiveSJTScenario(scope, type);
+  if (!scope || !pointer || pointer.attemptId !== attemptId || pointer.owner !== tabId) return;
+  writeActivePointer(scope, { ...pointer, aliveAt: 0 });
 }
 
 /** The partial attempt a discarded pointer should record, or null when nothing was marked. */
@@ -198,29 +305,116 @@ export type SJTPartialRecorder = (userId: string | null, scenario: ActiveSJTScen
 export const userIdForSJTDraftScope = (scope: string) => (scope === "guest" ? null : scope);
 
 /**
- * Discards the active scenario (optionally only if it is questionId) and records
- * its partial attempt exactly once: the pointer is claimed before anything is
- * recorded, so a repeat call finds nothing.
+ * Discards the active scenario (optionally only if it is questionId / attemptId)
+ * and records its partial attempt exactly once: the pointer is claimed before
+ * anything is recorded, so a repeat call (from any tab) finds nothing.
  */
-export function settleActiveSJTScenario(scope: string | null, type: string, questionId: string | undefined, record: SJTPartialRecorder): ActiveSJTScenario | null {
+export function settleActiveSJTScenario(
+  scope: string | null, type: string, questionId: string | undefined, record: SJTPartialRecorder, attemptId?: string,
+): ActiveSJTScenario | null {
   if (!scope) return null;
-  const pointer = claimActiveSJTScenario(scope, type, questionId);
+  const pointer = claimActiveSJTScenario(scope, type, questionId, attemptId);
   const partial = partialFromActiveSJTScenario(pointer);
   if (pointer && partial) record(userIdForSJTDraftScope(scope), pointer, partial);
   return pointer;
 }
 
+export type SJTPointerWrite = "owned" | "lost" | "blocked" | "unavailable";
+
 /**
- * On opening a trainer: the scenario to reopen, or null. A pointer that cannot
- * be resumed (expired, other filters, draft gone) is settled, recording its
- * partial attempt once.
+ * Writes this tab's pointer for an attempt it is showing.
+ * - "owned": written; this tab owns the attempt.
+ * - "lost": the tab owned it before, but another tab has since taken it over or claimed it; nothing written.
+ * - "blocked": another live tab is on a different scenario of this trainer; nothing written (the attempt runs without a pointer).
+ * - "unavailable": storage failed.
+ * A different, no longer live pointer in the slot is settled (recorded once) first.
  */
-export function resolveSJTResumeWith(scope: string | null, type: string, filters: SJTScenarioFilters, record: SJTPartialRecorder, now = Date.now()): ActiveSJTScenario | null {
+export function writeOwnedSJTScenario(
+  scope: string | null,
+  value: Omit<ActiveSJTScenarioInput, "owner" | "aliveAt"> & { attemptId: string },
+  opts: { tabId: string; previouslyOwned: boolean; record: SJTPartialRecorder; now?: number },
+): SJTPointerWrite {
+  if (!scope) return "unavailable";
+  const now = opts.now ?? Date.now();
+  const existing = readActiveSJTScenario(scope, value.type);
+  if (existing && existing.attemptId === value.attemptId) {
+    if (existing.owner !== opts.tabId) return "lost";
+  } else if (opts.previouslyOwned) {
+    return "lost";
+  } else if (existing) {
+    if (!isExpiredPointer(existing, now) && isActiveSJTScenarioLive(existing, now) && existing.owner !== opts.tabId) return "blocked";
+    settleActiveSJTScenario(scope, value.type, existing.questionId, opts.record, existing.attemptId);
+  }
+  return saveActiveSJTScenario(scope, { ...value, owner: opts.tabId, aliveAt: now }, now) ? "owned" : "unavailable";
+}
+
+/**
+ * On opening a trainer: the scenario to reopen (now owned by tabId), or null.
+ * A pointer that cannot be resumed (expired, other filters, draft gone) is
+ * settled, recording its partial attempt once, unless another tab is still
+ * showing it.
+ */
+export function resolveSJTResumeWith(
+  scope: string | null, type: string, filters: SJTScenarioFilters, record: SJTPartialRecorder, now = Date.now(), tabId = sjtTabId(),
+): ActiveSJTScenario | null {
   if (!scope) return null;
   const pointer = readActiveSJTScenario(scope, type);
   if (!pointer) return null;
   const hasDraft = hasSJTAnswerDraft(scope, type, pointer.questionId, now);
-  if (isActiveSJTScenarioResumable(pointer, { filters, hasDraft, now })) return pointer;
-  settleActiveSJTScenario(scope, type, pointer.questionId, record);
+  if (isActiveSJTScenarioResumable(pointer, { filters, hasDraft, now })) {
+    return takeOwnershipOfSJTScenario(scope, type, pointer.attemptId, tabId, now);
+  }
+  if (!isExpiredPointer(pointer, now) && isActiveSJTScenarioLive(pointer, now) && pointer.owner !== tabId) return null;
+  settleActiveSJTScenario(scope, type, pointer.questionId, record, pointer.attemptId);
   return null;
+}
+
+/**
+ * Hub or Dashboard load: settles every pointer in this scope that is expired or
+ * not open in any tab, recording each partial once. Returns how many were settled.
+ */
+export function settleStaleSJTScenariosWith(scope: string | null, record: SJTPartialRecorder, now = Date.now()): number {
+  let settled = 0;
+  for (const type of listActiveSJTScenarioTypes(scope)) {
+    const pointer = readActiveSJTScenario(scope, type);
+    if (!pointer) continue;
+    if (!isExpiredPointer(pointer, now) && isActiveSJTScenarioLive(pointer, now)) continue;
+    if (settleActiveSJTScenario(scope, type, pointer.questionId, record, pointer.attemptId)) settled++;
+  }
+  return settled;
+}
+
+/**
+ * Sign-in: moves each guest pointer (and its unmarked draft) to the account, so
+ * the same scenario resumes there and its result is recorded to the account.
+ * When it cannot be moved (expired, draft gone, finished, or the account
+ * already has a scenario open for that trainer) its partial is recorded once to
+ * the account instead. The guest pointer is claimed first, so nothing is ever
+ * recorded both as guest and as the user.
+ */
+export function migrateGuestSJTScenariosWith(userId: string | null, record: SJTPartialRecorder, now = Date.now()): number {
+  if (!userId || userId === "guest") return 0;
+  let moved = 0;
+  for (const type of listActiveSJTScenarioTypes("guest")) {
+    const pointer = readActiveSJTScenario("guest", type);
+    if (!pointer) continue;
+    let rawDraft: string | null = null;
+    try { rawDraft = hasSJTAnswerDraft("guest", type, pointer.questionId, now) ? localStorage.getItem(key("guest", type, pointer.questionId)) : null; } catch { rawDraft = null; }
+    if (!claimActiveSJTScenario("guest", type, pointer.questionId, pointer.attemptId)) continue;
+    const complete = !!pointer.progress && pointer.progress.itemsAttempted >= pointer.progress.itemsTotal;
+    const canMove = rawDraft !== null && !complete && !isExpiredPointer(pointer, now) && !readActiveSJTScenario(userId, type);
+    if (canMove) {
+      let draftMoved = false;
+      try { localStorage.setItem(key(userId, type, pointer.questionId), rawDraft as string); draftMoved = true; } catch { /* fall through */ }
+      // Released (aliveAt 0) so the account's next trainer visit, in any tab, resumes it.
+      if (draftMoved && writeActivePointer(userId, { ...pointer, aliveAt: 0 })) {
+        moved++;
+        continue;
+      }
+      clearSJTAnswerDraft(userId, type, pointer.questionId);
+    }
+    const partial = partialFromActiveSJTScenario(pointer);
+    if (partial) record(userId, pointer, partial);
+  }
+  return moved;
 }

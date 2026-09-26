@@ -2,7 +2,7 @@ import { bankSchema } from "./model";
 const opts = (texts: string[]) =>
   texts.map((text, i) => ({ id: String.fromCharCode(65 + i), text }));
 export const sample = bankSchema.parse({
-  title: "Sample Practice Test",
+  title: "TheUKCATPeople Interaction Demo",
   sections: [
     {
       id: "VR",

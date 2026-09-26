@@ -71,7 +71,9 @@ function ConfigureRedirect() {
   return <Navigate to={{ pathname: "/", search }} replace />;
 }
 
-const PRIVATE_INDEX_PATHS = ["/dashboard", "/study-plan", "/mock-scores", "/admin", "/tutor", "/join/", "/reset-password"];
+// /study-plan (the plan builder) and /mock-scores (the tracker) are public tools and stay indexable;
+// the personal planner views under /study-plan/ are not.
+const PRIVATE_INDEX_PATHS = ["/dashboard", "/study-plan/", "/admin", "/tutor", "/join/", "/reset-password"];
 function RouteIndexingPolicy() {
   const { pathname } = useLocation();
   useEffect(() => {

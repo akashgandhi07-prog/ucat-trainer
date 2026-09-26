@@ -792,7 +792,7 @@ export const trainerFaqs: TrainerFaqMap = {
       id: "qr-setup-review-mistakes",
       question: "How does Review mistakes work?",
       answer:
-        "Any question you do not get fully right is scheduled for review a day later. Review mistakes shows the questions that are due first. A fully correct answer in review mode clears the question, while in normal drills it needs two correct answers spaced a few days apart. When you get something wrong you can also record why, such as misreading or a unit error, which helps target later recommendations.",
+        "Any question you do not get fully right is scheduled for review a day later. Review mistakes shows the questions that are due first. To clear a question you need two fully correct answers spaced a few days apart. A correct answer in review mode counts as the first of these even if the question is not yet due, and the second must come at least three days later, so answering twice in one sitting will not clear it. A wrong answer starts the count again. When you get something wrong you can also record why, such as misreading or a unit error, which helps target later recommendations.",
     },
     {
       id: "qr-setup-progress",

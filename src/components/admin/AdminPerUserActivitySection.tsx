@@ -1,13 +1,11 @@
-export type AdminUserRow = {
+import { ADMIN_TRAINER_KEYS, adminTrainerLabel, type SessionCounts } from "./adminTrainerTypes";
+
+/** Rows are normalised with withSessionCounts, so every training type has a numeric field. */
+export type AdminUserRow = SessionCounts & {
   user_id: string;
   email: string;
   display_name?: string;
-  speed_reading: number;
-  rapid_recall: number;
-  keyword_scanning: number;
-  calculator: number;
-  inference_trainer: number;
-  mental_maths: number;
+  sessions_by_type?: Partial<Record<string, number>>;
   syllogism_micro: number;
   syllogism_macro: number;
   total_questions: number;
@@ -20,7 +18,7 @@ export type AdminUserRow = {
   last_active_at: string | null;
 };
 
-type UserSortKey = keyof AdminUserRow | "accuracy";
+type UserSortKey = Exclude<keyof AdminUserRow, "sessions_by_type"> | "accuracy";
 
 function formatTimeSeconds(seconds: number | undefined | null): string {
   if (seconds == null || seconds <= 0) return "-";
@@ -87,14 +85,7 @@ const USER_TABLE_COLUMNS: { key: UserSortKey; label: string }[] = [
   { key: "total_time_seconds", label: "Time spent" },
   { key: "days_active", label: "Days active" },
   { key: "last_wpm", label: "WPM (last)" },
-  { key: "speed_reading", label: "Speed reading" },
-  { key: "rapid_recall", label: "Rapid recall" },
-  { key: "keyword_scanning", label: "Keyword scanning" },
-  { key: "calculator", label: "Calculator" },
-  { key: "inference_trainer", label: "Inference" },
-  { key: "mental_maths", label: "Mental maths" },
-  { key: "syllogism_micro", label: "Syllogism micro" },
-  { key: "syllogism_macro", label: "Syllogism macro" },
+  ...ADMIN_TRAINER_KEYS.map((key) => ({ key, label: adminTrainerLabel(key) })),
 ];
 
 type AdminPerUserActivitySectionProps = {
@@ -146,7 +137,7 @@ export default function AdminPerUserActivitySection({
             type="button"
             onClick={() => {
               const filtered = filterAndSortUsers(users, userSortKey, userSortDir, userFilterMinQuestions, userFilterEmail);
-              const headers = ["display_name", "email", "last_active_at", "total_questions", "session_correct", "session_questions", "accuracy_pct", "total_time_seconds", "time_formatted", "days_active", "last_wpm", "avg_wpm", "speed_reading", "rapid_recall", "keyword_scanning", "calculator", "inference_trainer", "mental_maths", "syllogism_micro", "syllogism_macro"];
+              const headers = ["display_name", "email", "last_active_at", "total_questions", "session_correct", "session_questions", "accuracy_pct", "total_time_seconds", "time_formatted", "days_active", "last_wpm", "avg_wpm", ...ADMIN_TRAINER_KEYS];
               const escape = (v: string | number | null) => {
                 if (v == null) return "";
                 const s = String(v);
@@ -170,15 +161,8 @@ export default function AdminPerUserActivitySection({
                   days_active: u.days_active ?? "",
                   last_wpm: u.last_wpm ?? "",
                   avg_wpm: u.avg_wpm ?? "",
-                  speed_reading: u.speed_reading,
-                  rapid_recall: u.rapid_recall,
-                  keyword_scanning: u.keyword_scanning,
-                  calculator: u.calculator,
-                  inference_trainer: u.inference_trainer,
-                  mental_maths: u.mental_maths,
-                  syllogism_micro: u.syllogism_micro,
-                  syllogism_macro: u.syllogism_macro,
                 };
+                for (const key of ADMIN_TRAINER_KEYS) row[key] = u[key] ?? 0;
                 return headers.map((h) => escape(toCell(row[h]))).join(",");
               });
               downloadText("admin-users-export.csv", [headers.join(","), ...rows].join("\n"), "text/csv;charset=utf-8");

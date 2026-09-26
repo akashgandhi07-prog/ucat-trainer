@@ -127,27 +127,30 @@ function formatDuration(seconds: number) {
   return `${minutes} ${minutes === 1 ? "minute" : "minutes"} ${remainder} seconds`;
 }
 
+const MOCK_NAME = "TheUKCATPeople Mock";
+const guessingNote =
+  "Wrong answers do not lose marks, so give an answer to every question, even if you have to make your best guess.";
+const calculatorNote =
+  "Open the calculator from the toolbar. You can use it with the mouse or with the number keys on your keyboard.";
 const sectionInstructions: Record<Bank["sections"][number]["id"], string[]> = {
   VR: [
-    "For each question you may only select one response.",
-    "It is in your best interest to answer all questions as there is no penalty for guessing. Unanswered questions will be scored as incorrect.",
+    "Each question has one correct answer. Select a single option.",
+    guessingNote,
   ],
   DM: [
-    "For some questions you may only select one response. Other questions require you to respond to five statements by placing a Yes or No answer next to each statement.",
-    "It is in your best interest to answer all questions as there is no penalty for guessing. Unanswered questions will be scored as incorrect.",
-    "The onscreen calculator can be accessed from the top left and operated using the mouse or the number pad on the keyboard.",
-    "If the calculator does not respond, ensure Num Lock is on, press ON/C, or close and reopen it.",
+    "Some questions have one correct answer. Others give five statements, and you drag a Yes or No tile next to each one.",
+    guessingNote,
+    calculatorNote,
   ],
   QR: [
-    "For each question you may only select one response.",
-    "It is in your best interest to answer all questions as there is no penalty for guessing. Unanswered questions will be scored as incorrect.",
-    "The onscreen calculator can be accessed from the top left and operated using the mouse or the number pad on the keyboard.",
-    "If the calculator does not respond, ensure Num Lock is on, press ON/C, or close and reopen it.",
+    "Each question has one correct answer. Select a single option.",
+    guessingNote,
+    calculatorNote,
   ],
   SJT: [
-    "Rate each consideration or action using the responses shown. Some questions require both a most appropriate and a least appropriate action.",
-    "For most/least questions, you must place a different action in each answer slot.",
-    "Answer every item. An incomplete set of responses remains incomplete on the review screen.",
+    "Rate each action or consideration using the options shown. Some questions ask you to choose the most and the least appropriate action instead.",
+    "For most and least questions, each answer box needs a different action.",
+    "Try to answer every item. Anything left blank shows as incomplete on the review screen.",
   ],
 };
 function Dialog({
@@ -676,7 +679,7 @@ export default function App() {
         <>
           <header className="titlebar setup-titlebar">
             <span>
-              {timed ? "Practice Test A" : `${section.name} Question Bank 1`}
+              {timed ? MOCK_NAME : `${MOCK_NAME} · ${section.name} practice`}
             </span>
             <span className="setup-status">Test setup</span>
           </header>
@@ -697,7 +700,7 @@ export default function App() {
             </select>
           </nav>
           <main className="setup content setup-screen">
-            <p className="eyebrow">PRACTICE TEST</p>
+            <p className="eyebrow">THEUKCATPEOPLE MOCK</p>
             <h1>Select your test</h1>
             <p className="setup-intro">
               Choose a test format and timing arrangement. Your progress is
@@ -754,11 +757,11 @@ export default function App() {
               </label>
             </div>
             <p className="setup-guidance">
-              The full-length shell uses the captured section counts and
-              timings. The short demo contains eight questions covering every
-              supported interaction. Imported banks use their own question
-              counts and timer settings. Active attempts recover after reloads
-              and sync across devices for signed-in users.
+              The full-length mock uses the same section question counts and
+              timings as the real test. The short demo contains eight questions
+              covering every supported interaction. Imported banks use their own
+              question counts and timer settings. Active attempts recover after
+              reloads and sync across devices for signed-in users.
             </p>
             <div className="setup-actions">
               {savedDraft && (
@@ -856,7 +859,7 @@ export default function App() {
       ) : phase === "finished" ? (
         <>
           <header className="titlebar setup-titlebar">
-            <span>Practice Test A</span>
+            <span>{MOCK_NAME}</span>
             <span className="setup-status">Test complete</span>
           </header>
           <nav className="toolbar setup-toolbar">
@@ -934,7 +937,7 @@ export default function App() {
         <>
           <header className="titlebar">
             <span>
-              {timed ? "Practice Test A" : `${section.name} Question Bank 1`}
+              {timed ? MOCK_NAME : `${MOCK_NAME} · ${section.name} practice`}
             </span>
             <div>
               <button
@@ -1024,8 +1027,8 @@ export default function App() {
             <main className="content instructions">
               {timed && (
                 <b>
-                  You have {formatDuration(section.instructionSeconds)} to read
-                  this screen.
+                  This screen closes after{" "}
+                  {formatDuration(section.instructionSeconds)}.
                 </b>
               )}
               <h3>
@@ -1040,8 +1043,8 @@ export default function App() {
                     <th colSpan={2}>Subtest Time</th>
                   </tr>
                   <tr>
-                    <th>UCAT</th>
-                    <th>UCAT (25% Extra Time)</th>
+                    <th>Standard time</th>
+                    <th>Extended time (25% extra)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1071,8 +1074,8 @@ export default function App() {
                 </p>
               )}
               <p>
-                Please click <b>Next (N)</b> to proceed before the time on this
-                screen expires.
+                Select <b>Next (N)</b> when you are ready. The section starts
+                automatically when the time on this screen runs out.
               </p>
             </main>
           ) : phase === "question" ? (

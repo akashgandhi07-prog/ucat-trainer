@@ -32,11 +32,7 @@
       ]
     },
     {
-      "source": "/study-plan(.*)",
-      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
-    },
-    {
-      "source": "/mock-scores",
+      "source": "/study-plan/(.*)",
       "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
     },
     {

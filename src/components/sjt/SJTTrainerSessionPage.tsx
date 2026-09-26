@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, type ReactNode } from "react";
+import { useState, useCallback, useEffect, useLayoutEffect, useRef, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { RotateCcw, ChevronRight, type LucideIcon } from "lucide-react";
 import Header from "../layout/Header";
@@ -14,7 +14,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { trainerFaqs } from "../../data/trainerFaqs";
 import { recordSJTAttempt } from "../../lib/sjtAnalytics";
 import { persistSJTSession } from "../../lib/sjtSessionStorage";
-import { recordSJTPartialAttempt, resolveSJTResume, settleAbandonedSJTScenario } from "../../lib/sjtActiveScenario";
+import { recordSJTPartialAttempt, resolveSJTResume, settleAbandonedSJTScenario, writeOwnedActiveSJTScenario } from "../../lib/sjtActiveScenario";
 import { getSiteBaseUrl } from "../../lib/siteUrl";
 import { cn } from "../../lib/cn";
 import type { SJTQuestion, SJTQuestionType, SJTQuizProgress } from "../../types/sjt";
@@ -26,14 +26,29 @@ import { trackEvent } from "../../lib/analytics";
 import SJTNextDrill from "./SJTNextDrill";
 import { syncSJTReviewOutcome, syncSJTReviewRemoval } from "../../lib/sjtReviewCloud";
 import {
+  activeSJTScenarioOwnership,
   clearSJTAnswerDraft,
   claimActiveSJTScenario,
-  saveActiveSJTScenario,
+  heartbeatSJTScenario,
+  isActiveSJTScenarioKey,
+  newSJTAttemptId,
+  releaseSJTScenario,
+  SJT_ACTIVE_HEARTBEAT_MS,
   sjtDraftScope,
+  sjtTabId,
   type ActiveSJTScenario,
 } from "../../lib/sjtDraftRecovery";
 
 type Phase = "intro" | "quiz" | "between";
+
+/**
+ * The scenario attempt this tab is showing. "owned": this tab owns its
+ * active-scenario pointer; "lost": another tab took the pointer over or already
+ * recorded the attempt; "pointerless": no pointer (review mode, storage
+ * unavailable, or another tab holds this trainer's pointer), so it is recorded
+ * directly.
+ */
+type TabAttempt = { questionId: string; attemptId: string; state: "owned" | "lost" | "pointerless" };
 
 export type SJTQuizHandlers = {
   /** Leave the scenario for the summary screen. Records the attempt if onSubmitted has not. */
@@ -64,7 +79,12 @@ type Props = {
 export default function SJTTrainerSessionPage(props: Props) {
   const [params] = useSearchParams();
   const { user } = useAuth();
-  return <SJTTrainerSession key={`${props.type}:${params.get("review") ?? "practice"}:${user?.id ?? "guest"}`} {...props} />;
+  // Read by the outgoing session when the account changes, so it hands its scenario over instead of recording it.
+  // Layout effects run before the unmounted session's passive cleanup, so it sees the new account.
+  const authScopeRef = useRef(sjtDraftScope(user?.id));
+  const authScope = sjtDraftScope(user?.id);
+  useLayoutEffect(() => { authScopeRef.current = authScope; }, [authScope]);
+  return <SJTTrainerSession key={`${props.type}:${params.get("review") ?? "practice"}:${user?.id ?? "guest"}`} authScopeRef={authScopeRef} {...props} />;
 }
 
 function SJTTrainerSession({
@@ -80,7 +100,8 @@ function SJTTrainerSession({
   emptyMessage,
   introContent,
   renderQuiz,
-}: Props) {
+  authScopeRef,
+}: Props & { authScopeRef: { readonly current: string } }) {
   const { user, loading: authLoading } = useAuth();
   const [params, setParams] = useSearchParams();
   const topic = GMC_DOMAINS_LIST.some(d => d.id === params.get("topic")) ? params.get("topic")! : "";
@@ -117,6 +138,7 @@ function SJTTrainerSession({
   const [lastScore, setLastScore] = useState<{ score: number; max: number } | null>(null);
   const [advancing, setAdvancing] = useState(false);
   const [performanceRefreshKey, setPerformanceRefreshKey] = useState(0);
+  const [savedElsewhere, setSavedElsewhere] = useState(false);
 
   const progressRef = useRef<SJTQuizProgress | null>(null);
   const savedQuestionIdRef = useRef<string | null>(null);
@@ -125,8 +147,9 @@ function SJTTrainerSession({
   const userIdRef = useRef(user?.id ?? null);
   const draftScopeRef = useRef(draftScope);
   const filtersRef = useRef({ domain: topic, difficulty });
-  /** Question id whose active-scenario pointer this tab has written (it can then be resumed). */
-  const pointerQuestionIdRef = useRef<string | null>(null);
+  const attemptRef = useRef<TabAttempt | null>(null);
+  /** Question id whose attempt another tab has taken over or recorded (this tab then shows a notice and stops saving drafts). */
+  const [lostQuestionId, setLostQuestionId] = useState<string | null>(null);
 
   phaseRef.current = phase;
   questionRef.current = question;
@@ -155,16 +178,59 @@ function SJTTrainerSession({
     progressRef.current = null;
   }, [question?.id]);
 
+  const markLost = useCallback((attempt: TabAttempt) => {
+    attempt.state = "lost";
+    setLostQuestionId(attempt.questionId);
+  }, []);
+
   /** Keep the active-scenario pointer current so a reload can reopen this scenario. */
   const writeActivePointer = useCallback(() => {
     const q = questionRef.current;
     const scope = draftScopeRef.current;
-    if (!scope || !q || phaseRef.current !== "quiz" || savedQuestionIdRef.current === q.id) return;
-    const saved = saveActiveSJTScenario(scope, {
-      type: q.type, questionId: q.id, domain: q.domain, filters: filtersRef.current, progress: progressRef.current,
-    });
-    pointerQuestionIdRef.current = saved ? q.id : null;
-  }, []);
+    if (!q || phaseRef.current !== "quiz" || savedQuestionIdRef.current === q.id) return;
+    let attempt = attemptRef.current;
+    if (!attempt || attempt.questionId !== q.id) {
+      attempt = { questionId: q.id, attemptId: newSJTAttemptId(), state: "pointerless" };
+      attemptRef.current = attempt;
+    }
+    if (!scope || attempt.state === "lost") return;
+    const result = writeOwnedActiveSJTScenario(scope, {
+      type: q.type, questionId: q.id, domain: q.domain, filters: filtersRef.current, progress: progressRef.current, attemptId: attempt.attemptId,
+    }, attempt.state === "owned");
+    if (result === "owned") attempt.state = "owned";
+    else if (result === "lost") markLost(attempt);
+    else attempt.state = "pointerless";
+  }, [markLost]);
+
+  /** Re-checks (and refreshes) ownership of the attempt this tab shows; used by the heartbeat and cross-tab events. */
+  const checkOwnership = useCallback((heartbeat: boolean) => {
+    const attempt = attemptRef.current;
+    const q = questionRef.current;
+    const scope = draftScopeRef.current;
+    if (!attempt || attempt.state !== "owned" || !q || attempt.questionId !== q.id || !scope || phaseRef.current !== "quiz") return;
+    const ownership = heartbeat
+      ? heartbeatSJTScenario(scope, q.type, attempt.attemptId, sjtTabId())
+      : activeSJTScenarioOwnership(scope, q.type, attempt.attemptId, sjtTabId());
+    if (ownership !== "owner") markLost(attempt);
+  }, [markLost]);
+
+  useEffect(() => {
+    if (phase !== "quiz") return;
+    const onStorage = (event: StorageEvent) => { if (isActiveSJTScenarioKey(event.key)) checkOwnership(false); };
+    const onVisible = () => { if (document.visibilityState === "visible") checkOwnership(true); };
+    // Restored from the back/forward cache after pagehide released the pointer: mark it live again.
+    const onPageShow = (event: PageTransitionEvent) => { if (event.persisted) checkOwnership(true); };
+    const timer = window.setInterval(() => checkOwnership(true), SJT_ACTIVE_HEARTBEAT_MS);
+    window.addEventListener("storage", onStorage);
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("pageshow", onPageShow);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("storage", onStorage);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("pageshow", onPageShow);
+    };
+  }, [phase, checkOwnership]);
 
   useEffect(() => {
     if (phase !== "quiz" || !question) return;
@@ -174,17 +240,19 @@ function SJTTrainerSession({
   // The resumed scenario could not be loaded (removed, or the targeted RPC is missing):
   // it is discarded, recording its partial attempt, and a new scenario is served instead.
   useEffect(() => {
-    if (resumeStatus === "failed" && resume) settleAbandonedSJTScenario(draftScope, type, resume.questionId);
+    if (resumeStatus === "failed" && resume) settleAbandonedSJTScenario(draftScope, type, resume.questionId, resume.attemptId);
   }, [resumeStatus, resume, draftScope, type]);
 
   // Reopen a resumed scenario straight into the quiz, at the first unmarked item.
   const resumedQuestionId = resumeStatus === "resumed" ? resume?.questionId ?? null : null;
   const autoStartedRef = useRef(false);
   useEffect(() => {
-    if (autoStartedRef.current || !resumedQuestionId || question?.id !== resumedQuestionId) return;
+    if (autoStartedRef.current || !resumedQuestionId || !resume || question?.id !== resumedQuestionId) return;
     autoStartedRef.current = true;
+    // resolveSJTResume made this tab the owner of the resumed attempt.
+    attemptRef.current = { questionId: resume.questionId, attemptId: resume.attemptId, state: "owned" };
     setPhase("quiz");
-  }, [resumedQuestionId, question?.id]);
+  }, [resumedQuestionId, resume, question?.id]);
 
   useEffect(() => {
     if (phase === "between") {
@@ -196,41 +264,57 @@ function SJTTrainerSession({
 
   /**
    * Record a partial attempt when a scenario is left before it was submitted.
-   * "leave" is an in-app exit (navigation, reset, starting another scenario):
-   * the draft and pointer are discarded and the partial is recorded now.
-   * "pagehide" may be a reload: while a resumable draft and pointer exist,
-   * nothing is recorded; the partial is recorded later, once, if the scenario
-   * is discarded instead of resumed (see resolveSJTResume). Without drafts
-   * (delayed-review mode, or storage unavailable) it is recorded immediately.
+   * "leave" is an in-app exit (reset, starting another scenario) and "unmount"
+   * a navigation away: the pointer is claimed and the partial recorded now.
+   * "pagehide" may be a reload: the owner only releases its pointer and records
+   * nothing; the partial is recorded later, once, if the scenario is discarded
+   * instead of resumed (next trainer visit, or the hub or Dashboard). An unmount
+   * caused by signing in or out also only releases it (sign-in then moves it to
+   * the account). A tab that has lost the attempt to another tab never records.
+   * Without a pointer the partial is recorded immediately.
    */
-  const flushPartialIfNeeded = useCallback((reason: "leave" | "pagehide" = "leave") => {
+  const flushPartialIfNeeded = useCallback((reason: "leave" | "unmount" | "pagehide") => {
     const q = questionRef.current;
     if (phaseRef.current !== "quiz" || !q) return;
     // Already submitted and recorded as complete (or already recorded as partial).
     if (savedQuestionIdRef.current === q.id) return;
 
     const scope = draftScopeRef.current;
-    const pointerWritten = !!scope && pointerQuestionIdRef.current === q.id;
-    if (reason === "pagehide" && pointerWritten) return;
+    const attempt = attemptRef.current?.questionId === q.id ? attemptRef.current : null;
+    const accountChanged = reason === "unmount" && authScopeRef.current !== sjtDraftScope(userIdRef.current);
 
-    // Claim the pointer first: if another tab or an earlier settle already took it, do not record twice.
-    const claimed = scope ? claimActiveSJTScenario(scope, q.type, q.id) : null;
-    clearSJTAnswerDraft(scope, q.type, q.id);
-    pointerQuestionIdRef.current = null;
-    if (pointerWritten && !claimed) {
+    if (scope && attempt && attempt.state !== "pointerless") {
+      if (attempt.state === "lost") return;
+      const tabId = sjtTabId();
+      if (activeSJTScenarioOwnership(scope, q.type, attempt.attemptId, tabId) !== "owner") {
+        attempt.state = "lost";
+        return;
+      }
+      if (reason === "pagehide" || accountChanged) {
+        releaseSJTScenario(scope, q.type, attempt.attemptId, tabId);
+        return;
+      }
+      // Claim first: if another tab or a settle already took it, it is not recorded twice.
+      const claimed = claimActiveSJTScenario(scope, q.type, q.id, attempt.attemptId);
+      attemptRef.current = null;
+      const progress = progressRef.current ?? claimed?.progress ?? null;
+      if (!claimed || !progress || progress.itemsAttempted <= 0) return;
       savedQuestionIdRef.current = q.id;
+      recordSJTPartialAttempt(userIdRef.current, { questionId: q.id, type: q.type, domain: q.domain }, progress);
       return;
     }
 
-    const progress = progressRef.current ?? claimed?.progress ?? null;
+    clearSJTAnswerDraft(scope, q.type, q.id);
+    if (attempt) attemptRef.current = null;
+    const progress = progressRef.current;
     if (!progress || progress.itemsAttempted <= 0) return;
     savedQuestionIdRef.current = q.id;
     recordSJTPartialAttempt(userIdRef.current, { questionId: q.id, type: q.type, domain: q.domain }, progress);
-  }, []);
+  }, [authScopeRef]);
 
   useEffect(() => {
     return () => {
-      flushPartialIfNeeded();
+      flushPartialIfNeeded("unmount");
     };
   }, [flushPartialIfNeeded]);
 
@@ -248,15 +332,32 @@ function SJTTrainerSession({
   const handleSubmitted = useCallback(
     (score: number, max: number) => {
       if (!question || savedQuestionIdRef.current === question.id) return;
+      const attempt = attemptRef.current?.questionId === question.id ? attemptRef.current : null;
+      attemptRef.current = null;
+      savedQuestionIdRef.current = question.id;
+      // Claim the pointer before recording, so the scenario can never also be recorded as partial.
+      // If this attempt had a pointer and it is gone, another tab has already recorded it: show the
+      // result here but do not record a second row.
+      let recordHere = true;
+      if (draftScope && attempt && attempt.state !== "pointerless") {
+        recordHere = claimActiveSJTScenario(draftScope, question.type, question.id, attempt.attemptId) !== null;
+      } else if (draftScope && !attempt) {
+        claimActiveSJTScenario(draftScope, question.type, question.id);
+      }
       clearSJTAnswerDraft(draftScope, question.type, question.id);
-      // Clear the pointer before recording, so the scenario can never also be recorded as partial.
-      claimActiveSJTScenario(draftScope, question.type, question.id);
-      pointerQuestionIdRef.current = null;
+      setSessionScore((s) => s + score);
+      setSessionMax((m) => m + max);
+      setQuestionsAttempted((n) => n + 1);
+      setLastScore({ score, max });
+      if (!recordHere) {
+        setSavedElsewhere(true);
+        return;
+      }
+      setSavedElsewhere(false);
       const hadReviewEntry = Boolean(review) || loadSJTReviews(user?.id).some((entry) => entry.id === question.id && entry.type === question.type);
       const savedLocally = saveSJTReview(user?.id ?? null, question, score, max);
       setReviewSaved(savedLocally);
       if (user?.id && savedLocally) void syncSJTReviewOutcome(user.id, question, hadReviewEntry);
-      savedQuestionIdRef.current = question.id;
       recordSJTAttempt({
         questionId: question.id,
         domain: question.domain,
@@ -274,10 +375,6 @@ function SJTTrainerSession({
         items_total: max,
         completed: true,
       });
-      setSessionScore((s) => s + score);
-      setSessionMax((m) => m + max);
-      setQuestionsAttempted((n) => n + 1);
-      setLastScore({ score, max });
       setPerformanceRefreshKey((key) => key + 1);
     },
     [question, user?.id, review, draftScope],
@@ -305,7 +402,7 @@ function SJTTrainerSession({
 
   /** Discard a resumed scenario (recording its partial attempt) and serve a new one. */
   const handleStartNew = useCallback(async () => {
-    flushPartialIfNeeded();
+    flushPartialIfNeeded("leave");
     setAdvancing(true);
     try {
       await advanceToNext();
@@ -317,7 +414,7 @@ function SJTTrainerSession({
   }, [advanceToNext, flushPartialIfNeeded]);
 
   const handleReset = useCallback(() => {
-    flushPartialIfNeeded();
+    flushPartialIfNeeded("leave");
     setSessionScore(0);
     setSessionMax(0);
     setQuestionsAttempted(0);
@@ -331,11 +428,13 @@ function SJTTrainerSession({
   const showIntroSkeleton = phase === "intro" && (authLoading || loading) && !question && (!reviewId || !!review);
   const noQuestions = !authLoading && !loading && !question && !error;
 
+  const lostToOtherTab = !!question && lostQuestionId === question.id;
   const quizHandlers: SJTQuizHandlers = {
     onComplete: handleComplete,
     onSubmitted: handleSubmitted,
     onProgress: handleProgress,
-    draftScope,
+    // Once another tab has this scenario, drafts here would overwrite that tab's.
+    draftScope: lostToOtherTab ? null : draftScope,
   };
 
   return (
@@ -445,6 +544,11 @@ function SJTTrainerSession({
               </button>
             </div>
           )}
+          {phase === "quiz" && !loading && lostToOtherTab && (
+            <p role="status" className="mb-4 rounded-xl border border-border bg-card px-4 py-2 text-sm text-foreground">
+              This scenario is also open in another tab. It is saved once, from whichever tab finishes it first.
+            </p>
+          )}
           {phase === "quiz" && loading && <SJTQuestionSkeleton />}
           {phase === "quiz" && !loading && question && renderQuiz(question, quizHandlers)}
 
@@ -477,8 +581,9 @@ function SJTTrainerSession({
                 Completed scenarios sync to your dashboard when you are signed in. If you leave
                 mid-scenario, partial progress is saved too.
               </p>
+              {savedElsewhere && <p role="status" className="text-sm text-muted-foreground">This scenario was already saved from another tab, so this result was not saved again.</p>}
               {!reviewSaved && <p role="status" className="text-sm text-destructive">Your browser could not save this mistake review. Check that browser storage is available.</p>}
-              {reviewSaved && lastScore && lastScore.score < lastScore.max && <p role="status" className="text-sm text-muted-foreground">Added to your mistake reviews. Your next retry is in 24 hours.</p>}
+              {!savedElsewhere && reviewSaved && lastScore && lastScore.score < lastScore.max && <p role="status" className="text-sm text-muted-foreground">Added to your mistake reviews. Your next retry is in 24 hours.</p>}
               <SJTNextDrill onStart={handleReset} />
               {lastScore && lastScore.score < lastScore.max && <aside className="rounded-xl border border-border p-4 space-y-2">
                 <h2 className="font-semibold text-sm">Want help with your SJT reasoning?</h2>

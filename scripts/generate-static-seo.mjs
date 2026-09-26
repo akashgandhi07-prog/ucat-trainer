@@ -41,6 +41,10 @@ const trainers = [
   ["/ucat-sjt-ranking-trainer", "UCAT SJT Ranking Questions", "Choose the most and least appropriate responses in UCAT SJT scenarios."],
 ].map(([url, title, intro]) => [url, title, `${intro} Free practice with immediate explanations.`, title, intro, "LearningResource", commonLinks]);
 routes.push(...trainers);
+routes.push(
+  ["/study-plan", "Free UCAT Study Plan Builder (UK)", "Answer seven quick questions and get a free, personalised UCAT revision schedule built around your test date, weekly hours and weakest sections.", "Free UCAT study plan builder", "Answer seven quick questions and get a personalised UCAT revision schedule built around your test date, weekly hours and weakest sections.", "LearningResource", commonLinks],
+  ["/mock-scores", "Free UCAT Mock Score Tracker (UK)", "Log your UCAT full and mini mock scores, set section targets and see your trend over time. Free, with your scores saved across devices.", "Free UCAT mock score tracker", "Log full and mini mock scores, set section targets and see how your scaled scores are trending before test day.", "LearningResource", commonLinks],
+);
 
 const escapeHtml = (value) => String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
 const template = await readFile(path.resolve("dist/index.html"), "utf8");

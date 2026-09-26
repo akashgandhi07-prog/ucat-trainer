@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { decideAccess, gateRequired } from "../src/exam-simulator/gateRules";
 import { sample } from "../src/exam-simulator/sample";
 import { fullShell } from "../src/exam-simulator/fullShell";
 import {
@@ -61,6 +63,30 @@ assert.equal(examShortcut({ key: "e", altKey: true }), "end-review");
 assert.equal(examShortcut({ key: "a", altKey: true }), "review-all");
 assert.equal(examShortcut({ key: "n", altKey: false }), null);
 assert.equal(examShortcut({ key: "n", altKey: true, repeat: true }), null);
+// Access gate: open unless the flag is exactly "true"; staff = admin or tutor.
+assert.equal(gateRequired({}), false);
+assert.equal(gateRequired({ VITE_EXAM_SIMULATOR_REQUIRE_AUTH: "false" }), false);
+assert.equal(gateRequired({ VITE_EXAM_SIMULATOR_REQUIRE_AUTH: "true" }), true);
+assert.equal(decideAccess("signed-in", null, null), "signed-out");
+assert.equal(decideAccess("signed-in", "u1", null), "allowed");
+assert.equal(decideAccess("staff", null, { role: "admin" }), "signed-out");
+assert.equal(decideAccess("staff", "u1", null), "forbidden");
+assert.equal(decideAccess("staff", "u1", { role: "user", planner_role: "student" }), "forbidden");
+assert.equal(decideAccess("staff", "u1", { role: "admin" }), "allowed");
+assert.equal(decideAccess("staff", "u1", { role: "user", planner_role: "tutor" }), "allowed");
+// Neutral branding: no wording that imitates the official test screens.
+for (const file of [
+  "src/exam-simulator/App.tsx",
+  "src/exam-simulator/AccessGate.tsx",
+  "src/question-database/App.tsx",
+  "exam-simulator.html",
+  "question-database.html",
+]) {
+  const text = readFileSync(new URL(`../${file}`, import.meta.url), "utf8");
+  for (const banned of [/Practice Test A/, /Question Bank 1/, /UCAT \(25% Extra Time\)/, /<th>UCAT<\/th>/, /captured/i, /Pearson/i, /[\u2013\u2014]/]) {
+    assert.equal(banned.test(text), false, `${file} contains ${banned}`);
+  }
+}
 console.log(
-  "Simulator checks passed: bank validation, completion, shortcuts, unique ranking, reusable Yes/No tiles.",
+  "Simulator checks passed: bank validation, access gate, neutral naming, completion, shortcuts, unique ranking, reusable Yes/No tiles.",
 );

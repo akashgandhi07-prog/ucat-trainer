@@ -16,7 +16,7 @@ for (const route of urls) {
 }
 const shell = await readFile(path.resolve("dist/app-shell.html"), "utf8");
 assert.ok(!shell.includes("data-seo-static"), "app-shell.html is the SPA fallback and must not carry page-specific SEO tags");
-for (const privatePath of ["/study-plan", "/mock-scores", "/dashboard", "/admin", "/tutor"]) {
+for (const privatePath of ["/study-plan/today", "/study-plan/plan", "/study-plan/reflect", "/dashboard", "/admin", "/tutor"]) {
   assert.ok(!sitemap.includes(`>${privatePath}<`) && !sitemap.includes(`.co.uk${privatePath}<`), `${privatePath} must not be in the sitemap`);
 }
 console.log(`Static SEO checks passed for ${urls.length} public pages; private application routes are excluded.`);

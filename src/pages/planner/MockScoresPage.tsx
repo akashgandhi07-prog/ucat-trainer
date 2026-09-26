@@ -8,6 +8,20 @@ import PlannerPageLayout from '../../planner/PlannerPageLayout'
 import PlannerLoading from '../../planner/components/PlannerLoading'
 import MockScoresBrowseView from '../../planner/components/MockScoresBrowseView'
 import MockScoresPageShell from '../../planner/components/MockScoresPageShell'
+import SEOHead from '../../components/seo/SEOHead'
+import { getSiteBaseUrl } from '../../lib/siteUrl'
+
+function MockScoresSEO() {
+  const base = getSiteBaseUrl()
+  return (
+    <SEOHead
+      title="Free UCAT Mock Score Tracker (UK)"
+      description="Log your UCAT full and mini mock scores, set section targets and see your trend over time. Free, with your scores saved across devices."
+      canonicalUrl={base ? `${base}/mock-scores` : undefined}
+      breadcrumbs={base ? [{ name: 'Home', url: `${base}/` }, { name: 'Mock scores', url: `${base}/mock-scores` }] : undefined}
+    />
+  )
+}
 
 function CloudMockScoresView() {
   const { user } = useAuth()
@@ -57,6 +71,7 @@ export default function MockScoresPage() {
   if (loading) {
     return (
       <PlannerPageLayout showCourseBanner={false}>
+        <MockScoresSEO />
         <PlannerLoading />
       </PlannerPageLayout>
     )
@@ -65,6 +80,7 @@ export default function MockScoresPage() {
   if (!user) {
     return (
       <PlannerPageLayout showCourseBanner={false}>
+        <MockScoresSEO />
         <MockScoresPageShell>
           {hasGuestPlanner() ? <GuestScoresPage /> : <MockScoresBrowseView />}
         </MockScoresPageShell>
@@ -74,6 +90,7 @@ export default function MockScoresPage() {
 
   return (
     <PlannerPageLayout showCourseBanner={false}>
+      <MockScoresSEO />
       <MockScoresPageShell>
         <CloudMockScoresView />
       </MockScoresPageShell>

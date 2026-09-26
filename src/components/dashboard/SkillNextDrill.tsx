@@ -66,7 +66,7 @@ export default function SkillNextDrill() {
           <h2 className="mt-1 text-lg font-semibold text-foreground">{trainer.label}</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             {hasDue
-              ? `${dueHere} mistake${dueHere === 1 ? ' is' : 's are'} ready for review. A correct answer in review clears ${dueHere === 1 ? 'it' : 'each one'}.`
+              ? `${dueHere} mistake${dueHere === 1 ? ' is' : 's are'} ready for review. Each mistake clears after two correct answers a few days apart.`
               : attemptCount === 0
                 ? `Start here to ${trainer.purpose}. Your results will personalise later recommendations.`
                 : `This is your least-practised or lowest-accuracy skill. Use it to ${trainer.purpose}.`}

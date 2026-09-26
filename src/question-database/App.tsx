@@ -323,7 +323,7 @@ export default function App() {
         <div>
           <Database />
           <div>
-            <h1>UCAT Question Database</h1>
+            <h1>TheUKCATPeople Question Database</h1>
             <p>Local tutor authoring and review workspace</p>
           </div>
         </div>

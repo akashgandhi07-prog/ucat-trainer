@@ -1,16 +1,14 @@
-export type RegistrationRow = {
+import { ADMIN_TRAINER_KEYS, adminTrainerLabel, type SessionCounts } from "./adminTrainerTypes";
+
+/** Rows are normalised with withSessionCounts, so every training type has a numeric field. */
+export type RegistrationRow = SessionCounts & {
   user_id: string;
   email: string;
   display_name?: string;
   stream?: string | null;
   entry_year?: string | null;
   created_at: string | null;
-  speed_reading: number;
-  rapid_recall: number;
-  keyword_scanning: number;
-  calculator: number;
-  inference_trainer: number;
-  mental_maths: number;
+  sessions_by_type?: Partial<Record<string, number>>;
   syllogism_micro: number;
   syllogism_macro: number;
   total_questions: number;
@@ -85,15 +83,13 @@ const REGISTRATION_TABLE_COLUMNS: { key: RegistrationSortKey; label: string }[] 
   { key: "days_active", label: "Days active" },
   { key: "total_questions", label: "Questions" },
   { key: "total_time_seconds", label: "Time spent" },
-  { key: "speed_reading", label: "Speed reading" },
-  { key: "rapid_recall", label: "Rapid recall" },
-  { key: "keyword_scanning", label: "Keyword scanning" },
-  { key: "calculator", label: "Calculator" },
-  { key: "inference_trainer", label: "Inference" },
-  { key: "mental_maths", label: "Mental maths" },
-  { key: "syllogism_micro", label: "Syllogism micro" },
-  { key: "syllogism_macro", label: "Syllogism macro" },
+  ...ADMIN_TRAINER_KEYS.map((key) => ({ key, label: adminTrainerLabel(key) })),
 ];
+
+/** CSV column name for a table column (trainer columns use their stable key, not the label). */
+function csvHeader(key: RegistrationSortKey, label: string): string {
+  return (ADMIN_TRAINER_KEYS as readonly string[]).includes(key) ? key : label.toLowerCase().replace(/\s+/g, "_");
+}
 
 type AdminRegistrationsSectionProps = {
   registrations: RegistrationRow[];
@@ -136,7 +132,7 @@ export default function AdminRegistrationsSection({
           <button
             type="button"
             onClick={() => {
-              const headers = REGISTRATION_TABLE_COLUMNS.map((c) => c.label.toLowerCase().replace(/\s+/g, "_"));
+              const headers = REGISTRATION_TABLE_COLUMNS.map((c) => csvHeader(c.key, c.label));
               const rows = filterAndSortRegistrations(
                 registrations,
                 registrationSortKey,
@@ -162,17 +158,10 @@ export default function AdminRegistrationsSection({
                   registered_on: formatDate(r.created_at, false),
                   last_active: formatDate(r.last_active_at, true),
                   days_active: r.days_active ?? null,
-                  total_questions: r.total_questions,
-                  total_time_seconds: r.total_time_seconds ?? null,
-                  speed_reading: r.speed_reading,
-                  rapid_recall: r.rapid_recall,
-                  keyword_scanning: r.keyword_scanning,
-                  calculator: r.calculator,
-                  inference_trainer: r.inference_trainer,
-                  mental_maths: r.mental_maths,
-                  syllogism_micro: r.syllogism_micro,
-                  syllogism_macro: r.syllogism_macro,
+                  questions: r.total_questions,
+                  time_spent: r.total_time_seconds ?? null,
                 };
+                for (const key of ADMIN_TRAINER_KEYS) row[key] = r[key] ?? 0;
                 return headers.map((h) => escape(row[h])).join(",");
               });
               downloadText(

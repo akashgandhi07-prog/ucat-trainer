@@ -5,6 +5,7 @@ import { loadSJTReviews, loadSJTReviewStats, removeSJTReview, resetSJTReviewStat
 import { GMC_DOMAINS } from "../../data/gmcDomains";
 import { fetchSJTRecommendationRows, getGuestSJTSessions, SJT_SESSIONS_UPDATED_EVENT } from "../../lib/sjtSessionStorage";
 import { recommendSJTDrill, type SJTRecommendationRow } from "../../lib/sjtRecommendation";
+import { settleStaleSJTScenarios } from "../../lib/sjtActiveScenario";
 import { clearCloudSJTReviews, getReviewStoragePreference, setReviewStoragePreference, syncSJTReviewRemoval, syncSJTReviewState, type ReviewStoragePreference } from "../../lib/sjtReviewCloud";
 
 /**
@@ -19,6 +20,11 @@ export default function SJTNextDrill({ onStart, sessions }: { onStart?: () => vo
   const [preferenceChoice, setPreferenceChoice] = useState<{ userId: string; value: ReviewStoragePreference } | null>(null);
   const [cloudSessions, setCloudSessions] = useState<{ userId: string; rows: SJTRecommendationRow[] } | null>(null);
   const [sessionsVersion, setSessionsVersion] = useState(0);
+  // Hub and Dashboard load: record scenarios abandoned mid-way (tab closed, expired) that no open tab is showing.
+  useEffect(() => {
+    if (loading) return;
+    settleStaleSJTScenarios(user?.id ?? null);
+  }, [loading, user?.id]);
   useEffect(() => {
     const bump = () => setSessionsVersion((v) => v + 1);
     window.addEventListener(SJT_SESSIONS_UPDATED_EVENT, bump);

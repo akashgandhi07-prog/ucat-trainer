@@ -8,6 +8,20 @@ import { useAuth } from '../../hooks/useAuth'
 import PlannerLoading from '../../planner/components/PlannerLoading'
 import PlannerPageLayout from '../../planner/PlannerPageLayout'
 import type { AuthState } from '../../types/session'
+import SEOHead from '../../components/seo/SEOHead'
+import { getSiteBaseUrl } from '../../lib/siteUrl'
+
+function StudyPlanSEO() {
+  const base = getSiteBaseUrl()
+  return (
+    <SEOHead
+      title="Free UCAT Study Plan Builder (UK)"
+      description="Answer seven quick questions and get a free, personalised UCAT revision schedule built around your test date, weekly hours and weakest sections."
+      canonicalUrl={base ? `${base}/study-plan` : undefined}
+      breadcrumbs={base ? [{ name: 'Home', url: `${base}/` }, { name: 'Study plan', url: `${base}/study-plan` }] : undefined}
+    />
+  )
+}
 
 function buildOnboardingPrefill(
   user: AuthState['user'],
@@ -94,6 +108,7 @@ export default function StudyPlanPage() {
   if (authLoading || (user && cloudReady === null)) {
     return (
       <PlannerPageLayout showSubNav={false} showGuestBanner={false} showCourseBanner={false}>
+        <StudyPlanSEO />
         <PlannerLoading />
       </PlannerPageLayout>
     )
@@ -108,6 +123,7 @@ export default function StudyPlanPage() {
 
   return (
     <PlannerPageLayout showSubNav={false} showGuestBanner={false} showCourseBanner={false}>
+      <StudyPlanSEO />
       <OnboardingClient initialInviteToken={inviteToken} profilePrefill={profilePrefill} />
     </PlannerPageLayout>
   )

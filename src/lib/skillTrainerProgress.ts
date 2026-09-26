@@ -16,7 +16,7 @@ export type SkillAttempt = {
   difficulty?: string
   skillTags?: string[]
   mistakeCause?: MistakeCause
-  /** Answered in explicit "Review mistakes" mode; a correct review answer clears the item. */
+  /** Answered in explicit "Review mistakes" mode; a correct review answer counts as one of the two steps needed to clear the item. */
   review?: boolean
   at: string
 }
@@ -301,7 +301,8 @@ export function selectSkillItems<T extends { id: string }>(
 ) {
   const latest = getSkillSummary(type, userId).latest
   // Review mode shows mistakes that are due first; only when none are due does it fall
-  // back to not-yet-due mistakes. A correct answer in review mode clears the item.
+  // back to not-yet-due mistakes. A correct answer in review mode is one of two steps needed
+  // to clear the item (see deriveSkillReviewState).
   const reviewIds = review ? new Set(getSkillReviewIds(type, userId)) : null
   let pool: T[] = review
     ? bank.filter((question) => reviewIds?.has(question.id))
