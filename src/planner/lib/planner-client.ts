@@ -12,7 +12,7 @@ import {
 import { supabase } from '../../lib/supabase'
 import { writeOwnProfile } from '../../lib/profileApi'
 import { requireStudentOrTutorPlan } from './planner-guard'
-import { regenerateFutureWeeks, updateDayAvailability } from './planner-db-ops'
+import { getTrainerWeaknessTags, regenerateFutureWeeks, updateDayAvailability } from './planner-db-ops'
 
 const MOCK_SOURCES = new Set<MockSource>([
   'medify',
@@ -97,7 +97,30 @@ function scheduleRegenerateFromNextWeek(
   )
 }
 
-/** Reassess future weeks after a meaningful batch of skill-trainer evidence. */
+const TRAINER_TAGS_APPLIED_KEY = 'planner_trainer_tags_applied_v1'
+
+function readAppliedTrainerTags(planId: string): string | null {
+  try {
+    return localStorage.getItem(`${TRAINER_TAGS_APPLIED_KEY}:${planId}`)
+  } catch {
+    return null
+  }
+}
+
+function writeAppliedTrainerTags(planId: string, signature: string): void {
+  try {
+    localStorage.setItem(`${TRAINER_TAGS_APPLIED_KEY}:${planId}`, signature)
+  } catch {
+    // Best effort: without storage the next batch just re-checks.
+  }
+}
+
+/**
+ * Reassess future weeks after a meaningful batch of skill-trainer evidence, but only
+ * when the weakness tags derived from that evidence have actually changed. A rebuild
+ * replaces every future day (including days the student set to reduced hours), so
+ * running it after every drill silently undid their own schedule edits.
+ */
 export async function refreshPlanFromSkillTrainerEvidence(studentId: string): Promise<void> {
   const { data: plan, error: planError } = await supabase
     .from('plans')
@@ -111,12 +134,22 @@ export async function refreshPlanFromSkillTrainerEvidence(studentId: string): Pr
   if (planError) throw new Error(planError.message)
   if (!plan) return
 
+  const signature = [...(await getTrainerWeaknessTags(studentId))].sort().join(',')
+  const applied = readAppliedTrainerTags(plan.id)
+  // First check on this device with no trainer weaknesses: nothing the plan needs to absorb.
+  if (applied === null && signature === '') {
+    writeAppliedTrainerTags(plan.id, signature)
+    return
+  }
+  if (applied === signature) return
+
   const { data: weeks, error: weeksError } = await supabase
     .from('plan_weeks')
     .select('week_number, week_start')
     .eq('plan_id', plan.id)
     .order('week_number')
   if (weeksError) throw new Error(weeksError.message)
+  writeAppliedTrainerTags(plan.id, signature)
   scheduleRegenerateFromNextWeek(plan.id, weeks)
 }
 

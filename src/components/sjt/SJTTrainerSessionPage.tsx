@@ -472,20 +472,22 @@ function SJTTrainerSession({
       <Header />
       <main className="flex-1 py-5 sm:py-6 px-4">
         <div className="w-full max-w-6xl mx-auto">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-xl bg-primary/10 text-primary">
-              <Icon className="w-5 h-5" aria-hidden />
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mb-4">
+            <div className="flex min-w-0 flex-1 basis-60 items-center gap-3">
+              <div className="p-2 rounded-xl bg-primary/10 text-primary shrink-0">
+                <Icon className="w-5 h-5" aria-hidden />
+              </div>
+              <div className="min-w-0">
+                <h1 className="text-lg font-bold text-foreground">{title}</h1>
+                <p className="text-xs text-muted-foreground">{subtitle}</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-lg font-bold text-foreground">{title}</h1>
-              <p className="text-xs text-muted-foreground">{subtitle}</p>
-            </div>
-            <div className="ml-auto flex items-center gap-4">
+            <div className="flex w-full min-w-0 items-center justify-between gap-4 sm:ml-auto sm:w-auto sm:justify-end">
               {question && phase !== "between" && (
-                <SJTDomainBadge domain={question.domain} showLink />
+                <SJTDomainBadge domain={question.domain} showLink className="min-w-0" />
               )}
               {questionsAttempted > 0 && (
-                <div className="text-right">
+                <div className="ml-auto shrink-0 whitespace-nowrap text-right sm:ml-0">
                   <p className="text-xs text-muted-foreground">{questionsAttempted} done</p>
                   {sessionPct != null && (
                     <p className="text-sm font-bold text-foreground">{sessionPct}%</p>

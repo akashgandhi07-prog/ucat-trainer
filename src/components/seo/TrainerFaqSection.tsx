@@ -60,24 +60,24 @@ export default function TrainerFaqSection({
             key={item.id}
             className="border border-border rounded-lg bg-white/60 hover:border-border transition-colors"
           >
-            <button
-              type="button"
-              id={buttonId}
-              aria-controls={panelId}
-              aria-expanded={isOpen}
-              onClick={() => setOpenId(isOpen ? null : item.id)}
-              className="w-full flex items-center justify-between text-left px-4 sm:px-5 py-3 sm:py-3.5 gap-3"
-            >
-              <h3 className="text-sm sm:text-base font-semibold text-foreground">
-                {item.question}
-              </h3>
-              <span
-                className="inline-flex items-center justify-center rounded-full border border-border text-muted-foreground w-6 h-6 text-xs shrink-0"
-                aria-hidden="true"
+            <h3 className="text-sm sm:text-base font-semibold text-foreground">
+              <button
+                type="button"
+                id={buttonId}
+                aria-controls={panelId}
+                aria-expanded={isOpen}
+                onClick={() => setOpenId(isOpen ? null : item.id)}
+                className="w-full flex items-center justify-between text-left px-4 sm:px-5 py-3 sm:py-3.5 gap-3"
               >
-                {isOpen ? "−" : "+"}
-              </span>
-            </button>
+                <span>{item.question}</span>
+                <span
+                  className="inline-flex items-center justify-center rounded-full border border-border text-muted-foreground font-normal w-6 h-6 text-xs shrink-0"
+                  aria-hidden="true"
+                >
+                  {isOpen ? "−" : "+"}
+                </span>
+              </button>
+            </h3>
             <div
               className="grid transition-[grid-template-rows] duration-[350ms] ease-out"
               style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
@@ -134,33 +134,36 @@ export default function TrainerFaqSection({
 
         {collapseIntoSingleAccordion && (
           <div className="border border-border rounded-xl bg-white/70">
-            <button
-              type="button"
-              id={id ? `${id}-heading` : undefined}
-              aria-controls={id ? `${id}-panel` : undefined}
-              aria-expanded={groupOpen}
-              onClick={() => setGroupOpen((open) => !open)}
-              className="w-full flex items-center justify-between text-left px-4 sm:px-5 py-3.5 sm:py-4 gap-3"
-            >
-              <div>
-                {title && (
-                  <h2 className="text-base sm:text-lg font-semibold text-foreground">
-                    {title}
-                  </h2>
-                )}
-                {intro && (
-                  <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
-                    {intro}
-                  </p>
-                )}
-              </div>
-              <span
-                className="inline-flex items-center justify-center rounded-full border border-border text-muted-foreground w-7 h-7 text-sm shrink-0"
-                aria-hidden="true"
+            {/* Heading wraps the button (not the reverse): block content inside a <button> is invalid. */}
+            <h2 className="m-0">
+              <button
+                type="button"
+                id={id ? `${id}-heading` : undefined}
+                aria-controls={id ? `${id}-panel` : undefined}
+                aria-expanded={groupOpen}
+                onClick={() => setGroupOpen((open) => !open)}
+                className="w-full flex items-center justify-between text-left px-4 sm:px-5 py-3.5 sm:py-4 gap-3"
               >
-                {groupOpen ? "−" : "+"}
-              </span>
-            </button>
+                <span className="block">
+                  {title && (
+                    <span className="block text-base sm:text-lg font-semibold text-foreground">
+                      {title}
+                    </span>
+                  )}
+                  {intro && (
+                    <span className="mt-1 block text-xs sm:text-sm font-normal text-muted-foreground">
+                      {intro}
+                    </span>
+                  )}
+                </span>
+                <span
+                  className="inline-flex items-center justify-center rounded-full border border-border text-muted-foreground w-7 h-7 text-sm shrink-0"
+                  aria-hidden="true"
+                >
+                  {groupOpen ? "−" : "+"}
+                </span>
+              </button>
+            </h2>
             <div
               className="grid transition-[grid-template-rows] duration-[350ms] ease-out"
               style={{ gridTemplateRows: groupOpen ? "1fr" : "0fr" }}

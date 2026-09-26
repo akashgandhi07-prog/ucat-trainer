@@ -13,17 +13,17 @@ export default function SJTDomainBadge({ domain, showLink = false, className }: 
   const d = GMC_DOMAINS[domain];
 
   return (
-    <div className={cn("inline-flex items-center gap-2", className)}>
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border border-border bg-secondary text-foreground">
+    <div className={cn("inline-flex max-w-full items-center gap-2", className)}>
+      <span className="inline-flex min-w-0 items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border border-border bg-secondary text-foreground" title={d.shortName}>
         <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-primary" aria-hidden />
-        {d.shortName}
+        <span className="truncate">{d.shortName}</span>
       </span>
       {showLink && (
         <a
           href={d.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+          className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-xs text-muted-foreground hover:text-primary transition-colors"
           aria-label={`Read GMP guidance on ${d.name}`}
         >
           GMP guidance

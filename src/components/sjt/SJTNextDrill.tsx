@@ -1,12 +1,32 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import { loadSJTReviews, loadSJTReviewStats, removeSJTReview, resetSJTReviewState, sjtPracticePath, snoozeSJTReview } from "../../lib/sjtReview";
+import { type ReviewEntry, loadSJTReviews, loadSJTReviewStats, removeSJTReview, resetSJTReviewState, sjtPracticePath, snoozeSJTReview } from "../../lib/sjtReview";
 import { GMC_DOMAINS } from "../../data/gmcDomains";
 import { fetchSJTRecommendationRows, getGuestSJTSessions, SJT_SESSIONS_UPDATED_EVENT } from "../../lib/sjtSessionStorage";
 import { recommendSJTDrill, type SJTRecommendationRow } from "../../lib/sjtRecommendation";
 import { settleStaleSJTScenarios } from "../../lib/sjtActiveScenario";
 import { clearCloudSJTReviews, getReviewStoragePreference, setReviewStoragePreference, syncSJTReviewRemoval, syncSJTReviewState, type ReviewStoragePreference } from "../../lib/sjtReviewCloud";
+
+const SJT_TYPE_LABELS: Record<ReviewEntry["type"], string> = {
+  appropriateness: "Appropriateness",
+  importance: "Importance",
+  ranking: "Ranking",
+};
+
+const HOUR = 3_600_000;
+const DAY = 86_400_000;
+
+/** Student-facing due status for a review entry, e.g. "Due now", "Due in 5 hours", "Due in 2 days". */
+function dueLabel(due: number, now: number): string {
+  const wait = due - now;
+  if (wait <= 0) return "Due now";
+  if (wait < HOUR) return "Due within the hour";
+  const hours = Math.round(wait / HOUR);
+  if (hours < 24) return `Due in ${hours} hour${hours === 1 ? "" : "s"}`;
+  const days = Math.round(wait / DAY);
+  return days <= 1 ? "Due tomorrow" : `Due in ${days} days`;
+}
 
 /**
  * Pass `sessions` when the caller already has the student's SJT attempts (for
@@ -115,10 +135,13 @@ export default function SJTNextDrill({ onStart, sessions }: { onStart?: () => vo
       <summary className="cursor-pointer min-h-[44px] py-2 text-sm font-medium inline-flex items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-md">
         Review queue ({entries.length})
       </summary>
-      <ul className="space-y-2 text-sm mt-2">{entries.map(r => <li key={`${r.type}:${r.id}`} className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2">
-        <span>{GMC_DOMAINS[r.domain].shortName} · {r.type} · {r.id}</span>
+      <ul className="space-y-2 text-sm mt-2">{entries.map((r, index) => <li key={`${r.type}:${r.id}`} className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2">
+        <span className="min-w-0">
+          <span className="font-medium text-foreground">Scenario {index + 1}</span>
+          <span className="text-muted-foreground"> · {GMC_DOMAINS[r.domain].shortName} · {SJT_TYPE_LABELS[r.type]} · {dueLabel(r.due, now)}</span>
+        </span>
         <span className="flex flex-wrap items-center gap-3">
-          {r.due <= now ? <Link onClick={onStart} className="text-primary underline min-h-[44px] inline-flex items-center" to={`${sjtPracticePath(r.type)}?review=${encodeURIComponent(r.id)}`}>Retry scenario</Link> : <span className="text-muted-foreground">Due {new Date(r.due).toLocaleString("en-GB", { dateStyle: "short", timeStyle: "short" })}</span>}
+          {r.due <= now ? <Link onClick={onStart} className="text-primary underline min-h-[44px] inline-flex items-center" to={`${sjtPracticePath(r.type)}?review=${encodeURIComponent(r.id)}`}>Retry scenario</Link> : <span className="text-muted-foreground">Retry from {new Date(r.due).toLocaleString("en-GB", { dateStyle: "short", timeStyle: "short" })}</span>}
           <button type="button" className="min-h-[44px] underline text-muted-foreground" onClick={() => { if (snoozeSJTReview(user?.id ?? null, r.id, r.type)) { refresh(Date.now()); if (user?.id) void syncSJTReviewState(user.id); } }}>Snooze 1 day</button>
           <button type="button" className="min-h-[44px] underline text-muted-foreground" onClick={() => { if (removeSJTReview(user?.id ?? null, r.id, r.type)) { refresh(Date.now()); if (user?.id) void syncSJTReviewRemoval(user.id, r.id, r.type, r.domain); } }}>Dismiss</button>
         </span>

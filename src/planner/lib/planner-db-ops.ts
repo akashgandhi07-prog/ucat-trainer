@@ -50,7 +50,7 @@ async function computeAdherenceRatio(planId: string, studentId: string): Promise
 /** Convert repeated weak component results in the skill trainers into the same focused
  * tags used by the plan engine. We require at least three observations and <70%
  * accuracy so one early mistake cannot rewrite a student's plan. */
-async function getTrainerWeaknessTags(studentId: string): Promise<string[]> {
+export async function getTrainerWeaknessTags(studentId: string): Promise<string[]> {
   const { data, error } = await supabase
     .from('skill_trainer_attempts')
     .select('trainer_type, components')

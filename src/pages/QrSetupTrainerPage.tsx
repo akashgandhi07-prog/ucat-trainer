@@ -1,6 +1,7 @@
 import { useState } from "react";
 import SkillTrainerShell, { ChoiceField, ComponentProgress, MistakeCausePrompt, ResultsCard, ReviewMistakesButton, TrainerLoading, TrainerProgress } from "../components/skillTrainers/SkillTrainerShell";
 import { useSkillTrainerRun } from "../components/skillTrainers/useSkillTrainerRun";
+import { RESULTS_SUMMARY } from "../components/skillTrainers/resultsSummary";
 import { QR_SETUP_QUESTIONS, type QrSetupQuestion } from "../data/skillTrainerQuestions";
 import { getSkillSummary, saveSkillAttempt } from "../lib/skillTrainerProgress";
 import { useSkillTrainerRunLog } from "../hooks/useSkillTrainerRunLog";
@@ -23,7 +24,7 @@ function QrSetupRun({questions,sessionId,reviewMode,userId,markAnswered,restart}
   const q=questions[index];
   const points = Number(answers.relevant===q.relevantAnswer)+Number(answers.operation===q.operationAnswer)+Number(answers.unit===q.unitAnswer)+Number(answers.calculation===q.calculationAnswer);
   const allChosen=Object.values(answers).every(Boolean);
-  if(done) return <SkillTrainerShell title="QR Setup Trainer" description={DESCRIPTION} path="/ucat-qr-setup-trainer" hubPath="/ucat-quantitative-reasoning-practice" hubLabel="Quantitative Reasoning" faqKey="qrSetup"><ResultsCard score={score} total={questions.length*4} onRestart={()=>restart()}><ComponentProgress rows={getSkillSummary("qr_setup",userId).components}/><ReviewMistakesButton trainerType="qr_setup" userId={userId} onReview={()=>restart(true)}/></ResultsCard></SkillTrainerShell>;
+  if(done) return <SkillTrainerShell title="QR Setup Trainer" description={DESCRIPTION} path="/ucat-qr-setup-trainer" hubPath="/ucat-quantitative-reasoning-practice" hubLabel="Quantitative Reasoning" faqKey="qrSetup"><ResultsCard score={score} total={questions.length*4} summary={RESULTS_SUMMARY.qr_setup} onRestart={()=>restart()} actions={<ReviewMistakesButton trainerType="qr_setup" userId={userId} onReview={()=>restart(true)}/>}><ComponentProgress rows={getSkillSummary("qr_setup",userId).components}/></ResultsCard></SkillTrainerShell>;
   return <SkillTrainerShell title="QR Setup Trainer" description={DESCRIPTION} path="/ucat-qr-setup-trainer" hubPath="/ucat-quantitative-reasoning-practice" hubLabel="Quantitative Reasoning" faqKey="qrSetup">
     <TrainerProgress current={index} total={questions.length} score={score+(revealed?points:0)} />
     <section className="rounded-2xl border border-border bg-card p-5 shadow-card sm:p-7">

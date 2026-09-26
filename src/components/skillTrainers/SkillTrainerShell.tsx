@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, RotateCcw } from "lucide-react";
+import { ArrowLeft, Check, RotateCcw, X } from "lucide-react";
 import Header from "../layout/Header";
 import Footer from "../layout/Footer";
 import BreadcrumbNav from "../layout/BreadcrumbNav";
@@ -64,16 +64,19 @@ export function TrainerProgress({ current, total, score }: { current: number; to
   </div>;
 }
 
-export function ResultsCard({ score, total, onRestart, children }: { score: number; total: number; onRestart: () => void; children?: ReactNode }) {
+export function ResultsCard({ score, total, summary, onRestart, actions, children }: { score: number; total: number; summary: string; onRestart: () => void; actions?: ReactNode; children?: ReactNode }) {
   const pct = Math.round(score / total * 100);
   return <section className="rounded-2xl border border-border bg-card p-6 shadow-card sm:p-8" aria-labelledby="results-title">
     <p className="text-sm font-semibold uppercase tracking-wide text-primary">Drill complete</p>
     <h2 id="results-title" className="mt-1 text-2xl font-bold text-foreground">{score}/{total} points · {pct}%</h2>
-    <p className="mt-2 text-sm text-muted-foreground">Your score measures the setup decisions, not just the final answer.</p>
+    <p className="mt-2 text-sm text-muted-foreground">{summary}</p>
     {children}
-    <button type="button" onClick={onRestart} className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary px-5 py-2.5 font-semibold text-primary-foreground hover:bg-primary/90">
-      <RotateCcw className="h-4 w-4" aria-hidden /> Practise again
-    </button>
+    <div className="mt-6 flex flex-wrap items-center gap-3">
+      <button type="button" onClick={onRestart} className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary px-5 py-2.5 font-semibold text-primary-foreground hover:bg-primary/90">
+        <RotateCcw className="h-4 w-4" aria-hidden /> Practise again
+      </button>
+      {actions}
+    </div>
   </section>;
 }
 
@@ -88,7 +91,7 @@ export function TrainerLoading() {
 /** Results-screen button for a run of this trainer's pending review items; hidden when none are waiting. */
 export function ReviewMistakesButton({ trainerType, userId, onReview }: { trainerType: SkillTrainerKey; userId?: string | null; onReview: () => void }) {
   if (getSkillReviewIds(trainerType, userId).length === 0) return null;
-  return <button type="button" onClick={onReview} className="mt-3 ml-3 min-h-11 rounded-lg border border-border px-4 py-2 font-semibold hover:bg-secondary">Review mistakes</button>;
+  return <button type="button" onClick={onReview} className="inline-flex min-h-11 items-center rounded-lg border border-border px-4 py-2 font-semibold hover:bg-secondary">Review mistakes</button>;
 }
 
 export function ComponentProgress({ rows }: { rows:{name:string;accuracy:number;correct:number;total:number}[] }) {
@@ -96,7 +99,9 @@ export function ComponentProgress({ rows }: { rows:{name:string;accuracy:number;
   return <div className="mt-5"><h3 className="font-semibold text-foreground">Skill breakdown</h3><div className="mt-2 grid gap-2 sm:grid-cols-2">{rows.map(row=><div key={row.name} className="rounded-lg border border-border p-3"><div className="flex justify-between gap-3 text-sm"><span className="capitalize">{row.name.replaceAll("_"," ")}</span><strong>{row.accuracy}%</strong></div><div className="mt-2 h-1.5 rounded-full bg-secondary"><div className="h-full rounded-full bg-primary" style={{width:`${row.accuracy}%`}}/></div><p className="mt-1 text-xs text-muted-foreground">{row.correct}/{row.total} decisions</p></div>)}</div></div>
 }
 
-const MISTAKE_CAUSES: { id: MistakeCause; label: string }[] = [
+type CauseOption = { id: MistakeCause; label: string };
+
+const QR_MISTAKE_CAUSES: CauseOption[] = [
   { id: "misread", label: "I misread the information" },
   { id: "method", label: "I chose the wrong method" },
   { id: "calculation", label: "Calculation slip" },
@@ -105,6 +110,23 @@ const MISTAKE_CAUSES: { id: MistakeCause; label: string }[] = [
   { id: "guessed", label: "I guessed" },
   { id: "changed_answer", label: "I changed a correct answer" },
 ];
+
+// DM labels map onto the codes allowed by the skill_trainer_attempts.mistake_cause
+// check constraint (no new codes without a migration). Ids must stay unique per list.
+const DM_MISTAKE_CAUSES: CauseOption[] = [
+  { id: "misread", label: "I misread a rule" },
+  { id: "method", label: "I missed a rule" },
+  { id: "guessed", label: "I placed items too early or guessed" },
+  { id: "rushed", label: "I rushed" },
+  { id: "changed_answer", label: "I changed a correct arrangement" },
+];
+
+const MISTAKE_CAUSES: Record<SkillTrainerKey, CauseOption[]> = {
+  qr_setup: QR_MISTAKE_CAUSES,
+  qr_extraction: QR_MISTAKE_CAUSES,
+  qr_estimation: QR_MISTAKE_CAUSES,
+  dm_constraints: DM_MISTAKE_CAUSES,
+};
 
 export function MistakeCausePrompt({ trainerType, sessionId, itemId, userId }: {
   trainerType: SkillTrainerKey;
@@ -116,7 +138,7 @@ export function MistakeCausePrompt({ trainerType, sessionId, itemId, userId }: {
   return <fieldset className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
     <legend className="px-1 text-sm font-semibold text-amber-950">What caused the mistake?</legend>
     <p className="mb-3 text-xs text-amber-900">Choose the main reason. This helps future recommendations target the real problem.</p>
-    <div className="flex flex-wrap gap-2">{MISTAKE_CAUSES.map((cause) => <button
+    <div className="flex flex-wrap gap-2">{MISTAKE_CAUSES[trainerType].map((cause) => <button
       key={cause.id}
       type="button"
       aria-pressed={selected === cause.id}
@@ -143,10 +165,11 @@ export function ChoiceField({ legend, options, value, answer, revealed, onChange
       {displayedOptions.map(option => {
         const correct = revealed && option.id === answer;
         const wrong = revealed && option.id === value && option.id !== answer;
-        return <label key={option.id} className={`flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm ${correct ? "border-green-500 bg-green-50" : wrong ? "border-red-400 bg-red-50" : value === option.id ? "border-primary bg-primary/5" : "border-border bg-background hover:bg-secondary"}`}>
+        return <label key={option.id} className={`flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm ${correct ? "border-green-500 bg-green-50" : wrong ? "border-red-500 bg-red-50" : value === option.id ? "border-primary bg-primary/5" : "border-border bg-background hover:bg-secondary"}`}>
           <input type="radio" name={legend} value={option.id} checked={value === option.id} disabled={revealed} onChange={() => onChange(option.id)} className="h-4 w-4" />
-          <span>{option.label}</span>
-          {correct && <span className="ml-auto font-semibold text-green-700">Correct</span>}
+          <span className="min-w-0 flex-1">{option.label}</span>
+          {correct && <span className="ml-auto inline-flex shrink-0 items-center gap-1 whitespace-nowrap font-semibold text-green-700"><Check className="h-4 w-4" aria-hidden />Correct</span>}
+          {wrong && <span className="ml-auto inline-flex shrink-0 items-center gap-1 whitespace-nowrap font-semibold text-red-700"><X className="h-4 w-4" aria-hidden />Your answer<span className="sr-only">, incorrect</span></span>}
         </label>;
       })}
     </div>
