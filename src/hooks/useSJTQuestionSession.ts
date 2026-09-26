@@ -1,13 +1,16 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { fetchRandomSJTQuestion, isAbortError, type SJTPracticeFilters } from "../lib/sjtApi";
+import { fetchRandomSJTQuestion, isAbortError, SJTReviewUnavailableError, type SJTPracticeFilters } from "../lib/sjtApi";
 import type { SJTQuestion, SJTQuestionType } from "../types/sjt";
 
 export type SJTResumeStatus = "none" | "resumed" | "failed";
 
 /**
  * @param resumeQuestionId When set, the first load reopens this scenario (a
- *   half-finished one after a reload) instead of a random one. If it cannot be
- *   loaded, resumeStatus becomes "failed" and a normal scenario loads instead.
+ *   half-finished one after a reload) instead of a random one. If that scenario
+ *   no longer exists (not returned, a different one returned, or the targeted
+ *   RPC is unavailable), resumeStatus becomes "failed" and a normal scenario
+ *   loads instead. Any other error (timeout, offline) shows the usual error and
+ *   leaves resumeStatus "none", so Try again retries the resume.
  */
 export function useSJTQuestionSession(
   type: SJTQuestionType,
@@ -38,6 +41,8 @@ export function useSJTQuestionSession(
           resumed = await fetchRandomSJTQuestion(type, [], controller.signal, 0, { questionId: resumeId });
         } catch (e) {
           if (isAbortError(e) || controller.signal.aborted) return;
+          // A network blip must not discard the half-finished scenario: surface it and let Try again resume.
+          if (!(e instanceof SJTReviewUnavailableError)) throw e;
         }
         if (controller.signal.aborted) return;
         resumeDone.current = true;

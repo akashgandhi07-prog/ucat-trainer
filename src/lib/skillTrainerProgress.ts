@@ -186,9 +186,29 @@ function toRow(userId: string, type: SkillTrainerKey, attempt: SkillAttempt) {
     components: attempt.components,
     difficulty: attempt.difficulty ?? null,
     skill_tags: attempt.review && !tags.includes(REVIEW_TAG) ? [...tags, REVIEW_TAG] : tags,
-    ...(attempt.mistakeCause ? { mistake_cause: attempt.mistakeCause } : {}),
     created_at: attempt.at,
   }
+}
+
+/**
+ * mistake_cause is sticky. postgrest-js sends the union of columns for a batch and fills
+ * gaps with null, so an unannotated copy batched beside an annotated row would wipe the
+ * annotation on conflict. Annotated rows therefore go in their own upsert that sends the
+ * cause explicitly, and unannotated rows go in one that never includes the column, so a
+ * stale or racing copy without a cause can never clear one already stored.
+ */
+async function upsertRows(rows: Record<string, unknown>[]) {
+  if (!rows.length || skillTableMissing) return
+  await withRetry(async () => {
+    const { error } = await supabase
+      .from('skill_trainer_attempts')
+      .upsert(rows, { onConflict: 'user_id,client_attempt_id' })
+    if (error && isMissingTableError(error)) {
+      noteMissingTable()
+      return
+    }
+    if (error) throw error
+  })
 }
 
 /**
@@ -196,21 +216,53 @@ function toRow(userId: string, type: SkillTrainerKey, attempt: SkillAttempt) {
  * table is missing (rows stay queued locally), and throws on any other failure.
  */
 async function cloudWriteMany(userId: string, entries: QueuedAttempt[]): Promise<boolean> {
-  for (let i = 0; i < entries.length; i += UPLOAD_CHUNK_SIZE) {
+  // The local cache always holds the newest annotation, so an older queued copy (with no
+  // cause, or an earlier one) never overwrites it.
+  const local = readRaw(keyFor(userId))
+  const withCause = entries.map(({ type, attempt }) => {
+    const cause = (local[type] ?? []).find((row) => row.clientAttemptId === attempt.clientAttemptId)?.mistakeCause
+    return { type, attempt: cause && cause !== attempt.mistakeCause ? { ...attempt, mistakeCause: cause } : attempt }
+  })
+  for (let i = 0; i < withCause.length; i += UPLOAD_CHUNK_SIZE) {
     if (skillTableMissing) return false
-    const rows = entries.slice(i, i + UPLOAD_CHUNK_SIZE).map(({ type, attempt }) => toRow(userId, type, attempt))
-    await withRetry(async () => {
-      const { error } = await supabase
-        .from('skill_trainer_attempts')
-        .upsert(rows, { onConflict: 'user_id,client_attempt_id' })
-      if (error && isMissingTableError(error)) {
-        noteMissingTable()
-        return
-      }
-      if (error) throw error
-    })
+    const chunk = withCause.slice(i, i + UPLOAD_CHUNK_SIZE)
+    await upsertRows(chunk
+      .filter(({ attempt }) => attempt.mistakeCause)
+      .map(({ type, attempt }) => ({ ...toRow(userId, type, attempt), mistake_cause: attempt.mistakeCause })))
+    await upsertRows(chunk
+      .filter(({ attempt }) => !attempt.mistakeCause)
+      .map(({ type, attempt }) => toRow(userId, type, attempt)))
   }
   return !skillTableMissing
+}
+
+/**
+ * Queue attempts in the outbox, keeping one entry per client attempt id. The newest copy
+ * wins, but a cause already queued is kept when the newer copy has none.
+ */
+function enqueueOutbox(userId: string, entries: QueuedAttempt[]): boolean {
+  const outboxKey = outboxKeyFor(userId)
+  const outbox = readRaw(outboxKey)
+  for (const { type, attempt } of entries) {
+    const rows = outbox[type] ?? []
+    const existing = rows.find((row) => row.clientAttemptId === attempt.clientAttemptId)
+    const merged = existing?.mistakeCause && !attempt.mistakeCause
+      ? { ...attempt, mistakeCause: existing.mistakeCause }
+      : attempt
+    outbox[type] = [...rows.filter((row) => row.clientAttemptId !== attempt.clientAttemptId), merged]
+  }
+  return writeRaw(outboxKey, outbox)
+}
+
+/** One entry per attempt id, preferring the latest annotated copy (older outboxes may hold duplicates). */
+function dedupeQueued(entries: QueuedAttempt[]): QueuedAttempt[] {
+  const byId = new Map<string, QueuedAttempt>()
+  for (const entry of entries) {
+    const previous = byId.get(entry.attempt.clientAttemptId)
+    const cause = entry.attempt.mistakeCause ?? previous?.attempt.mistakeCause
+    byId.set(entry.attempt.clientAttemptId, { type: entry.type, attempt: cause ? { ...entry.attempt, mistakeCause: cause } : entry.attempt })
+  }
+  return [...byId.values()]
 }
 
 function cloudWrite(userId: string, type: SkillTrainerKey, attempt: SkillAttempt) {
@@ -224,8 +276,10 @@ function removeMatchingOutboxAttempts(userId: string, written: QueuedAttempt[]) 
   for (const { type, attempt } of written) {
     outbox[type] = (outbox[type] ?? []).filter((queued) => (
       queued.clientAttemptId !== attempt.clientAttemptId
-      // Keep a newer annotation that raced with an older base-attempt write.
-      || queued.mistakeCause !== attempt.mistakeCause
+      // Keep a newer annotation that raced with an older write. An annotated write is the
+      // full row, so it also supersedes any queued copy without a cause.
+      || (queued.mistakeCause !== attempt.mistakeCause
+        && !(attempt.mistakeCause && !queued.mistakeCause))
     ))
   }
   writeRaw(outboxKey, outbox)
@@ -261,9 +315,7 @@ export async function saveSkillAttempt(
   if (typeof window !== 'undefined') window.dispatchEvent(new Event('skill-trainer-progress-updated'))
 
   if (userId) {
-    const outbox = readRaw(outboxKeyFor(userId))
-    outbox[type] = [...(outbox[type] ?? []), attempt]
-    writeRaw(outboxKeyFor(userId), outbox)
+    enqueueOutbox(userId, [{ type, attempt }])
     try {
       // A missing table leaves the attempt queued in the outbox for a later replay.
       if (!(await cloudWrite(userId, type, attempt))) return attempt
@@ -382,10 +434,9 @@ export async function annotateLatestSkillAttempt(
   } catch {
     // Fall through and queue it.
   }
-  // Queue the entire idempotent row; hydration will upsert the annotation as well.
-  const outbox = readRaw(outboxKeyFor(userId))
-  outbox[type] = [...(outbox[type] ?? []).filter((row) => row.clientAttemptId !== updated.clientAttemptId), updated]
-  writeRaw(outboxKeyFor(userId), outbox)
+  // Queue the entire idempotent row, replacing any older unannotated copy of it;
+  // hydration will upsert the annotation as well.
+  enqueueOutbox(userId, [{ type, attempt: updated }])
   return false
 }
 
@@ -395,7 +446,7 @@ function flatten(store: Store): QueuedAttempt[] {
 }
 
 async function replayUserOutbox(userId: string) {
-  const queued = flatten(readRaw(outboxKeyFor(userId)))
+  const queued = dedupeQueued(flatten(readRaw(outboxKeyFor(userId))))
   if (!queued.length) return
   if (await cloudWriteMany(userId, queued)) removeMatchingOutboxAttempts(userId, queued)
 }
@@ -433,6 +484,11 @@ async function hydrateSkillAttempts(userId: string) {
       mistakeCause: row.mistake_cause ?? undefined,
       review: (row.skill_tags ?? []).includes(REVIEW_TAG) || undefined,
       at: row.created_at,
+    }
+    // A cause recorded on this device but not yet uploaded stays sticky.
+    if (!attempt.mistakeCause) {
+      const cached = (store[type] ?? []).find((row) => row.clientAttemptId === attempt.clientAttemptId)
+      if (cached?.mistakeCause) attempt.mistakeCause = cached.mistakeCause
     }
     const withoutDuplicate = (store[type] ?? []).filter(
       (cached) => cached.clientAttemptId !== attempt.clientAttemptId,
@@ -474,16 +530,14 @@ export async function migrateGuestSkillAttempts(userId: string) {
   if (moved.length) {
     const userKey = keyFor(userId)
     const store = readRaw(userKey)
-    const outbox = readRaw(outboxKeyFor(userId))
     for (const { type, attempt } of moved) {
       store[type] = [...(store[type] ?? []).filter((row) => row.clientAttemptId !== attempt.clientAttemptId), attempt]
-      outbox[type] = [...(outbox[type] ?? []).filter((row) => row.clientAttemptId !== attempt.clientAttemptId), attempt]
     }
     for (const type of Object.keys(store) as SkillTrainerKey[]) {
       store[type] = (store[type] ?? []).sort((a, b) => a.at.localeCompare(b.at)).slice(-MAX_LOCAL_ATTEMPTS_PER_TRAINER)
     }
     // Only drop the guest copy once the outbox holds it.
-    if (writeRaw(outboxKeyFor(userId), outbox)) {
+    if (enqueueOutbox(userId, moved)) {
       writeRaw(userKey, store)
       if (typeof window !== 'undefined') {
         localStorage.removeItem(GUEST_KEY)

@@ -716,7 +716,7 @@ export const trainerFaqs: TrainerFaqMap = {
       id: "sjt-appropriateness-tips",
       question: "How should I approach Appropriateness Rating questions?",
       answer:
-        "Ask yourself two questions: Does this action directly address the core professional duty in the scenario? And does it risk any harm - to the patient, a colleague, or the profession? Rate each response independently. A very appropriate action may address one aspect well without solving everything, and several responses can share a rating. Judge negative responses by their actual seriousness; inaction is not automatically very inappropriate. Most nuance sits in the Appropriate versus Inappropriate boundary, which is where the GMC domain reference helps most.",
+        "Ask yourself two questions: Does this action directly address the core professional duty in the scenario? And does it risk any harm to the patient, a colleague or the profession? Rate each response independently. A very appropriate action may address one aspect well without solving everything, and several responses can share a rating. Judge negative responses by their actual seriousness; inaction is not automatically very inappropriate. Most nuance sits in the Appropriate versus Inappropriate boundary, which is where the GMC domain reference helps most.",
     },
     {
       id: "sjt-importance-tips",
@@ -792,7 +792,7 @@ export const trainerFaqs: TrainerFaqMap = {
       id: "qr-setup-review-mistakes",
       question: "How does Review mistakes work?",
       answer:
-        "Any question you do not get fully right is scheduled for review a day later. Review mistakes shows the questions that are due first. To clear a question you need two fully correct answers spaced a few days apart. A correct answer in review mode counts as the first of these even if the question is not yet due, and the second must come at least three days later, so answering twice in one sitting will not clear it. A wrong answer starts the count again. When you get something wrong you can also record why, such as misreading or a unit error, which helps target later recommendations.",
+        "Any question you do not get fully right is scheduled for review a day later. When questions are waiting, a Review mistakes button appears on the results screen and starts a drill of those questions, due ones first. To clear a question you need two fully correct answers at least three days apart. A correct answer in Review mistakes counts as the first of these even if the question is not yet due, and the second must come at least three days later, so answering twice in one sitting will not clear it. A wrong answer starts the count again. When you get something wrong you can also record why, such as misreading or a unit error, which helps target later recommendations.",
     },
     {
       id: "qr-setup-progress",
@@ -824,7 +824,7 @@ export const trainerFaqs: TrainerFaqMap = {
       id: "data-extraction-mistakes",
       question: "What happens when I get a table wrong?",
       answer:
-        "You can record the main cause, such as misreading the table or a unit error. Tables you do not get fully right come back for review after a day, and questions you have not seen yet are chosen before repeats in normal drills.",
+        "You can record the main cause, such as misreading the table or a unit error. Any table you do not get fully right is scheduled for review a day later. When tables are waiting, a Review mistakes button appears on the results screen and starts a drill of those tables, due ones first. To clear a table you need two fully correct answers at least three days apart. A correct answer in Review mistakes counts as the first of these even if the table is not yet due, and the second must come at least three days later, so answering twice in one sitting will not clear it. A wrong answer starts the count again. In normal drills, tables you have not seen yet are chosen before repeats.",
     },
     {
       id: "data-extraction-progress",
@@ -856,7 +856,7 @@ export const trainerFaqs: TrainerFaqMap = {
       id: "estimation-mistakes",
       question: "What happens when I get an estimate wrong?",
       answer:
-        "You can record the main cause, such as rushing or choosing the wrong method. Calculations you do not get fully right come back for review after a day, and new calculations are chosen before repeats in normal drills.",
+        "You can record the main cause, such as rushing or choosing the wrong method. Any calculation you do not get fully right is scheduled for review a day later. When calculations are waiting, a Review mistakes button appears on the results screen and starts a drill of those calculations, due ones first. To clear a calculation you need two fully correct answers at least three days apart. A correct answer in Review mistakes counts as the first of these even if the calculation is not yet due, and the second must come at least three days later, so answering twice in one sitting will not clear it. A wrong answer starts the count again. In normal drills, new calculations are chosen before repeats.",
     },
     {
       id: "estimation-progress",
@@ -885,6 +885,12 @@ export const trainerFaqs: TrainerFaqMap = {
         "Each drill has six puzzles and each puzzle is worth one point. You earn the point when your first checked arrangement satisfies every rule. If it breaks a rule, the trainer shows one valid arrangement and you can reset and try again for practice, but no point is awarded for that puzzle.",
     },
     {
+      id: "constraint-builder-review-mistakes",
+      question: "What happens when I get a puzzle wrong?",
+      answer:
+        "You can record the main cause, such as misreading a rule or rushing. Any puzzle you do not solve on your first check is scheduled for review a day later. When puzzles are waiting, a Review mistakes button appears on the results screen and starts a drill of those puzzles, due ones first. To clear a puzzle you need two correct first checks at least three days apart. A correct answer in Review mistakes counts as the first of these even if the puzzle is not yet due, and the second must come at least three days later, so answering twice in one sitting will not clear it. A wrong answer starts the count again.",
+    },
+    {
       id: "constraint-strategy",
       question: "What is the best strategy for UCAT arrangement puzzles?",
       answer:
@@ -894,7 +900,7 @@ export const trainerFaqs: TrainerFaqMap = {
       id: "constraint-builder-progress",
       question: "Is my Constraint Builder progress saved?",
       answer:
-        "Yes. Each checked puzzle is saved, and each drill is saved as a session with its score and time, even if you stop part way through. Signed in, it appears on your Dashboard under Decision Making. As a guest it stays on this device until you sign in. Puzzles you do not solve come back for review after a day.",
+        "Yes. Each checked puzzle is saved, and each drill is saved as a session with its score and time, even if you stop part way through. Signed in, it appears on your Dashboard under Decision Making. As a guest it stays on this device until you sign in. Puzzles you do not solve on your first check come back for review, as described below.",
     },
   ],
 };

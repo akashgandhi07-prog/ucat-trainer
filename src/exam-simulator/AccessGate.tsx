@@ -49,10 +49,19 @@ function EnforcedGate({
     statusRef.current = status;
   }, [status]);
 
+  // Every check (initial, auth event, focus, retry) takes a new id; only the
+  // latest one may set the status, so a slow profile lookup that resolves late
+  // (e.g. a stale "allowed") cannot overwrite a newer result such as "signed-out".
+  const requestIdRef = useRef(0);
+  const nextRequestId = useCallback(() => ++requestIdRef.current, []);
+
   const resolve = useCallback(
-    async (userId: string | null) => {
+    async (userId: string | null, requestId: number) => {
+      const apply = (next: GateStatus) => {
+        if (requestId === requestIdRef.current) setStatus(next);
+      };
       if (!userId || mode === "signed-in") {
-        setStatus(decideAccess(mode, userId, null));
+        apply(decideAccess(mode, userId, null));
         return;
       }
       const { data, error } = await supabase
@@ -61,28 +70,32 @@ function EnforcedGate({
         .eq("id", userId)
         .maybeSingle();
       if (error) {
-        setStatus("error");
+        apply("error");
         return;
       }
-      setStatus(decideAccess(mode, userId, data as GateProfile));
+      apply(decideAccess(mode, userId, data as GateProfile));
     },
     [mode],
   );
 
   const recheck = useCallback(() => {
+    const requestId = nextRequestId();
     void supabase.auth
       .getSession()
-      .then(({ data }) => resolve(data.session?.user.id ?? null))
-      .catch(() => setStatus("error"));
-  }, [resolve]);
+      .then(({ data }) => resolve(data.session?.user.id ?? null, requestId))
+      .catch(() => {
+        if (requestId === requestIdRef.current) setStatus("error");
+      });
+  }, [nextRequestId, resolve]);
 
   useEffect(() => {
     recheck();
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "TOKEN_REFRESHED") return;
-      // Defer the profile query: Supabase warns against awaiting client calls
-      // inside this callback.
-      window.setTimeout(() => void resolve(session?.user.id ?? null), 0);
+      // Take the id now so events keep their order; defer the profile query
+      // because Supabase warns against awaiting client calls inside this callback.
+      const requestId = nextRequestId();
+      window.setTimeout(() => void resolve(session?.user.id ?? null, requestId), 0);
     });
     // Signing in happens in the main app tab; re-read the shared session
     // when the student returns here.
@@ -96,11 +109,13 @@ function EnforcedGate({
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("focus", onReturn);
     return () => {
+      // Invalidate any lookup still in flight.
+      nextRequestId();
       data.subscription.unsubscribe();
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", onReturn);
     };
-  }, [recheck, resolve]);
+  }, [nextRequestId, recheck, resolve]);
 
   if (status === "allowed") return <>{children}</>;
 
@@ -143,7 +158,7 @@ function EnforcedGate({
           <>
             <p>
               This workspace is only available to tutor and admin accounts. If
-              you think you should have access, contact the TheUKCATPeople team.
+              you think you should have access, please get in touch with our team.
             </p>
             <a className="access-gate-button" href={MAIN_APP_URL}>
               Back to TheUKCATPeople

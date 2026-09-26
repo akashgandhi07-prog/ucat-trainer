@@ -9,7 +9,7 @@ import TrainerFaqSection from "../seo/TrainerFaqSection";
 import { trainerFaqs, type TrainerFaqKey } from "../../data/trainerFaqs";
 import { getSiteBaseUrl } from "../../lib/siteUrl";
 import { useState } from "react";
-import { annotateLatestSkillAttempt, type MistakeCause, type SkillTrainerKey } from "../../lib/skillTrainerProgress";
+import { annotateLatestSkillAttempt, getSkillReviewIds, type MistakeCause, type SkillTrainerKey } from "../../lib/skillTrainerProgress";
 
 type Props = {
   title: string;
@@ -75,6 +75,20 @@ export function ResultsCard({ score, total, onRestart, children }: { score: numb
       <RotateCcw className="h-4 w-4" aria-hidden /> Practise again
     </button>
   </section>;
+}
+
+/** Shown while auth settles, so items are picked from the right account's history. */
+export function TrainerLoading() {
+  return <div className="flex min-h-40 items-center justify-center gap-3 rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground shadow-card" role="status">
+    <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-slate-400 border-t-transparent" aria-hidden />
+    Loading your drill...
+  </div>;
+}
+
+/** Results-screen button for a run of this trainer's pending review items; hidden when none are waiting. */
+export function ReviewMistakesButton({ trainerType, userId, onReview }: { trainerType: SkillTrainerKey; userId?: string | null; onReview: () => void }) {
+  if (getSkillReviewIds(trainerType, userId).length === 0) return null;
+  return <button type="button" onClick={onReview} className="mt-3 ml-3 min-h-11 rounded-lg border border-border px-4 py-2 font-semibold hover:bg-secondary">Review mistakes</button>;
 }
 
 export function ComponentProgress({ rows }: { rows:{name:string;accuracy:number;correct:number;total:number}[] }) {

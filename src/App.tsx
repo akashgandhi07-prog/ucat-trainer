@@ -15,6 +15,7 @@ import { WindowScrollToTop } from "./components/layout/ScrollRestoration";
 // Route-level code splitting: every page below loads as its own chunk on first
 // visit instead of shipping in the initial bundle. AppShell and LandingPage stay
 // eager so the first paint of "/" needs no extra round trip.
+const NotFoundPage = lazyWithRetry(() => import("./pages/NotFoundPage"), "NotFoundPage");
 const VerbalReasoningPage = lazyWithRetry(() => import("./pages/VerbalReasoningPage"), "VerbalReasoningPage");
 const ReaderPage = lazyWithRetry(() => import("./pages/ReaderPage"), "ReaderPage");
 const RapidRecallPage = lazyWithRetry(() => import("./pages/RapidRecallPage"), "RapidRecallPage");
@@ -73,7 +74,7 @@ function ConfigureRedirect() {
 
 // /study-plan (the plan builder) and /mock-scores (the tracker) are public tools and stay indexable;
 // the personal planner views under /study-plan/ are not.
-const PRIVATE_INDEX_PATHS = ["/dashboard", "/study-plan/", "/admin", "/tutor", "/join/", "/reset-password"];
+const PRIVATE_INDEX_PATHS = ["/dashboard", "/study-plan/", "/configure", "/admin", "/tutor", "/join/", "/reset-password"];
 function RouteIndexingPolicy() {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -168,6 +169,7 @@ function App() {
                       <Route path="invite" element={<TutorInvitePage />} />
                       <Route path="student/:planId" element={<TutorStudentPage />} />
                     </Route>
+                    <Route path="*" element={<NotFoundPage />} />
                   </Route>
 
                   <Route path="/join/:token" element={<JoinInvitePage />} />

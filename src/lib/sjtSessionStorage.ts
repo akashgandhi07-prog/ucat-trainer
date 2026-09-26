@@ -80,13 +80,45 @@ export function appendGuestSJTSession(payload: GuestSJTSessionPayload): void {
     sessions.length > MAX_GUEST_SJT_SESSIONS
       ? sessions.slice(sessions.length - MAX_GUEST_SJT_SESSIONS)
       : sessions;
-  localStorage.setItem(GUEST_SJT_SESSIONS_KEY, JSON.stringify(capped));
+  try {
+    localStorage.setItem(GUEST_SJT_SESSIONS_KEY, JSON.stringify(capped));
+  } catch {
+    // Storage full or blocked: the attempt is still in local analytics; never throw from a save.
+    return;
+  }
   window.dispatchEvent(new Event(SJT_SESSIONS_UPDATED_EVENT));
+}
+
+/**
+ * Removes the most recent guest partial row for a scenario, when the same
+ * attempt was later completed (the completed row supersedes it).
+ */
+export function removeLatestGuestSJTPartial(questionId: string, questionType: string): boolean {
+  if (!storageAvailable()) return false;
+  const sessions = getGuestSJTSessions();
+  for (let i = sessions.length - 1; i >= 0; i--) {
+    const row = sessions[i];
+    if (row.question_id !== questionId || row.question_type !== questionType) continue;
+    if (row.completed) return false;
+    sessions.splice(i, 1);
+    try {
+      localStorage.setItem(GUEST_SJT_SESSIONS_KEY, JSON.stringify(sessions));
+    } catch {
+      return false;
+    }
+    window.dispatchEvent(new Event(SJT_SESSIONS_UPDATED_EVENT));
+    return true;
+  }
+  return false;
 }
 
 export function clearGuestSJTSessions(): void {
   if (!storageAvailable()) return;
-  localStorage.removeItem(GUEST_SJT_SESSIONS_KEY);
+  try {
+    localStorage.removeItem(GUEST_SJT_SESSIONS_KEY);
+  } catch {
+    /* storage blocked */
+  }
 }
 
 export async function saveSJTSession(

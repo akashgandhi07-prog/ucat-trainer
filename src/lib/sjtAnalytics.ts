@@ -49,16 +49,28 @@ function saveAttempts(attempts: SJTAttempt[]): void {
   }
 }
 
+/** Records an attempt locally and returns its id. */
 export function recordSJTAttempt(
   attempt: Omit<SJTAttempt, "id" | "timestamp">
-): void {
+): string {
   const attempts = loadAttempts();
+  const id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
   attempts.push({
     ...attempt,
-    id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    id,
     timestamp: Date.now(),
   });
   saveAttempts(attempts);
+  return id;
+}
+
+/** Removes one locally recorded attempt (a partial superseded by the completed attempt). */
+export function removeSJTAttempt(id: string): boolean {
+  const attempts = loadAttempts();
+  const remaining = Array.isArray(attempts) ? attempts.filter((a) => a?.id !== id) : [];
+  if (remaining.length === attempts.length) return false;
+  saveAttempts(remaining);
+  return true;
 }
 
 export function getSJTStats(): SJTOverallStats | null {

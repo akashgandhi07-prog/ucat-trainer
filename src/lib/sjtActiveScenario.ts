@@ -1,6 +1,6 @@
 import type { GMCDomainId, SJTQuestionType } from "../types/sjt";
-import { recordSJTAttempt } from "./sjtAnalytics";
-import { persistSJTSession } from "./sjtSessionStorage";
+import { recordSJTAttempt, removeSJTAttempt } from "./sjtAnalytics";
+import { persistSJTSession, removeLatestGuestSJTPartial } from "./sjtSessionStorage";
 import { trackEvent } from "./analytics";
 import {
   migrateGuestSJTScenariosWith,
@@ -12,17 +12,18 @@ import {
   writeOwnedSJTScenario,
   type ActiveSJTScenario,
   type ActiveSJTScenarioInput,
+  type SJTAttemptSavedMarker,
   type SJTPointerWrite,
   type SJTScenarioFilters,
   type SJTScenarioProgress,
 } from "./sjtDraftRecovery";
 
-/** Records one abandoned (partial) attempt locally and to guest storage or the cloud. */
+/** Records one abandoned (partial) attempt locally and to guest storage or the cloud. Returns the local analytics id. */
 export function recordSJTPartialAttempt(
   userId: string | null,
   scenario: { questionId: string; type: string; domain: string },
   progress: SJTScenarioProgress,
-): void {
+): string {
   const type = scenario.type as SJTQuestionType;
   const domain = scenario.domain as GMCDomainId;
   void trackEvent("sjt_scenario_abandoned", {
@@ -32,7 +33,7 @@ export function recordSJTPartialAttempt(
     items_attempted: progress.itemsAttempted,
     items_total: progress.itemsTotal,
   });
-  recordSJTAttempt({ questionId: scenario.questionId, domain, type, score: progress.partialScore, maxScore: progress.itemsTotal });
+  const localId = recordSJTAttempt({ questionId: scenario.questionId, domain, type, score: progress.partialScore, maxScore: progress.itemsTotal });
   void persistSJTSession(userId, {
     question_id: scenario.questionId,
     question_type: type,
@@ -43,6 +44,22 @@ export function recordSJTPartialAttempt(
     items_total: progress.itemsTotal,
     completed: false,
   });
+  return localId;
+}
+
+/**
+ * The same attempt was recorded as partial (by another tab or a settle) and has
+ * now been completed: drop the local partial rows so local stats count it once,
+ * as completed. Cloud sjt_sessions rows are insert-only, so a signed-in user's
+ * partial row stays in their history; cloud stats only count completed rows.
+ */
+export function supersedeSJTPartialAttempt(
+  userId: string | null,
+  scenario: { questionId: string; type: string },
+  partial: SJTAttemptSavedMarker,
+): void {
+  if (partial.localId) removeSJTAttempt(partial.localId);
+  if (!userId) removeLatestGuestSJTPartial(scenario.questionId, scenario.type);
 }
 
 /** Discards the active scenario (only that attempt, when attemptId is given) and records its partial attempt, once. */

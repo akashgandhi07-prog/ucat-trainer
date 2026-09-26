@@ -1,5 +1,6 @@
 {
   "cleanUrls": true,
+  "trailingSlash": false,
   "redirects": [
     { "source": "/verbal", "destination": "/ucat-verbal-reasoning-practice", "permanent": true },
     { "source": "/quantitative", "destination": "/ucat-quantitative-reasoning-practice", "permanent": true },
@@ -53,6 +54,10 @@
     },
     {
       "source": "/app-shell(.*)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/configure",
       "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
     },
     {

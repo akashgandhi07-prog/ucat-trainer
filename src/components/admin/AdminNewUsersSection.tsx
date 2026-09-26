@@ -7,6 +7,7 @@ export type NewUserRow = SessionCounts & {
   created_at: string;
   email: string;
   sessions_by_type?: Partial<Record<string, number>>;
+  syllogism_foundation: number;
   syllogism_micro: number;
   syllogism_macro: number;
   total_questions: number;

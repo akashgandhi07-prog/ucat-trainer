@@ -6,6 +6,7 @@ export type AdminUserRow = SessionCounts & {
   email: string;
   display_name?: string;
   sessions_by_type?: Partial<Record<string, number>>;
+  syllogism_foundation: number;
   syllogism_micro: number;
   syllogism_macro: number;
   total_questions: number;

@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import {
-  activeSJTScenarioOwnership, claimActiveSJTScenario, clearSJTAnswerDraft, DRAFT_TTL_MS, hasSJTAnswerDraft, heartbeatSJTScenario,
+  activeSJTScenarioOwnership, claimActiveSJTScenario, claimSJTAttemptCompletion, clearSJTAnswerDraft, DRAFT_TTL_MS, hasSJTAnswerDraft, heartbeatSJTScenario,
   isActiveSJTScenarioLive, listActiveSJTScenarioTypes, loadRankingDraft, loadRatingDraft, migrateGuestSJTScenariosWith,
   readActiveSJTScenario, releaseSJTScenario, resolveSJTResumeWith, saveActiveSJTScenario, saveSJTAnswerDraft, settleActiveSJTScenario,
-  settleStaleSJTScenariosWith, SJT_ACTIVE_LIVE_MS, sjtDraftScope, writeOwnedSJTScenario,
+  settleStaleSJTScenariosWith, SJT_ACTIVE_LIVE_MS, SJT_ATTEMPT_MARKER_TTL_MS, sjtDraftScope, writeOwnedSJTScenario,
+  markSJTAttemptSaved, readSJTAttemptSaved,
   type SJTPartialRecorder,
 } from "../src/lib/sjtDraftRecovery";
 
@@ -66,6 +67,7 @@ const noFilters = { domain: "", difficulty: "" };
 const recorded: Array<{ userId: string | null; questionId: string; itemsAttempted: number; partialScore: number }> = [];
 const record: SJTPartialRecorder = (userId, scenario, progress) => {
   recorded.push({ userId, questionId: scenario.questionId, itemsAttempted: progress.itemsAttempted, partialScore: progress.partialScore });
+  return `local-${scenario.questionId}`;
 };
 const pointer = (questionId: string, itemsAttempted: number, partialScore: number, filters = noFilters) => ({
   type: "appropriateness", questionId, domain: "trust_professionalism", filters,
@@ -341,4 +343,111 @@ assert.deepEqual(recorded.map((r) => [r.questionId, r.userId]), [["g4", "user-bo
 assert.equal(readActiveSJTScenario(bob, "appropriateness"), null);
 recorded.length = 0;
 
-console.log("SJT draft recovery checks passed: per-account scope, review-mode opt-out, expiry, unsubmitted-only restore, cleanup, corrupt-state rejection, active-scenario resume (scope, expiry, filters, review opt-out), record-once partials, two-tab ownership and claims, stale settle on hub load, and guest-to-account migration.");
+// ---------- A tab that lost its attempt still saves the completed result ----------
+memory.clear();
+recorded.length = 0;
+const half = { itemsAttempted: 2, itemsTotal: 4, partialScore: 2 };
+
+// The reported scenario: A answers 2/4, B resumes it (takes ownership), B leaves in-app recording the partial 2/4.
+assert.equal(writeAs(TAB_A, "L1", "att-L1", half, false), "owned");
+draftAt("L1");
+assert.equal(resolveSJTResumeWith(alice, "appropriateness", noFilters, record, now + 1000, TAB_B)?.owner, TAB_B);
+assert.equal(settleActiveSJTScenario(alice, "appropriateness", "L1", record, "att-L1", now + 1500)?.questionId, "L1", "B leaves: partial recorded");
+assert.deepEqual(recorded.map((r) => [r.questionId, r.itemsAttempted]), [["L1", 2]]);
+assert.deepEqual(readSJTAttemptSaved(alice, "att-L1", now + 2000)?.state, "partial");
+assert.equal(readSJTAttemptSaved(alice, "att-L1", now + 2000)?.localId, "local-L1", "The marker remembers the local partial row");
+// A cannot take it back (it was claimed), but finishing it still records the completed attempt, superseding the partial.
+assert.equal(writeAs(TAB_A, "L1", "att-L1", { itemsAttempted: 3, itemsTotal: 4, partialScore: 3 }, true, now + 3000), "lost");
+const finishA = claimSJTAttemptCompletion(alice, "appropriateness", "L1", "att-L1", now + 4000);
+assert.equal(finishA.record, true, "A's completed attempt is saved, not dropped");
+assert.equal(finishA.supersedes?.localId, "local-L1", "It supersedes the partial row");
+assert.equal(readSJTAttemptSaved(alice, "att-L1", now + 4000)?.state, "complete");
+// Exactly once: any later submit of the same attempt (B, or A again) is not recorded.
+assert.deepEqual(claimSJTAttemptCompletion(alice, "appropriateness", "L1", "att-L1", now + 5000), { record: false, supersedes: null });
+assert.equal(settleStaleSJTScenariosWith(alice, record, now + DRAFT_TTL_MS * 2), 0);
+assert.equal(recorded.length, 1, "No further partial");
+recorded.length = 0;
+
+// B is closed instead (pagehide releases it) and the hub settles the partial; A then finishes: recorded once, superseding.
+assert.equal(writeAs(TAB_A, "L2", "att-L2", half, false), "owned");
+draftAt("L2");
+resolveSJTResumeWith(alice, "appropriateness", noFilters, record, now + 1000, TAB_B);
+releaseSJTScenario(alice, "appropriateness", "att-L2", TAB_B);
+assert.equal(settleStaleSJTScenariosWith(alice, record, now + 2000), 1);
+assert.deepEqual(recorded.map((r) => r.questionId), ["L2"]);
+const finishL2 = claimSJTAttemptCompletion(alice, "appropriateness", "L2", "att-L2", now + 3000);
+assert.equal(finishL2.record, true);
+assert.equal(finishL2.supersedes?.state, "partial");
+recorded.length = 0;
+
+// B is closed and nothing settled it yet: A takes the attempt back on its next write and owns it again.
+assert.equal(writeAs(TAB_A, "L3", "att-L3", half, false), "owned");
+draftAt("L3");
+resolveSJTResumeWith(alice, "appropriateness", noFilters, record, now + 1000, TAB_B);
+assert.equal(writeAs(TAB_A, "L3", "att-L3", half, true, now + 2000), "lost", "Not while B is live");
+releaseSJTScenario(alice, "appropriateness", "att-L3", TAB_B);
+assert.equal(writeAs(TAB_A, "L3", "att-L3", { itemsAttempted: 3, itemsTotal: 4, partialScore: 2 }, true, now + 3000), "owned", "Released by B: A reclaims it");
+assert.equal(readActiveSJTScenario(alice, "appropriateness")?.owner, TAB_A);
+assert.equal(readActiveSJTScenario(alice, "appropriateness")?.progress?.itemsAttempted, 3, "A's own progress is written");
+assert.equal(heartbeatSJTScenario(alice, "appropriateness", "att-L3", TAB_B, now + 4000), "other", "B (restored) sees it has lost the attempt");
+const finishL3 = claimSJTAttemptCompletion(alice, "appropriateness", "L3", "att-L3", now + 5000);
+assert.deepEqual(finishL3, { record: true, supersedes: null }, "Owner claim: recorded, nothing to supersede");
+assert.equal(claimSJTAttemptCompletion(alice, "appropriateness", "L3", "att-L3", now + 6000).record, false, "B cannot record it again");
+assert.equal(recorded.length, 0);
+
+// B's tab froze (no release, heartbeat stopped): A takes it back once B is no longer live.
+assert.equal(writeAs(TAB_A, "L4", "att-L4", half, false), "owned");
+draftAt("L4");
+resolveSJTResumeWith(alice, "appropriateness", noFilters, record, now + 1000, TAB_B);
+assert.equal(writeAs(TAB_A, "L4", "att-L4", half, true, now + 1000 + SJT_ACTIVE_LIVE_MS - 1), "lost");
+assert.equal(writeAs(TAB_A, "L4", "att-L4", half, true, now + 1000 + SJT_ACTIVE_LIVE_MS), "owned", "Silent owner: reclaimed");
+claimActiveSJTScenario(alice, "appropriateness", "L4", "att-L4");
+
+// A itself froze in the background (> live window): the hub settles its partial; A wakes, sees it gone, and still records the completion.
+assert.equal(writeAs(TAB_A, "L5", "att-L5", half, false), "owned");
+assert.equal(settleStaleSJTScenariosWith(alice, record, now + SJT_ACTIVE_LIVE_MS + 1), 1);
+assert.equal(heartbeatSJTScenario(alice, "appropriateness", "att-L5", TAB_A, now + SJT_ACTIVE_LIVE_MS + 2), "gone");
+const finishL5 = claimSJTAttemptCompletion(alice, "appropriateness", "L5", "att-L5", now + SJT_ACTIVE_LIVE_MS + 3);
+assert.equal(finishL5.record, true);
+assert.equal(finishL5.supersedes?.localId, "local-L5");
+recorded.length = 0;
+
+// B finished it first: A's later submit is told it was completed elsewhere.
+assert.equal(writeAs(TAB_A, "L6", "att-L6", half, false), "owned");
+draftAt("L6");
+resolveSJTResumeWith(alice, "appropriateness", noFilters, record, now + 1000, TAB_B);
+assert.deepEqual(claimSJTAttemptCompletion(alice, "appropriateness", "L6", "att-L6", now + 2000), { record: true, supersedes: null }, "B records");
+assert.deepEqual(claimSJTAttemptCompletion(alice, "appropriateness", "L6", "att-L6", now + 3000), { record: false, supersedes: null }, "A does not");
+
+// Pointer gone with no marker (claimed, nothing recorded): the completion is recorded.
+assert.equal(writeAs(TAB_A, "L7", "att-L7", null, false), "owned");
+claimActiveSJTScenario(alice, "appropriateness", "L7", "att-L7");
+assert.deepEqual(claimSJTAttemptCompletion(alice, "appropriateness", "L7", "att-L7", now), { record: true, supersedes: null });
+assert.equal(recorded.length, 0);
+
+// Markers: per scope, never downgraded, expire after the TTL (and are pruned), corrupt ones ignored; null scope is a no-op.
+markSJTAttemptSaved(alice, "m1", "complete", { now });
+markSJTAttemptSaved(alice, "m1", "partial", { now: now + 1, localId: "x" });
+assert.equal(readSJTAttemptSaved(alice, "m1", now + 2)?.state, "complete", "A completion is never downgraded to partial");
+assert.equal(readSJTAttemptSaved(bob, "m1", now + 2), null, "Markers are per scope");
+assert.equal(readSJTAttemptSaved(alice, "m1", now + SJT_ATTEMPT_MARKER_TTL_MS + 1), null, "Markers expire");
+assert.equal(memory.has(`ucat_sjt_attempt_saved_v1:${alice}:m1`), false, "Expired markers are removed");
+markSJTAttemptSaved(alice, "m2", "partial", { now });
+markSJTAttemptSaved(alice, "m3", "partial", { now: now + SJT_ATTEMPT_MARKER_TTL_MS + 1 });
+assert.equal(memory.has(`ucat_sjt_attempt_saved_v1:${alice}:m2`), false, "Writing a marker prunes expired ones");
+memory.set(`ucat_sjt_attempt_saved_v1:${alice}:bad`, "not-json");
+assert.equal(readSJTAttemptSaved(alice, "bad", now), null);
+markSJTAttemptSaved(null, "m4", "complete", { now });
+assert.equal(readSJTAttemptSaved(null, "m4", now), null);
+assert.deepEqual(claimSJTAttemptCompletion(null, "appropriateness", "q", "a", now), { record: true, supersedes: null }, "Review mode records directly");
+
+// Guest migration marks what it recorded, in both scopes.
+memory.clear();
+recorded.length = 0;
+saveActiveSJTScenario("guest", { ...pointer("gm", 1, 1), attemptId: "att-gm" }, now);
+migrateGuestSJTScenariosWith("user-alice", record, now);
+assert.equal(readSJTAttemptSaved("guest", "att-gm", now)?.state, "partial");
+assert.equal(readSJTAttemptSaved(alice, "att-gm", now)?.localId, "local-gm");
+recorded.length = 0;
+
+console.log("SJT draft recovery checks passed: per-account scope, review-mode opt-out, expiry, unsubmitted-only restore, cleanup, corrupt-state rejection, active-scenario resume (scope, expiry, filters, review opt-out), record-once partials, two-tab ownership and claims, stale settle on hub load, guest-to-account migration, lost-tab reclaim, and completions saved exactly once after another tab recorded a partial.");

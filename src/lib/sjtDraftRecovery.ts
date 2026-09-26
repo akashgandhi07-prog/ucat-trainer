@@ -97,9 +97,12 @@ export function hasSJTAnswerDraft(scope: string | null, type: string, id: string
  * tab last showed it (`aliveAt`, refreshed by a heartbeat and set to 0 on
  * pagehide). A tab that resumes a scenario takes ownership; the previous owner
  * sees the change (storage event, or on its next write) and stops treating the
- * attempt as its own: it never records on pagehide or leave, and on submit it
- * records only if it can still claim the pointer, i.e. the owner has not
- * recorded it yet. A pointer shown by a live tab is never settled by another.
+ * attempt as its own: it never records on pagehide or leave. It takes the
+ * attempt back once the other tab releases it or stops heartbeating. On submit
+ * it records the completed attempt unless the attempt was already completed
+ * elsewhere (see claimSJTAttemptCompletion and the per-attempt saved marker), so
+ * a partial recorded meanwhile by another tab or a settle is superseded, not
+ * lost. A pointer shown by a live tab is never settled by another.
  */
 const ACTIVE_PREFIX = "ucat_sjt_active_v1";
 /** A pointer counts as open in some tab while its heartbeat is this recent (background tabs tick about once a minute). */
@@ -299,7 +302,8 @@ export function partialFromActiveSJTScenario(pointer: ActiveSJTScenario | null):
   return progress;
 }
 
-export type SJTPartialRecorder = (userId: string | null, scenario: ActiveSJTScenario, progress: SJTScenarioProgress) => void;
+/** Records a partial attempt; may return the local analytics id of the row it wrote (so a later completion can replace it). */
+export type SJTPartialRecorder = (userId: string | null, scenario: ActiveSJTScenario, progress: SJTScenarioProgress) => string | void;
 
 /** Draft scopes are the user id or "guest"; guest attempts are saved without a user id. */
 export const userIdForSJTDraftScope = (scope: string) => (scope === "guest" ? null : scope);
@@ -310,12 +314,15 @@ export const userIdForSJTDraftScope = (scope: string) => (scope === "guest" ? nu
  * anything is recorded, so a repeat call (from any tab) finds nothing.
  */
 export function settleActiveSJTScenario(
-  scope: string | null, type: string, questionId: string | undefined, record: SJTPartialRecorder, attemptId?: string,
+  scope: string | null, type: string, questionId: string | undefined, record: SJTPartialRecorder, attemptId?: string, now = Date.now(),
 ): ActiveSJTScenario | null {
   if (!scope) return null;
   const pointer = claimActiveSJTScenario(scope, type, questionId, attemptId);
   const partial = partialFromActiveSJTScenario(pointer);
-  if (pointer && partial) record(userIdForSJTDraftScope(scope), pointer, partial);
+  if (pointer && partial) {
+    const localId = record(userIdForSJTDraftScope(scope), pointer, partial);
+    markSJTAttemptSaved(scope, pointer.attemptId, "partial", { localId: typeof localId === "string" ? localId : undefined, now });
+  }
   return pointer;
 }
 
@@ -324,7 +331,8 @@ export type SJTPointerWrite = "owned" | "lost" | "blocked" | "unavailable";
 /**
  * Writes this tab's pointer for an attempt it is showing.
  * - "owned": written; this tab owns the attempt.
- * - "lost": the tab owned it before, but another tab has since taken it over or claimed it; nothing written.
+ * - "lost": the tab owned it before, but another live tab has since taken it over, or it was claimed; nothing written.
+ *   (A pointer for the same attempt that is released or no longer live is taken back: "owned".)
  * - "blocked": another live tab is on a different scenario of this trainer; nothing written (the attempt runs without a pointer).
  * - "unavailable": storage failed.
  * A different, no longer live pointer in the slot is settled (recorded once) first.
@@ -338,12 +346,13 @@ export function writeOwnedSJTScenario(
   const now = opts.now ?? Date.now();
   const existing = readActiveSJTScenario(scope, value.type);
   if (existing && existing.attemptId === value.attemptId) {
-    if (existing.owner !== opts.tabId) return "lost";
+    // Another tab took it over: it stays theirs while they show it; once released or silent, this tab takes it back.
+    if (existing.owner !== opts.tabId && isActiveSJTScenarioLive(existing, now)) return "lost";
   } else if (opts.previouslyOwned) {
     return "lost";
   } else if (existing) {
     if (!isExpiredPointer(existing, now) && isActiveSJTScenarioLive(existing, now) && existing.owner !== opts.tabId) return "blocked";
-    settleActiveSJTScenario(scope, value.type, existing.questionId, opts.record, existing.attemptId);
+    settleActiveSJTScenario(scope, value.type, existing.questionId, opts.record, existing.attemptId, now);
   }
   return saveActiveSJTScenario(scope, { ...value, owner: opts.tabId, aliveAt: now }, now) ? "owned" : "unavailable";
 }
@@ -365,7 +374,7 @@ export function resolveSJTResumeWith(
     return takeOwnershipOfSJTScenario(scope, type, pointer.attemptId, tabId, now);
   }
   if (!isExpiredPointer(pointer, now) && isActiveSJTScenarioLive(pointer, now) && pointer.owner !== tabId) return null;
-  settleActiveSJTScenario(scope, type, pointer.questionId, record, pointer.attemptId);
+  settleActiveSJTScenario(scope, type, pointer.questionId, record, pointer.attemptId, now);
   return null;
 }
 
@@ -379,7 +388,7 @@ export function settleStaleSJTScenariosWith(scope: string | null, record: SJTPar
     const pointer = readActiveSJTScenario(scope, type);
     if (!pointer) continue;
     if (!isExpiredPointer(pointer, now) && isActiveSJTScenarioLive(pointer, now)) continue;
-    if (settleActiveSJTScenario(scope, type, pointer.questionId, record, pointer.attemptId)) settled++;
+    if (settleActiveSJTScenario(scope, type, pointer.questionId, record, pointer.attemptId, now)) settled++;
   }
   return settled;
 }
@@ -414,7 +423,100 @@ export function migrateGuestSJTScenariosWith(userId: string | null, record: SJTP
       clearSJTAnswerDraft(userId, type, pointer.questionId);
     }
     const partial = partialFromActiveSJTScenario(pointer);
-    if (partial) record(userId, pointer, partial);
+    if (partial) {
+      const localId = record(userId, pointer, partial);
+      const saved = { localId: typeof localId === "string" ? localId : undefined, now };
+      markSJTAttemptSaved("guest", pointer.attemptId, "partial", saved);
+      markSJTAttemptSaved(userId, pointer.attemptId, "partial", saved);
+    }
   }
   return moved;
+}
+
+/**
+ * What has been saved for each attempt id ("partial" or "complete"), kept for
+ * SJT_ATTEMPT_MARKER_TTL_MS per scope. A tab finishing an attempt whose pointer
+ * another tab or a settle has already claimed uses this to decide whether its
+ * completed result still needs saving: after a partial (or nothing) it does,
+ * after a completion it does not.
+ */
+const SAVED_PREFIX = "ucat_sjt_attempt_saved_v1";
+export const SJT_ATTEMPT_MARKER_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+export type SJTAttemptSavedState = "partial" | "complete";
+/** localId: the local analytics row written for a partial, so a completion can replace it. */
+export type SJTAttemptSavedMarker = { state: SJTAttemptSavedState; at: number; localId?: string };
+const savedKey = (scope: string, attemptId: string) => `${SAVED_PREFIX}:${scope}:${attemptId}`;
+
+function parseMarker(raw: string | null): SJTAttemptSavedMarker | null {
+  if (!raw) return null;
+  try {
+    const v = JSON.parse(raw) as Record<string, unknown> | null;
+    if (!v || (v.state !== "partial" && v.state !== "complete") || typeof v.at !== "number" || !Number.isFinite(v.at)) return null;
+    return { state: v.state, at: v.at, ...(typeof v.localId === "string" ? { localId: v.localId } : {}) };
+  } catch { return null; }
+}
+
+const isExpiredMarker = (marker: SJTAttemptSavedMarker, now: number) =>
+  marker.at > now + 60_000 || now - marker.at > SJT_ATTEMPT_MARKER_TTL_MS;
+
+export function readSJTAttemptSaved(scope: string | null, attemptId: string, now = Date.now()): SJTAttemptSavedMarker | null {
+  if (!scope || !attemptId) return null;
+  let raw: string | null = null;
+  try { raw = localStorage.getItem(savedKey(scope, attemptId)); } catch { return null; }
+  const marker = parseMarker(raw);
+  if (raw !== null && (!marker || isExpiredMarker(marker, now))) {
+    try { localStorage.removeItem(savedKey(scope, attemptId)); } catch { /* ignore */ }
+    return null;
+  }
+  return marker;
+}
+
+/** Records what was saved for an attempt. A completion is never downgraded to a partial. Expired markers are pruned. */
+export function markSJTAttemptSaved(
+  scope: string | null, attemptId: string, state: SJTAttemptSavedState, opts: { localId?: string; now?: number } = {},
+): void {
+  if (!scope || !attemptId) return;
+  const now = opts.now ?? Date.now();
+  if (state === "partial" && readSJTAttemptSaved(scope, attemptId, now)?.state === "complete") return;
+  const marker: SJTAttemptSavedMarker = { state, at: now, ...(opts.localId ? { localId: opts.localId } : {}) };
+  try { localStorage.setItem(savedKey(scope, attemptId), JSON.stringify(marker)); } catch { /* best effort */ }
+  pruneSJTAttemptMarkers(now);
+}
+
+function pruneSJTAttemptMarkers(now: number): void {
+  try {
+    const stale: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k || !k.startsWith(`${SAVED_PREFIX}:`)) continue;
+      const marker = parseMarker(localStorage.getItem(k));
+      if (!marker || isExpiredMarker(marker, now)) stale.push(k);
+    }
+    for (const k of stale) localStorage.removeItem(k);
+  } catch { /* storage unavailable */ }
+}
+
+export type SJTCompletionClaim = {
+  /** Record the completed attempt from this tab. */
+  record: boolean;
+  /** The partial saved earlier for this attempt, which the completed row supersedes. */
+  supersedes: SJTAttemptSavedMarker | null;
+};
+
+/**
+ * Submit: decides, exactly once across tabs, whether this tab records the
+ * completed attempt. The pointer is claimed first; if it is already gone (another
+ * tab or a settle claimed it), the saved marker decides: a completion elsewhere
+ * means do not record again; a partial (or nothing) means record, superseding
+ * that partial. The attempt is marked complete before the caller records it.
+ */
+export function claimSJTAttemptCompletion(
+  scope: string | null, type: string, questionId: string, attemptId: string, now = Date.now(),
+): SJTCompletionClaim {
+  if (!scope) return { record: true, supersedes: null };
+  const claimed = claimActiveSJTScenario(scope, type, questionId, attemptId);
+  const marker = readSJTAttemptSaved(scope, attemptId, now);
+  if (marker?.state === "complete") return { record: false, supersedes: null };
+  markSJTAttemptSaved(scope, attemptId, "complete", { now });
+  return { record: true, supersedes: !claimed && marker?.state === "partial" ? marker : null };
 }

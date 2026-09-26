@@ -82,3 +82,66 @@ export function replaceSJTReviewState(userId: string | null, entries: ReviewEntr
 export function resetSJTReviewState(userId: string | null): boolean {
   return replaceSJTReviewState(userId, [], 0);
 }
+
+/** Review row as stored in sjt_review_items (the columns the sync reads). */
+export type CloudSJTReviewRow = {
+  question_id: string;
+  question_type: ReviewEntry["type"];
+  domain: ReviewEntry["domain"];
+  due_at: string | null;
+  successes: number;
+  cleared_at: string | null;
+  updated_at: string;
+};
+
+const reviewItemKey = (type: string, id: string) => `${type}:${id}`;
+
+/**
+ * When an entry's latest outcome happened: its due date minus the interval that
+ * outcome scheduled (1 day after a miss, 3 days after the first due success).
+ * Comparable across devices, unlike updated_at, which every upload bumps.
+ */
+export function reviewEntryEventTime(entry: Pick<ReviewEntry, "due" | "successes">): number {
+  return entry.due - (entry.successes >= 1 ? 3 : 1) * DAY;
+}
+
+/** True when `local` reflects a later outcome than `cloud` (ties keep the cloud copy). */
+export function isLocalReviewNewer(local: ReviewEntry, cloud: ReviewEntry): boolean {
+  const localAt = reviewEntryEventTime(local);
+  const cloudAt = reviewEntryEventTime(cloud);
+  if (localAt !== cloudAt) return localAt > cloudAt;
+  return local.successes > cloud.successes;
+}
+
+/**
+ * Merges the local review queue with the cloud rows for this user.
+ * - upload: local entries the cloud does not have, or has an older outcome for.
+ *   A cloud row is never overwritten with an older local copy.
+ * - active: the merged queue (newest outcome per scenario) to keep locally.
+ * Scenarios cleared or removed in the cloud (cleared_at set) are dropped locally
+ * and never re-uploaded.
+ */
+export function planSJTReviewSync(local: ReviewEntry[], cloudRows: CloudSJTReviewRow[]): { upload: ReviewEntry[]; active: ReviewEntry[] } {
+  const clearedKeys = new Set<string>();
+  const cloudActive = new Map<string, ReviewEntry>();
+  for (const row of cloudRows) {
+    const itemKey = reviewItemKey(row.question_type, row.question_id);
+    if (row.cleared_at) { clearedKeys.add(itemKey); continue; }
+    const due = row.due_at ? new Date(row.due_at).getTime() : NaN;
+    if (!Number.isFinite(due)) continue;
+    const entry: ReviewEntry = { id: row.question_id, type: row.question_type, domain: row.domain, due, successes: row.successes };
+    const previous = cloudActive.get(itemKey);
+    if (!previous || isLocalReviewNewer(entry, previous)) cloudActive.set(itemKey, entry);
+  }
+  const upload: ReviewEntry[] = [];
+  const merged = new Map(cloudActive);
+  for (const entry of local) {
+    const itemKey = reviewItemKey(entry.type, entry.id);
+    if (clearedKeys.has(itemKey)) continue;
+    const cloud = merged.get(itemKey);
+    if (cloud && !isLocalReviewNewer(entry, cloud)) continue;
+    merged.set(itemKey, entry);
+    upload.push(entry);
+  }
+  return { upload, active: [...merged.values()] };
+}

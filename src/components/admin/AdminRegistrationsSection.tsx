@@ -9,6 +9,7 @@ export type RegistrationRow = SessionCounts & {
   entry_year?: string | null;
   created_at: string | null;
   sessions_by_type?: Partial<Record<string, number>>;
+  syllogism_foundation: number;
   syllogism_micro: number;
   syllogism_macro: number;
   total_questions: number;

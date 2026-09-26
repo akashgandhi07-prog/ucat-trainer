@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import { loadSJTReviews, loadSJTReviewStats, replaceSJTReviewState, type ReviewEntry } from "./sjtReview";
+import { loadSJTReviews, loadSJTReviewStats, planSJTReviewSync, replaceSJTReviewState, type CloudSJTReviewRow, type ReviewEntry } from "./sjtReview";
 import type { SJTQuestion } from "../types/sjt";
 
 export type ReviewStoragePreference = "account" | "device";
@@ -13,18 +13,9 @@ export function setReviewStoragePreference(userId: string, value: ReviewStorageP
   try { localStorage.setItem(preferenceKey(userId), value); } catch { /* local fallback remains available */ }
 }
 
-type CloudReviewRow = {
-  question_id: string;
-  question_type: ReviewEntry["type"];
-  domain: ReviewEntry["domain"];
-  due_at: string | null;
-  successes: number;
-  cleared_at: string | null;
-  updated_at: string;
-};
+type CloudReviewRow = CloudSJTReviewRow;
 
 const SYNC_LIMIT = 500;
-const itemKeyOf = (type: string, id: string) => `${type}:${id}`;
 
 export async function syncSJTReviewState(userId: string): Promise<{ synced: boolean; cleared: number }> {
   if (getReviewStoragePreference(userId) === "device") return { synced: false, cleared: loadSJTReviewStats(userId).cleared };
@@ -32,25 +23,24 @@ export async function syncSJTReviewState(userId: string): Promise<{ synced: bool
   const local = loadSJTReviews(userId);
   const columns = "question_id,question_type,domain,due_at,successes,cleared_at,updated_at";
   const localIds = [...new Set(local.map((entry) => entry.id))];
-  const [activeRes, tombstoneRes, clearedRes] = await Promise.all([
+  const [activeRes, localRowsRes, clearedRes] = await Promise.all([
     // Newest active items first, so a large history never hides recent mistakes.
     supabase.from("sjt_review_items").select(columns)
       .eq("user_id", userId).is("cleared_at", null)
       .order("updated_at", { ascending: false }).limit(SYNC_LIMIT),
-    // Cleared or removed rows only matter for items this device still holds locally.
+    // Every cloud row (active, cleared or removed) for items this device holds, so a
+    // local copy is only uploaded when it is newer than what the cloud already has.
     localIds.length
       ? supabase.from("sjt_review_items").select(columns)
-        .eq("user_id", userId).not("cleared_at", "is", null).in("question_id", localIds)
+        .eq("user_id", userId).in("question_id", localIds)
       : Promise.resolve({ data: [] as CloudReviewRow[], error: null }),
     // Successful clears are stored with successes = 1; removals are tombstones with 0.
     supabase.from("sjt_review_items").select("question_id", { count: "exact", head: true })
       .eq("user_id", userId).not("cleared_at", "is", null).gte("successes", 1),
   ]);
-  if (activeRes.error || tombstoneRes.error || clearedRes.error) return offline();
-  const activeRows = (activeRes.data ?? []) as CloudReviewRow[];
-  const tombstones = (tombstoneRes.data ?? []) as CloudReviewRow[];
-  const clearedKeys = new Set(tombstones.map((row) => itemKeyOf(row.question_type, row.question_id)));
-  const upload = local.filter((entry) => !clearedKeys.has(itemKeyOf(entry.type, entry.id)));
+  if (activeRes.error || localRowsRes.error || clearedRes.error) return offline();
+  const cloudRows = [...((activeRes.data ?? []) as CloudReviewRow[]), ...((localRowsRes.data ?? []) as CloudReviewRow[])];
+  const { upload, active } = planSJTReviewSync(local, cloudRows);
   if (upload.length) {
     const { error: uploadError } = await supabase.from("sjt_review_items").upsert(upload.map((entry) => ({
       user_id: userId, question_id: entry.id, question_type: entry.type, domain: entry.domain,
@@ -58,17 +48,6 @@ export async function syncSJTReviewState(userId: string): Promise<{ synced: bool
     })), { onConflict: "user_id,question_id,question_type" });
     if (uploadError) return offline();
   }
-  const cloudActive = activeRows.filter((row) => row.due_at).map((row) => ({
-    id: row.question_id, type: row.question_type, domain: row.domain,
-    due: new Date(row.due_at!).getTime(), successes: row.successes,
-  }));
-  const activeByKey = new Map<string, ReviewEntry>();
-  for (const entry of [...cloudActive, ...upload]) {
-    const itemKey = itemKeyOf(entry.type, entry.id);
-    const previous = activeByKey.get(itemKey);
-    if (!previous || entry.successes > previous.successes || entry.due > previous.due) activeByKey.set(itemKey, entry);
-  }
-  const active = [...activeByKey.values()];
   const cleared = clearedRes.count ?? loadSJTReviewStats(userId).cleared;
   replaceSJTReviewState(userId, active, cleared);
   return { synced: true, cleared };
